@@ -93,8 +93,8 @@ public:
                     "Added {} rage.",
                     player->GetName(), spellId, CUSTOM_RAGE_AMOUNT);
 
-                // Cast Execute on the player's selected target
-                Unit* target = player->GetSelectedUnit();
+                // Cast Execute on the spell's target (not the selected unit)
+                Unit* target = spell->m_targets.GetUnitTarget();
                 if (target)
                 {
                     player->CastSpell(target, SPELL_CUSTOM_EXECUTE, true);
