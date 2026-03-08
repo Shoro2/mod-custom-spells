@@ -109,7 +109,11 @@ public:
                 SpellNonMeleeDamage damageInfo(
                     player, target, spell->GetSpellInfo(),
                     spell->GetSpellInfo()->SchoolMask);
-                damageInfo.damage = totalDmg;
+
+                player->CalculateSpellDamageTaken(
+                    &damageInfo, totalDmg, spell->GetSpellInfo());
+                Unit::DealDamageMods(
+                    damageInfo.target, damageInfo.damage, &damageInfo.absorb);
 
                 player->SendSpellNonMeleeDamageLog(&damageInfo);
                 player->DealSpellDamage(&damageInfo, false);
