@@ -48,14 +48,17 @@
 
 enum CustomSpellIds
 {
-    // Custom proc spell: Rage Burst + Execute
-    SPELL_CUSTOM_RAGE_EXECUTE_PROC = 900106,
-
-    // The Execute spell that gets triggered
-    SPELL_CUSTOM_EXECUTE           = 97471,
+    // Custom damage spell: Base 666 + 66% AP + 1% per Paragon level
+    SPELL_CUSTOM_PARAGON_STRIKE = 900106,
 };
 
-constexpr uint32 CUSTOM_RAGE_AMOUNT = 100; // Rage to add (display units, *10 internally)
+// Paragon level aura (stack count = paragon level)
+constexpr uint32 AURA_PARAGON_LEVEL   = 100000;
+
+// Damage constants
+constexpr int32  CUSTOM_BASE_DAMAGE   = 666;
+constexpr float  CUSTOM_AP_COEFF      = 0.66f;   // 66% of Attack Power
+constexpr float  CUSTOM_PARAGON_BONUS = 0.01f;    // +1% damage per Paragon level
 
 class CustomSpellsPlayerScript : public PlayerScript
 {
@@ -75,41 +78,42 @@ public:
         switch (spellId)
         {
             // ============================================================
-            //  SPELL 900106: Rage Burst + Execute
-            //  - Adds 100 rage to the caster
-            //  - Casts Execute (97471) on the player's current target
+            //  SPELL 900106: Paragon Strike
+            //  - Base damage: 666
+            //  - Bonus: 66% Attack Power
+            //  - +1% total damage per Paragon level (aura 100000 stacks)
             // ============================================================
-            case SPELL_CUSTOM_RAGE_EXECUTE_PROC:
+            case SPELL_CUSTOM_PARAGON_STRIKE:
             {
-                // Add 100 rage (rage is stored as *10 internally)
-                player->EnergizeBySpell(
-                    player,
-                    SPELL_CUSTOM_RAGE_EXECUTE_PROC,
-                    CUSTOM_RAGE_AMOUNT * 10,
-                    POWER_RAGE
-                );
-
-                LOG_INFO("module", "mod-custom-spells: Player {} cast spell {}. "
-                    "Added {} rage.",
-                    player->GetName(), spellId, CUSTOM_RAGE_AMOUNT);
-
-                // Cast Execute on the spell's target (not the selected unit)
                 Unit* target = spell->m_targets.GetUnitTarget();
-                if (target)
-                {
-                    player->CastSpell(target, SPELL_CUSTOM_EXECUTE, true);
-
-                    LOG_INFO("module", "mod-custom-spells: Player {} -> "
-                        "Execute (spell {}) on target {}.",
-                        player->GetName(), SPELL_CUSTOM_EXECUTE,
-                        target->GetName());
-                }
-                else
+                if (!target || !target->IsAlive())
                 {
                     LOG_DEBUG("module", "mod-custom-spells: Player {} "
-                        "has no target for Execute.",
+                        "has no valid target for Paragon Strike.",
                         player->GetName());
+                    break;
                 }
+
+                // 66% of melee attack power
+                float ap = player->GetTotalAttackPowerValue(BASE_ATTACK);
+                float bonusDmg = ap * CUSTOM_AP_COEFF;
+
+                // Paragon level from aura stacks on ID 100000
+                uint32 paragonLevel = player->GetAuraCount(AURA_PARAGON_LEVEL);
+                float paragonMult = 1.0f + (paragonLevel * CUSTOM_PARAGON_BONUS);
+
+                // Final damage = (base + AP bonus) * paragon multiplier
+                int32 totalDmg = static_cast<int32>(
+                    (CUSTOM_BASE_DAMAGE + bonusDmg) * paragonMult);
+
+                player->SpellNonMeleeDamageLog(
+                    target, SPELL_CUSTOM_PARAGON_STRIKE, totalDmg);
+
+                LOG_INFO("module", "mod-custom-spells: Player {} -> "
+                    "Paragon Strike {} dmg on {} "
+                    "(AP: {:.0f}, Paragon Lv: {}, Mult: {:.2f})",
+                    player->GetName(), totalDmg, target->GetName(),
+                    ap, paragonLevel, paragonMult);
                 break;
             }
 
