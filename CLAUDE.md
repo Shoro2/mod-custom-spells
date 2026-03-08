@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-AzerothCore module for defining custom spell effects via C++ scripts. Hooks into `OnPlayerSpellCast` (PlayerScript) to intercept specific spell IDs and execute custom logic.
+AzerothCore module for defining custom spell effects via C++ SpellScripts. Each custom spell gets its own SpellScript class that hooks into the spell's DBC effects (e.g. School Damage) and overrides the damage/behavior.
 
 ## Module Structure
 
@@ -19,17 +19,22 @@ mod-custom-spells/
 ## How to Add a New Custom Spell
 
 1. Add spell ID constant to the `CustomSpellIds` enum in `src/custom_spells.cpp`
-2. Add a new `case` block in the `switch (spellId)` inside `OnPlayerSpellCast()`
-3. Implement custom logic using the `player` and `spell` objects
+2. Create a new SpellScript class (see `spell_custom_paragon_strike` as example)
+3. Hook into the DBC effect (e.g. `OnEffectHitTarget` with `SPELL_EFFECT_SCHOOL_DAMAGE`)
+4. Use `SetHitDamage()` to override damage, `GetCaster()`, `GetHitUnit()` for units
+5. Register with `RegisterSpellScript(YourClassName)` in `AddCustomSpellsScripts()`
 
-## Key APIs
+## Key APIs (SpellScript)
 
-- `player->CastSpell(target, spellId, true)` - Cast a spell (true = triggered)
-- `player->EnergizeBySpell(target, spellId, amount, powerType)` - Add power (rage/mana/etc). Rage is stored *10 internally
-- `spell->m_targets.GetUnitTarget()` - Get the spell's target unit
-- `spell->GetSpellInfo()->Id` - Get the cast spell's ID
-- `player->GetSelectedUnit()` - Get player's currently selected unit
+- `GetCaster()` / `GetHitUnit()` - Get caster and target units
+- `SetHitDamage(amount)` - Override the spell effect's damage
+- `GetHitDamage()` - Get current calculated damage
+- `GetSpellInfo()` - Get the SpellInfo of the spell being cast
+- `GetCaster()->ToPlayer()` - Cast to Player for player-specific APIs
+- `player->GetTotalAttackPowerValue(BASE_ATTACK)` - Get melee AP
+- `player->GetAuraCount(auraId)` - Get stack count of an aura
 - `LOG_INFO("module", "format {}", args)` - Logging
+- `RegisterSpellScript(ClassName)` - Register in AddCustomSpellsScripts()
 
 ## Build
 
