@@ -55,10 +55,7 @@ enum CustomSpellIds
     SPELL_CUSTOM_EXECUTE           = 97471,
 };
 
-enum CustomSpellValues
-{
-    RAGE_AMOUNT = 100,  // Rage to add (in display units, *10 internally)
-};
+constexpr uint32 CUSTOM_RAGE_AMOUNT = 100; // Rage to add (display units, *10 internally)
 
 class CustomSpellsPlayerScript : public PlayerScript
 {
@@ -88,13 +85,13 @@ public:
                 player->EnergizeBySpell(
                     player,
                     SPELL_CUSTOM_RAGE_EXECUTE_PROC,
-                    RAGE_AMOUNT * 10,
+                    CUSTOM_RAGE_AMOUNT * 10,
                     POWER_RAGE
                 );
 
                 LOG_INFO("module", "mod-custom-spells: Player {} cast spell {}. "
                     "Added {} rage.",
-                    player->GetName(), spellId, RAGE_AMOUNT);
+                    player->GetName(), spellId, CUSTOM_RAGE_AMOUNT);
 
                 // Cast Execute on the player's selected target
                 Unit* target = player->GetSelectedUnit();
