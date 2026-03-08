@@ -18,7 +18,9 @@
 #include "ScriptMgr.h"
 #include "Player.h"
 #include "Spell.h"
+#include "SpellAuraEffects.h"
 #include "SpellInfo.h"
+#include "SpellScript.h"
 #include "Config.h"
 #include "Log.h"
 
@@ -27,23 +29,15 @@
  *  mod-custom-spells - Custom Spell Effects Module
  * ==========================================================================
  *
- *  This module hooks into player spell casts and allows you to define
- *  custom behavior for specific spell IDs via C++ scripts.
+ *  This module uses SpellScripts to override spell effect behavior.
+ *  Each custom spell gets its own SpellScript class that hooks into
+ *  the spell's DBC effects (e.g. School Damage) and replaces the
+ *  damage calculation with custom logic.
  *
  *  HOW TO ADD A NEW CUSTOM SPELL:
  *  1. Define the spell ID as a constant in the enum below.
- *  2. Add a new case in OnPlayerSpellCast() for your spell ID.
- *  3. Implement your custom logic inside that case.
- *
- *  TEMPLATE EXAMPLE (copy & adapt):
- *  ---------------------------------------------------------------
- *      case SPELL_MY_CUSTOM_SPELL:
- *      {
- *          // Your custom logic here
- *          // e.g. player->CastSpell(target, SPELL_SOMETHING, true);
- *          break;
- *      }
- *  ---------------------------------------------------------------
+ *  2. Create a new SpellScript class (see spell_custom_paragon_strike).
+ *  3. Register it in AddCustomSpellsScripts() at the bottom.
  */
 
 enum CustomSpellIds
@@ -60,90 +54,61 @@ constexpr int32  CUSTOM_BASE_DAMAGE   = 666;
 constexpr float  CUSTOM_AP_COEFF      = 0.66f;   // 66% of Attack Power
 constexpr float  CUSTOM_PARAGON_BONUS = 0.01f;    // +1% damage per Paragon level
 
-class CustomSpellsPlayerScript : public PlayerScript
+// ============================================================
+//  SPELL 900106: Paragon Strike (SpellScript)
+//  Overrides the School Damage effect with custom calculation:
+//  - Base damage: 666
+//  - Bonus: 66% Attack Power
+//  - +1% total damage per Paragon level (aura 100000 stacks)
+// ============================================================
+class spell_custom_paragon_strike : public SpellScript
 {
-public:
-    CustomSpellsPlayerScript() : PlayerScript("CustomSpellsPlayerScript") { }
+    PrepareSpellScript(spell_custom_paragon_strike);
 
-    void OnPlayerSpellCast(Player* player, Spell* spell, bool /*skipCheck*/) override
+    void HandleDamage(SpellEffIndex /*effIndex*/)
     {
-        if (!player || !spell || !spell->GetSpellInfo())
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
             return;
 
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        uint32 spellId = spell->GetSpellInfo()->Id;
+        // 66% of melee attack power
+        float ap = player->GetTotalAttackPowerValue(BASE_ATTACK);
+        float bonusDmg = ap * CUSTOM_AP_COEFF;
 
-        switch (spellId)
-        {
-            // ============================================================
-            //  SPELL 900106: Paragon Strike
-            //  - Base damage: 666
-            //  - Bonus: 66% Attack Power
-            //  - +1% total damage per Paragon level (aura 100000 stacks)
-            // ============================================================
-            case SPELL_CUSTOM_PARAGON_STRIKE:
-            {
-                Unit* target = spell->m_targets.GetUnitTarget();
-                if (!target || !target->IsAlive())
-                {
-                    LOG_DEBUG("module", "mod-custom-spells: Player {} "
-                        "has no valid target for Paragon Strike.",
-                        player->GetName());
-                    break;
-                }
+        // Paragon level from aura stacks on ID 100000
+        uint32 paragonLevel = player->GetAuraCount(AURA_PARAGON_LEVEL);
+        float paragonMult = 1.0f + (paragonLevel * CUSTOM_PARAGON_BONUS);
 
-                // 66% of melee attack power
-                float ap = player->GetTotalAttackPowerValue(BASE_ATTACK);
-                float bonusDmg = ap * CUSTOM_AP_COEFF;
+        // Final damage = (base + AP bonus) * paragon multiplier
+        int32 totalDmg = static_cast<int32>(
+            (CUSTOM_BASE_DAMAGE + bonusDmg) * paragonMult);
 
-                // Paragon level from aura stacks on ID 100000
-                uint32 paragonLevel = player->GetAuraCount(AURA_PARAGON_LEVEL);
-                float paragonMult = 1.0f + (paragonLevel * CUSTOM_PARAGON_BONUS);
+        SetHitDamage(totalDmg);
 
-                // Final damage = (base + AP bonus) * paragon multiplier
-                int32 totalDmg = static_cast<int32>(
-                    (CUSTOM_BASE_DAMAGE + bonusDmg) * paragonMult);
+        LOG_INFO("module", "mod-custom-spells: Player {} -> "
+            "Paragon Strike {} dmg on {} "
+            "(AP: {:.0f}, Paragon Lv: {}, Mult: {:.2f})",
+            player->GetName(), totalDmg, target->GetName(),
+            ap, paragonLevel, paragonMult);
+    }
 
-                SpellNonMeleeDamage damageInfo(
-                    player, target, spell->GetSpellInfo(),
-                    spell->GetSpellInfo()->SchoolMask);
-
-                player->CalculateSpellDamageTaken(
-                    &damageInfo, totalDmg, spell->GetSpellInfo());
-                Unit::DealDamageMods(
-                    damageInfo.target, damageInfo.damage, &damageInfo.absorb);
-
-                player->SendSpellNonMeleeDamageLog(&damageInfo);
-                player->DealSpellDamage(&damageInfo, false);
-
-                LOG_INFO("module", "mod-custom-spells: Player {} -> "
-                    "Paragon Strike {} dmg on {} "
-                    "(AP: {:.0f}, Paragon Lv: {}, Mult: {:.2f})",
-                    player->GetName(), totalDmg, target->GetName(),
-                    ap, paragonLevel, paragonMult);
-                break;
-            }
-
-            // ============================================================
-            //  ADD MORE CUSTOM SPELLS HERE
-            //  Copy the template below and adapt it:
-            // ============================================================
-            //
-            // case SPELL_MY_NEW_SPELL:
-            // {
-            //     // Custom logic...
-            //     break;
-            // }
-
-            default:
-                break;
-        }
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(
+            spell_custom_paragon_strike::HandleDamage,
+            EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
     }
 };
 
 void AddCustomSpellsScripts()
 {
-    new CustomSpellsPlayerScript();
+    RegisterSpellScript(spell_custom_paragon_strike);
 }
