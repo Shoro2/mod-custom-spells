@@ -106,8 +106,13 @@ public:
                 int32 totalDmg = static_cast<int32>(
                     (CUSTOM_BASE_DAMAGE + bonusDmg) * paragonMult);
 
-                player->SpellNonMeleeDamageLog(
-                    target, SPELL_CUSTOM_PARAGON_STRIKE, totalDmg);
+                SpellNonMeleeDamage damageInfo(
+                    player, target, spell->GetSpellInfo(),
+                    spell->GetSpellInfo()->SchoolMask);
+                damageInfo.damage = totalDmg;
+
+                player->SendSpellNonMeleeDamageLog(&damageInfo);
+                player->DealSpellDamage(&damageInfo, false);
 
                 LOG_INFO("module", "mod-custom-spells: Player {} -> "
                     "Paragon Strike {} dmg on {} "
