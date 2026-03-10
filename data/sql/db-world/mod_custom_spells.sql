@@ -13,8 +13,9 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 (900114, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0);
 
 -- Bloody Whirlwind passive (900116): C++ AuraScript handles Bloodthirst filtering.
--- FamilyName/Mask=0 so the base proc check passes any spell; the script's
+-- ProcFlags=0x10 (PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS) matches Bloodthirst's melee dmg class.
+-- FamilyName/Mask=0 so the base proc check passes any melee spell; the script's
 -- DoCheckProc narrows it to Bloodthirst (SpellFamilyFlags[0]=0x40000000).
 DELETE FROM `spell_proc` WHERE `SpellId` = 900116;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900116, 0, 0, 0, 0, 0, 0x10000, 1, 2, 0, 0, 0, 0, 100, 0, 0);
+(900116, 0, 0, 0, 0, 0, 0x10, 1, 2, 0, 0, 0, 0, 100, 0, 0);
