@@ -3,3 +3,9 @@ DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce');
+
+-- ICD for Whirlwind proc aura (900114): 500ms cooldown to prevent
+-- recursive loop (Whirlwind hits count as auto-attacks → re-proc → crash)
+DELETE FROM `spell_proc` WHERE `SpellId` = 900114;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900114, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0);
