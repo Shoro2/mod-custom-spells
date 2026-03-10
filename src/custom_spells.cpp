@@ -46,6 +46,8 @@ enum CustomSpellIds
     SPELL_CUSTOM_PARAGON_STRIKE         = 900106,
     // Each cast reduces Bladestorm (46927) cooldown by 0.5s
     SPELL_CUSTOM_BLADESTORM_CD_REDUCE   = 900107,
+    // Bloody Whirlwind buff: +50% Whirlwind damage per stack, consumed on WW cast
+    SPELL_BLOODY_WHIRLWIND_BUFF         = 900115,
 };
 
 // ---- Paragon Strike constants ----
@@ -149,8 +151,44 @@ class spell_custom_bladestorm_cd_reduce : public SpellScript
     }
 };
 
+// ============================================================
+//  SPELL 1680: Whirlwind - Consume Bloody Whirlwind stacks
+//  After Whirlwind finishes casting, remove all stacks of the
+//  Bloody Whirlwind buff (900115). The damage bonus from
+//  Add % Modifier is already applied during damage calculation,
+//  so removing after cast is safe.
+// ============================================================
+class spell_custom_bloody_whirlwind_consume : public SpellScript
+{
+    PrepareSpellScript(spell_custom_bloody_whirlwind_consume);
+
+    void HandleAfterCast()
+    {
+        Unit* caster = GetCaster();
+        if (!caster)
+            return;
+
+        if (!caster->HasAura(SPELL_BLOODY_WHIRLWIND_BUFF))
+            return;
+
+        uint32 stacks = caster->GetAuraCount(SPELL_BLOODY_WHIRLWIND_BUFF);
+        caster->RemoveAurasDueToSpell(SPELL_BLOODY_WHIRLWIND_BUFF);
+
+        if (Player* player = caster->ToPlayer())
+            LOG_INFO("module", "mod-custom-spells: Player {} -> "
+                "Bloody Whirlwind consumed {} stacks on Whirlwind cast",
+                player->GetName(), stacks);
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_bloody_whirlwind_consume::HandleAfterCast);
+    }
+};
+
 void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
     RegisterSpellScript(spell_custom_bladestorm_cd_reduce);
+    RegisterSpellScript(spell_custom_bloody_whirlwind_consume);
 }
