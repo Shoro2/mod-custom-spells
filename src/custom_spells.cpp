@@ -48,7 +48,14 @@ enum CustomSpellIds
     SPELL_CUSTOM_BLADESTORM_CD_REDUCE   = 900107,
     // Bloody Whirlwind buff: +50% Whirlwind damage per stack, consumed on WW cast
     SPELL_BLOODY_WHIRLWIND_BUFF         = 900115,
+    // Bloody Whirlwind passive: procs 900115 on Bloodthirst hit
+    SPELL_BLOODY_WHIRLWIND_PASSIVE      = 900116,
 };
+
+// ---- Bloodthirst SpellFamilyFlags ----
+// Bloodthirst (23881): SpellFamilyName=4, SpellFamilyFlags[0]=0x40000000
+constexpr uint32 SPELLFAMILY_WARRIOR_ID        = 4;
+constexpr uint32 BLOODTHIRST_FAMILY_FLAG       = 0x40000000;
 
 // ---- Paragon Strike constants ----
 constexpr uint32 AURA_PARAGON_LEVEL   = 100000;
@@ -152,6 +159,56 @@ class spell_custom_bladestorm_cd_reduce : public SpellScript
 };
 
 // ============================================================
+//  SPELL 900116: Bloody Whirlwind Passive (AuraScript)
+//  The DBC Class Mask uses bit index 43 which doesn't match
+//  Bloodthirst's actual SpellFamilyFlags[0]=0x40000000 (bit 30).
+//  This script explicitly filters procs to only fire on Bloodthirst.
+// ============================================================
+class spell_custom_bloody_whirlwind_passive : public AuraScript
+{
+    PrepareAuraScript(spell_custom_bloody_whirlwind_passive);
+
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+        if (!spellInfo)
+            return false;
+
+        // Only proc on Bloodthirst: Warrior family, flag bit 30
+        if (spellInfo->SpellFamilyName != SPELLFAMILY_WARRIOR_ID)
+            return false;
+
+        if (!(spellInfo->SpellFamilyFlags[0] & BLOODTHIRST_FAMILY_FLAG))
+            return false;
+
+        return true;
+    }
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
+    {
+        PreventDefaultAction();
+
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        caster->CastSpell(caster, SPELL_BLOODY_WHIRLWIND_BUFF, true);
+
+        if (Player* player = caster->ToPlayer())
+            LOG_INFO("module", "mod-custom-spells: Player {} -> "
+                "Bloody Whirlwind passive procced, applying {} buff",
+                player->GetName(), SPELL_BLOODY_WHIRLWIND_BUFF);
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_bloody_whirlwind_passive::CheckProc);
+        OnEffectProc += AuraEffectProcFn(spell_custom_bloody_whirlwind_passive::HandleProc,
+            EFFECT_0, SPELL_AURA_PROC_TRIGGER_SPELL);
+    }
+};
+
+// ============================================================
 //  SPELL 1680: Whirlwind - Consume Bloody Whirlwind stacks
 //  After Whirlwind finishes casting, remove all stacks of the
 //  Bloody Whirlwind buff (900115). The damage bonus from
@@ -190,5 +247,6 @@ void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
     RegisterSpellScript(spell_custom_bladestorm_cd_reduce);
+    RegisterSpellScript(spell_custom_bloody_whirlwind_passive);
     RegisterSpellScript(spell_custom_bloody_whirlwind_consume);
 }

@@ -1,8 +1,9 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 1680);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 1680);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
+(900116, 'spell_custom_bloody_whirlwind_passive'),
 (1680, 'spell_custom_bloody_whirlwind_consume');
 
 -- ICD for Whirlwind proc aura (900114): 500ms cooldown to prevent
@@ -11,9 +12,9 @@ DELETE FROM `spell_proc` WHERE `SpellId` = 900114;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
 (900114, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0);
 
--- Bloody Whirlwind passive (900116): proc on Bloodthirst cast to trigger 900115 buff
--- SpellFamilyName=4 (Warrior), SpellFamilyMask0=0x40000000 (Bloodthirst)
--- ProcFlags=0x10000 (PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS)
+-- Bloody Whirlwind passive (900116): C++ AuraScript handles Bloodthirst filtering.
+-- FamilyName/Mask=0 so the base proc check passes any spell; the script's
+-- DoCheckProc narrows it to Bloodthirst (SpellFamilyFlags[0]=0x40000000).
 DELETE FROM `spell_proc` WHERE `SpellId` = 900116;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900116, 0, 4, 0x40000000, 0, 0, 0x10000, 1, 1, 0, 0, 0, 0, 100, 0, 0);
+(900116, 0, 0, 0, 0, 0, 0x10000, 1, 2, 0, 0, 0, 0, 100, 0, 0);
