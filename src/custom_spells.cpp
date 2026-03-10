@@ -43,16 +43,20 @@
 enum CustomSpellIds
 {
     // Custom damage spell: Base 666 + 66% AP + 1% per Paragon level
-    SPELL_CUSTOM_PARAGON_STRIKE = 900106,
+    SPELL_CUSTOM_PARAGON_STRIKE         = 900106,
+    // Each cast reduces Bladestorm (46927) cooldown by 0.5s
+    SPELL_CUSTOM_BLADESTORM_CD_REDUCE   = 900107,
 };
 
-// Paragon level aura (stack count = paragon level)
+// ---- Paragon Strike constants ----
 constexpr uint32 AURA_PARAGON_LEVEL   = 100000;
-
-// Damage constants
 constexpr int32  CUSTOM_BASE_DAMAGE   = 666;
 constexpr float  CUSTOM_AP_COEFF      = 0.66f;   // 66% of Attack Power
 constexpr float  CUSTOM_PARAGON_BONUS = 0.01f;    // +1% damage per Paragon level
+
+// ---- Bladestorm CD Reduction constants ----
+constexpr uint32 SPELL_BLADESTORM     = 46927;
+constexpr int32  BLADESTORM_CD_REDUCE_MS = -500;  // -0.5 seconds (in ms)
 
 // ============================================================
 //  SPELL 900106: Paragon Strike (SpellScript)
@@ -108,7 +112,45 @@ class spell_custom_paragon_strike : public SpellScript
     }
 };
 
+// ============================================================
+//  SPELL 900107: Bladestorm CD Reduction (SpellScript)
+//  Each cast reduces the cooldown of Bladestorm (46927) by 0.5s.
+//  Uses SPELL_EFFECT_DUMMY as the DBC effect hook.
+// ============================================================
+class spell_custom_bladestorm_cd_reduce : public SpellScript
+{
+    PrepareSpellScript(spell_custom_bladestorm_cd_reduce);
+
+    void HandleDummy(SpellEffIndex /*effIndex*/)
+    {
+        Unit* caster = GetCaster();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        player->ModifySpellCooldown(SPELL_BLADESTORM, BLADESTORM_CD_REDUCE_MS);
+
+        LOG_INFO("module", "mod-custom-spells: Player {} -> "
+            "Bladestorm CD reduced by {}ms (remaining CD modified)",
+            player->GetName(), -BLADESTORM_CD_REDUCE_MS);
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(
+            spell_custom_bladestorm_cd_reduce::HandleDummy,
+            EFFECT_0, SPELL_EFFECT_DUMMY);
+    }
+};
+
 void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
+    RegisterSpellScript(spell_custom_bladestorm_cd_reduce);
 }

@@ -13,7 +13,8 @@ mod-custom-spells/
 │   └── custom_spells.cpp            # Custom spell logic (main file to edit)
 ├── conf/
 │   └── mod_custom_spells.conf.dist  # Config: CustomSpells.Enable
-└── data/sql/                        # SQL directories (currently unused)
+└── data/sql/db-world/
+    └── mod_custom_spells.sql         # spell_script_names registration
 ```
 
 ## How to Add a New Custom Spell
@@ -23,6 +24,14 @@ mod-custom-spells/
 3. Hook into the DBC effect (e.g. `OnEffectHitTarget` with `SPELL_EFFECT_SCHOOL_DAMAGE`)
 4. Use `SetHitDamage()` to override damage, `GetCaster()`, `GetHitUnit()` for units
 5. Register with `RegisterSpellScript(YourClassName)` in `AddCustomSpellsScripts()`
+6. Add the spell to `data/sql/db-world/mod_custom_spells.sql` in `spell_script_names`
+
+## Current Custom Spells
+
+| Spell ID | Script Name | Effect |
+|----------|-------------|--------|
+| 900106 | `spell_custom_paragon_strike` | SCHOOL_DAMAGE: Base 666 + 66% AP, +1%/Paragon level |
+| 900107 | `spell_custom_bladestorm_cd_reduce` | DUMMY: Each cast reduces Bladestorm (46927) CD by 0.5s |
 
 ## Key APIs (SpellScript)
 
@@ -33,6 +42,7 @@ mod-custom-spells/
 - `GetCaster()->ToPlayer()` - Cast to Player for player-specific APIs
 - `player->GetTotalAttackPowerValue(BASE_ATTACK)` - Get melee AP
 - `player->GetAuraCount(auraId)` - Get stack count of an aura
+- `player->ModifySpellCooldown(spellId, deltaMs)` - Modify a spell's cooldown (negative = reduce)
 - `LOG_INFO("module", "format {}", args)` - Logging
 - `RegisterSpellScript(ClassName)` - Register in AddCustomSpellsScripts()
 
