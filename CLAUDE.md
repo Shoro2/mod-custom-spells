@@ -37,10 +37,20 @@ mod-custom-spells/
 
 ## Current Custom Spells
 
-| Spell ID | Script Name | Effect |
-|----------|-------------|--------|
-| 900106 | `spell_custom_paragon_strike` | SCHOOL_DAMAGE: Base 666 + 66% AP, +1%/Paragon level |
-| 900107 | `spell_custom_bladestorm_cd_reduce` | DUMMY: Each cast reduces Bladestorm (46927) CD by 0.5s |
+| Spell ID | Script Name | Type | Effect |
+|----------|-------------|------|--------|
+| 900106 | `spell_custom_paragon_strike` | SpellScript | SCHOOL_DAMAGE: Base 666 + 66% AP, +1%/Paragon level |
+| 900107 | `spell_custom_bladestorm_cd_reduce` | AuraScript | PROC: On melee damage dealt → reduce Bladestorm (46927) CD by 0.5s |
+| 900116 | `spell_custom_bloody_whirlwind_passive` | AuraScript | PROC: On Bloodthirst hit → apply buff 900115 |
+| 1680 | `spell_custom_bloody_whirlwind_consume` | SpellScript | AFTER_CAST: Removes all 900115 stacks on Whirlwind cast |
+
+### Bloody Whirlwind System (900115/900116)
+
+- **900116** (passive aura, EFFECT_1 = `SPELL_AURA_PROC_TRIGGER_SPELL`): Sits on the player, procs on Bloodthirst hits
+- **900115** (buff): +50% Whirlwind damage per stack, max 5 stacks, 10s duration
+- **1680** (Whirlwind override): Consumes all 900115 stacks after cast
+- **Bloodthirst detection**: `SpellFamilyName=4, SpellFamilyFlags[1]=0x00000400` (Bit 42)
+- **Important**: The DBC `EffectSpellClassMask` (Class Mask Target Spells) is NOT used by the proc system — filtering is done entirely in the C++ `CheckProc` handler
 
 ## Key APIs (SpellScript)
 
