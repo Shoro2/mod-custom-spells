@@ -139,11 +139,22 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
 
     bool CheckProc(ProcEventInfo& eventInfo)
     {
-        // Only proc when Bladestorm is actually on cooldown
         Player* player = GetTarget()->ToPlayer();
         if (!player)
+        {
+            LOG_INFO("module", "mod-custom-spells: 900107 CheckProc -> "
+                "NO player, returning false");
             return false;
+        }
 
+        SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+        LOG_INFO("module", "mod-custom-spells: 900107 CheckProc -> "
+            "procSpell={}, flags=0x{:X}, hasBladestormCD={}",
+            spellInfo ? spellInfo->Id : 0,
+            eventInfo.GetTypeMask(),
+            player->HasSpellCooldown(SPELL_BLADESTORM) ? "yes" : "no");
+
+        // Only proc when Bladestorm is actually on cooldown
         return player->HasSpellCooldown(SPELL_BLADESTORM);
     }
 
@@ -162,11 +173,11 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        player->ModifySpellCooldown(SPELL_BLADESTORM, BLADESTORM_CD_REDUCE_MS);
-
-        LOG_INFO("module", "mod-custom-spells: Player {} -> "
-            "Bladestorm CD reduced by {}ms (remaining CD modified)",
+        LOG_INFO("module", "mod-custom-spells: 900107 HandleProc -> "
+            "Player {} reducing Bladestorm CD by {}ms",
             player->GetName(), -BLADESTORM_CD_REDUCE_MS);
+
+        player->ModifySpellCooldown(SPELL_BLADESTORM, BLADESTORM_CD_REDUCE_MS);
     }
 
     void Register() override
@@ -193,16 +204,7 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
     {
         SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
         if (!spellInfo)
-        {
-            LOG_INFO("module", "mod-custom-spells: 900116 CheckProc -> "
-                "NO spell info, returning false");
             return false;
-        }
-
-        LOG_INFO("module", "mod-custom-spells: 900116 CheckProc -> "
-            "spell {} family {} flags[0]=0x{:08X} flags[1]=0x{:08X}",
-            spellInfo->Id, spellInfo->SpellFamilyName,
-            spellInfo->SpellFamilyFlags[0], spellInfo->SpellFamilyFlags[1]);
 
         // Only proc on Bloodthirst: Warrior family, flags[1] bit 10
         if (spellInfo->SpellFamilyName != SPELLFAMILY_WARRIOR_ID)
@@ -211,8 +213,6 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
         if (!(spellInfo->SpellFamilyFlags[1] & BLOODTHIRST_FAMILY_FLAG1))
             return false;
 
-        LOG_INFO("module", "mod-custom-spells: 900116 CheckProc -> "
-            "PASSED, Bloodthirst matched!");
         return true;
     }
 
@@ -223,10 +223,6 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
         Unit* caster = GetTarget();
         if (!caster)
             return;
-
-        LOG_INFO("module", "mod-custom-spells: 900116 HandleProc -> "
-            "casting {} on {}",
-            SPELL_BLOODY_WHIRLWIND_BUFF, caster->GetName());
 
         caster->CastSpell(caster, SPELL_BLOODY_WHIRLWIND_BUFF, true);
     }
@@ -289,7 +285,18 @@ class spell_custom_speedy_bloodthirst : public AuraScript
     {
         SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
         if (!spellInfo)
+        {
+            LOG_INFO("module", "mod-custom-spells: 900117 CheckProc -> "
+                "NO spell info, returning false");
             return false;
+        }
+
+        LOG_INFO("module", "mod-custom-spells: 900117 CheckProc -> "
+            "spell={}, typeMask=0x{:X}, spellFamily={}, "
+            "flags[0]=0x{:08X} flags[1]=0x{:08X}",
+            spellInfo->Id, eventInfo.GetTypeMask(),
+            spellInfo->SpellFamilyName,
+            spellInfo->SpellFamilyFlags[0], spellInfo->SpellFamilyFlags[1]);
 
         // Only proc on Whirlwind (1680)
         return spellInfo->Id == 1680;
@@ -301,16 +308,21 @@ class spell_custom_speedy_bloodthirst : public AuraScript
 
         Player* player = GetTarget()->ToPlayer();
         if (!player)
+        {
+            LOG_INFO("module", "mod-custom-spells: 900117 HandleProc -> "
+                "NO player, returning");
             return;
+        }
 
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        player->RemoveSpellCooldown(SPELL_BLOODTHIRST, true);
+        LOG_INFO("module", "mod-custom-spells: 900117 HandleProc -> "
+            "Player {} resetting Bloodthirst CD, hasBTCooldown={}",
+            player->GetName(),
+            player->HasSpellCooldown(SPELL_BLOODTHIRST) ? "yes" : "no");
 
-        LOG_INFO("module", "mod-custom-spells: Player {} -> "
-            "Speedy Bloodthirst: Bloodthirst CD reset by Whirlwind",
-            player->GetName());
+        player->RemoveSpellCooldown(SPELL_BLOODTHIRST, true);
     }
 
     void Register() override
