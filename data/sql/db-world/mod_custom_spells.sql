@@ -1,10 +1,12 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 900117, 1680);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 900117, 900120, 900121, 1680);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
 (900116, 'spell_custom_bloody_whirlwind_passive'),
 (900117, 'spell_custom_speedy_bloodthirst'),
+(900120, 'spell_custom_ww_overpower'),
+(900121, 'spell_custom_ww_slam'),
 (1680, 'spell_custom_bloody_whirlwind_consume');
 
 -- ICD for Whirlwind proc aura (900114): 500ms cooldown to prevent
