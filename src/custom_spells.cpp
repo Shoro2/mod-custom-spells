@@ -23,6 +23,7 @@
 #include "SpellScript.h"
 #include "Config.h"
 #include "Log.h"
+#include "ObjectAccessor.h"
 
 /*
  * ==========================================================================
@@ -52,6 +53,12 @@ enum CustomSpellIds
     SPELL_BLOODY_WHIRLWIND_PASSIVE      = 900116,
     // Speedy Bloodthirst: Whirlwind resets Bloodthirst cooldown
     SPELL_CUSTOM_SPEEDY_BLOODTHIRST     = 900117,
+    // WW single-target: passive auras (markers checked via HasAura)
+    SPELL_WW_OVERPOWER_PASSIVE          = 900118,
+    SPELL_WW_SLAM_PASSIVE               = 900119,
+    // WW single-target: boosted damage spells (autocast)
+    SPELL_WW_OVERPOWER_BOOSTED          = 900120,
+    SPELL_WW_SLAM_BOOSTED               = 900121,
 };
 
 // ---- Bloodthirst SpellFamilyFlags ----
@@ -236,14 +243,26 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
 
 // ============================================================
 //  SPELL 1680: Whirlwind - Consume Bloody Whirlwind stacks
-//  After Whirlwind finishes casting, remove all stacks of the
-//  Bloody Whirlwind buff (900115). The damage bonus from
-//  Add % Modifier is already applied during damage calculation,
-//  so removing after cast is safe.
+//  + Single-target autocast (Overpower / Slam)
+//
+//  After Whirlwind finishes casting:
+//  1. Remove all stacks of the Bloody Whirlwind buff (900115)
+//  2. If WW hit exactly 1 target and player has passive 900118/900119,
+//     autocast boosted Overpower (900120) / Slam (900121) on the target
 // ============================================================
 class spell_custom_bloody_whirlwind_consume : public SpellScript
 {
     PrepareSpellScript(spell_custom_bloody_whirlwind_consume);
+
+    uint32 _targetCount = 0;
+    ObjectGuid _singleTargetGuid;
+
+    void FilterTargets(std::list<WorldObject*>& targets)
+    {
+        _targetCount = targets.size();
+        if (_targetCount == 1 && !targets.empty())
+            _singleTargetGuid = targets.front()->GetGUID();
+    }
 
     void HandleAfterCast()
     {
@@ -251,20 +270,55 @@ class spell_custom_bloody_whirlwind_consume : public SpellScript
         if (!caster)
             return;
 
-        if (!caster->HasAura(SPELL_BLOODY_WHIRLWIND_BUFF))
+        // --- Bloody Whirlwind: consume stacks ---
+        if (caster->HasAura(SPELL_BLOODY_WHIRLWIND_BUFF))
+        {
+            uint32 stacks = caster->GetAuraCount(SPELL_BLOODY_WHIRLWIND_BUFF);
+            caster->RemoveAurasDueToSpell(SPELL_BLOODY_WHIRLWIND_BUFF);
+
+            if (Player* player = caster->ToPlayer())
+                LOG_INFO("module", "mod-custom-spells: Player {} -> "
+                    "Bloody Whirlwind consumed {} stacks on Whirlwind cast",
+                    player->GetName(), stacks);
+        }
+
+        // --- Single-target autocast ---
+        if (_targetCount != 1)
             return;
 
-        uint32 stacks = caster->GetAuraCount(SPELL_BLOODY_WHIRLWIND_BUFF);
-        caster->RemoveAurasDueToSpell(SPELL_BLOODY_WHIRLWIND_BUFF);
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
 
-        if (Player* player = caster->ToPlayer())
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        Unit* target = ObjectAccessor::GetUnit(*player, _singleTargetGuid);
+        if (!target || !target->IsAlive())
+            return;
+
+        if (player->HasAura(SPELL_WW_OVERPOWER_PASSIVE))
+        {
+            player->CastSpell(target, SPELL_WW_OVERPOWER_BOOSTED, true);
             LOG_INFO("module", "mod-custom-spells: Player {} -> "
-                "Bloody Whirlwind consumed {} stacks on Whirlwind cast",
-                player->GetName(), stacks);
+                "WW single-target: autocast Overpower on {}",
+                player->GetName(), target->GetName());
+        }
+
+        if (player->HasAura(SPELL_WW_SLAM_PASSIVE))
+        {
+            player->CastSpell(target, SPELL_WW_SLAM_BOOSTED, true);
+            LOG_INFO("module", "mod-custom-spells: Player {} -> "
+                "WW single-target: autocast Slam on {}",
+                player->GetName(), target->GetName());
+        }
     }
 
     void Register() override
     {
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(
+            spell_custom_bloody_whirlwind_consume::FilterTargets,
+            EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
         AfterCast += SpellCastFn(spell_custom_bloody_whirlwind_consume::HandleAfterCast);
     }
 };
@@ -333,6 +387,84 @@ class spell_custom_speedy_bloodthirst : public AuraScript
     }
 };
 
+// ============================================================
+//  SPELL 900120: WW Boosted Overpower (SpellScript)
+//  Autocast by Whirlwind when only 1 target is hit.
+//  Multiplies DBC base damage by Paragon bonus: +1% per level.
+// ============================================================
+class spell_custom_ww_overpower : public SpellScript
+{
+    PrepareSpellScript(spell_custom_ww_overpower);
+
+    void HandleDamage(SpellEffIndex /*effIndex*/)
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        uint32 paragonLevel = player->GetAuraCount(AURA_PARAGON_LEVEL);
+        float paragonMult = 1.0f + (paragonLevel * CUSTOM_PARAGON_BONUS);
+        int32 damage = static_cast<int32>(GetHitDamage() * paragonMult);
+        SetHitDamage(damage);
+
+        LOG_INFO("module", "mod-custom-spells: Player {} -> "
+            "WW Overpower {} dmg on {} (Paragon Lv: {}, Mult: {:.2f})",
+            player->GetName(), damage, target->GetName(),
+            paragonLevel, paragonMult);
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(
+            spell_custom_ww_overpower::HandleDamage,
+            EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+    }
+};
+
+// ============================================================
+//  SPELL 900121: WW Boosted Slam (SpellScript)
+//  Autocast by Whirlwind when only 1 target is hit.
+//  Multiplies DBC base damage by Paragon bonus: +1% per level.
+// ============================================================
+class spell_custom_ww_slam : public SpellScript
+{
+    PrepareSpellScript(spell_custom_ww_slam);
+
+    void HandleDamage(SpellEffIndex /*effIndex*/)
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        uint32 paragonLevel = player->GetAuraCount(AURA_PARAGON_LEVEL);
+        float paragonMult = 1.0f + (paragonLevel * CUSTOM_PARAGON_BONUS);
+        int32 damage = static_cast<int32>(GetHitDamage() * paragonMult);
+        SetHitDamage(damage);
+
+        LOG_INFO("module", "mod-custom-spells: Player {} -> "
+            "WW Slam {} dmg on {} (Paragon Lv: {}, Mult: {:.2f})",
+            player->GetName(), damage, target->GetName(),
+            paragonLevel, paragonMult);
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(
+            spell_custom_ww_slam::HandleDamage,
+            EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+    }
+};
+
 void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
@@ -340,4 +472,6 @@ void AddCustomSpellsScripts()
     RegisterSpellScript(spell_custom_bloody_whirlwind_passive);
     RegisterSpellScript(spell_custom_bloody_whirlwind_consume);
     RegisterSpellScript(spell_custom_speedy_bloodthirst);
+    RegisterSpellScript(spell_custom_ww_overpower);
+    RegisterSpellScript(spell_custom_ww_slam);
 }
