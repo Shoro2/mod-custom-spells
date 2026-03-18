@@ -160,6 +160,7 @@ class spell_custom_bladestorm_cd_reduce : public SpellScript
 
 // ============================================================
 //  SPELL 900116: Bloody Whirlwind Passive (AuraScript)
+//  DBC has the proc aura on EFFECT_1 (not EFFECT_0).
 //  The DBC Class Mask uses bit index 43 which doesn't match
 //  Bloodthirst's actual SpellFamilyFlags[0]=0x40000000 (bit 30).
 //  This script explicitly filters procs to only fire on Bloodthirst.
@@ -204,7 +205,7 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
     {
         DoCheckProc += AuraCheckProcFn(spell_custom_bloody_whirlwind_passive::CheckProc);
         OnEffectProc += AuraEffectProcFn(spell_custom_bloody_whirlwind_passive::HandleProc,
-            EFFECT_0, SPELL_AURA_PROC_TRIGGER_SPELL);
+            EFFECT_1, SPELL_AURA_PROC_TRIGGER_SPELL);
     }
 };
 
