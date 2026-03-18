@@ -66,7 +66,7 @@ constexpr float  CUSTOM_AP_COEFF      = 0.66f;   // 66% of Attack Power
 constexpr float  CUSTOM_PARAGON_BONUS = 0.01f;    // +1% damage per Paragon level
 
 // ---- Bladestorm CD Reduction constants ----
-constexpr uint32 SPELL_BLADESTORM     = 46927;
+constexpr uint32 SPELL_BLADESTORM     = 46924;
 constexpr int32  BLADESTORM_CD_REDUCE_MS = -500;  // -0.5 seconds (in ms)
 
 // ---- Speedy Bloodthirst constants ----
