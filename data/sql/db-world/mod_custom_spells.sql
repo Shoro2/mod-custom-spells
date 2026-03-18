@@ -1,9 +1,10 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 1680);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 900117, 1680);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
 (900116, 'spell_custom_bloody_whirlwind_passive'),
+(900117, 'spell_custom_speedy_bloodthirst'),
 (1680, 'spell_custom_bloody_whirlwind_consume');
 
 -- ICD for Whirlwind proc aura (900114): 500ms cooldown to prevent
@@ -26,3 +27,10 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 DELETE FROM `spell_proc` WHERE `SpellId` = 900116;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
 (900116, 0, 0, 0, 0, 0, 0x10, 1, 2, 0, 0, 0, 0, 100, 0, 0);
+
+-- Speedy Bloodthirst (900117): Whirlwind resets Bloodthirst CD.
+-- ProcFlags=0x10 (PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS), SpellPhaseMask=4 (FINISH).
+-- C++ CheckProc filters to Whirlwind (1680) only.
+DELETE FROM `spell_proc` WHERE `SpellId` = 900117;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900117, 0, 0, 0, 0, 0, 0x10, 1, 4, 0, 0, 0, 0, 100, 0, 0);

@@ -50,6 +50,8 @@ enum CustomSpellIds
     SPELL_BLOODY_WHIRLWIND_BUFF         = 900115,
     // Bloody Whirlwind passive: procs 900115 on Bloodthirst hit
     SPELL_BLOODY_WHIRLWIND_PASSIVE      = 900116,
+    // Speedy Bloodthirst: Whirlwind resets Bloodthirst cooldown
+    SPELL_CUSTOM_SPEEDY_BLOODTHIRST     = 900117,
 };
 
 // ---- Bloodthirst SpellFamilyFlags ----
@@ -66,6 +68,9 @@ constexpr float  CUSTOM_PARAGON_BONUS = 0.01f;    // +1% damage per Paragon leve
 // ---- Bladestorm CD Reduction constants ----
 constexpr uint32 SPELL_BLADESTORM     = 46927;
 constexpr int32  BLADESTORM_CD_REDUCE_MS = -500;  // -0.5 seconds (in ms)
+
+// ---- Speedy Bloodthirst constants ----
+constexpr uint32 SPELL_BLOODTHIRST    = 23881;
 
 // ============================================================
 //  SPELL 900106: Paragon Strike (SpellScript)
@@ -269,10 +274,60 @@ class spell_custom_bloody_whirlwind_consume : public SpellScript
     }
 };
 
+// ============================================================
+//  SPELL 900117: Speedy Bloodthirst (AuraScript)
+//  Passive proc aura: when Whirlwind (1680) is cast,
+//  resets the cooldown of Bloodthirst (23881).
+//  DBC: EFFECT_0 = SPELL_EFFECT_APPLY_AURA / SPELL_AURA_PROC_TRIGGER_SPELL
+//  Proc filtering via spell_proc (ProcFlags=0x10, SpellPhaseMask=FINISH).
+// ============================================================
+class spell_custom_speedy_bloodthirst : public AuraScript
+{
+    PrepareAuraScript(spell_custom_speedy_bloodthirst);
+
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+        if (!spellInfo)
+            return false;
+
+        // Only proc on Whirlwind (1680)
+        return spellInfo->Id == 1680;
+    }
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
+    {
+        PreventDefaultAction();
+
+        Player* player = GetTarget()->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        player->RemoveSpellCooldown(SPELL_BLOODTHIRST, true);
+
+        LOG_INFO("module", "mod-custom-spells: Player {} -> "
+            "Speedy Bloodthirst: Bloodthirst CD reset by Whirlwind",
+            player->GetName());
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(
+            spell_custom_speedy_bloodthirst::CheckProc);
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_speedy_bloodthirst::HandleProc,
+            EFFECT_0, SPELL_AURA_PROC_TRIGGER_SPELL);
+    }
+};
+
 void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
     RegisterSpellScript(spell_custom_bladestorm_cd_reduce);
     RegisterSpellScript(spell_custom_bloody_whirlwind_passive);
     RegisterSpellScript(spell_custom_bloody_whirlwind_consume);
+    RegisterSpellScript(spell_custom_speedy_bloodthirst);
 }
