@@ -40,7 +40,7 @@ mod-custom-spells/
 | Spell ID | Script Name | Type | Effect |
 |----------|-------------|------|--------|
 | 900106 | `spell_custom_paragon_strike` | SpellScript | SCHOOL_DAMAGE: Base 666 + 66% AP, +1%/Paragon level |
-| 900107 | `spell_custom_bladestorm_cd_reduce` | SpellScript | DUMMY: Each cast reduces Bladestorm (46927) CD by 0.5s |
+| 900107 | `spell_custom_bladestorm_cd_reduce` | AuraScript | PROC: On melee damage dealt → reduce Bladestorm (46927) CD by 0.5s |
 | 900116 | `spell_custom_bloody_whirlwind_passive` | AuraScript | PROC: On Bloodthirst hit → apply buff 900115 |
 | 1680 | `spell_custom_bloody_whirlwind_consume` | SpellScript | AFTER_CAST: Removes all 900115 stacks on Whirlwind cast |
 

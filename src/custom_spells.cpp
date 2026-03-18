@@ -122,21 +122,35 @@ class spell_custom_paragon_strike : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900107: Bladestorm CD Reduction (SpellScript)
-//  Each cast reduces the cooldown of Bladestorm (46927) by 0.5s.
-//  Uses SPELL_EFFECT_DUMMY as the DBC effect hook.
+//  SPELL 900107: Bladestorm CD Reduction (AuraScript)
+//  Passive proc aura: on melee damage dealt, reduces the
+//  cooldown of Bladestorm (46927) by 0.5s.
+//  DBC: EFFECT_0 = SPELL_EFFECT_APPLY_AURA / SPELL_AURA_DUMMY
+//  Proc filtering via spell_proc table (ProcFlags=0x14).
 // ============================================================
-class spell_custom_bladestorm_cd_reduce : public SpellScript
+class spell_custom_bladestorm_cd_reduce : public AuraScript
 {
-    PrepareSpellScript(spell_custom_bladestorm_cd_reduce);
+    PrepareAuraScript(spell_custom_bladestorm_cd_reduce);
 
-    void HandleDummy(SpellEffIndex /*effIndex*/)
+    bool CheckProc(ProcEventInfo& eventInfo)
     {
-        Unit* caster = GetCaster();
-        if (!caster)
+        // Only proc when Bladestorm is actually on cooldown
+        Player* player = GetTarget()->ToPlayer();
+        if (!player)
+            return false;
+
+        return player->HasSpellCooldown(SPELL_BLADESTORM);
+    }
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
+    {
+        PreventDefaultAction();
+
+        Unit* target = GetTarget();
+        if (!target)
             return;
 
-        Player* player = caster->ToPlayer();
+        Player* player = target->ToPlayer();
         if (!player)
             return;
 
@@ -152,9 +166,11 @@ class spell_custom_bladestorm_cd_reduce : public SpellScript
 
     void Register() override
     {
-        OnEffectHitTarget += SpellEffectFn(
-            spell_custom_bladestorm_cd_reduce::HandleDummy,
-            EFFECT_0, SPELL_EFFECT_DUMMY);
+        DoCheckProc += AuraCheckProcFn(
+            spell_custom_bladestorm_cd_reduce::CheckProc);
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_bladestorm_cd_reduce::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
     }
 };
 
