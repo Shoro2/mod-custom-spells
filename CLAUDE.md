@@ -9,12 +9,7 @@
 >
 > **Alle Änderungen an diesem oder den anderen Repos müssen dort geloggt werden.**
 >
-> **AI-Spell-Design-Prompts** (im share-public Repo):
-> - [`AI-Prompt-Gen.txt`](https://github.com/Shoro2/share-public/blob/main/AI-Prompt-Gen.txt) — Prompt für die **Neuerstellung** von Spells: Vollständiges `AiSpellDefinition`-JSON mit allen Feldern, Inferenz-Regeln für Damage, Targeting, Costs, Effects, WotLK-Balancing
-> - [`AI-Prompt-Mod.txt`](https://github.com/Shoro2/share-public/blob/main/AI-Prompt-Mod.txt) — Prompt für die **Modifikation** bestehender Spells: Nur geänderte Felder ausgeben, Snapshot als Source of Truth, keine Regenerierung unveränderter Effects
->
 > **Beim Arbeiten an Custom Spells beachten:**
-> - Erlaubte Werte für School, Mechanic, DispelType, PowerType, TargetType, Effect Types und Auras sind in diesen Dateien exakt definiert — keine eigenen Strings erfinden
 > - Numerische Werte (Damage, Healing, Absorption) sind immer **reale In-Game-Werte**, nicht interne DBC-Encodings (BasePoints = Spielerwert, Editor konvertiert zu DBC-Format: `EffectBasePoints = BasePoints - 1`)
 > - WotLK-Balancing beachten: Low-Level 30–150, Mid 200–600, High 800–2500, Boss 3000–10000+
 > - Spells haben max. 3 Effects (Effect1/2/3 in spell.dbc)
