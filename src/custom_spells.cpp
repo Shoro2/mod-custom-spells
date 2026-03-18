@@ -53,9 +53,9 @@ enum CustomSpellIds
 };
 
 // ---- Bloodthirst SpellFamilyFlags ----
-// Bloodthirst (23881): SpellFamilyName=4, SpellFamilyFlags[0]=0x40000000
+// Bloodthirst (23881): SpellFamilyName=4, SpellFamilyFlags[1]=0x00000400 (bit 42)
 constexpr uint32 SPELLFAMILY_WARRIOR_ID        = 4;
-constexpr uint32 BLOODTHIRST_FAMILY_FLAG       = 0x40000000;
+constexpr uint32 BLOODTHIRST_FAMILY_FLAG1      = 0x00000400;
 
 // ---- Paragon Strike constants ----
 constexpr uint32 AURA_PARAGON_LEVEL   = 100000;
@@ -161,8 +161,7 @@ class spell_custom_bladestorm_cd_reduce : public SpellScript
 // ============================================================
 //  SPELL 900116: Bloody Whirlwind Passive (AuraScript)
 //  DBC has the proc aura on EFFECT_1 (not EFFECT_0).
-//  The DBC Class Mask uses bit index 43 which doesn't match
-//  Bloodthirst's actual SpellFamilyFlags[0]=0x40000000 (bit 30).
+//  Bloodthirst (23881) SpellFamilyFlags[1]=0x00000400 (bit 42).
 //  This script explicitly filters procs to only fire on Bloodthirst.
 // ============================================================
 class spell_custom_bloody_whirlwind_passive : public AuraScript
@@ -184,11 +183,11 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
             spellInfo->Id, spellInfo->SpellFamilyName,
             spellInfo->SpellFamilyFlags[0], spellInfo->SpellFamilyFlags[1]);
 
-        // Only proc on Bloodthirst: Warrior family, flag bit 30
+        // Only proc on Bloodthirst: Warrior family, flags[1] bit 10
         if (spellInfo->SpellFamilyName != SPELLFAMILY_WARRIOR_ID)
             return false;
 
-        if (!(spellInfo->SpellFamilyFlags[0] & BLOODTHIRST_FAMILY_FLAG))
+        if (!(spellInfo->SpellFamilyFlags[1] & BLOODTHIRST_FAMILY_FLAG1))
             return false;
 
         LOG_INFO("module", "mod-custom-spells: 900116 CheckProc -> "
