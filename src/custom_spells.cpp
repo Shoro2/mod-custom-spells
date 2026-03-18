@@ -173,7 +173,16 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
     {
         SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
         if (!spellInfo)
+        {
+            LOG_INFO("module", "mod-custom-spells: 900116 CheckProc -> "
+                "NO spell info, returning false");
             return false;
+        }
+
+        LOG_INFO("module", "mod-custom-spells: 900116 CheckProc -> "
+            "spell {} family {} flags[0]=0x{:08X} flags[1]=0x{:08X}",
+            spellInfo->Id, spellInfo->SpellFamilyName,
+            spellInfo->SpellFamilyFlags[0], spellInfo->SpellFamilyFlags[1]);
 
         // Only proc on Bloodthirst: Warrior family, flag bit 30
         if (spellInfo->SpellFamilyName != SPELLFAMILY_WARRIOR_ID)
@@ -182,6 +191,8 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
         if (!(spellInfo->SpellFamilyFlags[0] & BLOODTHIRST_FAMILY_FLAG))
             return false;
 
+        LOG_INFO("module", "mod-custom-spells: 900116 CheckProc -> "
+            "PASSED, Bloodthirst matched!");
         return true;
     }
 
@@ -193,12 +204,11 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
         if (!caster)
             return;
 
-        caster->CastSpell(caster, SPELL_BLOODY_WHIRLWIND_BUFF, true);
+        LOG_INFO("module", "mod-custom-spells: 900116 HandleProc -> "
+            "casting {} on {}",
+            SPELL_BLOODY_WHIRLWIND_BUFF, caster->GetName());
 
-        if (Player* player = caster->ToPlayer())
-            LOG_INFO("module", "mod-custom-spells: Player {} -> "
-                "Bloody Whirlwind passive procced, applying {} buff",
-                player->GetName(), SPELL_BLOODY_WHIRLWIND_BUFF);
+        caster->CastSpell(caster, SPELL_BLOODY_WHIRLWIND_BUFF, true);
     }
 
     void Register() override
