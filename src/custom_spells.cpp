@@ -158,7 +158,7 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
         return player->HasSpellCooldown(SPELL_BLADESTORM);
     }
 
-    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
+    void HandleProc(ProcEventInfo& /*eventInfo*/)
     {
         PreventDefaultAction();
 
@@ -184,9 +184,8 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
     {
         DoCheckProc += AuraCheckProcFn(
             spell_custom_bladestorm_cd_reduce::CheckProc);
-        OnEffectProc += AuraEffectProcFn(
-            spell_custom_bladestorm_cd_reduce::HandleProc,
-            EFFECT_0, SPELL_AURA_DUMMY);
+        OnProc += AuraProcFn(
+            spell_custom_bladestorm_cd_reduce::HandleProc);
     }
 };
 
@@ -302,7 +301,7 @@ class spell_custom_speedy_bloodthirst : public AuraScript
         return spellInfo->Id == 1680;
     }
 
-    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
+    void HandleProc(ProcEventInfo& /*eventInfo*/)
     {
         PreventDefaultAction();
 
@@ -329,9 +328,8 @@ class spell_custom_speedy_bloodthirst : public AuraScript
     {
         DoCheckProc += AuraCheckProcFn(
             spell_custom_speedy_bloodthirst::CheckProc);
-        OnEffectProc += AuraEffectProcFn(
-            spell_custom_speedy_bloodthirst::HandleProc,
-            EFFECT_0, SPELL_AURA_PROC_TRIGGER_SPELL);
+        OnProc += AuraProcFn(
+            spell_custom_speedy_bloodthirst::HandleProc);
     }
 };
 
