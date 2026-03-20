@@ -391,12 +391,14 @@ class spell_custom_speedy_bloodthirst : public AuraScript
 //  SPELL 900120: WW Boosted Overpower (SpellScript)
 //  Autocast by Whirlwind when only 1 target is hit.
 //  Multiplies DBC base damage by Paragon bonus: +1% per level.
+//  Uses OnHit instead of OnEffectHitTarget to avoid DBC effect
+//  type validation (the DBC effect may not be SCHOOL_DAMAGE).
 // ============================================================
 class spell_custom_ww_overpower : public SpellScript
 {
     PrepareSpellScript(spell_custom_ww_overpower);
 
-    void HandleDamage(SpellEffIndex /*effIndex*/)
+    void HandleHit()
     {
         Unit* caster = GetCaster();
         Unit* target = GetHitUnit();
@@ -420,9 +422,7 @@ class spell_custom_ww_overpower : public SpellScript
 
     void Register() override
     {
-        OnEffectHitTarget += SpellEffectFn(
-            spell_custom_ww_overpower::HandleDamage,
-            EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+        OnHit += SpellHitFn(spell_custom_ww_overpower::HandleHit);
     }
 };
 
@@ -430,12 +430,14 @@ class spell_custom_ww_overpower : public SpellScript
 //  SPELL 900121: WW Boosted Slam (SpellScript)
 //  Autocast by Whirlwind when only 1 target is hit.
 //  Multiplies DBC base damage by Paragon bonus: +1% per level.
+//  Uses OnHit instead of OnEffectHitTarget to avoid DBC effect
+//  type validation (the DBC effect may not be SCHOOL_DAMAGE).
 // ============================================================
 class spell_custom_ww_slam : public SpellScript
 {
     PrepareSpellScript(spell_custom_ww_slam);
 
-    void HandleDamage(SpellEffIndex /*effIndex*/)
+    void HandleHit()
     {
         Unit* caster = GetCaster();
         Unit* target = GetHitUnit();
@@ -459,9 +461,7 @@ class spell_custom_ww_slam : public SpellScript
 
     void Register() override
     {
-        OnEffectHitTarget += SpellEffectFn(
-            spell_custom_ww_slam::HandleDamage,
-            EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+        OnHit += SpellHitFn(spell_custom_ww_slam::HandleHit);
     }
 };
 
