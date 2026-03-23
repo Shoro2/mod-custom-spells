@@ -456,6 +456,132 @@ class spell_custom_wlk_sacrifice_all : public SpellScript
 //  End Warlock Demonology section
 // ============================================================
 
+// ============================================================
+//  WARLOCK DESTRUCTION
+// ============================================================
+
+// ============================================================
+//  900866: Shadow Bolt +9 targets
+//  Hooked on Shadow Bolt (all ranks via -47809). After hitting
+//  main target, deals same damage to up to 9 additional enemies
+//  within 10yd via helper spell 900871.
+// ============================================================
+class spell_custom_wlk_sb_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_sb_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_WLK_DEST_SB_AOE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(target, player, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(target, targets, check);
+        Cell::VisitObjects(target, searcher, 10.0f);
+        targets.remove(target);
+
+        uint32 count = 0;
+        for (Unit* extra : targets)
+        {
+            if (count >= 9)
+                break;
+            if (!extra->IsAlive() || !player->IsValidAttackTarget(extra))
+                continue;
+
+            player->CastCustomSpell(SPELL_WLK_DEST_SB_HELPER, SPELLVALUE_BASE_POINT0,
+                damage, extra, true);
+            ++count;
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_wlk_sb_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  900870: Chaos Bolt +9 targets
+//  Hooked on Chaos Bolt (all ranks via -59172). After hitting
+//  main target, deals same damage to up to 9 additional enemies
+//  within 10yd via helper spell 900872. Helper has
+//  SPELL_ATTR0_NO_IMMUNITIES to mimic Chaos Bolt's resistance
+//  ignoring behavior.
+// ============================================================
+class spell_custom_wlk_cb_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_cb_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_WLK_DEST_CB_AOE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(target, player, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(target, targets, check);
+        Cell::VisitObjects(target, searcher, 10.0f);
+        targets.remove(target);
+
+        uint32 count = 0;
+        for (Unit* extra : targets)
+        {
+            if (count >= 9)
+                break;
+            if (!extra->IsAlive() || !player->IsValidAttackTarget(extra))
+                continue;
+
+            player->CastCustomSpell(SPELL_WLK_DEST_CB_HELPER, SPELLVALUE_BASE_POINT0,
+                damage, extra, true);
+            ++count;
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_wlk_cb_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  End Warlock Destruction section
+// ============================================================
+
 void AddWarlockSpellsScripts()
 {
     // Warlock Affliction
@@ -469,4 +595,8 @@ void AddWarlockSpellsScripts()
     RegisterSpellScript(spell_custom_wlk_imp_fb_aoe);
     RegisterSpellScript(spell_custom_wlk_fg_unlim);
     RegisterSpellScript(spell_custom_wlk_sacrifice_all);
+
+    // Warlock Destruction
+    RegisterSpellScript(spell_custom_wlk_sb_aoe);
+    RegisterSpellScript(spell_custom_wlk_cb_aoe);
 }

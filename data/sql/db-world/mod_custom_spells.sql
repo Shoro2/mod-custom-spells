@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771, 900800, 900802, 900834, -47964, 47994, 18788);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771, 900800, 900802, 900834, -47964, 47994, 18788, -47809, -59172);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -122,7 +122,14 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Warlock Demonology: Felguard Cleave unlimited targets
 (47994, 'spell_custom_wlk_fg_unlim'),
 -- Warlock Demonology: Demonic Sacrifice grants ALL bonuses
-(18788, 'spell_custom_wlk_sacrifice_all');
+(18788, 'spell_custom_wlk_sacrifice_all'),
+-- Warlock Destruction: Shadow Bolt +9 targets (hooked on all ranks)
+(-47809, 'spell_custom_wlk_sb_aoe'),
+-- Warlock Destruction: Chaos Bolt +9 targets (hooked on all ranks)
+(-59172, 'spell_custom_wlk_cb_aoe');
+-- 900867: Shadow Bolt +50% → DBC only
+-- 900868: Chaos Bolt +50% → DBC only
+-- 900869: Chaos Bolt CD -2s → DBC only
 -- 900833: Meta Kill Extend → PlayerScript (no spell_script_names needed)
 -- 900835: Lesser Demon Spawn → UnitScript (no spell_script_names needed)
 -- 900836: Imp Firebolt +50% → DBC only
@@ -1010,3 +1017,32 @@ INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`,
 (900836, 0, 18399, 0.7, 1, 12340),
 -- Lesser Voidwalker: Voidwalker model (1132), smaller scale
 (900837, 0, 1132, 0.6, 1, 12340);
+
+-- ============================================================
+-- Warlock Destruction: spell_dbc entries (900866-900872)
+-- SpellFamilyName=5 (Warlock)
+-- Shadow Bolt SpellFamilyFlags[0]=0x1 (verify!)
+-- Chaos Bolt SpellFamilyFlags[1]=0x1000000 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900866, 900867, 900868, 900869, 900870, 900871, 900872);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900866: Shadow Bolt +9 targets (DUMMY marker, C++ on -47809)
+(900866, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Destro: SB AoE', 0x003F3F),
+-- 900867: Shadow Bolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x1 targets Shadow Bolt (verify!)
+(900867, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 0, 5, 313, 0, 0, 'Destro: SB +50%', 0x003F3F),
+-- 900868: Chaos Bolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskB=0x1000000 targets Chaos Bolt (verify!)
+(900868, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0, 0x1000000, 0, 5, 313, 0, 0, 'Destro: CB +50%', 0x003F3F),
+-- 900869: Chaos Bolt CD -2s (ADD_FLAT_MODIFIER + SPELLMOD_COOLDOWN)
+-- EffectSpellClassMaskB=0x1000000 targets Chaos Bolt (verify!)
+(900869, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, -2000, 1, 107, 11, 0, 0, 0x1000000, 0, 5, 313, 0, 0, 'Destro: CB CD -2s', 0x003F3F),
+-- 900870: Chaos Bolt +9 targets (DUMMY marker, C++ on -59172)
+(900870, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Destro: CB AoE', 0x003F3F),
+-- 900871: Helper - Shadow Bolt bounce (instant Shadow single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=32 (Shadow)
+(900871, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Bolt Bounce', 0x003F3F),
+-- 900872: Helper - Chaos Bolt bounce (instant Fire single-target damage, ignores resists)
+-- Attributes=0x10100000 (NOT_SHAPESHIFT + UNAFFECTED_BY_INVULNERABILITY)
+-- SchoolMask=4 (Fire, same as Chaos Bolt)
+(900872, 0x10100000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 4, 0, 'Chaos Bolt Bounce', 0x003F3F);

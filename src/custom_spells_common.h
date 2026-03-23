@@ -231,6 +231,15 @@ enum CustomSpellIds
     SPELL_WLK_DEMO_META_AOE_HELPER     = 900842,
     SPELL_WLK_DEMO_META_HEAL_HELPER    = 900843,
 
+    // ---- Warlock Destruction (900866-900899) ----
+    SPELL_WLK_DEST_SB_AOE              = 900866,
+    SPELL_WLK_DEST_SB_DMG              = 900867,
+    SPELL_WLK_DEST_CB_DMG              = 900868,
+    SPELL_WLK_DEST_CB_CD               = 900869,
+    SPELL_WLK_DEST_CB_AOE              = 900870,
+    SPELL_WLK_DEST_SB_HELPER           = 900871,
+    SPELL_WLK_DEST_CB_HELPER           = 900872,
+
     // ---- Druid Balance (901000-901032) ----
     SPELL_BAL_MF_AOE_PASSIVE            = 901000,
     SPELL_BAL_MF_DMG_PASSIVE            = 901001,
@@ -403,6 +412,10 @@ constexpr uint32 NPC_LESSER_IMP            = 900835; // Lesser Imp
 constexpr uint32 NPC_LESSER_FELGUARD       = 900836; // Lesser Felguard
 constexpr uint32 NPC_LESSER_VOIDWALKER     = 900837; // Lesser Voidwalker
 // Corruption SpellFamilyFlags[0] = 0x2 (verify!)
+constexpr uint32 SPELL_SHADOW_BOLT_R13     = 47809;  // Shadow Bolt highest rank
+constexpr uint32 SPELL_CHAOS_BOLT_R4       = 59172;  // Chaos Bolt highest rank
+// Shadow Bolt SpellFamilyFlags[0] = 0x1 (verify!)
+// Chaos Bolt SpellFamilyFlags[1] = 0x1000000 (verify!)
 // Warlock DoTs: Corruption, Curse of Agony, Immolate, Unstable Affliction, Seed of Corruption
 
 // Per-class registration functions
