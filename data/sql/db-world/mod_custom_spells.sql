@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -40,6 +40,8 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900304, 'spell_custom_dkb_deathcoil_proc'),
 -- DK Frost: Frost Wyrm (on Raise Dead 46584)
 (46584, 'spell_custom_dkf_frost_wyrm'),
+-- DK Frost: Frost Breath damage handler
+(900368, 'spell_custom_frost_breath'),
 -- DK Unholy: DoT → Shadow AoE proc passive
 (900366, 'spell_custom_dku_dot_aoe');
 
@@ -270,3 +272,62 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900367: Shadow AoE helper (instant AoE Shadow damage around target)
 -- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=32(Shadow), 8yd radius
 (900367, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 150, 600, 15, 0, 0, 0, 0, 0, 15, 2770, 32, 0, 'Shadow Eruption', 0x003F3F);
+
+-- 900368: Frost Breath (2s cast, cone 20yd, Frost damage + slow)
+-- Effect1=SCHOOL_DAMAGE(2), Target=CONE_ENEMY(24), SchoolMask=16(Frost)
+-- Effect2=APPLY_AURA(6) AURA_MOD_DECREASE_SPEED(11) -50% for 6s
+-- CastingTimeIndex=16 (2000ms), DurationIndex=18 (6s), RangeIndex=4 (30yd)
+DELETE FROM `spell_dbc` WHERE `ID` = 900368;
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`,
+    `CastingTimeIndex`, `DurationIndex`, `RangeIndex`,
+    `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`,
+    `EffectAura_1`, `EffectMiscValue_1`, `EffectRadiusIndex_1`,
+    `Effect_2`, `EffectDieSides_2`, `EffectBasePoints_2`, `ImplicitTargetA_2`,
+    `EffectAura_2`, `EffectMiscValue_2`, `EffectRadiusIndex_2`,
+    `SpellFamilyName`, `SpellIconID`, `SchoolMask`,
+    `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+(900368, 0x10000000, 0, 0, 0,
+ 16, 18, 4,
+ 2, 1000, 5000, 24,
+ 0, 0, 15,
+ 6, 0, -50, 24,
+ 11, 0, 15,
+ 15, 3223, 16,
+ 'Frost Breath', 0x003F3F);
+
+-- ============================================================
+-- DK Frost: Frost Wyrm creature_template (NPC 900333)
+-- Stats: 2× Gargoyle HP, Level 80, follows + casts Frost Breath
+-- ============================================================
+DELETE FROM `creature_template` WHERE `entry` = 900333;
+INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`,
+    `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`,
+    `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`,
+    `detection_range`, `scale`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
+    `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`,
+    `dynamicflags`, `family`, `trainer_type`, `trainer_spell`, `trainer_class`, `trainer_race`,
+    `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`,
+    `PetSpellDataId`, `VehicleId`, `mingold`, `maxgold`,
+    `AIName`, `MovementType`, `HoverHeight`,
+    `HealthModifier`, `ManaModifier`, `ArmorModifier`,
+    `ExperienceModifier`, `RacialLeader`, `movementId`,
+    `RegenHealth`, `mechanic_immune_mask`, `spell_school_immune_mask`, `flags_extra`,
+    `ScriptName`, `VerifiedBuild`) VALUES
+(900333, 0, 0, 0,
+ 0, 0, 'Frost Wyrm', '', '', 0,
+ 80, 80, 2, 14, 0, 1, 1.14286,
+ 20, 0.5, 1, 4, 1, 2000,
+ 2000, 1, 1, 1, 0, 2048,
+ 0, 0, 0, 0, 0, 0,
+ 6, 12288, 0, 0, 0,
+ 0, 0, 0, 0,
+ '', 0, 1,
+ 2, 1, 1,
+ 0, 0, 0,
+ 1, 8388624, 0, 0,
+ 'npc_custom_frost_wyrm', 12340);
+
+-- Frost Wyrm display model (Sindragosa-style, scaled down)
+DELETE FROM `creature_template_model` WHERE `CreatureID` = 900333;
+INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
+(900333, 0, 26752, 1, 1, 12340);

@@ -28,6 +28,9 @@
 #include "CellImpl.h"
 #include "Group.h"
 #include "GroupReference.h"
+#include "ScriptedCreature.h"
+#include "CreatureScript.h"
+#include "PetDefines.h"
 
 /*
  * ==========================================================================
@@ -131,7 +134,8 @@ constexpr uint32 SPELL_DK_DEATH_COIL_DMG    = 47632; // Death Coil damage effect
 constexpr uint32 SPELL_DK_RAISE_DEAD        = 46584;
 constexpr uint32 NPC_DK_RUNE_WEAPON         = 27893;
 constexpr uint32 NPC_DK_GHOUL               = 26125;
-constexpr uint32 NPC_DK_FROST_WYRM          = 26125; // Reuses ghoul entry; DBC DisplayID patch needed
+constexpr uint32 NPC_DK_FROST_WYRM          = 900333; // Custom Frost Wyrm creature
+constexpr uint32 SPELL_FROST_BREATH         = 900368; // Frost Wyrm cone breath
 
 // ---- Bloodthirst SpellFamilyFlags ----
 // Bloodthirst (23881): SpellFamilyName=4, SpellFamilyFlags[1]=0x00000400 (bit 42)
@@ -1439,11 +1443,9 @@ class spell_custom_dkb_deathcoil_proc : public AuraScript
 
 // ============================================================
 //  SPELL 900333: Replace Ghoul with Frost Wyrm (SpellScript)
-//  Hooked on Raise Dead (46584). After cast, if the player
-//  has passive 900333, replace the summoned ghoul's display.
-//  NOTE: Requires a custom Frost Wyrm NPC or DisplayID patch.
-//  For now, just logs and marks — full creature swap needs
-//  creature_template entry.
+//  Hooked on Raise Dead (46584). After cast, despawns the
+//  ghoul and summons a custom Frost Wyrm (NPC 900333) instead.
+//  The Frost Wyrm has 2× Gargoyle HP and casts Frost Breath.
 // ============================================================
 class spell_custom_dkf_frost_wyrm : public SpellScript
 {
@@ -1465,28 +1467,193 @@ class spell_custom_dkf_frost_wyrm : public SpellScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        // Find the freshly summoned ghoul and change its display
-        // Frost Wyrm DisplayID: 26752 (Sindragosa-style smaller wyrm)
-        constexpr uint32 FROST_WYRM_DISPLAY_ID = 26752;
-        constexpr float  FROST_WYRM_SCALE      = 0.5f;
-
+        // Find and despawn the ghoul
         for (auto itr = player->m_Controlled.begin(); itr != player->m_Controlled.end(); ++itr)
         {
-            if ((*itr)->GetEntry() == NPC_DK_GHOUL)
+            if ((*itr)->GetEntry() == NPC_DK_GHOUL && (*itr)->ToCreature())
             {
-                (*itr)->SetDisplayId(FROST_WYRM_DISPLAY_ID);
-                (*itr)->SetObjectScale(FROST_WYRM_SCALE);
-                LOG_INFO("module",
-                    "mod-custom-spells: Player {} -> Ghoul replaced with Frost Wyrm display",
-                    player->GetName());
+                (*itr)->ToCreature()->DespawnOrUnsummon();
                 break;
             }
+        }
+
+        // Summon Frost Wyrm as guardian (follows + fights)
+        if (Creature* wyrm = player->SummonCreature(NPC_DK_FROST_WYRM,
+            player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(),
+            player->GetOrientation(), TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000))
+        {
+            wyrm->SetOwnerGUID(player->GetGUID());
+            wyrm->SetCreatorGUID(player->GetGUID());
+            wyrm->SetFaction(player->GetFaction());
+            wyrm->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
+
+            if (Unit* victim = player->GetVictim())
+            {
+                wyrm->Attack(victim, true);
+                wyrm->GetMotionMaster()->MoveChase(victim);
+            }
+
+            LOG_INFO("module",
+                "mod-custom-spells: Player {} -> Frost Wyrm (NPC {}) summoned",
+                player->GetName(), NPC_DK_FROST_WYRM);
         }
     }
 
     void Register() override
     {
         AfterCast += SpellCastFn(spell_custom_dkf_frost_wyrm::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  NPC 900333: Frost Wyrm CreatureScript
+//  AI: Follows owner, auto-casts Frost Breath (900368) on
+//  victim. Frost Breath is a 2s cast, cone 20yd, deals
+//  5000 base damage + AP scaling, slows targets.
+// ============================================================
+struct npc_custom_frost_wyrm : public ScriptedAI
+{
+    npc_custom_frost_wyrm(Creature* creature) : ScriptedAI(creature)
+    {
+        _breathTimer = 0;
+        _selectionTimer = 0;
+    }
+
+    void InitializeAI() override
+    {
+        ScriptedAI::InitializeAI();
+        me->SetReactState(REACT_AGGRESSIVE);
+
+        Unit* owner = me->GetOwner();
+        if (!owner)
+            return;
+
+        if (Unit* victim = owner->GetVictim())
+        {
+            me->Attack(victim, true);
+            me->GetMotionMaster()->MoveChase(victim);
+        }
+        else
+        {
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, 0.0f);
+        }
+    }
+
+    void IsSummonedBy(WorldObject* summoner) override
+    {
+        if (!summoner || !summoner->ToUnit())
+            return;
+
+        Unit* owner = summoner->ToUnit();
+        if (Unit* victim = owner->GetVictim())
+        {
+            me->Attack(victim, true);
+            me->GetMotionMaster()->MoveChase(victim);
+        }
+    }
+
+    void SelectTarget()
+    {
+        Unit* owner = me->GetOwner();
+        if (!owner)
+            return;
+
+        Player* player = owner->ToPlayer();
+        if (!player)
+            return;
+
+        // Follow player's target selection
+        Unit* selection = player->GetSelectedUnit();
+        if (selection && selection != me->GetVictim() && me->IsValidAttackTarget(selection))
+        {
+            me->GetMotionMaster()->Clear(false);
+            AttackStart(selection);
+        }
+        else if (!me->GetVictim() || !me->GetVictim()->IsAlive())
+        {
+            me->CombatStop(true);
+            me->GetMotionMaster()->Clear(false);
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, 0.0f);
+        }
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        _selectionTimer += diff;
+        if (_selectionTimer >= 1000)
+        {
+            SelectTarget();
+            _selectionTimer = 0;
+        }
+
+        if (!UpdateVictim())
+            return;
+
+        _breathTimer += diff;
+
+        // Cast Frost Breath every ~4s (2s cast + 2s gap)
+        if (_breathTimer >= 4000)
+        {
+            if (!me->HasUnitState(UNIT_STATE_CASTING))
+            {
+                // Scale damage with owner's AP
+                Unit* owner = me->GetOwner();
+                if (owner)
+                {
+                    float ap = owner->GetTotalAttackPowerValue(BASE_ATTACK);
+                    int32 damage = 5000 + static_cast<int32>(ap * 0.5f);
+                    me->CastCustomSpell(me->GetVictim(), SPELL_FROST_BREATH,
+                        &damage, nullptr, nullptr, false);
+                }
+                else
+                {
+                    DoCastVictim(SPELL_FROST_BREATH);
+                }
+                _breathTimer = 0;
+            }
+        }
+
+        DoMeleeAttackIfReady();
+    }
+
+    void JustDied(Unit* /*who*/) override
+    {
+        if (me->IsSummon())
+            me->ToTempSummon()->UnSummon();
+    }
+
+private:
+    uint32 _breathTimer;
+    uint32 _selectionTimer;
+};
+
+// ============================================================
+//  SPELL 900368: Frost Breath damage handler (SpellScript)
+//  Overrides damage with 5000 base + 50% owner AP scaling.
+// ============================================================
+class spell_custom_frost_breath : public SpellScript
+{
+    PrepareSpellScript(spell_custom_frost_breath);
+
+    void HandleDamage(SpellEffIndex /*effIndex*/)
+    {
+        Unit* caster = GetCaster();
+        if (!caster)
+            return;
+
+        Unit* owner = caster->GetOwner();
+        if (!owner)
+            return;
+
+        float ap = owner->GetTotalAttackPowerValue(BASE_ATTACK);
+        int32 damage = 5000 + static_cast<int32>(ap * 0.5f);
+        SetHitDamage(damage);
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(spell_custom_frost_breath::HandleDamage,
+            EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
     }
 };
 
@@ -1572,6 +1739,8 @@ void AddCustomSpellsScripts()
 
     // DK Frost
     RegisterSpellScript(spell_custom_dkf_frost_wyrm);
+    RegisterCreatureAI(npc_custom_frost_wyrm);
+    RegisterSpellScript(spell_custom_frost_breath);
 
     // DK Unholy
     RegisterSpellScript(spell_custom_dku_dot_aoe);

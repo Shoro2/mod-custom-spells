@@ -547,7 +547,8 @@ Spell IDs 900200-900210 (Paladin Holy + Helper) existieren in `spell_dbc` Tabell
 Spell IDs 900234-900241 (Paladin Prot) existieren in `spell_dbc` Tabelle und sind implementiert.
 Spell IDs 900268-900275 (Paladin Ret + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
 Spell IDs 900300-900304 (DK Blood) existieren in `spell_dbc` Tabelle und sind implementiert.
-Spell IDs 900333 (DK Frost) existiert in `spell_dbc` Tabelle und ist implementiert.
+Spell IDs 900333, 900368 (DK Frost + Frost Breath helper) existieren in `spell_dbc` Tabelle und sind implementiert.
+NPC 900333 (Frost Wyrm) existiert in `creature_template` mit AI-Script `npc_custom_frost_wyrm`.
 Spell IDs 900366-900367 (DK Unholy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
 
 Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
@@ -713,7 +714,8 @@ Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900333 | Ghoul → Frost Wyrm | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf Raise Dead (46584): `AfterCast` → SetDisplayId(26752) + SetObjectScale(0.5) auf Ghoul (NPC 26125). Prüft `HasAura(900333)`. **Hinweis**: Nur visueller Replace. Für eigene AI/Spells braucht es custom creature_template. |
+| 1 | 900333 | Ghoul → Frost Wyrm | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf Raise Dead (46584): `AfterCast` → Despawns Ghoul, SummonCreature(900333 Frost Wyrm). Prüft `HasAura(900333)`. Frost Wyrm NPC hat eigene AI (`npc_custom_frost_wyrm`), 2× Gargoyle HP, castet Frost Breath. |
+| H1 | 900368 | Frost Breath | DBC+C++ | implementiert | 2s Cast, Cone 20yd, 5000+1000rnd Frost Damage + 50% Slow 6s. C++ `spell_custom_frost_breath` skaliert Damage mit Owner AP (5000 + 50% AP). |
 
 ### DK — Unholy (900366-900399)
 
@@ -722,7 +724,7 @@ Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
 | 1 | 900366 | DoTs → Shadow AoE proc | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x400000 (DONE_PERIODIC), 20% Chance, 2s ICD. C++ HandleProc → CastSpell(900367, triggered) auf DoT-Target. |
 | H1 | 900367 | Shadow Eruption (helper) | DBC | implementiert | Instant AoE Shadow Damage. Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=32(Shadow), BasePoints=600+150rnd, 8yd. |
 
-> **Hinweis DK**: Heart Strike SpellFamilyFlags[0]=0x2000000 verifizieren! 900300 (3 DRW) castet DRW nochmal als triggered — kann zu Aura-Stacking-Issues führen wenn nicht korrekt behandelt. 900333 (Frost Wyrm) ist aktuell nur ein DisplayID-Swap; für echte Frost-AI braucht es creature_template + CreatureScript.
+> **Hinweis DK**: Heart Strike SpellFamilyFlags[0]=0x2000000 verifizieren! 900300 (3 DRW) castet DRW nochmal als triggered — kann zu Aura-Stacking-Issues führen wenn nicht korrekt behandelt. 900333 (Frost Wyrm) hat eigene creature_template (NPC 900333) + CreatureScript (`npc_custom_frost_wyrm`) mit Frost Breath AI. DisplayID 26752 (Sindragosa-style), Scale 0.5, 2× Gargoyle HP.
 
 ---
 
