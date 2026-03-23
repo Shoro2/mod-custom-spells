@@ -448,7 +448,7 @@ DELETE FROM `creature_template` WHERE `entry` = 900333;
 INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`,
     `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`,
     `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`,
-    `speed_swim`, `speed_flight`, `detection_range`, `scale`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
+    `speed_swim`, `speed_flight`, `detection_range`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
     `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`,
     `dynamicflags`, `family`,
     `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`,
@@ -456,12 +456,12 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
     `AIName`, `MovementType`, `HoverHeight`,
     `HealthModifier`, `ManaModifier`, `ArmorModifier`,
     `ExperienceModifier`, `RacialLeader`, `movementId`,
-    `RegenHealth`, `mechanic_immune_mask`, `spell_school_immune_mask`, `flags_extra`,
+    `RegenHealth`, `CreatureImmunitiesId`, `flags_extra`,
     `ScriptName`, `VerifiedBuild`) VALUES
 (900333, 0, 0, 0,
  0, 0, 'Frost Wyrm', '', '', 0,
  80, 80, 2, 14, 0, 1, 1.14286,
- 1, 1, 20, 0.5, 1, 4, 1, 2000,
+ 1, 1, 20, 1, 4, 1, 2000,
  2000, 1, 1, 1, 0, 2048,
  0, 0,
  6, 12288, 0, 0, 0,
@@ -469,7 +469,7 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
  '', 0, 1,
  2, 1, 1,
  0, 0, 0,
- 1, 8388624, 0, 0,
+ 1, 0, 0,
  'npc_custom_frost_wyrm', 12340);
 
 -- Frost Wyrm display model (Sindragosa-style, scaled down)
@@ -556,7 +556,7 @@ DELETE FROM `creature_template` WHERE `entry` = 900436;
 INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`,
     `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`,
     `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`,
-    `speed_swim`, `speed_flight`, `detection_range`, `scale`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
+    `speed_swim`, `speed_flight`, `detection_range`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
     `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`,
     `dynamicflags`, `family`,
     `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`,
@@ -564,12 +564,12 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
     `AIName`, `MovementType`, `HoverHeight`,
     `HealthModifier`, `ManaModifier`, `ArmorModifier`,
     `ExperienceModifier`, `RacialLeader`, `movementId`,
-    `RegenHealth`, `mechanic_immune_mask`, `spell_school_immune_mask`, `flags_extra`,
+    `RegenHealth`, `CreatureImmunitiesId`, `flags_extra`,
     `ScriptName`, `VerifiedBuild`) VALUES
 (900436, 0, 0, 0,
  0, 0, 'Spirit Wolf', '', '', 0,
  80, 80, 2, 14, 0, 1, 1.14286,
- 1, 1, 20, 0.7, 0, 0, 0.5, 1500,
+ 1, 1, 20, 0, 0, 0.5, 1500,
  2000, 1, 1, 1, 0, 2048,
  0, 0,
  1, 0, 0, 0, 0,
@@ -577,7 +577,7 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
  '', 0, 1,
  0.5, 0, 0.5,
  0, 0, 0,
- 1, 0, 0, 0,
+ 1, 0, 0,
  '', 12340);
 
 -- Spirit Wolf display model (same as Feral Spirit wolves)
@@ -718,7 +718,7 @@ DELETE FROM `creature_template` WHERE `entry` = 901066;
 INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`,
     `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`,
     `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`,
-    `speed_swim`, `speed_flight`, `detection_range`, `scale`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
+    `speed_swim`, `speed_flight`, `detection_range`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
     `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`,
     `dynamicflags`, `family`,
     `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`,
@@ -726,12 +726,12 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
     `AIName`, `MovementType`, `HoverHeight`,
     `HealthModifier`, `ManaModifier`, `ArmorModifier`,
     `ExperienceModifier`, `RacialLeader`, `movementId`,
-    `RegenHealth`, `mechanic_immune_mask`, `spell_school_immune_mask`, `flags_extra`,
+    `RegenHealth`, `CreatureImmunitiesId`, `flags_extra`,
     `ScriptName`, `VerifiedBuild`) VALUES
 (901066, 0, 0, 0,
  0, 0, 'Healing Treant', '', '', 0,
  80, 80, 2, 14, 0, 1, 1.14286,
- 1, 1, 20, 0.8, 0, 0, 0.5, 2000,
+ 1, 1, 20, 0, 0, 0.5, 2000,
  2000, 1, 1, 1, 0, 2048,
  0, 0,
  4, 0, 0, 0, 0,
@@ -739,7 +739,7 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
  '', 0, 1,
  0.5, 0, 0.5,
  0, 0, 0,
- 1, 0, 0, 0,
+ 1, 0, 0,
  '', 12340);
 
 -- Treant display model (Force of Nature treant model)
@@ -1000,7 +1000,7 @@ DELETE FROM `creature_template` WHERE `entry` IN (900835, 900836, 900837);
 INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`,
     `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`,
     `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`,
-    `speed_swim`, `speed_flight`, `detection_range`, `scale`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
+    `speed_swim`, `speed_flight`, `detection_range`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
     `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`,
     `dynamicflags`, `family`,
     `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`,
@@ -1008,13 +1008,13 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
     `AIName`, `MovementType`, `HoverHeight`,
     `HealthModifier`, `ManaModifier`, `ArmorModifier`,
     `ExperienceModifier`, `RacialLeader`, `movementId`,
-    `RegenHealth`, `mechanic_immune_mask`, `spell_school_immune_mask`, `flags_extra`,
+    `RegenHealth`, `CreatureImmunitiesId`, `flags_extra`,
     `ScriptName`, `VerifiedBuild`) VALUES
 -- Lesser Imp: small fire demon, 50% HP, 50% damage
 (900835, 0, 0, 0,
  0, 0, 'Lesser Imp', '', '', 0,
  80, 80, 2, 14, 0, 1, 1.14286,
- 1, 1, 20, 0.5, 0, 0, 0.5, 1500,
+ 1, 1, 20, 0, 0, 0.5, 1500,
  2000, 1, 1, 1, 0, 2048,
  0, 0,
  3, 0, 0, 0, 0,
@@ -1022,13 +1022,13 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
  '', 0, 1,
  0.3, 0.3, 0.3,
  0, 0, 0,
- 1, 0, 0, 0,
+ 1, 0, 0,
  '', 12340),
 -- Lesser Felguard: melee demon, 50% HP, 50% damage
 (900836, 0, 0, 0,
  0, 0, 'Lesser Felguard', '', '', 0,
  80, 80, 2, 14, 0, 1, 1.14286,
- 1, 1, 20, 0.7, 0, 0, 0.5, 2000,
+ 1, 1, 20, 0, 0, 0.5, 2000,
  2000, 1, 1, 1, 0, 2048,
  0, 0,
  3, 0, 0, 0, 0,
@@ -1036,13 +1036,13 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
  '', 0, 1,
  0.5, 0.3, 0.5,
  0, 0, 0,
- 1, 0, 0, 0,
+ 1, 0, 0,
  '', 12340),
 -- Lesser Voidwalker: tanky demon, 50% HP, low damage
 (900837, 0, 0, 0,
  0, 0, 'Lesser Voidwalker', '', '', 0,
  80, 80, 2, 14, 0, 1, 1.14286,
- 1, 1, 20, 0.6, 0, 0, 0.3, 2000,
+ 1, 1, 20, 0, 0, 0.3, 2000,
  2000, 1, 1, 1, 0, 2048,
  0, 0,
  3, 0, 0, 0, 0,
@@ -1050,7 +1050,7 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
  '', 0, 1,
  0.6, 0.3, 0.6,
  0, 0, 0,
- 1, 0, 0, 0,
+ 1, 0, 0,
  '', 12340);
 
 -- Lesser Demon display models
