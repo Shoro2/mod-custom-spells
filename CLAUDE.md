@@ -69,80 +69,80 @@ mod-custom-spells/
 
 ## DBC Status
 
-Spell IDs 900100-900121 already exist in `Spell.dbc` (22 entries). Many are placeholders with template data. Next free ID for new spells: **900122+**.
+Spell IDs 900100-900121 existieren alle in `Spell.dbc` (22 Einträge) und sind fertig implementiert (DBC + C++ wo nötig).
+Einzige Ausnahme: **Thunderclap → Rend + 5× Sunder Armor** (Arms/Prot) fehlt noch.
 
-IDs with existing C++ SpellScript: 900106, 900107, 900116, 900117, 900120, 900121, 1680
-IDs used as DBC-only buffs/markers: 900114, 900115, 900118, 900119
-IDs available for reassignment/new use: 900100-900105, 900108-900113
+Nächste freie ID für neue Spells: **900122+**
 
 ---
 
 ## Custom Spell Master Plan (All Classes)
 
+> **Status-Legende**: `geplant` → `implementiert` → `getestet`
+
 ### ID-Block-Schema
 
-| Klasse | Spec | ID-Block | Anzahl |
-|--------|------|----------|--------|
-| Warrior | Arms | 900100-900109 | 10 |
-| Warrior | Fury | 900110-900119 | 10 |
-| Warrior | Prot | 900120-900125 | 6 |
-| (weitere Klassen) | — | ab 900126+ | — |
-
-> **Hinweis**: Einige IDs in diesen Blöcken sind bereits belegt (900106, 900107, 900114-900121). Die Zuordnung in den Tabellen unten berücksichtigt bestehende Implementierungen. Helper-Spells (Buffs, Trigger-Spells) können IDs außerhalb des Blocks verwenden oder freie Slots nutzen.
+| Klasse | Spec | ID-Block | Anzahl | Status |
+|--------|------|----------|--------|--------|
+| Warrior | Arms | 900100-900109 | 10 | getestet (bis auf TC→Rend+Sunder: geplant) |
+| Warrior | Fury | 900110-900121 | 12 | getestet |
+| Warrior | Prot | 900122-900127 | 6 | geplant |
+| (weitere Klassen) | — | ab 900128+ | — | Wartet auf Teil 2+ |
 
 ---
 
 ### Warrior — Arms (900100-900109)
 
+| # | Spell ID | Effekt | Ansatz | Status |
+|---|----------|--------|--------|--------|
+| 1 | 900100 | Mortal Strike damage +50% | DBC | getestet |
+| 2 | 900101 | Mortal Strike cd -2sec | DBC | getestet |
+| 3 | 900102 | Overpower damage +50% | DBC | getestet |
+| 4 | 900103 | Overpower +9 targets (AoE) | DBC+C++ | getestet |
+| 5 | 900104 | Mortal Strike +9 targets (AoE) | DBC+C++ | getestet |
+| 6 | 900105 | 20% Crit-Chance → Enhanced Execute (5 stacks) | C++ | getestet |
+| 7 | 900106 | Enhanced Execute (Damage Spell = Paragon Strike) | C++ | getestet |
+| 8 | 900107 | Phys. Damage → Bladestorm CD -0.5s | C++ | getestet |
+| 9 | 900108 | Whirlwind unlimited targets | DBC | getestet |
+| 10a | 900109 | WW 1 target → autocast Overpower | C++ | getestet |
+| 10b | *neue ID* | Thunderclap → Rend + 5× Sunder Armor | C++ | geplant |
+
+**TC→Rend+Sunder Details**: SpellScript auf Thunderclap. `AfterHit` pro Target: Rend casten + 5× Sunder Armor applyen. Wird auch von Prot geteilt. Braucht eigene Spell-ID (passive Marker-Aura) + Hook auf Original-TC oder eigene TC-Variante.
+
+### Warrior — Fury (900110-900121)
+
+| # | Spell ID | Effekt | Ansatz | Status |
+|---|----------|--------|--------|--------|
+| 1 | 900110 | Bloodthirst +50% damage | DBC | getestet |
+| 2 | 900111 | Bloodthirst +9 targets (AoE) | DBC+C++ | getestet |
+| 3 | 900112 | Whirlwind damage +50% | DBC | getestet |
+| 4 | 900113 | Whirlwind unlimited targets | DBC | getestet |
+| 5 | 900114 | Cleave unlimited targets | DBC | getestet |
+| 6 | 900115 | 20% Auto-Attack → free Whirlwind | C++ | getestet |
+| 7 | 900116 | BT → next WW +50% damage (Bloody WW passive) | C++ | getestet |
+| 8 | 900117 | WW resets Bloodthirst CD | C++ | getestet |
+| 9 | 900118+900120 | WW 1 target → autocast Overpower | C++ | getestet |
+| — | 900119+900121 | WW 1 target → autocast Slam | C++ | getestet |
+| 10 | (DBC) | Remove WW stance requirement | DBC | getestet |
+
+### Warrior — Prot (ab 900122)
+
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900100 | Mortal Strike damage +50% | **DBC** | NEU | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyName=4, SpellFamilyMask für MS. Kein C++ nötig. |
-| 2 | 900101 | Mortal Strike cd -2sec | **DBC** | NEU | Passive Aura: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_COOLDOWN`, Wert=-2000. SpellFamilyMask für MS. |
-| 3 | 900102 | Overpower damage +50% | **DBC** | NEU | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Overpower. |
-| 4 | 900103 | Overpower +9 targets (AoE) | **C++** | NEU | Kein DBC-Modifier für Target-Count. Braucht SpellScript mit `OnObjectAreaTargetSelect` oder Override der Target-Selektion. Overpower muss als AoE umgebaut werden (DBC: TargetA ändern auf AREA_ENEMY). |
-| 5 | 900104 | Mortal Strike +9 targets (AoE) | **C++** | NEU | Gleicher Ansatz wie #4. MS wird AoE-fähig gemacht. |
-| 6 | 900105 | 20% Crit-Chance → Enhanced Execute (5 stacks) | **C++** | NEU | Passive Proc-Aura: `DoCheckProc` prüft auf Crit (`HitMask & PROC_HIT_CRITICAL`), 20% Chance. Triggered Spell = 900106 (Paragon Strike). Braucht `spell_proc` Eintrag. |
-| 7 | 900106 | Enhanced Execute (Damage Spell) | **C++** | ✓ DONE | = Paragon Strike. 666 base + 0.66×AP + 1%/PL. Bereits implementiert. |
-| 8 | 900107 | Phys. Damage → Bladestorm CD -0.5s | **C++** | ✓ DONE | Bereits implementiert als `spell_custom_bladestorm_cd_reduce`. |
-| 9 | 900108 | Whirlwind unlimited targets | **DBC** | NEU | DBC-Feld `MaxAffectedTargets` auf 0 setzen (= unlimited). Kann via `spell_dbc` Tabelle oder WW-Clone mit unbegrenzten Targets. Alternative: Passive Aura die WW modifiziert. |
-| 10a | 900109 | WW 1 target → autocast Overpower | **C++** | ✓ DONE | Implementiert via 900118 (passive marker) + 1680 Script (FilterTargets + autocast 900120). |
-| 10b | *neu* | Thunderclap → Rend + 5× Sunder Armor | **C++** | NEU | SpellScript auf Thunderclap (6343/8198/...). `AfterHit`: Auf jedes getroffene Ziel Rend casten + 5× Sunder Armor applyen. Braucht Loop über Targets. ID: freier Slot oder Hook auf original TC. |
+| 1 | 900122 | Revenge +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Revenge. |
+| 2 | 900123 | Revenge unlimited targets | C++ | geplant | Revenge ist Single-Target. AoE-Umbau: DBC TargetA→`TARGET_UNIT_SRC_AREA_ENEMY` + SpellScript für Target-Filterung. |
+| 3 | 900124 | Thunderclap → Rend + 5× Sunder Armor | C++ | geplant | Passive Marker-Aura, TC-Hook prüft via `HasAura`. `AfterHit` pro Target: CastSpell(Rend) + 5× CastSpell(SunderArmor). Wird auch von Arms geteilt. |
+| 4 | 900125 | Thunderclap +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für TC. |
+| 5 | 900126 | AoE damage on Block | C++ | geplant | Proc-Aura mit `PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK` + HitMask=BLOCK. HandleProc: CastSpell(AoE-Damage-Spell). Braucht zusätzlichen AoE-Damage-Spell (eigene ID). |
+| 6 | 900127 | 10% Block-Chance → Enhanced Thunderclap | C++ | geplant | Passive Proc-Aura: Block-Proc, 10% Chance. Triggered: Enhanced TC Spell (eigene ID, höherer Damage). |
 
-### Warrior — Fury (900110-900119)
-
-| # | Spell ID | Effekt | Ansatz | Status | Details |
-|---|----------|--------|--------|--------|---------|
-| 1 | 900110 | Bloodthirst +50% damage | **DBC** | NEU | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für BT (23881). |
-| 2 | 900111 | Bloodthirst +9 targets (AoE) | **C++** | NEU | BT ist Single-Target. Muss via SpellScript auf multi-target umgebaut werden. Neue AoE-Variante mit `TARGET_UNIT_SRC_AREA_ENEMY`. |
-| 3 | 900112 | Whirlwind damage +50% | **DBC** | NEU | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für WW. Oder: Ist das der Bloody WW Buff (900115)? Falls separate Erhöhung gewünscht → eigene passive Aura. |
-| 4 | 900113 | Whirlwind unlimited targets | **DBC** | NEU | Wie Arms #9 (900108). `MaxAffectedTargets=0`. |
-| 5 | 900114 | Cleave unlimited targets | **DBC** | NEU | DBC: `MaxAffectedTargets=0` auf Cleave. **Achtung**: 900114 ist aktuell als WW Proc ICD verwendet → muss umgewidmet oder neuer ID. |
-| 6 | *neu* | 20% Auto-Attack → free Whirlwind | **C++** | NEU | Passive Proc-Aura: ProcFlags=`DONE_MELEE_AUTO_ATTACK` (0x04), Chance=20. `HandleProc`: CastSpell(WW, triggered=true). Braucht ICD um Spam zu verhindern. |
-| 7 | 900115+900116 | BT → next WW +50% damage | **C++** | ✓ DONE | Bloody Whirlwind System. 900116 = passive proc, 900115 = stacking buff. |
-| 8 | 900117 | WW resets Bloodthirst CD | **C++** | ✓ DONE | `spell_custom_speedy_bloodthirst`. |
-| 9 | *neu* | WW 1 target → autocast Bloodthirst | **C++** | NEU | Analog zu Arms (900118/900120). Passive Marker-Aura + Erweiterung des 1680-Scripts um BT-Autocast. |
-| 10 | *neu* | Remove WW stance requirement | **DBC** | NEU | DBC-Feld `StancesNot` / `Stances` auf WW (1680) auf 0 setzen. Entfernt Stance-Requirement. Kann via `spell_dbc` Tabelle. |
-
-### Warrior — Prot (900120-900125)
-
-| # | Spell ID | Effekt | Ansatz | Status | Details |
-|---|----------|--------|--------|--------|---------|
-| 1 | *neu* | Revenge +50% damage | **DBC** | NEU | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Revenge. |
-| 2 | *neu* | Revenge unlimited targets | **C++** | NEU | Revenge ist Single-Target. AoE-Umbau via SpellScript. |
-| 3 | *reuse* | TC → Rend + 5× Sunder Armor | **C++** | NEU | Gleiche Implementierung wie Arms #10b. Gemeinsame passive Aura, die den TC-Hook aktiviert. |
-| 4 | *neu* | Thunderclap +50% damage | **DBC** | NEU | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für TC. |
-| 5 | *neu* | AoE damage on Block | **C++** | NEU | `PlayerScript::OnBlock` oder Proc-Aura mit `PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK` + HitMask=BLOCK. HandleProc: AoE-Damage-Spell auf alle Feinde im Radius casten. |
-| 6 | *neu* | 10% Block-Chance → Enhanced Thunderclap | **C++** | NEU | Passive Proc-Aura: auf Block procen, 10% Chance. Triggered: Enhanced TC Spell (eigene ID mit höherem Damage). |
-
-> **Hinweis**: Prot-IDs kollidieren mit 900120/900121 (WW Overpower/Slam). Diese Spells gehören logisch zu Arms/Fury. Prot-Spells sollten ab 900122+ oder einem eigenen Block beginnen.
+> **Hinweis Prot**: Spells 900126 und 900127 brauchen jeweils zusätzliche Helper-Spells (AoE-Damage-Spell bzw. Enhanced TC). Diese können IDs ab 900128+ verwenden.
 
 ---
 
-### Implementierungs-Kategorien
+### Implementierungs-Referenz
 
 #### Rein DBC (kein C++ nötig) — via `spell_dbc` Tabelle oder WoW Spell Editor
-
-Diese Spells sind passive Auren, die über DBC-Felder andere Spells modifizieren:
 
 | Effekt-Typ | DBC Aura | DBC MiscValue | Beispiel |
 |------------|----------|---------------|----------|
@@ -170,10 +170,9 @@ Diese Spells sind passive Auren, die über DBC-Felder andere Spells modifizieren
 
 1. **SpellFamilyFlags verifizieren**: Vor jeder DBC-Implementierung müssen die SpellFamilyFlags des Ziel-Spells in unserer Spell.dbc geprüft werden (nicht aus Online-DBs übernehmen!)
 2. **MaxAffectedTargets**: Änderung auf 0 betrifft ALLE Spieler, nicht nur die mit dem Passive. Für bedingte unlimited targets → C++ `OnObjectAreaTargetSelect`
-3. **ID-Konflikte**: 900114 (aktuell WW Proc ICD) und 900120/900121 (WW Boosted Spells) müssen bei der Prot-Planung berücksichtigt werden
-4. **Helper-Spells**: Viele Effekte brauchen 2+ Spell-IDs (Passive + Trigger + evtl. Buff). Genügend ID-Raum pro Spec einplanen
-5. **spell_proc Tabelle**: Jeder proc-basierte Spell braucht einen Eintrag in `spell_proc` mit korrekten ProcFlags
-6. **Testen**: Neue DBC-Modifier immer in-game testen — manche Aura-Typen funktionieren nicht für alle Spell-Kombinationen
+3. **Helper-Spells**: Viele Effekte brauchen 2+ Spell-IDs (Passive + Trigger + evtl. Buff). Genügend ID-Raum pro Spec einplanen
+4. **spell_proc Tabelle**: Jeder proc-basierte Spell braucht einen Eintrag in `spell_proc` mit korrekten ProcFlags
+5. **Testen**: Neue DBC-Modifier immer in-game testen — manche Aura-Typen funktionieren nicht für alle Spell-Kombinationen
 
 ## Key APIs (SpellScript)
 
