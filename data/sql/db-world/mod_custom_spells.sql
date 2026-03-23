@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771, 900800, 900802, 900834, -47964, 47994, 18788, -47809, -59172);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -110,7 +110,30 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Mage Frost: Water Elemental permanent (on Summon Water Elemental)
 (31687, 'spell_custom_mage_permanent_water_ele'),
 -- Mage Frost: Comet Shower (active spell)
-(900771, 'spell_custom_mage_comet_shower');
+(900771, 'spell_custom_mage_comet_shower'),
+-- Warlock Affliction: DoT ticks deal Shadow AoE (proc aura)
+(900800, 'spell_custom_wlk_dot_aoe'),
+-- Warlock Affliction: DoT ticks spread to 2 additional targets (proc aura)
+(900802, 'spell_custom_wlk_dot_spread'),
+-- Warlock Demonology: Meta periodic AoE+Heal (own aura script)
+(900834, 'spell_custom_wlk_meta_aoe_heal'),
+-- Warlock Demonology: Imp Firebolt +9 targets (hooked on all ranks)
+(-47964, 'spell_custom_wlk_imp_fb_aoe'),
+-- Warlock Demonology: Felguard Cleave unlimited targets
+(47994, 'spell_custom_wlk_fg_unlim'),
+-- Warlock Demonology: Demonic Sacrifice grants ALL bonuses
+(18788, 'spell_custom_wlk_sacrifice_all'),
+-- Warlock Destruction: Shadow Bolt +9 targets (hooked on all ranks)
+(-47809, 'spell_custom_wlk_sb_aoe'),
+-- Warlock Destruction: Chaos Bolt +9 targets (hooked on all ranks)
+(-59172, 'spell_custom_wlk_cb_aoe');
+-- 900867: Shadow Bolt +50% → DBC only
+-- 900868: Chaos Bolt +50% → DBC only
+-- 900869: Chaos Bolt CD -2s → DBC only
+-- 900833: Meta Kill Extend → PlayerScript (no spell_script_names needed)
+-- 900835: Lesser Demon Spawn → UnitScript (no spell_script_names needed)
+-- 900836: Imp Firebolt +50% → DBC only
+-- 900839: Felguard +50% → DBC only
 -- 900500: Get back arrows → PlayerScript (no spell_script_names needed)
 -- 900501: Multi-Shot AoE → checked via HasAura (hooked on Multi-Shot via -49048 above)
 -- 900502/900503/900504: Pet passives → UnitScript/PlayerScript (no spell_script_names needed)
@@ -861,3 +884,165 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900774: Helper - Comet Impact (instant Frost single-target damage, high base)
 -- SchoolMask=16 (Frost). Base damage for the comet impact.
 (900774, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 500, 3000, 6, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frost Comet', 0x003F3F);
+
+-- ============================================================
+-- Warlock Affliction: spell_proc entries
+-- ============================================================
+
+-- DoT AoE proc (900800): procs on DONE_PERIODIC (0x40000).
+-- 20% chance, 2s ICD. C++ casts Shadow AoE helper on target.
+DELETE FROM `spell_proc` WHERE `SpellId` IN (900800, 900802);
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+-- 900800: DoT tick → Shadow AoE. ProcFlags=0x40000 (DONE_PERIODIC), 20% chance, 2s ICD.
+(900800, 0, 5, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 20, 2000, 0),
+-- 900802: DoT tick → Spread to 2. ProcFlags=0x40000 (DONE_PERIODIC), 15% chance, 3s ICD.
+(900802, 0, 5, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 15, 3000, 0);
+
+-- ============================================================
+-- Warlock Affliction: spell_dbc entries (900800-900803)
+-- SpellFamilyName=5 (Warlock)
+-- Corruption SpellFamilyFlags[0]=0x2 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900800, 900801, 900802, 900803);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900800: DoT ticks → Shadow AoE (DUMMY, proc via spell_proc + C++)
+(900800, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT AoE', 0x003F3F),
+-- 900801: Corruption +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x2 targets Corruption (verify!)
+(900801, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2, 0, 0, 5, 313, 0, 0, 'Affl: Corruption +50%', 0x003F3F),
+-- 900802: DoT ticks → Spread to 2 targets (DUMMY, proc via spell_proc + C++)
+(900802, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT Spread', 0x003F3F),
+-- 900803: Helper - Shadow AoE (instant Shadow AoE damage, 8yd around target)
+-- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=32 (Shadow)
+(900803, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Eruption', 0x003F3F);
+
+-- ============================================================
+-- Warlock Demonology: spell_dbc entries (900833-900843)
+-- SpellFamilyName=5 (Warlock)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900833, 900834, 900835, 900836, 900837, 900838, 900839, 900840, 900841, 900842, 900843);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900833: Kill extends Meta duration (DUMMY marker, C++ via PlayerScript)
+(900833, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Meta Kill Extend', 0x003F3F),
+-- 900834: Demon Form periodic AoE+Heal (PERIODIC_DUMMY, 3s tick, permanent)
+(900834, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 226, 0, 0, 0, 0, 3000, 5, 313, 0, 0, 'Demo: Meta AoE+Heal', 0x003F3F),
+-- 900835: Demons spawn lesser versions (DUMMY marker, C++ via UnitScript)
+(900835, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Lesser Spawn', 0x003F3F),
+-- 900836: Imp Firebolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- Imp Firebolt SpellFamilyFlags unknown — using broad mask 0 (may need verify)
+(900836, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Imp FB +50%', 0x003F3F),
+-- 900837: Imp Firebolt +9 targets (DUMMY marker, C++ on Imp Firebolt -47964)
+(900837, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Imp FB AoE', 0x003F3F),
+-- 900838: Felguard Cleave unlimited targets (DUMMY marker, C++ on 47994)
+(900838, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: FG Unlim', 0x003F3F),
+-- 900839: Felguard +50% damage (MOD_DAMAGE_PERCENT_DONE, all schools)
+(900839, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 79, 127, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: FG +50%', 0x003F3F),
+-- 900840: Sacrifice grants ALL bonuses (DUMMY marker, C++ on 18788)
+(900840, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Sacrifice All', 0x003F3F),
+-- 900841: Helper - Imp Firebolt bounce (instant Fire single-target damage)
+(900841, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 4, 0, 'Imp Firebolt Bounce', 0x003F3F),
+-- 900842: Helper - Meta Shadow AoE (instant Shadow AoE, 8yd around caster)
+(900842, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 600, 22, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Meta Shadow Burst', 0x003F3F),
+-- 900843: Helper - Meta Self Heal (instant heal on caster)
+(900843, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 100, 400, 1, 0, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Meta Demon Heal', 0x003F3F);
+
+-- ============================================================
+-- Warlock Demonology: creature_template entries (Lesser Demons)
+-- ============================================================
+
+-- Lesser Imp (NPC 900835): 30s temp summon, 50% stats
+DELETE FROM `creature_template` WHERE `entry` IN (900835, 900836, 900837);
+INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`,
+    `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`,
+    `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`,
+    `detection_range`, `scale`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
+    `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`,
+    `dynamicflags`, `family`, `trainer_type`, `trainer_spell`, `trainer_class`, `trainer_race`,
+    `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`,
+    `PetSpellDataId`, `VehicleId`, `mingold`, `maxgold`,
+    `AIName`, `MovementType`, `HoverHeight`,
+    `HealthModifier`, `ManaModifier`, `ArmorModifier`,
+    `ExperienceModifier`, `RacialLeader`, `movementId`,
+    `RegenHealth`, `mechanic_immune_mask`, `spell_school_immune_mask`, `flags_extra`,
+    `ScriptName`, `VerifiedBuild`) VALUES
+-- Lesser Imp: small fire demon, 50% HP, 50% damage
+(900835, 0, 0, 0,
+ 0, 0, 'Lesser Imp', '', '', 0,
+ 80, 80, 2, 14, 0, 1, 1.14286,
+ 20, 0.5, 0, 0, 0.5, 1500,
+ 2000, 1, 1, 1, 0, 2048,
+ 0, 0, 0, 0, 0, 0,
+ 3, 0, 0, 0, 0,
+ 0, 0, 0, 0,
+ '', 0, 1,
+ 0.3, 0.3, 0.3,
+ 0, 0, 0,
+ 1, 0, 0, 0,
+ '', 12340),
+-- Lesser Felguard: melee demon, 50% HP, 50% damage
+(900836, 0, 0, 0,
+ 0, 0, 'Lesser Felguard', '', '', 0,
+ 80, 80, 2, 14, 0, 1, 1.14286,
+ 20, 0.7, 0, 0, 0.5, 2000,
+ 2000, 1, 1, 1, 0, 2048,
+ 0, 0, 0, 0, 0, 0,
+ 3, 0, 0, 0, 0,
+ 0, 0, 0, 0,
+ '', 0, 1,
+ 0.5, 0.3, 0.5,
+ 0, 0, 0,
+ 1, 0, 0, 0,
+ '', 12340),
+-- Lesser Voidwalker: tanky demon, 50% HP, low damage
+(900837, 0, 0, 0,
+ 0, 0, 'Lesser Voidwalker', '', '', 0,
+ 80, 80, 2, 14, 0, 1, 1.14286,
+ 20, 0.6, 0, 0, 0.3, 2000,
+ 2000, 1, 1, 1, 0, 2048,
+ 0, 0, 0, 0, 0, 0,
+ 3, 0, 0, 0, 0,
+ 0, 0, 0, 0,
+ '', 0, 1,
+ 0.6, 0.3, 0.6,
+ 0, 0, 0,
+ 1, 0, 0, 0,
+ '', 12340);
+
+-- Lesser Demon display models
+DELETE FROM `creature_template_model` WHERE `CreatureID` IN (900835, 900836, 900837);
+INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
+-- Lesser Imp: Imp model (4449), small scale
+(900835, 0, 4449, 0.6, 1, 12340),
+-- Lesser Felguard: Felguard model (18399), smaller scale
+(900836, 0, 18399, 0.7, 1, 12340),
+-- Lesser Voidwalker: Voidwalker model (1132), smaller scale
+(900837, 0, 1132, 0.6, 1, 12340);
+
+-- ============================================================
+-- Warlock Destruction: spell_dbc entries (900866-900872)
+-- SpellFamilyName=5 (Warlock)
+-- Shadow Bolt SpellFamilyFlags[0]=0x1 (verify!)
+-- Chaos Bolt SpellFamilyFlags[1]=0x1000000 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900866, 900867, 900868, 900869, 900870, 900871, 900872);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900866: Shadow Bolt +9 targets (DUMMY marker, C++ on -47809)
+(900866, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Destro: SB AoE', 0x003F3F),
+-- 900867: Shadow Bolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x1 targets Shadow Bolt (verify!)
+(900867, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 0, 5, 313, 0, 0, 'Destro: SB +50%', 0x003F3F),
+-- 900868: Chaos Bolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskB=0x1000000 targets Chaos Bolt (verify!)
+(900868, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0, 0x1000000, 0, 5, 313, 0, 0, 'Destro: CB +50%', 0x003F3F),
+-- 900869: Chaos Bolt CD -2s (ADD_FLAT_MODIFIER + SPELLMOD_COOLDOWN)
+-- EffectSpellClassMaskB=0x1000000 targets Chaos Bolt (verify!)
+(900869, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, -2000, 1, 107, 11, 0, 0, 0x1000000, 0, 5, 313, 0, 0, 'Destro: CB CD -2s', 0x003F3F),
+-- 900870: Chaos Bolt +9 targets (DUMMY marker, C++ on -59172)
+(900870, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Destro: CB AoE', 0x003F3F),
+-- 900871: Helper - Shadow Bolt bounce (instant Shadow single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=32 (Shadow)
+(900871, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Bolt Bounce', 0x003F3F),
+-- 900872: Helper - Chaos Bolt bounce (instant Fire single-target damage, ignores resists)
+-- Attributes=0x10100000 (NOT_SHAPESHIFT + UNAFFECTED_BY_INVULNERABILITY)
+-- SchoolMask=4 (Fire, same as Chaos Bolt)
+(900872, 0x10100000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 4, 0, 'Chaos Bolt Bounce', 0x003F3F);

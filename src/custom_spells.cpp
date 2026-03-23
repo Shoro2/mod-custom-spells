@@ -32,6 +32,7 @@
  *    custom_spells_rogue.cpp    - Rogue (Assa/Combat/Sub)
  *    custom_spells_druid.cpp    - Druid (Balance/Feral/Resto)
  *    custom_spells_mage.cpp     - Mage (Arcane/Fire/Frost)
+ *    custom_spells_warlock.cpp  - Warlock (Affli/Demo/Destro)
  *
  *  Shared constants and spell IDs are in custom_spells_common.h
  */
@@ -46,4 +47,5 @@ void AddCustomSpellsScripts()
     AddRogueSpellsScripts();
     AddDruidSpellsScripts();
     AddMageSpellsScripts();
+    AddWarlockSpellsScripts();
 }
