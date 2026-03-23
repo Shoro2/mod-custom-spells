@@ -551,7 +551,9 @@ Spell IDs 900333, 900368 (DK Frost + Frost Breath helper) existieren in `spell_d
 NPC 900333 (Frost Wyrm) existiert in `creature_template` mit AI-Script `npc_custom_frost_wyrm`.
 Spell IDs 900366-900367 (DK Unholy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
 
-Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
+Spell IDs 900400-900408 (Shaman Ele + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
+
+Nächste freie Klassen-Blöcke: **900433+** (Shaman Enhance), **900500+** (Hunter), etc.
 
 ---
 
@@ -590,6 +592,7 @@ Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
 | DK | Blood | 900300-900304 (5) | 900305-900332 (28) | implementiert |
 | DK | Frost | 900333 (1) | 900334-900365 (32) | implementiert |
 | DK | Unholy | 900366-900367 (2) | 900368-900399 (32) | implementiert |
+| Shaman | Ele | 900400-900408 (9) | 900409-900432 (24) | implementiert |
 
 ---
 
@@ -730,18 +733,21 @@ Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
 
 ### Shaman — Elemental (900400-900432)
 
-> Shaman SpellFamilyName = 11. Totem-Replacement ist ein Kern-Feature für alle 3 Specs — jede Spec braucht eigene Variante da unterschiedliche Totems/Creatures relevant sind.
+> Shaman SpellFamilyName = 11. Chain Lightning flags[0]=0x2, Flame Shock flags[0]=0x10000000, Lightning Overload icon=2018.
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900400 | Chain Lightning +6 targets, no damage reduction | DBC/C++ | geplant | Chain Lightning (421/CL ranks) hat normalerweise 3 Bounces mit 30% Reduce pro Bounce. DBC: `EffectChainTarget` auf 9 erhöhen. Damage-Reduction entfernen: C++ SpellScript `CalculateChainDamage` oder Aura `SPELL_AURA_ADD_PCT_MODIFIER` die Chain-Penalty auf 0 setzt. |
-| 2 | 900401 | Totems replaced by creatures that follow/fight (Ele) | C++ | geplant | Großes System: Totem-Summon-Spells abfangen (`SpellScript`), statt Totem-NPC ein Creature spawnen das dem Caster folgt (`FollowMovementGenerator`) und kämpft. Braucht eigene AI-Scripts für jedes Totem-Creature. Creature behält Totem-Effekte (Auren) aber ist mobil + angreifbar. Evtl. eigene NPCs pro Totem-Typ. |
-| 3 | 900402 | Fire Elemental Totem → Ragnaros | C++ + DBC | geplant | Fire Elemental Totem (2894) beschwört Fire Elemental (15438). Override: Neuen NPC "Ragnaros" erstellen mit eigenem Model (DisplayID vom Ragnaros-Boss, z.B. 11121), eigener AI mit Fire-Spells + evtl. On-Hit-Proc. SpellScript auf Totem-Spell → Summon Ragnaros-NPC statt Fire Elemental. Balancing: Stats/Duration anpassen. |
-| 4 | 900403 | Lightning Overload chance erhöht + wirkt auf Lava Burst | C++ | geplant | Lightning Overload (Talent 30675) proct auf Lightning Bolt/Chain Lightning. (a) Chance erhöhen: Modify Proc-Chance des Talents via Aura. (b) Lava Burst hinzufügen: SpellScript oder `spell_proc` erweitern → Overload-Proc auch bei Lava Burst (51505) auslösen. Braucht evtl. eigenen Proc-Handler. |
-| 5 | 900404 | Lava Burst spreads Fire Shock DoT | C++ | geplant | SpellScript auf Lava Burst `AfterHit`: Prüfe ob Target Fire Shock (8050) hat → `GetCaster()->CastSpell()` Fire Shock auf alle Feinde im Radius (z.B. 10yd) um Target. Oder: Iterate nahe Enemies und appliziere Fire Shock Aura. Ähnlich wie Warrior Rend-Spread. |
-| 6 | 900405 | Flame Shock ticks chance to reset Lava Burst CD | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC` (0x400000), SpellFamilyMask für Flame Shock. `HandleProc`: Chance X% → `GetCaster()->GetSpellHistory()->ResetCooldown(51505, true)` (Lava Burst). `spell_proc` mit Chance + ICD. |
-| 7 | 900406 | Lava Burst two charges | DBC/C++ | geplant | Charge-System: DBC `ChargeCategory` + `CategoryCharges` = 2 für Lava Burst. Oder C++: Eigene Aura die bei Lava Burst-CD eine zweite "Aufladung" trackt und CD sofort resetet wenn noch Charges übrig. Charge-System in WotLK ist limitiert → vermutlich C++ nötig. |
-| 8 | 900407 | Clearcasting → Lava Burst instant | DBC | geplant | Clearcasting (Elemental Focus, 16246) gibt Buff. Passive Aura: Wenn Clearcasting aktiv → `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_CASTING_TIME` = -100% auf Lava Burst (SpellFamilyMask). Lava Burst hat bereits 2s Cast. |
+| 1 | 900400 | Chain Lightning +6 targets, no dmg reduction | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf CL (-49271): `AfterHit` → CastCustomSpell(900408) auf 6 Extra-Feinde in 12yd mit vollem Damage. Prüft `HasAura(900400)`. |
+| 2 | 900401 | Totems follow player | C++/PlayerScript | implementiert | Marker-Aura (DUMMY). `custom_totem_follow_playerscript::OnPlayerUpdate` → alle 2s prüft ob Totems >5yd entfernt → NearTeleportTo(Player). Prüft `HasAura(900401)`. |
+| 3 | 900402 | Fire Elemental → Ragnaros | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf Fire Ele Totem (2894): `AfterCast` → SetDisplayId(11121 Ragnaros), Scale 0.35, 2× HP. Prüft `HasAura(900402)`. |
+| 4 | 900403 | Lightning Overload + Lava Burst | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf LvB (-51505): `AfterHit` → prüft LO Talent (icon 2018), doppelte Proc-Chance, CastCustomSpell(LvB, halber Damage, triggered). Prüft `HasAura(900403)`. |
+| 5 | 900404 | Lava Burst spreads Flame Shock | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf LvB (-51505): `AfterHit` → prüft ob Target FS hat (flags[0]=0x10000000), CastSpell(FS) auf 5 Extra-Feinde in 10yd. Prüft `HasAura(900404)`. |
+| 6 | 900405 | Flame Shock ticks → reset LvB CD | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x400000, SpellFamilyMask0=0x10000000, 15% Chance, 2s ICD. C++ HandleProc → RemoveSpellCooldown(51505). |
+| 7 | 900406 | Lava Burst two charges | C++ | implementiert | Stacking DUMMY (CumulativeAura=2). C++ SpellScript auf LvB (-51505): `AfterCast` → Stack-Count als Charge-Tracker (1=first charge used→reset CD, 2=second charge→normal CD). Prüft `HasAura(900406)`. |
+| 8 | 900407 | Clearcasting → Lava Burst instant | DBC | implementiert | `ADD_PCT_MODIFIER` (108) + `SPELLMOD_CASTING_TIME` (14) = -100%. EffectSpellClassMaskB=0x1000 (LvB flags, verify!). Macht LvB permanent instant wenn Passive aktiv. |
+| H1 | 900408 | Chain Lightning Arc (helper) | DBC | implementiert | Instant Nature Damage. Effect=SCHOOL_DAMAGE(2), Target=ENEMY(6), SchoolMask=8(Nature). BasePoints überschrieben via CastCustomSpell. |
+
+> **Hinweis Ele**: Lava Burst SpellFamilyFlags in EffectSpellClassMaskB für 900407 muss verifiziert werden (0x1000 ist Schätzung). 900401 (Totem Follow) nutzt NearTeleportTo statt MoveFollow da Totems keine echte Bewegung haben — kann zu visuellen Rucklern führen. 900402 (Ragnaros) ist nur ein Display-Swap + HP-Buff, keine eigene AI. 900406 (LvB Charges) nutzt Aura-Stacks als Charge-Tracker — funktioniert aber kann bei schnellem Casting Edge-Cases haben.
 
 ### Shaman — Enhancement (900433-900465)
 
