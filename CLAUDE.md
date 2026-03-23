@@ -551,7 +551,13 @@ Spell IDs 900333, 900368 (DK Frost + Frost Breath helper) existieren in `spell_d
 NPC 900333 (Frost Wyrm) existiert in `creature_template` mit AI-Script `npc_custom_frost_wyrm`.
 Spell IDs 900366-900367 (DK Unholy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
 
-Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
+Spell IDs 900400-900408 (Shaman Ele + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
+
+Spell IDs 900433-900440 (Shaman Enhance + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
+NPC 900436 (Spirit Wolf) existiert in `creature_template` für Wolf-Summon-Proc.
+Spell IDs 900466-900467 (Shaman Resto) existieren in `spell_dbc` Tabelle und sind implementiert.
+
+Nächste freie Klassen-Blöcke: **900500+** (Hunter), **900600+** (Rogue), etc.
 
 ---
 
@@ -590,6 +596,9 @@ Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
 | DK | Blood | 900300-900304 (5) | 900305-900332 (28) | implementiert |
 | DK | Frost | 900333 (1) | 900334-900365 (32) | implementiert |
 | DK | Unholy | 900366-900367 (2) | 900368-900399 (32) | implementiert |
+| Shaman | Ele | 900400-900408 (9) | 900409-900432 (24) | implementiert |
+| Shaman | Enh | 900433-900440 (8) | 900441-900465 (25) | implementiert |
+| Shaman | Resto | 900466-900467 (2) | 900468-900499 (32) | implementiert |
 
 ---
 
@@ -730,40 +739,45 @@ Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
 
 ### Shaman — Elemental (900400-900432)
 
-> Shaman SpellFamilyName = 11. Totem-Replacement ist ein Kern-Feature für alle 3 Specs — jede Spec braucht eigene Variante da unterschiedliche Totems/Creatures relevant sind.
+> Shaman SpellFamilyName = 11. Chain Lightning flags[0]=0x2, Flame Shock flags[0]=0x10000000, Lightning Overload icon=2018.
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900400 | Chain Lightning +6 targets, no damage reduction | DBC/C++ | geplant | Chain Lightning (421/CL ranks) hat normalerweise 3 Bounces mit 30% Reduce pro Bounce. DBC: `EffectChainTarget` auf 9 erhöhen. Damage-Reduction entfernen: C++ SpellScript `CalculateChainDamage` oder Aura `SPELL_AURA_ADD_PCT_MODIFIER` die Chain-Penalty auf 0 setzt. |
-| 2 | 900401 | Totems replaced by creatures that follow/fight (Ele) | C++ | geplant | Großes System: Totem-Summon-Spells abfangen (`SpellScript`), statt Totem-NPC ein Creature spawnen das dem Caster folgt (`FollowMovementGenerator`) und kämpft. Braucht eigene AI-Scripts für jedes Totem-Creature. Creature behält Totem-Effekte (Auren) aber ist mobil + angreifbar. Evtl. eigene NPCs pro Totem-Typ. |
-| 3 | 900402 | Fire Elemental Totem → Ragnaros | C++ + DBC | geplant | Fire Elemental Totem (2894) beschwört Fire Elemental (15438). Override: Neuen NPC "Ragnaros" erstellen mit eigenem Model (DisplayID vom Ragnaros-Boss, z.B. 11121), eigener AI mit Fire-Spells + evtl. On-Hit-Proc. SpellScript auf Totem-Spell → Summon Ragnaros-NPC statt Fire Elemental. Balancing: Stats/Duration anpassen. |
-| 4 | 900403 | Lightning Overload chance erhöht + wirkt auf Lava Burst | C++ | geplant | Lightning Overload (Talent 30675) proct auf Lightning Bolt/Chain Lightning. (a) Chance erhöhen: Modify Proc-Chance des Talents via Aura. (b) Lava Burst hinzufügen: SpellScript oder `spell_proc` erweitern → Overload-Proc auch bei Lava Burst (51505) auslösen. Braucht evtl. eigenen Proc-Handler. |
-| 5 | 900404 | Lava Burst spreads Fire Shock DoT | C++ | geplant | SpellScript auf Lava Burst `AfterHit`: Prüfe ob Target Fire Shock (8050) hat → `GetCaster()->CastSpell()` Fire Shock auf alle Feinde im Radius (z.B. 10yd) um Target. Oder: Iterate nahe Enemies und appliziere Fire Shock Aura. Ähnlich wie Warrior Rend-Spread. |
-| 6 | 900405 | Flame Shock ticks chance to reset Lava Burst CD | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC` (0x400000), SpellFamilyMask für Flame Shock. `HandleProc`: Chance X% → `GetCaster()->GetSpellHistory()->ResetCooldown(51505, true)` (Lava Burst). `spell_proc` mit Chance + ICD. |
-| 7 | 900406 | Lava Burst two charges | DBC/C++ | geplant | Charge-System: DBC `ChargeCategory` + `CategoryCharges` = 2 für Lava Burst. Oder C++: Eigene Aura die bei Lava Burst-CD eine zweite "Aufladung" trackt und CD sofort resetet wenn noch Charges übrig. Charge-System in WotLK ist limitiert → vermutlich C++ nötig. |
-| 8 | 900407 | Clearcasting → Lava Burst instant | DBC | geplant | Clearcasting (Elemental Focus, 16246) gibt Buff. Passive Aura: Wenn Clearcasting aktiv → `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_CASTING_TIME` = -100% auf Lava Burst (SpellFamilyMask). Lava Burst hat bereits 2s Cast. |
+| 1 | 900400 | Chain Lightning +6 targets, no dmg reduction | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf CL (-49271): `AfterHit` → CastCustomSpell(900408) auf 6 Extra-Feinde in 12yd mit vollem Damage. Prüft `HasAura(900400)`. |
+| 2 | 900401 | Totems follow player | C++/PlayerScript | implementiert | Marker-Aura (DUMMY). `custom_totem_follow_playerscript::OnPlayerUpdate` → alle 2s prüft ob Totems >5yd entfernt → NearTeleportTo(Player). Prüft `HasAura(900401)`. |
+| 3 | 900402 | Fire Elemental → Ragnaros | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf Fire Ele Totem (2894): `AfterCast` → SetDisplayId(11121 Ragnaros), Scale 0.35, 2× HP. Prüft `HasAura(900402)`. |
+| 4 | 900403 | Lightning Overload + Lava Burst | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf LvB (-51505): `AfterHit` → prüft LO Talent (icon 2018), doppelte Proc-Chance, CastCustomSpell(LvB, halber Damage, triggered). Prüft `HasAura(900403)`. |
+| 5 | 900404 | Lava Burst spreads Flame Shock | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf LvB (-51505): `AfterHit` → prüft ob Target FS hat (flags[0]=0x10000000), CastSpell(FS) auf 5 Extra-Feinde in 10yd. Prüft `HasAura(900404)`. |
+| 6 | 900405 | Flame Shock ticks → reset LvB CD | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x400000, SpellFamilyMask0=0x10000000, 15% Chance, 2s ICD. C++ HandleProc → RemoveSpellCooldown(51505). |
+| 7 | 900406 | Lava Burst two charges | C++ | implementiert | Stacking DUMMY (CumulativeAura=2). C++ SpellScript auf LvB (-51505): `AfterCast` → Stack-Count als Charge-Tracker (1=first charge used→reset CD, 2=second charge→normal CD). Prüft `HasAura(900406)`. |
+| 8 | 900407 | Clearcasting → Lava Burst instant | DBC | implementiert | `ADD_PCT_MODIFIER` (108) + `SPELLMOD_CASTING_TIME` (14) = -100%. EffectSpellClassMaskB=0x1000 (LvB flags, verify!). Macht LvB permanent instant wenn Passive aktiv. |
+| H1 | 900408 | Chain Lightning Arc (helper) | DBC | implementiert | Instant Nature Damage. Effect=SCHOOL_DAMAGE(2), Target=ENEMY(6), SchoolMask=8(Nature). BasePoints überschrieben via CastCustomSpell. |
+
+> **Hinweis Ele**: Lava Burst SpellFamilyFlags in EffectSpellClassMaskB für 900407 muss verifiziert werden (0x1000 ist Schätzung). 900401 (Totem Follow) nutzt NearTeleportTo statt MoveFollow da Totems keine echte Bewegung haben — kann zu visuellen Rucklern führen. 900402 (Ragnaros) ist nur ein Display-Swap + HP-Buff, keine eigene AI. 900406 (LvB Charges) nutzt Aura-Stacks als Charge-Tracker — funktioniert aber kann bei schnellem Casting Edge-Cases haben.
 
 ### Shaman — Enhancement (900433-900465)
 
+> Maelstrom Weapon (53817) stacks to 5. Feral Spirit (51533) summons 2 Spirit Wolves (NPC 29264).
+
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900433 | Totems replaced by summons that follow/fight (Enhance) | C++ | geplant | Gleiche Kern-Mechanik wie 900401 (Ele Totem-Replacement), aber Enhance-spezifische Creatures mit Melee-AI statt Caster-AI. Shared Code-Basis mit 900251 möglich. |
-| 2 | 900434 | 5 Maelstrom stacks → summons empowered, AoE on attack 5s | C++ | geplant | Hook auf Maelstrom Weapon (53817) Stack-Erreichen (5 Stacks). Bei 5 Stacks: Buff auf alle aktiven Summons → `SPELL_AURA_PROC_TRIGGER_SPELL` oder AI-Flag das AoE-Damage bei jedem Angriff für 5s auslöst. Braucht Tracking welche Summons aktiv sind. |
-| 3 | 900435 | Summons +50% damage | DBC/C++ | geplant | Passive Aura auf Caster: Alle Summons (Pets/Guardians) erhalten `SPELL_AURA_MOD_DAMAGE_PERCENT_DONE` +50%. Oder: Aura auf Summon-Creatures via Owner-Check. |
-| 4 | 900436 | Auto attacks chance to summon a wolf | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` (0x4). `HandleProc`: Chance X% → `CastSpell(SummonWolf)`. Wolf-NPC: temporärer Guardian mit Timer (z.B. 15s), Melee-AI, Wolf-Model. Braucht eigenen NPC + Summon-Spell. |
-| 5 | 900437 | Spirit Wolves inherit your haste | C++ | geplant | Feral Spirit (51533) beschwört 2 Spirit Wolves (29264). CreatureScript/PetAI: Bei Summon → Owner Haste-Rating auslesen → Attackspeed des Wolves anpassen via `ApplyPercentModFloatValue(UNIT_FIELD_BASEATTACKTIME)`. Evtl. periodisch updaten falls Caster-Haste sich ändert. |
-| 6 | 900438 | Spirit Wolves 5% chance Chain Lightning on melee hit | C++ | geplant | CreatureScript für Spirit Wolf (29264): `OnMeleeHit` oder Proc-Aura auf Wolf → 5% Chance → `CastSpell(Chain Lightning, triggered=true)`. Chain Lightning Rank basierend auf Caster-Level. |
+| 1 | 900433 | Totems follow player | PlayerScript | implementiert | DUMMY Marker. Shared `custom_totem_follow_playerscript` prüft auch `HasAura(900433)`. Teleportiert Totems alle 2s. |
+| 2 | 900434 | 5 Maelstrom stacks → summons AoE 5s | C++ | implementiert | DUMMY Marker. C++ AuraScript auf Maelstrom Weapon (53817): `OnEffectApply` bei Stack=5 → CastSpell(900439 Buff) + CastSpell(900440 AoE) auf alle Controlled Units. |
+| 3 | 900435 | Summons +50% damage | DBC | implementiert | DUMMY Marker (BasePoints=50). Aktuell nur Marker — Pet-Scaling für +50% muss via C++ pet scaling oder owner aura transfer implementiert werden. |
+| 4 | 900436 | Auto attacks → summon wolf | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x4 (melee auto), 10%, 5s ICD. C++ HandleProc → SummonCreature(900436 Spirit Wolf, 15s). NPC 900436 hat DisplayID 27074 (Wolf). |
+| 5 | 900437 | Spirit Wolves inherit haste | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Feral Spirit (51533): `AfterCast` → liest Owner Haste (UNIT_MOD_CAST_SPEED) → SetAttackTime auf Wolves. |
+| 6 | 900438 | Spirit Wolves 5% CL on hit | C++/UnitScript | implementiert | DUMMY Marker. `custom_wolf_cl_unitscript::OnDamage` → wenn Attacker=Spirit Wolf (29264) + Owner HasAura(900438) → 5% CastSpell(CL 49271). |
+| H1 | 900439 | Maelstrom Fury (buff) | DBC | implementiert | 5s DUMMY Buff (DurationIndex=18). Visueller Marker für empowered summons. |
+| H2 | 900440 | Spirit Howl (AoE helper) | DBC | implementiert | Instant AoE Physical Damage. Effect=SCHOOL_DAMAGE(2), Target=SRC_AREA_ENEMY(22), 800+200rnd, 8yd. |
 
 ### Shaman — Restoration (900466-900499)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900466 | Totems replaced by creatures that follow/fight (Resto) | C++ | geplant | Gleiche Kern-Mechanik wie 900401/900433, aber Resto-spezifische Creatures mit Healer/Support-AI. Healing-Totems (Healing Stream etc.) werden zu folgenden Heal-Creatures. Shared Code-Basis. |
-| 2 | 900467 | Mana regen +2% per missing mana % | C++ | geplant | Passive Aura mit `SPELL_AURA_OBS_MOD_POWER` oder custom `HandlePeriodicManaRegen`. Berechnung: `missingManaPct = 1 - (currentMana / maxMana)` → `bonusRegen = missingManaPct * 2% * baseRegen`. Bei 50% Mana → +100% Regen, bei 10% Mana → +180% Regen. Skaliert umgekehrt proportional. |
+| 1 | 900466 | Totems follow player | PlayerScript | implementiert | DUMMY Marker. Shared `custom_totem_follow_playerscript` prüft auch `HasAura(900466)`. |
+| 2 | 900467 | Mana regen +2% per missing mana% | C++/PlayerScript | implementiert | DUMMY Marker. `custom_mana_regen_playerscript::OnPlayerUpdate` → alle 5s: missingPct = (1 - curMana/maxMana) × 100 → EnergizeBySpell(maxMana × missingPct × 0.02 / 100). Bei 50% missing → +1% maxMana/5s. Bei 90% missing → +1.8% maxMana/5s. |
 
-> **Helper-Spells Shaman**: 900401/900433/900466 (Totem-Replacement) ist ein gemeinsames System — braucht evtl. mehrere Helper-NPCs pro Totem-Typ (Fire, Earth, Water, Air Totem-Creatures). 900436 (Wolf-Summon) braucht eigenen Wolf-NPC + Summon-Spell. 900434 (Maelstrom Empower) braucht AoE-Buff-Spell für Summons. IDs ab 900468+ für Helper verfügbar.
-
-> **Besonders aufwändig**: Das Totem-Replacement-System (900401/900433/900466) ist das ambitionierteste Feature bisher — jedes Totem braucht ein eigenes folgendes Creature mit passender AI. Ragnaros-Replacement (900252) braucht Custom-Boss-NPC mit Fire-AI. Spirit Wolf Haste-Inheritance (900262) braucht dynamische Stat-Synchronisation.
+> **Hinweis Enhance**: 900435 (Summons +50%) ist aktuell nur ein Marker — die tatsächliche Damage-Erhöhung muss via Pet Scaling oder Owner→Pet Aura Transfer implementiert werden. 900434 (Maelstrom AoE) castet den AoE Helper direkt auf alle Controlled Units bei 5 Stacks — das AoE geht einmalig los, nicht für 5s bei jedem Angriff (simplified). 900438 (Wolf CL) nutzt UnitScript::OnDamage das für ALLE Damage-Events feuert — Performance beobachten.
 
 ---
 

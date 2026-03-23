@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -43,7 +43,32 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- DK Frost: Frost Breath damage handler
 (900368, 'spell_custom_frost_breath'),
 -- DK Unholy: DoT → Shadow AoE proc passive
-(900366, 'spell_custom_dku_dot_aoe');
+(900366, 'spell_custom_dku_dot_aoe'),
+-- Shaman Ele: Chain Lightning +6 targets (on all CL ranks)
+(-49271, 'spell_custom_ele_cl_aoe'),
+-- Shaman Ele: Totem follow (900401 is marker aura, PlayerScript handles logic)
+-- Shaman Ele: Ragnaros (on Fire Elemental Totem 2894)
+(2894, 'spell_custom_ele_ragnaros'),
+-- Shaman Ele: LO + LvB, LvB spread FS, LvB charges (on all LvB ranks)
+(-51505, 'spell_custom_ele_overload_lvb'),
+(-51505, 'spell_custom_ele_lvb_spread_fs'),
+(-51505, 'spell_custom_ele_lvb_charges'),
+-- Shaman Ele: FS ticks → reset LvB CD (proc aura on 900405)
+(900405, 'spell_custom_ele_fs_reset_lvb'),
+-- Shaman Enhance: Maelstrom AoE (on Maelstrom Weapon 53817)
+(53817, 'spell_custom_enh_maelstrom_aoe'),
+-- Shaman Enhance: Wolf summon proc (on 900436)
+(900436, 'spell_custom_enh_wolf_summon'),
+-- Shaman Enhance: Wolf haste (on Feral Spirit 51533)
+(51533, 'spell_custom_enh_wolf_haste');
+-- 900433/900466: Totem follow → PlayerScript (no spell_script_names needed)
+-- 900435: Summons +50% damage → DBC-only
+-- 900437/900438: Wolf haste/CL → checked via HasAura / UnitScript
+-- 900467: Mana regen → PlayerScript (no spell_script_names needed)
+-- 900406: LvB charges checked via HasAura (hooked on LvB via -51505 above)
+-- 900407: Clearcasting → instant LvB (DBC-only, no script needed)
+-- 900408: CL AoE helper (no script needed, pure DBC damage)
+-- 900400, 900402-900404, 900406-900408: marker auras / DBC-only, no script registration needed
 
 -- ICD for Whirlwind proc aura (900138): 500ms cooldown to prevent
 -- recursive loop (Whirlwind hits count as auto-attacks → re-proc → crash)
@@ -331,3 +356,111 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
 DELETE FROM `creature_template_model` WHERE `CreatureID` = 900333;
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
 (900333, 0, 26752, 1, 1, 12340);
+
+-- ============================================================
+-- Shaman Ele: spell_proc entries
+-- ============================================================
+
+-- Flame Shock ticks → reset LvB CD (900405)
+-- ProcFlags=0x400000 (DONE_PERIODIC), 15% chance, 2s ICD
+DELETE FROM `spell_proc` WHERE `SpellId` = 900405;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900405, 0, 11, 0x10000000, 0, 0, 0x400000, 1, 0, 0, 0, 0, 0, 15, 2000, 0);
+
+-- ============================================================
+-- Shaman Ele: spell_dbc entries (900400-900408)
+-- SpellFamilyName=11 (Shaman)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900400, 900401, 900402, 900403, 900404, 900405, 900406, 900407, 900408);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900400: CL +6 targets (marker, C++ on -49271)
+(900400, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 62, 0, 0, 'Ele: CL AoE', 0x003F3F),
+-- 900401: Totems follow (DUMMY marker, PlayerScript handles logic via OnUpdate)
+(900401, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Ele: Totem Follow', 0x003F3F),
+-- 900402: Ragnaros (marker, C++ on 2894)
+(900402, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 547, 0, 0, 'Ele: Ragnaros', 0x003F3F),
+-- 900403: Lightning Overload + LvB (marker, C++ on -51505)
+(900403, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 2018, 0, 0, 'Ele: LO + LvB', 0x003F3F),
+-- 900404: LvB spreads FS (marker, C++ on -51505)
+(900404, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 64, 0, 0, 'Ele: LvB Spread FS', 0x003F3F),
+-- 900405: FS ticks → reset LvB CD (DUMMY, proc via spell_proc + C++)
+(900405, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 64, 0, 0, 'Ele: FS Reset LvB', 0x003F3F),
+-- 900406: LvB two charges (DUMMY marker + stacking, CumulativeAura=2)
+(900406, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 64, 0, 2, 'Ele: LvB Charges', 0x003F3F),
+-- 900407: Clearcasting → LvB instant (ADD_PCT_MODIFIER + SPELLMOD_CASTING_TIME -100%)
+-- Lava Burst SpellFamilyFlags need verification! Using 0x1000 as estimate
+(900407, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, -100, 1, 108, 14, 0, 0x1000, 0, 11, 16164, 0, 0, 'Ele: Instant LvB', 0x003F3F),
+-- 900408: CL AoE damage helper (instant Nature damage)
+(900408, 0x10000000, 0, 0, 0, 1, 0, 4, 2, 0, 0, 6, 0, 0, 0, 0, 0, 11, 62, 8, 0, 'Chain Lightning Arc', 0x003F3F);
+
+-- ============================================================
+-- Shaman Enhance: spell_proc entries
+-- ============================================================
+
+-- Wolf summon proc (900436): 10% on melee auto attack, 5s ICD
+DELETE FROM `spell_proc` WHERE `SpellId` = 900436;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900436, 0, 0, 0, 0, 0, 0x4, 1, 2, 0, 0, 0, 0, 10, 5000, 0);
+
+-- ============================================================
+-- Shaman Enhance + Resto: spell_dbc entries
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900433, 900434, 900435, 900436, 900437, 900438, 900439, 900440, 900466, 900467);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900433: Totem follow Enhance (DUMMY marker)
+(900433, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Enh: Totem Follow', 0x003F3F),
+-- 900434: Maelstrom AoE (DUMMY marker, C++ on 53817)
+(900434, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Enh: Maelstrom AoE', 0x003F3F),
+-- 900435: Summons +50% damage (ADD_PCT_MODIFIER not directly applicable to pets via DBC)
+-- Use DUMMY marker; C++ or pet scaling handles the actual +50%
+(900435, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Enh: Summons +50%', 0x003F3F),
+-- 900436: Auto attack → summon wolf (DUMMY proc aura)
+(900436, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Enh: Wolf Summon', 0x003F3F),
+-- 900437: Spirit Wolves inherit haste (DUMMY marker, C++ on 51533)
+(900437, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Enh: Wolf Haste', 0x003F3F),
+-- 900438: Spirit Wolves CL proc (DUMMY marker, UnitScript)
+(900438, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 62, 0, 0, 'Enh: Wolf CL', 0x003F3F),
+-- 900439: Maelstrom empower buff (5s duration, visible buff)
+(900439, 0x10000000, 0, 0, 0, 1, 18, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Maelstrom Fury', 0x003F3F),
+-- 900440: Wolf AoE helper (instant Physical AoE around caster)
+(900440, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 22, 0, 0, 0, 0, 0, 11, 3786, 1, 0, 'Spirit Howl', 0x003F3F),
+-- 900466: Totem follow Resto (DUMMY marker)
+(900466, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Resto: Totem Follow', 0x003F3F),
+-- 900467: Mana regen per missing mana% (DUMMY marker, PlayerScript)
+(900467, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Resto: Mana Regen', 0x003F3F);
+
+-- ============================================================
+-- Custom Wolf NPC for 900436 (auto attack wolf summon)
+-- ============================================================
+DELETE FROM `creature_template` WHERE `entry` = 900436;
+INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`,
+    `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`,
+    `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`,
+    `detection_range`, `scale`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
+    `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`,
+    `dynamicflags`, `family`, `trainer_type`, `trainer_spell`, `trainer_class`, `trainer_race`,
+    `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`,
+    `PetSpellDataId`, `VehicleId`, `mingold`, `maxgold`,
+    `AIName`, `MovementType`, `HoverHeight`,
+    `HealthModifier`, `ManaModifier`, `ArmorModifier`,
+    `ExperienceModifier`, `RacialLeader`, `movementId`,
+    `RegenHealth`, `mechanic_immune_mask`, `spell_school_immune_mask`, `flags_extra`,
+    `ScriptName`, `VerifiedBuild`) VALUES
+(900436, 0, 0, 0,
+ 0, 0, 'Spirit Wolf', '', '', 0,
+ 80, 80, 2, 14, 0, 1, 1.14286,
+ 20, 0.7, 0, 0, 0.5, 1500,
+ 2000, 1, 1, 1, 0, 2048,
+ 0, 0, 0, 0, 0, 0,
+ 1, 0, 0, 0, 0,
+ 0, 0, 0, 0,
+ '', 0, 1,
+ 0.5, 0, 0.5,
+ 0, 0, 0,
+ 1, 0, 0, 0,
+ '', 12340);
+
+-- Spirit Wolf display model (same as Feral Spirit wolves)
+DELETE FROM `creature_template_model` WHERE `CreatureID` = 900436;
+INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
+(900436, 0, 27074, 1, 1, 12340);
