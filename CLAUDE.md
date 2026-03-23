@@ -90,7 +90,9 @@ Nächste freie ID für neue Spells: **900122+**
 | Paladin | Holy | 900150-900157 | 8 | geplant |
 | Paladin | Prot | 900158-900165 | 8 | geplant |
 | Paladin | Ret | 900166-900172 | 7 | geplant |
-| DK | — | ab 900200+ | — | Wartet auf nächsten Teil |
+| DK | Blood | 900200-900204 | 5 | geplant |
+| DK | Frost | 900205 | 1 | geplant |
+| DK | Unholy | 900206 | 1 | geplant |
 | (weitere Klassen) | — | ab 900250+ | — | Wartet auf weitere Teile |
 
 ---
@@ -187,6 +189,36 @@ Nächste freie ID für neue Spells: **900122+**
 > **Shared Spells Paladin**: "Consecration around you" (Holy/Prot/Ret) und "Judgement cd -2sec" (Prot/Ret) tauchen mehrfach auf. Optionen: (a) Eine gemeinsame ID pro Effekt, die allen Specs gegeben wird. (b) Separate IDs pro Spec für unabhängige Zuordnung. Empfehlung: Separate IDs, da Specs über ein Talent/Unlock-System zugewiesen werden und nicht alle Specs gleichzeitig aktiv sind.
 
 > **Helper-Spells Paladin**: 900172 (Exorcism-Buff-System) braucht 2-3 IDs: Passive Proc-Aura + Stacking Buff + evtl. Exorcism-Consume-Hook. 900163 (AS→Consecration) braucht evtl. eine eigene Consecration-Variante. Diese Helper-Spells können IDs ab 900173+ verwenden.
+
+---
+
+### DK — Blood (900200-900204)
+
+> DK SpellFamilyName = 15. Dancing Rune Weapon (49028) beschwört ein Rune Weapon das Spells des DK kopiert.
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900200 | 3 Rune Weapons gleichzeitig | C++ | geplant | Dancing Rune Weapon (49028) beschwört normalerweise 1 Weapon. Braucht SpellScript `AfterCast`: 2 zusätzliche CastSpell(DRW, triggered) oder direktes Spawnen von 2 Extra-NPCs via `SummonCreature`. Die Summon-NPC-ID (27893) muss 3× existieren können. Evtl. eigene Summon-Spell-Varianten nötig. |
+| 2 | 900201 | Rune Weapon double-casts | C++ | geplant | Das Rune Weapon kopiert bereits Caster-Spells. "Double cast" = jeder kopierte Spell wird 2× ausgeführt. Braucht Hook im DRW-AI-Script (oder `CreatureScript`): Bei jedem `SpellHit` des Weapons → gleichen Spell nochmal casten. Alternativ: Aura auf Weapon mit Proc → re-cast. |
+| 3 | 900202 | Heart Strike damage +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Heart Strike (55050). |
+| 4 | 900203 | Heart Strike +9 targets | DBC/C++ | geplant | Heart Strike trifft normalerweise 3 Ziele. DBC: `MaxAffectedTargets` auf 12 setzen. Falls bedingt → C++ `OnObjectAreaTargetSelect`. |
+| 5 | 900204 | Dealing damage → chance to cast Death Coil | C++ | geplant | Passive Proc-Aura: ProcFlags=`DONE_MELEE_AUTO_ATTACK|DONE_SPELL_MELEE_DMG_CLASS` (0x14), Chance=X% (festlegen!). `HandleProc`: CastSpell(Death Coil, triggered=true) auf aktuelles Ziel. Braucht `spell_proc` Eintrag + ICD um Spam zu verhindern. |
+
+### DK — Frost (900205)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900205 | Ghoul durch Frost Wyrm ersetzen | C++ + DBC | geplant | Raise Dead (46584) beschwört Ghoul (NPC 26125). Ansatz: (a) Neuen NPC "Frost Wyrm" erstellen (`creature_template`) mit eigenem Model, Stats, AI. (b) SpellScript auf Raise Dead: Override Summon-NPC-ID auf Frost Wyrm NPC. Oder DBC: `EffectMiscValue` (Summon-Entry) auf neue NPC-ID ändern. (c) Frost Wyrm braucht eigenes AI-Script (`CreatureScript`) mit passenden Frost-Angriffen. **Aufwand**: Hoch — neues Creature mit Model, AI, Spells, Balancing. |
+
+### DK — Unholy (900206)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900206 | DoTs → chance Shadow AoE damage | C++ | geplant | Passive Proc-Aura: Proc auf periodischen Schaden (`PROC_FLAG_DONE_PERIODIC`, 0x400000). `HandleProc`: CastSpell(Shadow-AoE-Damage, triggered=true) auf das DoT-Ziel. Der AoE-Spell dealt Shadow-Damage an alle Feinde im Radius um das Ziel. Braucht: (a) Passive Proc-Aura (900206), (b) Shadow-AoE-Damage-Spell (eigene ID, z.B. 900207), (c) `spell_proc` mit Chance + ICD. |
+
+> **Helper-Spells DK**: 900206 (Unholy DoT AoE) braucht einen separaten Shadow-AoE-Damage-Spell (z.B. 900207). 900200 (3 Rune Weapons) braucht evtl. zusätzliche Summon-Spell-Varianten. 900205 (Frost Wyrm) braucht neuen NPC-Eintrag + AI-Script. IDs ab 900207+ für Helper verfügbar.
+
+> **Besonders aufwändig**: 900200 (3 Rune Weapons) und 900205 (Frost Wyrm) sind die komplexesten Spells bisher. Rune Weapons brauchen Core-Verständnis der DRW-Mechanik, Frost Wyrm braucht komplett neues Creature mit Model + AI.
 
 ---
 
