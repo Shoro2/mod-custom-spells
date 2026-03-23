@@ -100,7 +100,11 @@ Nächste freie ID für neue Spells: **900122+**
 | Hunter | BM | 900302-900304 | 3 | geplant |
 | Hunter | MM | 900305-900306 | 2 | geplant |
 | Hunter | Surv | 900307 | 1 | geplant |
-| (weitere Klassen) | — | ab 900350+ | — | Wartet auf weitere Teile |
+| Rogue | Shared | 900350 | 1 | geplant |
+| Rogue | Assa | 900351-900353 | 3 | geplant |
+| Rogue | Combat | 900354-900357 | 4 | geplant |
+| Rogue | Sub | 900358-900359 | 2 | geplant |
+| (weitere Klassen) | — | ab 900400+ | — | Wartet auf weitere Teile |
 
 ---
 
@@ -301,6 +305,44 @@ Nächste freie ID für neue Spells: **900122+**
 > **Helper-Spells Hunter**: 900304 (Pet AoE) braucht AoE-Damage-Spell (z.B. 900308). 900305 (Auto Shot Bounce) braucht Bounce-Damage-Spell (z.B. 900309). 900306 (Multi-Shot Channel) braucht eigene Channel-Spell-DBC-Entry. 900307 (Explosive Trap on Damage) braucht evtl. modifizierte Trap-Spell-Variante. IDs ab 900308+ für Helper verfügbar.
 
 > **Besonders aufwändig**: 900306 (Multi-Shot Autocast Channel) ist ein neuartiges Konzept — 20 Multi-Shots in 2s braucht sorgfältiges Balancing und Performance-Tests (viele Projectiles gleichzeitig). 900305 (Auto Shot Bounce) ist ein Custom-Chain-System das es im Base-Game nicht gibt.
+
+---
+
+### Rogue — Shared (900350)
+
+> Rogue SpellFamilyName = 8. "Energy regen +50%" gilt für alle 3 Specs → shared Spell.
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900350 | Energy regeneration +50% | DBC | geplant | Passive Aura: `SPELL_AURA_MOD_POWER_REGEN_PERCENT` +50% für Energy (Power Type 3). Rogue Base Energy Regen = 10/s → wird 15/s. Vergleichbar mit Vitality-Talent. SpellFamilyName=8, Target=Self. |
+
+### Rogue — Assassination (900351-900353)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900351 | Mutilate damage +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Mutilate (SpellFamilyFlags für Mutilate 5374/27576). Oder `SPELL_AURA_MOD_DAMAGE_DONE_FOR_MECHANIC` spezifisch. Einfacher Damage-Multiplikator. |
+| 2 | 900352 | Poison damage +50% | DBC/C++ | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf alle Poison-Spells (Instant Poison 57965, Deadly Poison 57970, Wound Poison 57975, etc.). Alle Poison-Spells haben gemeinsame SpellFamilyFlags → ein Aura-Effekt kann mehrere abdecken. Alternativ C++: `OnDamage`-Hook → Wenn Damage-Spell School=Nature + SpellFamily=Rogue → ×1.5. |
+| 3 | 900353 | Poison damage has chance to unleash Poison Nova | C++ | geplant | Proc-Aura: `PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_POS|NEG` mit SpellFamily-Filter auf Poison-Spells. `HandleProc`: Chance X% → CastSpell(Poison Nova Helper, triggered=true) am Target. Poison Nova = AoE Nature Damage um Target. Braucht Helper-AoE-Spell (z.B. 900360). ICD empfohlen (z.B. 3s). |
+
+### Rogue — Combat (900354-900357)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900354 | Sinister Strike damage +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Sinister Strike (48638). SpellFamilyFlags für SS identifizieren. Einfacher Damage-Multiplikator. |
+| 2 | 900355 | Sinister Strike +9 targets | C++/DBC | geplant | Sinister Strike (48638) ist Single-Target Melee. Ansatz: SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Melee-Radius. CastSpell(SS-Damage-Helper, triggered=true) auf jedes Target. Ähnlich wie Hunter Auto Shot Bounce (900305). Braucht Helper-Spell (z.B. 900361). |
+| 3 | 900356 | Blade Dance (Blade Flurry) duration 2 min | DBC | geplant | Blade Flurry (13877) hat normalerweise 15s Duration. DBC-Patch: Duration auf 120000ms (2 min) setzen. Einfache DBC-Änderung. |
+| 4 | 900357 | Blade Dance (Blade Flurry) +9 targets | C++/DBC | geplant | Blade Flurry (13877) trifft normalerweise 1 zusätzliches Ziel. DBC: `MaxAffectedTargets` auf 10 setzen. C++: Falls Target-Limit hardcoded → `OnObjectAreaTargetSelect` überschreiben. Blade Flurry kopiert Melee-Damage auf zusätzliche Targets → alle 9 extra Targets bekommen den Damage. |
+
+### Rogue — Subtlety (900358-900359)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900358 | Hemorrhage damage +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Hemorrhage (48660). SpellFamilyFlags für Hemorrhage. Einfacher Damage-Multiplikator wie Mutilate (900351). |
+| 2 | 900359 | Hemorrhage +9 targets | C++ | geplant | Hemorrhage (48660) ist Single-Target Melee. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Melee-Radius. CastSpell(Hemorrhage-Damage-Helper, triggered=true) auf jedes. Gleicher Ansatz wie SS +9 (900355). Braucht Helper-Spell (z.B. 900362). |
+
+> **Helper-Spells Rogue**: 900353 (Poison Nova) braucht AoE-Nature-Damage-Spell (z.B. 900360). 900355 (SS +9) braucht Chain-Damage-Helper (z.B. 900361). 900359 (Hemorrhage +9) braucht Chain-Damage-Helper (z.B. 900362). IDs ab 900360+ für Helper verfügbar.
+
+> **Besonders aufwändig**: 900355 (SS +9 targets) und 900359 (Hemorrhage +9 targets) sind Custom-Chain-Melee-Systeme — Melee-Abilities auf mehrere Targets verteilen ist ungewöhnlich im Base-Game. 900357 (Blade Flurry +9 targets) könnte Performance-intensiv sein bei vielen Mobs.
 
 ---
 
