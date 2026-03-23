@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -97,7 +97,12 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Mage Arcane: Emergency Mana Shield proc passive
 (900708, 'spell_custom_mage_emergency_shield'),
 -- Mage Arcane: Targeted Blink (active spell)
-(900713, 'spell_custom_mage_targeted_blink');
+(900713, 'spell_custom_mage_targeted_blink'),
+-- Mage Fire: Fireball +9 targets (all ranks via negative ID)
+(-42833, 'spell_custom_mage_fb_aoe'),
+-- Mage Fire: Pyroblast +9 targets + Hot Streak (all ranks via negative ID)
+(-42891, 'spell_custom_mage_pyro_aoe'),
+(-42891, 'spell_custom_mage_pyro_hotstreak');
 -- 900500: Get back arrows → PlayerScript (no spell_script_names needed)
 -- 900501: Multi-Shot AoE → checked via HasAura (hooked on Multi-Shot via -49048 above)
 -- 900502/900503/900504: Pet passives → UnitScript/PlayerScript (no spell_script_names needed)
@@ -783,3 +788,34 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- Effect=DUMMY(3), ImplicitTargetA=16 (ground targeting), RangeIndex=5 (40yd)
 -- SpellIconID=258 (Blink icon). Needs client DBC patch for ground cursor.
 (900713, 0x10000000, 0, 0, 0, 1, 0, 5, 3, 0, 0, 16, 0, 0, 0, 0, 0, 0, 3, 258, 0, 0, 'Targeted Blink', 0x003F3F);
+
+-- ============================================================
+-- Mage Fire: spell_dbc entries (900733-900740)
+-- SpellFamilyName=3 (Mage)
+-- Fireball SpellFamilyFlags[0]=0x1 (verify!)
+-- Pyroblast SpellFamilyFlags[0]=0x400000 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900733, 900734, 900735, 900736, 900737, 900738, 900739, 900740);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900733: Fireball +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x1 targets Fireball (verify!)
+(900733, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 0, 3, 185, 4, 0, 'Fire: Fireball +50%', 0x003F3F),
+-- 900734: Fireball +9 targets (DUMMY marker, C++ on -42833)
+(900734, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 185, 0, 0, 'Fire: Fireball AoE', 0x003F3F),
+-- 900735: Pyroblast +9 targets (DUMMY marker, C++ on -42891)
+(900735, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 1726, 0, 0, 'Fire: Pyro AoE', 0x003F3F),
+-- 900736: Pyroblast +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x400000 targets Pyroblast (verify!)
+(900736, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x400000, 0, 0, 3, 1726, 4, 0, 'Fire: Pyro +50%', 0x003F3F),
+-- 900737: Fire Blast off GCD + cast while casting (DUMMY marker)
+-- NOTE: Actual behavior requires DBC patch on Fire Blast (42873):
+--   StartRecoveryCategory=0, AttributesEx4 |= SPELL_ATTR4_CAN_CAST_WHILE_CASTING
+(900737, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 12, 0, 0, 'Fire: Blast Off GCD', 0x003F3F),
+-- 900738: Pyroblast triggers Hot Streak (DUMMY marker, C++ on -42891)
+(900738, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 1726, 0, 0, 'Fire: Pyro Hot Streak', 0x003F3F),
+-- 900739: Helper - Fireball bounce (instant Fire single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=4 (Fire)
+(900739, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 185, 4, 0, 'Fireball Bounce', 0x003F3F),
+-- 900740: Helper - Pyroblast bounce (instant Fire single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=4 (Fire)
+(900740, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 1726, 4, 0, 'Pyroblast Bounce', 0x003F3F);

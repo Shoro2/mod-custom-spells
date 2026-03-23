@@ -191,6 +191,16 @@ enum CustomSpellIds
     SPELL_MAGE_ARC_EVOC_BUFF           = 900712,
     SPELL_MAGE_ARC_TARGETED_BLINK      = 900713,
 
+    // ---- Mage Fire (900733-900765) ----
+    SPELL_MAGE_FIRE_FB_DMG_PASSIVE     = 900733,
+    SPELL_MAGE_FIRE_FB_AOE_PASSIVE     = 900734,
+    SPELL_MAGE_FIRE_PYRO_AOE_PASSIVE   = 900735,
+    SPELL_MAGE_FIRE_PYRO_DMG_PASSIVE   = 900736,
+    SPELL_MAGE_FIRE_FBLAST_GCD_PASSIVE = 900737,
+    SPELL_MAGE_FIRE_PYRO_HS_PASSIVE    = 900738,
+    SPELL_MAGE_FIRE_FB_AOE_HELPER      = 900739,
+    SPELL_MAGE_FIRE_PYRO_AOE_HELPER    = 900740,
+
     // ---- Druid Balance (901000-901032) ----
     SPELL_BAL_MF_AOE_PASSIVE            = 901000,
     SPELL_BAL_MF_DMG_PASSIVE            = 901001,
@@ -333,6 +343,12 @@ constexpr uint32 SPELL_BLINK                   = 1953;   // Blink
 constexpr uint32 SPELLFAMILY_MAGE_ID           = 3;
 // Arcane Barrage SpellFamilyFlags[1] = 0x1000000 (verify!)
 // Arcane Blast SpellFamilyFlags[0] = 0x20000000 (verify!)
+constexpr uint32 SPELL_FIREBALL_R16        = 42833;  // Fireball highest rank
+constexpr uint32 SPELL_PYROBLAST_R12       = 42891;  // Pyroblast highest rank
+constexpr uint32 SPELL_FIRE_BLAST_R11      = 42873;  // Fire Blast highest rank
+constexpr uint32 SPELL_HOT_STREAK          = 48108;  // Hot Streak buff
+// Fireball SpellFamilyFlags[0] = 0x1 (verify!)
+// Pyroblast SpellFamilyFlags[0] = 0x400000 (verify!)
 
 // Per-class registration functions
 void AddWarriorSpellsScripts();

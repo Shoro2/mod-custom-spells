@@ -399,6 +399,158 @@ public:
 //  End Mage Arcane section
 // ============================================================
 
+// ============================================================
+//  MAGE FIRE: Fireball +9 targets (900734)
+//  Hooked on Fireball (all ranks via -42833).
+//  After hitting main target, deals same damage to up to 9
+//  additional enemies within 10yd.
+// ============================================================
+class spell_custom_mage_fb_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_fb_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_MAGE_FIRE_FB_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, targets, check);
+        Cell::VisitObjects(mainTarget, searcher, 10.0f);
+        targets.remove(mainTarget);
+
+        uint32 count = 0;
+        for (Unit* target : targets)
+        {
+            if (count >= 9)
+                break;
+            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
+                continue;
+
+            caster->CastCustomSpell(target, SPELL_MAGE_FIRE_FB_AOE_HELPER,
+                &damage, nullptr, nullptr, true);
+            ++count;
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_mage_fb_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  MAGE FIRE: Pyroblast +9 targets (900735)
+//  Hooked on Pyroblast (all ranks via -42891).
+//  After hitting main target, deals same damage to up to 9
+//  additional enemies within 10yd.
+// ============================================================
+class spell_custom_mage_pyro_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_pyro_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_MAGE_FIRE_PYRO_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, targets, check);
+        Cell::VisitObjects(mainTarget, searcher, 10.0f);
+        targets.remove(mainTarget);
+
+        uint32 count = 0;
+        for (Unit* target : targets)
+        {
+            if (count >= 9)
+                break;
+            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
+                continue;
+
+            caster->CastCustomSpell(target, SPELL_MAGE_FIRE_PYRO_AOE_HELPER,
+                &damage, nullptr, nullptr, true);
+            ++count;
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_mage_pyro_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  MAGE FIRE: Pyroblast triggers Hot Streak (900738)
+//  Hooked on Pyroblast (all ranks via -42891).
+//  After each Pyroblast cast, applies Hot Streak (48108)
+//  giving a guaranteed instant Pyroblast next cast.
+// ============================================================
+class spell_custom_mage_pyro_hotstreak : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_pyro_hotstreak);
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster()->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_MAGE_FIRE_PYRO_HS_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Apply Hot Streak buff (instant Pyroblast)
+        player->CastSpell(player, SPELL_HOT_STREAK, true);
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_mage_pyro_hotstreak::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  End Mage Fire section
+// ============================================================
+
 void AddMageSpellsScripts()
 {
     // Mage Arcane
@@ -410,4 +562,9 @@ void AddMageSpellsScripts()
     RegisterSpellScript(spell_custom_mage_emergency_shield);
     RegisterSpellScript(spell_custom_mage_targeted_blink);
     new custom_mage_mana_regen_playerscript();
+
+    // Mage Fire
+    RegisterSpellScript(spell_custom_mage_fb_aoe);
+    RegisterSpellScript(spell_custom_mage_pyro_aoe);
+    RegisterSpellScript(spell_custom_mage_pyro_hotstreak);
 }
