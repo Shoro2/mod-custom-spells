@@ -315,7 +315,7 @@ class custom_druid_summon_heal_unitscript : public UnitScript
 public:
     custom_druid_summon_heal_unitscript() : UnitScript("custom_druid_summon_heal_unitscript") {}
 
-    void OnUnitDeath(Unit* unit) override
+    void OnUnitDeath(Unit* unit, Unit* /*killer*/) override
     {
         if (!unit)
             return;

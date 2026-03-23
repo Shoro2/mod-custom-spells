@@ -361,7 +361,7 @@ class custom_mage_mana_regen_playerscript : public PlayerScript
 public:
     custom_mage_mana_regen_playerscript() : PlayerScript("custom_mage_mana_regen_playerscript") {}
 
-    void OnLogout(Player* player) override
+    void OnPlayerLogout(Player* player) override
     {
         if (player)
             _lastRegen.erase(player->GetGUID());
@@ -698,10 +698,8 @@ class spell_custom_mage_permanent_water_ele : public SpellScript
             return;
 
         // Find the Water Elemental among controlled units and make permanent
-        for (Unit::ControlList::iterator itr = player->m_Controlled.begin();
-             itr != player->m_Controlled.end(); ++itr)
+        for (Unit* controlled : player->m_Controlled)
         {
-            Unit* controlled = *itr;
             if (!controlled || !controlled->IsAlive())
                 continue;
 

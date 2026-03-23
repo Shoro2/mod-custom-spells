@@ -16,6 +16,7 @@
  */
 
 #include "custom_spells_common.h"
+#include "Pet.h"
 
 // ============================================================
 //  HUNTER: Shared - Get back arrows (900500)
@@ -27,7 +28,7 @@ class custom_hunter_arrows_playerscript : public PlayerScript
 public:
     custom_hunter_arrows_playerscript() : PlayerScript("custom_hunter_arrows_playerscript") {}
 
-    void OnSpellCast(Player* player, Spell* spell, bool /*skipCheck*/) override
+    void OnPlayerSpellCast(Player* player, Spell* spell, bool /*skipCheck*/) override
     {
         if (!player || !player->IsAlive())
             return;
