@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771, 900800, 900802, 900834, -47964, 47994, 18788, -47809, -59172, -48066, 900933, 900966, 900967);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771, 900800, 900802, 900834, -47964, 47994, 18788, -47809, -59172, -48066, 900933, 900966, 900967, 901101, 901102, 901103, 901104);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -134,7 +134,16 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Priest Shadow: DoT ticks → Shadow AoE (proc aura)
 (900966, 'spell_custom_pri_dot_aoe'),
 -- Priest Shadow: DoT ticks → Spread to 2 targets (proc aura)
-(900967, 'spell_custom_pri_dot_spread');
+(900967, 'spell_custom_pri_dot_spread'),
+-- Global: Kill enemy → heal 5% HP (proc aura)
+(901101, 'spell_custom_global_kill_heal'),
+-- Global: Extra Attack 25% (proc aura)
+(901102, 'spell_custom_global_extra_attack'),
+-- Global: 10% chance cleave to all enemies (proc aura)
+(901103, 'spell_custom_global_cleave_proc'),
+-- Global: Avoid attack → counter attack (proc aura)
+(901104, 'spell_custom_global_counter_attack');
+-- 901100: Cast while moving → DBC only (SPELL_AURA_CAST_WHILE_WALKING)
 -- 900901: Shields +50% → DBC only
 -- 900902: Weakened Soul 5s → DBC override on existing spell
 -- 900867: Shadow Bolt +50% → DBC only
@@ -1115,3 +1124,42 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 (900966, 0, 6, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 20, 2000, 0),
 -- 900967: DoT tick → Spread. ProcFlags=0x40000 (DONE_PERIODIC), 15%, 3s ICD.
 (900967, 0, 6, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 15, 3000, 0);
+
+-- ============================================================
+-- Non-Class Global: spell_dbc entries (901100-901107)
+-- SpellFamilyName=0 (Generic)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (901100, 901101, 901102, 901103, 901104, 901105, 901106, 901107);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 901100: Cast while moving (SPELL_AURA_CAST_WHILE_WALKING = 330, DBC only)
+(901100, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 330, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Cast Moving', 0x003F3F),
+-- 901101: Kill → heal 5% HP (DUMMY, proc via spell_proc + C++)
+(901101, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Kill Heal', 0x003F3F),
+-- 901102: Extra Attack 25% (DUMMY, proc via spell_proc + C++)
+-- C++ grants extra attack via helper with ADD_EXTRA_ATTACKS
+(901102, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Extra Attack', 0x003F3F),
+-- 901103: 10% cleave to all enemies (DUMMY, proc via spell_proc + C++)
+(901103, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Cleave Proc', 0x003F3F),
+-- 901104: Avoid → counter attack (DUMMY, proc via spell_proc + C++)
+(901104, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Counter', 0x003F3F),
+-- 901105: Helper - Kill Heal (instant heal on caster, BasePoints via CastCustomSpell)
+(901105, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Kill Heal', 0x003F3F),
+-- 901106: Helper - Cleave Damage (instant single-target damage, BasePoints via CastCustomSpell)
+-- SchoolMask=1 (Physical) — damage type mirrors the original hit via CastCustomSpell
+(901106, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Cleave Hit', 0x003F3F),
+-- 901107: Helper - Counter Attack (instant Physical single-target, BasePoints via CastCustomSpell)
+(901107, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Counter Strike', 0x003F3F);
+
+-- ============================================================
+-- Non-Class Global: spell_proc entries
+-- ============================================================
+DELETE FROM `spell_proc` WHERE `SpellId` IN (901101, 901102, 901103, 901104);
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+-- 901101: Kill → heal. ProcFlags=0x1 (KILL), 100% chance, no ICD (kill-rate-limited).
+(901101, 0, 0, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 100, 0, 0),
+-- 901102: Extra Attack. ProcFlags=0x14 (melee auto + melee spell), 25%, 1s ICD (prevent recursion).
+(901102, 0, 0, 0, 0, 0, 0x14, 0, 2, 0, 0, 0, 0, 25, 1000, 0),
+-- 901103: Cleave proc. ProcFlags=0x10014 (melee auto + melee spell + spell magic neg), 10%, 1s ICD.
+(901103, 0, 0, 0, 0, 0, 0x10014, 1, 2, 0, 0, 0, 0, 10, 1000, 0),
+-- 901104: Counter attack. ProcFlags=0x2 (taken melee auto), 100% (C++ filters by hit mask), 2s ICD.
+(901104, 0, 0, 0, 0, 0, 0x2, 0, 0, 0, 0, 0, 0, 100, 2000, 0);

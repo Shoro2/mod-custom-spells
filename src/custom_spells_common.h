@@ -280,6 +280,16 @@ enum CustomSpellIds
     SPELL_DRST_HOT_HASTE_PASSIVE        = 901071,
     SPELL_DRST_MANA_REGEN_PASSIVE       = 901072,
     SPELL_DRST_TREANT_HEAL_HELPER       = 901073,
+
+    // ---- Non-Class Global (901100-901199) ----
+    SPELL_GLOBAL_CAST_WHILE_MOVING     = 901100,
+    SPELL_GLOBAL_KILL_HEAL             = 901101,
+    SPELL_GLOBAL_EXTRA_ATTACK          = 901102,
+    SPELL_GLOBAL_CLEAVE_PROC           = 901103,
+    SPELL_GLOBAL_COUNTER_ATTACK        = 901104,
+    SPELL_GLOBAL_KILL_HEAL_HELPER      = 901105,
+    SPELL_GLOBAL_CLEAVE_HELPER         = 901106,
+    SPELL_GLOBAL_COUNTER_HELPER        = 901107,
 };
 
 // ---- DK constants ----
@@ -451,3 +461,4 @@ void AddDruidSpellsScripts();
 void AddMageSpellsScripts();
 void AddWarlockSpellsScripts();
 void AddPriestSpellsScripts();
+void AddGlobalSpellsScripts();

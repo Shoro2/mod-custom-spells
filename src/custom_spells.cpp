@@ -34,6 +34,7 @@
  *    custom_spells_mage.cpp     - Mage (Arcane/Fire/Frost)
  *    custom_spells_warlock.cpp  - Warlock (Affli/Demo/Destro)
  *    custom_spells_priest.cpp   - Priest (Disc/Holy/Shadow)
+ *    custom_spells_global.cpp   - Non-Class Global (all classes)
  *
  *  Shared constants and spell IDs are in custom_spells_common.h
  */
@@ -50,4 +51,5 @@ void AddCustomSpellsScripts()
     AddMageSpellsScripts();
     AddWarlockSpellsScripts();
     AddPriestSpellsScripts();
+    AddGlobalSpellsScripts();
 }
