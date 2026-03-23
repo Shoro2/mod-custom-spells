@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771, 900800, 900802, 900834, -47964, 47994, 18788, -47809, -59172);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771, 900800, 900802, 900834, -47964, 47994, 18788, -47809, -59172, -48066, 900933, 900966, 900967);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -126,7 +126,17 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Warlock Destruction: Shadow Bolt +9 targets (hooked on all ranks)
 (-47809, 'spell_custom_wlk_sb_aoe'),
 -- Warlock Destruction: Chaos Bolt +9 targets (hooked on all ranks)
-(-59172, 'spell_custom_wlk_cb_aoe');
+(-59172, 'spell_custom_wlk_cb_aoe'),
+-- Priest Discipline: Shields explode on break/fade (hooked on PW:S all ranks)
+(-48066, 'spell_custom_pri_shield_explode'),
+-- Priest Holy: Direct heals → Holy Fire on enemies (proc aura)
+(900933, 'spell_custom_pri_heal_fire'),
+-- Priest Shadow: DoT ticks → Shadow AoE (proc aura)
+(900966, 'spell_custom_pri_dot_aoe'),
+-- Priest Shadow: DoT ticks → Spread to 2 targets (proc aura)
+(900967, 'spell_custom_pri_dot_spread');
+-- 900901: Shields +50% → DBC only
+-- 900902: Weakened Soul 5s → DBC override on existing spell
 -- 900867: Shadow Bolt +50% → DBC only
 -- 900868: Chaos Bolt +50% → DBC only
 -- 900869: Chaos Bolt CD -2s → DBC only
@@ -1046,3 +1056,62 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- Attributes=0x10100000 (NOT_SHAPESHIFT + UNAFFECTED_BY_INVULNERABILITY)
 -- SchoolMask=4 (Fire, same as Chaos Bolt)
 (900872, 0x10100000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 4, 0, 'Chaos Bolt Bounce', 0x003F3F);
+
+-- ============================================================
+-- Priest Discipline: spell_dbc entries (900900-900903)
+-- SpellFamilyName=6 (Priest)
+-- PW:Shield SpellFamilyFlags[0]=0x1 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900900, 900901, 900902, 900903);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900900: Shields explode on break/fade (DUMMY marker, C++ on -48066)
+(900900, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Disc: Shield Explode', 0x003F3F),
+-- 900901: Shields +50% absorb (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE on PW:S)
+-- EffectSpellClassMaskA=0x1 targets PW:Shield (verify!)
+(900901, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 0, 6, 566, 0, 0, 'Disc: Shield +50%', 0x003F3F),
+-- 900903: Helper - Shield Explosion AoE (instant Holy AoE, 8yd around target)
+-- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=2 (Holy)
+-- BasePoints via CastCustomSpell (scales with shield amount)
+(900903, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 15, 0, 0, 0, 0, 0, 0, 6, 566, 2, 0, 'Shield Explosion', 0x003F3F);
+
+-- 900902: Weakened Soul duration override → 5 seconds
+-- This overrides the existing Weakened Soul debuff (6788) duration to 5s
+DELETE FROM `spell_dbc` WHERE `ID` = 6788;
+INSERT INTO `spell_dbc` (`ID`, `DurationIndex`) VALUES
+(6788, 1);
+-- NOTE: DurationIndex=1 = 6s (closest standard duration to 5s).
+-- For exact 5s, a custom SpellDuration.dbc entry or C++ override may be needed.
+-- Alternative approach: use a field-by-field override that only sets DurationIndex.
+
+-- ============================================================
+-- Priest Holy: spell_dbc entries (900933)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` = 900933;
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900933: Direct heals → Holy Fire on enemies (DUMMY, proc via spell_proc + C++)
+(900933, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Holy: Heal Fire', 0x003F3F);
+
+-- ============================================================
+-- Priest Shadow: spell_dbc entries (900966-900968)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900966, 900967, 900968);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900966: DoT ticks → Shadow AoE (DUMMY, proc via spell_proc + C++)
+(900966, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Shadow: DoT AoE', 0x003F3F),
+-- 900967: DoT ticks → Spread to 2 targets (DUMMY, proc via spell_proc + C++)
+(900967, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Shadow: DoT Spread', 0x003F3F),
+-- 900968: Helper - Shadow AoE (instant Shadow AoE damage, 8yd around target)
+-- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=32 (Shadow)
+(900968, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 0, 0, 0, 0, 0, 0, 6, 566, 32, 0, 'Shadow Eruption', 0x003F3F);
+
+-- ============================================================
+-- Priest: spell_proc entries
+-- ============================================================
+DELETE FROM `spell_proc` WHERE `SpellId` IN (900933, 900966, 900967);
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+-- 900933: Direct heal → Holy Fire. ProcFlags=0x10000 (DONE_SPELL_MAGIC_DMG_CLASS_POS), 20%, 3s ICD.
+(900933, 0, 6, 0, 0, 0, 0x10000, 2, 2, 0, 0, 0, 0, 20, 3000, 0),
+-- 900966: DoT tick → Shadow AoE. ProcFlags=0x40000 (DONE_PERIODIC), 20%, 2s ICD.
+(900966, 0, 6, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 20, 2000, 0),
+-- 900967: DoT tick → Spread. ProcFlags=0x40000 (DONE_PERIODIC), 15%, 3s ICD.
+(900967, 0, 6, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 15, 3000, 0);
