@@ -33,6 +33,7 @@
 #include "PetDefines.h"
 #include "PlayerScript.h"
 #include "GameTime.h"
+#include "UnitScript.h"
 
 /*
  * ==========================================================================
@@ -138,6 +139,20 @@ enum CustomSpellIds
     SPELL_ELE_LVB_TWO_CHARGES_PASSIVE   = 900406, // Lava Burst two charges (C++)
     SPELL_ELE_CC_INSTANT_LVB_PASSIVE    = 900407, // Clearcasting → instant Lava Burst (DBC)
     SPELL_ELE_CL_AOE_HELPER             = 900408, // Chain Lightning AoE damage helper
+
+    // ---- Shaman Enhance (900433-900465) ----
+    SPELL_ENH_TOTEM_FOLLOW_PASSIVE      = 900433, // Totems follow (reuse PlayerScript)
+    SPELL_ENH_MAELSTROM_AOE_PASSIVE     = 900434, // 5 Maelstrom → summons AoE 5s (C++)
+    SPELL_ENH_MAELSTROM_AOE_BUFF        = 900439, // Buff: summons deal AoE on attack 5s
+    SPELL_ENH_SUMMON_DMG_PASSIVE        = 900435, // Summons +50% damage (DBC)
+    SPELL_ENH_WOLF_SUMMON_PASSIVE       = 900436, // Auto attack → summon wolf (C++)
+    SPELL_ENH_WOLF_HASTE_PASSIVE        = 900437, // Spirit Wolves inherit haste (C++)
+    SPELL_ENH_WOLF_CL_PASSIVE           = 900438, // Spirit Wolves 5% CL on hit (C++)
+    SPELL_ENH_WOLF_AOE_HELPER           = 900440, // Wolf AoE damage helper
+
+    // ---- Shaman Resto (900466-900499) ----
+    SPELL_RST_TOTEM_FOLLOW_PASSIVE      = 900466, // Totems follow (reuse PlayerScript)
+    SPELL_RST_MANA_REGEN_PASSIVE        = 900467, // Mana regen +2% per missing mana% (C++)
 };
 
 // ---- DK constants ----
@@ -160,6 +175,11 @@ constexpr uint32 SPELL_OVERLOAD_CL          = 45297;  // Lightning Overload (CL)
 constexpr uint32 SPELL_FIRE_ELEMENTAL_TOTEM = 2894;
 // NPC_FIRE_ELEMENTAL = 15438 already defined in PetDefines.h
 constexpr uint32 NPC_RAGNAROS_CUSTOM        = 900402; // Custom Ragnaros NPC
+constexpr uint32 SPELL_MAELSTROM_WEAPON     = 53817;  // Maelstrom Weapon buff
+constexpr uint32 SPELL_FERAL_SPIRIT         = 51533;  // Summon Spirit Wolves
+constexpr uint32 NPC_SPIRIT_WOLF            = 29264;  // Spirit Wolf NPC
+constexpr uint32 NPC_CUSTOM_WOLF            = 900436; // Custom summoned wolf
+constexpr uint32 SPELL_CL_R6               = 49271;  // Chain Lightning rank 6
 // Flame Shock SpellFamilyFlags[0] = 0x10000000, SpellFamilyName = 11
 
 // ---- Bloodthirst SpellFamilyFlags ----
@@ -1798,7 +1818,10 @@ public:
         if (!player || !player->IsAlive())
             return;
 
-        if (!player->HasAura(SPELL_ELE_TOTEM_FOLLOW_PASSIVE))
+        // Check for any of the three totem follow passives (Ele/Enh/Resto)
+        if (!player->HasAura(SPELL_ELE_TOTEM_FOLLOW_PASSIVE) &&
+            !player->HasAura(SPELL_ENH_TOTEM_FOLLOW_PASSIVE) &&
+            !player->HasAura(SPELL_RST_TOTEM_FOLLOW_PASSIVE))
             return;
 
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
@@ -2113,6 +2136,248 @@ class spell_custom_ele_lvb_charges : public SpellScript
 //  (No separate C++ class needed — DBC handles it.)
 // ============================================================
 
+// ============================================================
+//  SPELL 900434: 5 Maelstrom stacks → summons empowered AoE 5s
+//  Hooked on Maelstrom Weapon (53817). When stacks reach 5,
+//  apply a 5s buff (900439) that makes summons deal AoE.
+// ============================================================
+class spell_custom_enh_maelstrom_aoe : public AuraScript
+{
+    PrepareAuraScript(spell_custom_enh_maelstrom_aoe);
+
+    void HandleStackChange(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        if (GetStackAmount() < 5)
+            return;
+
+        Unit* owner = GetUnitOwner();
+        if (!owner)
+            return;
+
+        Player* player = owner->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_ENH_MAELSTROM_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Apply empowerment buff on player (5s duration)
+        player->CastSpell(player, SPELL_ENH_MAELSTROM_AOE_BUFF, true);
+
+        // Make all controlled units deal AoE around their targets
+        for (auto itr = player->m_Controlled.begin(); itr != player->m_Controlled.end(); ++itr)
+        {
+            Unit* pet = *itr;
+            if (pet && pet->IsAlive() && pet->ToCreature())
+                pet->CastSpell(pet, SPELL_ENH_WOLF_AOE_HELPER, true);
+        }
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Maelstrom 5 stacks → summons empowered",
+            player->GetName());
+    }
+
+    void Register() override
+    {
+        OnEffectApply += AuraEffectApplyFn(spell_custom_enh_maelstrom_aoe::HandleStackChange,
+            EFFECT_0, SPELL_AURA_ADD_PCT_MODIFIER, AURA_EFFECT_HANDLE_CHANGE_AMOUNT);
+    }
+};
+
+// ============================================================
+//  SPELL 900436: Auto attacks → chance to summon wolf
+//  Proc aura: on melee auto attack, chance to summon a
+//  temporary wolf that fights for 15 seconds.
+// ============================================================
+class spell_custom_enh_wolf_summon : public AuraScript
+{
+    PrepareAuraScript(spell_custom_enh_wolf_summon);
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        Unit* target = eventInfo.GetActionTarget();
+        if (!target || !target->IsAlive())
+            return;
+
+        // Summon a temporary wolf (15s)
+        if (Creature* wolf = player->SummonCreature(NPC_CUSTOM_WOLF,
+            target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),
+            player->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
+        {
+            wolf->SetOwnerGUID(player->GetGUID());
+            wolf->SetCreatorGUID(player->GetGUID());
+            wolf->SetFaction(player->GetFaction());
+            wolf->Attack(target, true);
+            wolf->GetMotionMaster()->MoveChase(target);
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(spell_custom_enh_wolf_summon::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  SPELL 900437: Spirit Wolves inherit haste
+//  Hooked on Feral Spirit (51533). After cast, apply owner's
+//  haste rating to the wolves as attack speed reduction.
+// ============================================================
+class spell_custom_enh_wolf_haste : public SpellScript
+{
+    PrepareSpellScript(spell_custom_enh_wolf_haste);
+
+    void HandleAfterCast()
+    {
+        Unit* caster = GetCaster();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_ENH_WOLF_HASTE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Get owner's haste percentage
+        float haste = player->GetFloatValue(UNIT_MOD_CAST_SPEED);
+        // haste is a multiplier <1 = faster. E.g. 0.8 = 20% haste
+
+        for (auto itr = player->m_Controlled.begin(); itr != player->m_Controlled.end(); ++itr)
+        {
+            if ((*itr)->GetEntry() == NPC_SPIRIT_WOLF && (*itr)->ToCreature())
+            {
+                Creature* wolf = (*itr)->ToCreature();
+                // Apply haste: reduce base attack time
+                uint32 baseAttack = wolf->GetAttackTime(BASE_ATTACK);
+                uint32 newAttack = static_cast<uint32>(baseAttack * haste);
+                wolf->SetAttackTime(BASE_ATTACK, newAttack);
+
+                LOG_INFO("module",
+                    "mod-custom-spells: Player {} -> Spirit Wolf haste applied ({}ms → {}ms)",
+                    player->GetName(), baseAttack, newAttack);
+            }
+        }
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_enh_wolf_haste::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  SPELL 900438: Spirit Wolves 5% Chain Lightning on melee hit
+//  UnitScript: On any damage dealt, if attacker is a Spirit
+//  Wolf and owner has passive, 5% CL proc.
+// ============================================================
+class custom_wolf_cl_unitscript : public UnitScript
+{
+public:
+    custom_wolf_cl_unitscript() : UnitScript("custom_wolf_cl_unitscript") {}
+
+    void OnDamage(Unit* attacker, Unit* victim, uint32& /*damage*/) override
+    {
+        if (!attacker || !victim || !victim->IsAlive())
+            return;
+
+        Creature* wolf = attacker->ToCreature();
+        if (!wolf || wolf->GetEntry() != NPC_SPIRIT_WOLF)
+            return;
+
+        Unit* owner = wolf->GetOwner();
+        if (!owner)
+            return;
+
+        Player* player = owner->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_ENH_WOLF_CL_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // 5% chance
+        if (!roll_chance_i(5))
+            return;
+
+        // Cast Chain Lightning from the wolf
+        wolf->CastSpell(victim, SPELL_CL_R6, true);
+    }
+};
+
+// ============================================================
+//  SPELL 900467: Mana regen +2% per missing mana %
+//  PlayerScript: periodically adjust mana regen based on
+//  how much mana is missing.
+// ============================================================
+class custom_mana_regen_playerscript : public PlayerScript
+{
+public:
+    custom_mana_regen_playerscript() : PlayerScript("custom_mana_regen_playerscript") {}
+
+    void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
+    {
+        if (!player || !player->IsAlive())
+            return;
+
+        if (!player->HasAura(SPELL_RST_MANA_REGEN_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Throttle: only every 5 seconds
+        uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
+        static std::unordered_map<ObjectGuid, uint32> s_lastRegen;
+        ObjectGuid guid = player->GetGUID();
+        if (s_lastRegen.count(guid) && (now - s_lastRegen[guid]) < 5)
+            return;
+        s_lastRegen[guid] = now;
+
+        uint32 maxMana = player->GetMaxPower(POWER_MANA);
+        uint32 curMana = player->GetPower(POWER_MANA);
+        if (maxMana == 0)
+            return;
+
+        // Calculate missing mana percentage (0-100)
+        float missingPct = 100.0f * (1.0f - static_cast<float>(curMana) / maxMana);
+        // Regen bonus = missingPct * 2% of max mana, applied per 5s tick
+        int32 bonus = static_cast<int32>(maxMana * (missingPct * 0.02f) / 100.0f);
+        // Scale to per-5s (this runs every 5s)
+        if (bonus > 0)
+            player->EnergizeBySpell(player, SPELL_RST_MANA_REGEN_PASSIVE,
+                bonus, POWER_MANA);
+    }
+};
+
+// ============================================================
+//  Extend totem follow PlayerScript to also check 900433 + 900466
+// ============================================================
+
 void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
@@ -2168,4 +2433,16 @@ void AddCustomSpellsScripts()
     RegisterSpellScript(spell_custom_ele_fs_reset_lvb);
     RegisterSpellScript(spell_custom_ele_lvb_charges);
     // 900407: Clearcasting → LvB instant is DBC-only (no C++ needed)
+
+    // Shaman Enhancement
+    RegisterSpellScript(spell_custom_enh_maelstrom_aoe);
+    RegisterSpellScript(spell_custom_enh_wolf_summon);
+    RegisterSpellScript(spell_custom_enh_wolf_haste);
+    new custom_wolf_cl_unitscript();
+    // 900433/900466: Totem follow reuses custom_totem_follow_playerscript (checks all 3 passives)
+    // 900435: Summons +50% damage is DBC-only
+
+    // Shaman Resto
+    new custom_mana_regen_playerscript();
+    // 900466: Totem follow reuses custom_totem_follow_playerscript
 }
