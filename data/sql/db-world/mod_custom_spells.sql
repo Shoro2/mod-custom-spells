@@ -149,7 +149,7 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (901104, 'spell_custom_global_counter_attack');
 -- 901100: Cast while moving → DBC only (SPELL_AURA_CAST_WHILE_WALKING)
 -- 900901: Shields +50% → DBC only
--- 900902: Weakened Soul 5s → DBC override on existing spell
+-- 900902: Weakened Soul 5s → REMOVED (was vanilla spell override on ID 6788)
 -- 900867: Shadow Bolt +50% → DBC only
 -- 900868: Chaos Bolt +50% → DBC only
 -- 900869: Chaos Bolt CD -2s → DBC only
@@ -1109,12 +1109,6 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- BasePoints via CastCustomSpell (scales with shield amount)
 (900903, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 15, 13, 0, 0, 0, 0, 0, 0, 6, 566, 2, 0, 'Shield Explosion', 0x003F3F);
 
--- 900902: Weakened Soul duration override → 5 seconds
--- This overrides the existing Weakened Soul debuff (6788) duration to 5s
--- DurationIndex=28 = 5000ms (5s) from SpellDuration.dbc
-DELETE FROM `spell_dbc` WHERE `ID` = 6788;
-INSERT INTO `spell_dbc` (`ID`, `DurationIndex`) VALUES
-(6788, 28);
 
 -- ============================================================
 -- Priest Holy: spell_dbc entries (900933)
