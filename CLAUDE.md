@@ -70,9 +70,9 @@ mod-custom-spells/
 ## DBC Status
 
 Spell IDs 900100-900121 existieren alle in `Spell.dbc` (22 Einträge) und sind fertig implementiert (DBC + C++ wo nötig).
-Einzige Ausnahme: **Thunderclap → Rend + 5× Sunder Armor** (Arms/Prot) fehlt noch.
+Spell IDs 900122-900129 (Warrior Prot + Helper) existieren in `spell_dbc` Tabelle und sind implementiert (DBC + C++).
 
-Nächste freie ID für neue Spells: **900122+**
+Nächste freie ID für neue Spells: **900130+** (Warrior-Block reserviert bis 900129)
 
 ---
 
@@ -86,7 +86,7 @@ Nächste freie ID für neue Spells: **900122+**
 |--------|------|----------|--------|--------|
 | Warrior | Arms | 900100-900109 | 10 | getestet (bis auf TC→Rend+Sunder: geplant) |
 | Warrior | Fury | 900110-900121 | 12 | getestet |
-| Warrior | Prot | 900122-900127 | 6 | geplant |
+| Warrior | Prot | 900122-900129 | 6+2 Helper | implementiert |
 | Paladin | Holy | 900150-900157 | 8 | geplant |
 | Paladin | Prot | 900158-900165 | 8 | geplant |
 | Paladin | Ret | 900166-900172 | 7 | geplant |
@@ -153,18 +153,20 @@ Nächste freie ID für neue Spells: **900122+**
 | — | 900119+900121 | WW 1 target → autocast Slam | C++ | getestet |
 | 10 | (DBC) | Remove WW stance requirement | DBC | getestet |
 
-### Warrior — Prot (ab 900122)
+### Warrior — Prot (900122-900129)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900122 | Revenge +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Revenge. |
-| 2 | 900123 | Revenge unlimited targets | C++ | geplant | Revenge ist Single-Target. AoE-Umbau: DBC TargetA→`TARGET_UNIT_SRC_AREA_ENEMY` + SpellScript für Target-Filterung. |
-| 3 | 900124 | Thunderclap → Rend + 5× Sunder Armor | C++ | geplant | Passive Marker-Aura, TC-Hook prüft via `HasAura`. `AfterHit` pro Target: CastSpell(Rend) + 5× CastSpell(SunderArmor). Wird auch von Arms geteilt. |
-| 4 | 900125 | Thunderclap +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für TC. |
-| 5 | 900126 | AoE damage on Block | C++ | geplant | Proc-Aura mit `PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK` + HitMask=BLOCK. HandleProc: CastSpell(AoE-Damage-Spell). Braucht zusätzlichen AoE-Damage-Spell (eigene ID). |
-| 6 | 900127 | 10% Block-Chance → Enhanced Thunderclap | C++ | geplant | Passive Proc-Aura: Block-Proc, 10% Chance. Triggered: Enhanced TC Spell (eigene ID, höherer Damage). |
+| 1 | 900122 | Revenge +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x400 (Revenge). spell_dbc Entry. |
+| 2 | 900123 | Revenge unlimited targets | C++ | implementiert | Passive Marker-Aura (DUMMY). C++ SpellScript auf Revenge (57823): `AfterHit` → `AnyUnfriendlyUnitInObjectRangeCheck(8yd)` → DealDamage auf alle Feinde. Prüft `HasAura(900123)`. |
+| 3 | 900124 | Thunderclap → Rend + 5× Sunder Armor | C++ | implementiert | Passive Marker-Aura (DUMMY). C++ SpellScript auf TC (47502): `AfterHit` pro Target → CastSpell(Rend 47465) + 5× CastSpell(SunderArmor 58567). Prüft `HasAura(900124)`. |
+| 4 | 900125 | Thunderclap +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x80 (TC). spell_dbc Entry. |
+| 5 | 900126 | AoE damage on Block | C++ | implementiert | Proc-Aura (DUMMY) mit spell_proc: ProcFlags=0x2, 100% Chance, 1s ICD. C++ HandleProc: Prüft `PROC_HIT_BLOCK` → CastSpell(900128). |
+| 6 | 900127 | 10% Block → Enhanced Thunderclap | C++ | implementiert | Proc-Aura (DUMMY) mit spell_proc: ProcFlags=0x2, 10% Chance, 3s ICD. C++ HandleProc: Prüft `PROC_HIT_BLOCK` → CastSpell(900129). |
+| H1 | 900128 | Helper: Block AoE Damage | DBC | implementiert | Instant AoE Physical Damage. Effect=SCHOOL_DAMAGE(2), Target=SRC_AREA_ENEMY(22), BasePoints=500+100rnd, Radius=8yd. |
+| H2 | 900129 | Helper: Enhanced Thunderclap | DBC | implementiert | Instant AoE Physical Damage. Effect=SCHOOL_DAMAGE(2), Target=SRC_AREA_ENEMY(22), BasePoints=1000+200rnd, Radius=10yd. |
 
-> **Hinweis Prot**: Spells 900126 und 900127 brauchen jeweils zusätzliche Helper-Spells (AoE-Damage-Spell bzw. Enhanced TC). Diese können IDs ab 900128+ verwenden.
+> **Hinweis Prot**: 900122/900125 sind rein DBC (kein C++ nötig). 900123/900124 hooken auf bestehende Spells (57823/47502) und prüfen Marker-Aura via HasAura. 900126/900127 nutzen das Proc-System mit Block-Detection. SpellFamilyFlags für Revenge (0x400) und TC (0x80) müssen in-game verifiziert werden.
 
 ---
 
