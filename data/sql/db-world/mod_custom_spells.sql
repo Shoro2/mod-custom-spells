@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -60,7 +60,19 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Shaman Enhance: Wolf summon proc (on 900436)
 (900436, 'spell_custom_enh_wolf_summon'),
 -- Shaman Enhance: Wolf haste (on Feral Spirit 51533)
-(51533, 'spell_custom_enh_wolf_haste');
+(51533, 'spell_custom_enh_wolf_haste'),
+-- Hunter: Multi-Shot unlimited targets (all ranks via negative ID)
+(-49048, 'spell_custom_hunt_multishot_aoe'),
+-- Hunter MM: Auto Shot bounces +9 targets
+(75, 'spell_custom_hunt_autoshot_bounce'),
+-- Hunter MM: Multi-Shot Barrage (active spell, AuraScript)
+(900534, 'spell_custom_hunt_barrage'),
+-- Hunter Surv: Explosive trap proc passive
+(900566, 'spell_custom_hunt_surv_trap_proc');
+-- 900500: Get back arrows → PlayerScript (no spell_script_names needed)
+-- 900501: Multi-Shot AoE → checked via HasAura (hooked on Multi-Shot via -49048 above)
+-- 900502/900503/900504: Pet passives → UnitScript/PlayerScript (no spell_script_names needed)
+-- 900533: Auto Shot bounce → checked via HasAura (hooked on Auto Shot via 75 above)
 -- 900433/900466: Totem follow → PlayerScript (no spell_script_names needed)
 -- 900435: Summons +50% damage → DBC-only
 -- 900437/900438: Wolf haste/CL → checked via HasAura / UnitScript
@@ -464,3 +476,48 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
 DELETE FROM `creature_template_model` WHERE `CreatureID` = 900436;
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
 (900436, 0, 27074, 1, 1, 12340);
+
+-- ============================================================
+-- Hunter: spell_proc entries
+-- ============================================================
+
+-- Explosive trap proc (900566): procs on ranged auto + ranged spell damage.
+-- ProcFlags=0x44 (DONE_RANGED_AUTO_ATTACK 0x4 | DONE_SPELL_RANGED_DMG_CLASS 0x40).
+-- 15% chance, 2s ICD.
+DELETE FROM `spell_proc` WHERE `SpellId` = 900566;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900566, 0, 0, 0, 0, 0, 0x44, 1, 2, 0, 0, 0, 0, 15, 2000, 0);
+
+-- ============================================================
+-- Hunter: spell_dbc entries (900500-900567)
+-- SpellFamilyName=9 (Hunter)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900500, 900501, 900502, 900503, 900504, 900505, 900533, 900534, 900535, 900536, 900566, 900567);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900500: Get back arrows (DUMMY marker, PlayerScript)
+(900500, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'Hunt: Get Back Arrows', 0x003F3F),
+-- 900501: Multi-Shot unlimited targets (DUMMY marker, C++ on -49048)
+(900501, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'Hunt: Multishot AoE', 0x003F3F),
+-- 900502: Pet damage +50% (DUMMY marker, UnitScript)
+(900502, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'BM: Pet Damage +50%', 0x003F3F),
+-- 900503: Pet attack speed +50% (DUMMY marker, PlayerScript)
+(900503, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'BM: Pet Speed +50%', 0x003F3F),
+-- 900504: Pet AoE proc (DUMMY marker, UnitScript)
+(900504, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'BM: Pet AoE Proc', 0x003F3F),
+-- 900505: Helper - Pet AoE damage (instant AoE physical, 8yd around target)
+(900505, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 0, 0, 0, 0, 0, 0, 9, 132, 1, 0, 'Beast Cleave', 0x003F3F),
+-- 900533: Auto Shot bounces +9 (DUMMY marker, C++ on 75)
+(900533, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'MM: Autoshot Bounce', 0x003F3F),
+-- 900534: Multi-Shot Barrage (2s periodic, ticks every 100ms, PERIODIC_DUMMY)
+-- DurationIndex=4 (2000ms=2s), EffectAmplitude_1=100 (100ms ticks)
+(900534, 0x10000000, 0, 0, 0, 1, 4, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 100, 9, 132, 0, 0, 'MM: Barrage', 0x003F3F),
+-- 900535: Helper - Auto Shot bounce damage (instant Physical single-target)
+(900535, 0x10000000, 0, 0, 0, 1, 0, 4, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 9, 132, 1, 0, 'Ricochet Shot', 0x003F3F),
+-- 900536: Helper - Barrage slow debuff (-50% movement, 2s duration)
+-- Effect=APPLY_AURA(6), Aura=MOD_DECREASE_SPEED(11), BasePoints=-50
+(900536, 0x10000000, 0, 0, 0, 1, 4, 1, 6, 0, -50, 1, 11, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'Barrage Slow', 0x003F3F),
+-- 900566: Explosive trap proc passive (DUMMY, proc via spell_proc + C++)
+(900566, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'Surv: Trap Proc', 0x003F3F),
+-- 900567: Helper - Explosive burst (instant AoE Fire damage, 8yd around target)
+-- SchoolMask=4 (Fire), Target=DEST_AREA_ENEMY(15)
+(900567, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 1000, 15, 0, 0, 0, 0, 0, 0, 9, 132, 4, 0, 'Explosive Burst', 0x003F3F);
