@@ -390,15 +390,10 @@ class spell_custom_wlk_fg_unlim : public SpellScript
 {
     PrepareSpellScript(spell_custom_wlk_fg_unlim);
 
-    void CollectOriginalTargets(std::list<WorldObject*>& targets)
+    void RecordHit()
     {
-        _hitTargets.clear();
-        for (WorldObject* obj : targets)
-            _hitTargets.insert(obj->GetGUID());
-    }
-
-    void SaveDamage(SpellEffIndex /*effIndex*/)
-    {
+        if (Unit* target = GetHitUnit())
+            _hitTargets.insert(target->GetGUID());
         if (_savedDamage == 0)
             _savedDamage = GetHitDamage();
     }
@@ -442,12 +437,7 @@ class spell_custom_wlk_fg_unlim : public SpellScript
 
     void Register() override
     {
-        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(
-            spell_custom_wlk_fg_unlim::CollectOriginalTargets,
-            EFFECT_0, TARGET_UNIT_CONE_ENEMY_24);
-        OnEffectHitTarget += SpellEffectFn(
-            spell_custom_wlk_fg_unlim::SaveDamage,
-            EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+        OnHit += SpellHitFn(spell_custom_wlk_fg_unlim::RecordHit);
         AfterCast += SpellCastFn(
             spell_custom_wlk_fg_unlim::HandleAfterCast);
     }
