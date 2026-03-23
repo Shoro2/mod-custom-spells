@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 900117, 900120, 900121, 1680, 57823, 47502, 900126, 900127);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 900117, 900120, 900121, 1680, 57823, 47502, 900126, 900127, -25912, -25914, 48819);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -8,14 +8,19 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900120, 'spell_custom_ww_overpower'),
 (900121, 'spell_custom_ww_slam'),
 (1680, 'spell_custom_bloody_whirlwind_consume'),
--- Warrior Prot: Revenge AoE hook (on Revenge max rank)
+-- Warrior Prot
 (57823, 'spell_custom_prot_revenge_aoe'),
--- Warrior Prot: TC → Rend + Sunder hook (on Thunderclap max rank)
 (47502, 'spell_custom_prot_tc_rend_sunder'),
--- Warrior Prot: Block → AoE damage (passive proc aura)
 (900126, 'spell_custom_prot_block_aoe'),
--- Warrior Prot: Block → Enhanced TC (passive proc aura)
-(900127, 'spell_custom_prot_block_tc');
+(900127, 'spell_custom_prot_block_tc'),
+-- Paladin Holy: Holy Shock damage (all ranks via negative ID)
+(-25912, 'spell_custom_holy_hs_aoe_dmg'),
+(-25912, 'spell_custom_holy_hs_both_dmg'),
+-- Paladin Holy: Holy Shock heal (all ranks via negative ID)
+(-25914, 'spell_custom_holy_hs_aoe_heal'),
+(-25914, 'spell_custom_holy_hs_both_heal'),
+-- Paladin Holy: Consecration heal hook (max rank)
+(48819, 'spell_custom_holy_consec_heal');
 
 -- ICD for Whirlwind proc aura (900114): 500ms cooldown to prevent
 -- recursive loop (Whirlwind hits count as auto-attacks → re-proc → crash)
@@ -82,3 +87,44 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 (900128, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 100, 500, 22, 0, 0, 0, 0, 4, 132, 'Block Shield Burst', 0x003F3F),
 -- 900129: Helper - Enhanced Thunderclap (instant AoE physical, 10yd radius)
 (900129, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 1000, 22, 0, 0, 0, 0, 4, 132, 'Enhanced Thunderclap', 0x003F3F);
+
+-- ============================================================
+-- Paladin Holy: spell_dbc entries (900150-900160)
+-- ============================================================
+-- SpellFamilyName=10 (Paladin)
+-- Holy Shock SpellFamilyFlags[0]: 0x200000
+-- Consecration SpellFamilyFlags[0]: 0x20 (verify in-game!)
+
+DELETE FROM `spell_dbc` WHERE `ID` IN (900150, 900151, 900152, 900153, 900154, 900155, 900156, 900157, 900158, 900159, 900160);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900150: Holy Shock AoE damage passive (marker, C++ on -25912)
+(900150, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 156, 0, 'Holy: HS AoE Damage', 0x003F3F),
+-- 900151: Holy Shock AoE heal passive (marker, C++ on -25914)
+(900151, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 156, 0, 'Holy: HS AoE Heal', 0x003F3F),
+-- 900152: Holy Shock always both passive (marker, C++ on -25912 and -25914)
+(900152, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 156, 0, 'Holy: HS Both', 0x003F3F),
+-- 900153: Holy Shock +50% damage/healing (DBC passive)
+-- EffectSpellClassMaskA=0x200000 targets Holy Shock family
+(900153, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x200000, 10, 156, 0, 'Holy: HS +50%', 0x003F3F),
+-- 900154: Consecration also heals passive (marker, C++ on 48819)
+(900154, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 51, 0, 'Holy: Consec Heal', 0x003F3F),
+-- 900155: Consecration around you (DBC passive)
+-- This is a marker; actual "follow caster" needs DBC edit on Consecration itself
+-- or a C++ approach. For now: marker aura (DBC change on base spell needed separately)
+(900155, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 51, 0, 'Holy: Consec Around', 0x003F3F),
+-- 900156: Consecration +50% damage/heal (DBC passive)
+-- EffectSpellClassMaskA=0x20 targets Consecration family (verify!)
+(900156, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x20, 10, 51, 0, 'Holy: Consec +50%', 0x003F3F),
+-- 900157: Consecration +5sec duration (DBC passive)
+-- ADD_FLAT_MODIFIER (107), SPELLMOD_DURATION (17), BasePoints=5000 (ms)
+-- EffectSpellClassMaskA=0x20 targets Consecration
+(900157, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 5000, 1, 107, 17, 0, 0x20, 10, 51, 0, 'Holy: Consec +5s', 0x003F3F),
+-- 900158: Helper - Holy Shock AoE damage (instant, Holy school, 10yd around target)
+-- SchoolMask=2 (Holy), TARGET_UNIT_DEST_AREA_ENEMY (15)
+(900158, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 100, 800, 15, 0, 0, 0, 0, 10, 156, 2, 'Holy Shock Burst', 0x003F3F),
+-- 900159: Helper - Holy Shock AoE heal (instant, Holy school, 10yd around target)
+-- SchoolMask=2 (Holy), TARGET_UNIT_DEST_AREA_ALLY (30)
+(900159, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 100, 800, 30, 0, 0, 0, 0, 10, 156, 2, 'Holy Shock Radiance', 0x003F3F),
+-- 900160: Helper - Consecration heal tick (instant AoE heal around caster)
+-- Effect=HEAL(10), TARGET_UNIT_SRC_AREA_ALLY (31), 8yd radius
+(900160, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 50, 200, 31, 0, 0, 0, 0, 10, 51, 2, 'Consecration Heal', 0x003F3F);

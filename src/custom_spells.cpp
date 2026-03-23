@@ -26,6 +26,8 @@
 #include "ObjectAccessor.h"
 #include "GridNotifiers.h"
 #include "CellImpl.h"
+#include "Group.h"
+#include "GroupReference.h"
 
 /*
  * ==========================================================================
@@ -71,6 +73,20 @@ enum CustomSpellIds
     SPELL_PROT_BLOCK_TC_PASSIVE         = 900127, // 10% Block → Enhanced TC (C++)
     SPELL_PROT_BLOCK_AOE_DAMAGE         = 900128, // Helper: AoE damage (triggered)
     SPELL_PROT_ENHANCED_THUNDERCLAP     = 900129, // Helper: Enhanced TC (triggered)
+
+    // ---- Paladin Holy (900150-900161) ----
+    SPELL_HOLY_HS_AOE_DMG_PASSIVE       = 900150, // Holy Shock AoE damage (C++)
+    SPELL_HOLY_HS_AOE_HEAL_PASSIVE      = 900151, // Holy Shock AoE heal (C++)
+    SPELL_HOLY_HS_BOTH_PASSIVE          = 900152, // Holy Shock always both (C++)
+    SPELL_HOLY_HS_DMG_PASSIVE           = 900153, // Holy Shock +50% (DBC-only)
+    SPELL_HOLY_CONSEC_HEAL_PASSIVE      = 900154, // Consecration also heals (C++)
+    SPELL_HOLY_CONSEC_AROUND_PASSIVE    = 900155, // Consecration around you (DBC)
+    SPELL_HOLY_CONSEC_DMG_PASSIVE       = 900156, // Consecration +50% (DBC-only)
+    SPELL_HOLY_CONSEC_DUR_PASSIVE       = 900157, // Consecration +5sec (DBC-only)
+    // Helper spells
+    SPELL_HOLY_HS_AOE_DMG_HELPER        = 900158, // AoE Holy damage around target
+    SPELL_HOLY_HS_AOE_HEAL_HELPER       = 900159, // AoE Holy heal around target
+    SPELL_HOLY_CONSEC_HEAL_HELPER       = 900160, // Consecration heal tick helper
 };
 
 // ---- Bloodthirst SpellFamilyFlags ----
@@ -94,6 +110,16 @@ constexpr uint32 SPELL_BLOODTHIRST    = 23881;
 // ---- Warrior Prot constants ----
 constexpr uint32 SPELL_REND_R10       = 47465;
 constexpr uint32 SPELL_SUNDER_ARMOR   = 58567;
+
+// ---- Paladin Holy constants ----
+// Holy Shock base spell (dummy → routes to dmg/heal)
+constexpr uint32 SPELL_HOLY_SHOCK           = 20473;
+// Holy Shock damage spell (highest rank: 48824, R1: 25912)
+constexpr uint32 SPELL_HOLY_SHOCK_DMG_R7    = 48824;
+// Holy Shock heal spell (highest rank: 48825, R1: 25914)
+constexpr uint32 SPELL_HOLY_SHOCK_HEAL_R7   = 48825;
+// Consecration highest rank
+constexpr uint32 SPELL_CONSECRATION_R8      = 48819;
 
 // ============================================================
 //  SPELL 900106: Paragon Strike (SpellScript)
@@ -666,6 +692,246 @@ class spell_custom_prot_block_tc : public AuraScript
     }
 };
 
+// ============================================================
+//  SPELL 900150: Holy Shock AoE Damage (SpellScript)
+//  Hooked on Holy Shock damage spells (48824 etc.).
+//  After hitting a hostile target, casts AoE holy damage
+//  helper (900158) centered on the target.
+//  Only active when player has passive 900150.
+// ============================================================
+class spell_custom_holy_hs_aoe_dmg : public SpellScript
+{
+    PrepareSpellScript(spell_custom_holy_hs_aoe_dmg);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_HOLY_HS_AOE_DMG_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        caster->CastSpell(target, SPELL_HOLY_HS_AOE_DMG_HELPER, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Holy Shock AoE damage on {}",
+            player->GetName(), target->GetName());
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_holy_hs_aoe_dmg::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900151: Holy Shock AoE Heal (SpellScript)
+//  Hooked on Holy Shock heal spells (48825 etc.).
+//  After healing a friendly target, casts AoE holy heal
+//  helper (900159) centered on the target.
+//  Only active when player has passive 900151.
+// ============================================================
+class spell_custom_holy_hs_aoe_heal : public SpellScript
+{
+    PrepareSpellScript(spell_custom_holy_hs_aoe_heal);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_HOLY_HS_AOE_HEAL_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        caster->CastSpell(target, SPELL_HOLY_HS_AOE_HEAL_HELPER, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Holy Shock AoE heal on {}",
+            player->GetName(), target->GetName());
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_holy_hs_aoe_heal::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900152: Holy Shock Always Both (SpellScript)
+//  Hooked on Holy Shock damage (48824) and heal (48825).
+//  After hitting a hostile target → also heal nearest ally.
+//  After healing a friendly target → also damage nearest enemy.
+//  Only active when player has passive 900152.
+// ============================================================
+class spell_custom_holy_hs_both_dmg : public SpellScript
+{
+    PrepareSpellScript(spell_custom_holy_hs_both_dmg);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_HOLY_HS_BOTH_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // We're on the damage spell → also heal nearest injured ally
+        // Find nearest friendly unit within 40yd that's injured
+        Unit* healTarget = nullptr;
+        float minDist = 40.0f;
+
+        Group* group = player->GetGroup();
+        if (group)
+        {
+            for (GroupReference* ref = group->GetFirstMember(); ref; ref = ref->next())
+            {
+                Player* member = ref->GetSource();
+                if (!member || !member->IsAlive() || member->GetGUID() == player->GetGUID())
+                    continue;
+                if (member->GetHealthPct() >= 100.0f)
+                    continue;
+                float dist = player->GetDistance(member);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    healTarget = member;
+                }
+            }
+        }
+
+        // Fallback: heal self if no group or no injured members
+        if (!healTarget && player->GetHealthPct() < 100.0f)
+            healTarget = player;
+
+        if (healTarget)
+        {
+            caster->CastSpell(healTarget, SPELL_HOLY_SHOCK_HEAL_R7, true);
+            LOG_INFO("module",
+                "mod-custom-spells: Player {} -> HS Both: auto-heal {}",
+                player->GetName(), healTarget->GetName());
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_holy_hs_both_dmg::HandleAfterHit);
+    }
+};
+
+class spell_custom_holy_hs_both_heal : public SpellScript
+{
+    PrepareSpellScript(spell_custom_holy_hs_both_heal);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_HOLY_HS_BOTH_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // We're on the heal spell → also damage nearest enemy
+        Unit* dmgTarget = player->GetVictim();
+        if (!dmgTarget || !dmgTarget->IsAlive())
+        {
+            // Find nearest hostile within 40yd
+            dmgTarget = player->SelectNearbyTarget(nullptr, 40.0f);
+        }
+
+        if (dmgTarget)
+        {
+            caster->CastSpell(dmgTarget, SPELL_HOLY_SHOCK_DMG_R7, true);
+            LOG_INFO("module",
+                "mod-custom-spells: Player {} -> HS Both: auto-damage {}",
+                player->GetName(), dmgTarget->GetName());
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_holy_hs_both_heal::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900154: Consecration Also Heals (SpellScript)
+//  Hooked on Consecration (48819). On each periodic tick,
+//  also casts a heal helper on friendly units in the area.
+//  Only active when player has passive 900154.
+//
+//  Approach: AuraScript on Consecration's periodic aura.
+//  OnEffectPeriodic → cast heal helper on caster's location.
+// ============================================================
+class spell_custom_holy_consec_heal : public AuraScript
+{
+    PrepareAuraScript(spell_custom_holy_consec_heal);
+
+    void HandlePeriodic(AuraEffect const* aurEff)
+    {
+        Unit* caster = GetCaster();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_HOLY_CONSEC_HEAL_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Cast AoE heal centered on the Consecration area (caster position
+        // at time of cast, but since Consecration is stationary we use
+        // the aura owner which is the dynamic object → fallback to caster)
+        caster->CastSpell(caster, SPELL_HOLY_CONSEC_HEAL_HELPER, true);
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_holy_consec_heal::HandlePeriodic,
+            EFFECT_0, SPELL_AURA_PERIODIC_DAMAGE);
+    }
+};
+
 void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
@@ -681,4 +947,11 @@ void AddCustomSpellsScripts()
     RegisterSpellScript(spell_custom_prot_tc_rend_sunder);
     RegisterSpellScript(spell_custom_prot_block_aoe);
     RegisterSpellScript(spell_custom_prot_block_tc);
+
+    // Paladin Holy
+    RegisterSpellScript(spell_custom_holy_hs_aoe_dmg);
+    RegisterSpellScript(spell_custom_holy_hs_aoe_heal);
+    RegisterSpellScript(spell_custom_holy_hs_both_dmg);
+    RegisterSpellScript(spell_custom_holy_hs_both_heal);
+    RegisterSpellScript(spell_custom_holy_consec_heal);
 }

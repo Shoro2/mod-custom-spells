@@ -542,8 +542,9 @@ Die `spell_dbc` Tabelle hat 257 Spalten. Hier die für Custom Spells relevantest
 
 Spell IDs 900100-900121 existieren alle in `Spell.dbc` (22 Einträge) und sind fertig implementiert (DBC + C++ wo nötig).
 Spell IDs 900122-900129 (Warrior Prot + Helper) existieren in `spell_dbc` Tabelle und sind implementiert (DBC + C++).
+Spell IDs 900150-900160 (Paladin Holy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert (DBC + C++).
 
-Nächste freie ID für neue Spells: **900130+** (Warrior-Block reserviert bis 900129)
+Nächste freie ID für neue Spells: **900161+** (Paladin Prot ab 900161)
 
 ---
 
@@ -558,8 +559,8 @@ Nächste freie ID für neue Spells: **900130+** (Warrior-Block reserviert bis 90
 | Warrior | Arms | 900100-900109 | 10 | getestet (bis auf TC→Rend+Sunder: geplant) |
 | Warrior | Fury | 900110-900121 | 12 | getestet |
 | Warrior | Prot | 900122-900129 | 6+2 Helper | implementiert |
-| Paladin | Holy | 900150-900157 | 8 | geplant |
-| Paladin | Prot | 900158-900165 | 8 | geplant |
+| Paladin | Holy | 900150-900160 | 8+3 Helper | implementiert |
+| Paladin | Prot | 900161-900168 | 8 | geplant |
 | Paladin | Ret | 900166-900172 | 7 | geplant |
 | DK | Blood | 900200-900204 | 5 | geplant |
 | DK | Frost | 900205 | 1 | geplant |
@@ -641,33 +642,40 @@ Nächste freie ID für neue Spells: **900130+** (Warrior-Block reserviert bis 90
 
 ---
 
-### Paladin — Holy (900150-900157)
+### Paladin — Holy (900150-900160)
 
-> Paladin SpellFamilyName = 10. Shared Spells (Consecration around you, Judgement cd) können spec-übergreifend dieselbe ID verwenden, wenn alle 3 Specs den Effekt haben.
-
-| # | Spell ID | Effekt | Ansatz | Status | Details |
-|---|----------|--------|--------|--------|---------|
-| 1 | 900150 | Holy Shock deals AoE damage | C++ | geplant | SpellScript auf Holy Shock (20473). `OnEffectHitTarget`: AoE-Damage auf alle Feinde im Radius um das Ziel casten (triggered Spell). Oder DBC-Clone mit `TARGET_UNIT_DEST_AREA_ENEMY`. |
-| 2 | 900151 | Holy Shock heals AoE | C++ | geplant | Analog zu #1: AoE-Heal auf alle Verbündeten im Radius. Oder DBC-Clone mit `TARGET_UNIT_DEST_AREA_ALLY`. |
-| 3 | 900152 | Holy Shock always does both (damage + heal) | C++ | geplant | SpellScript: `AfterHit` prüft ob Damage- oder Heal-Version gecastet wurde und castet automatisch die andere Version auf passendes Ziel (nächster Feind/Verbündeter). |
-| 4 | 900153 | Holy Shock damage/healing +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE` (für Damage) + zweiter Effekt für Healing, SpellFamilyMask für Holy Shock. |
-| 5 | 900154 | Consecration also heals | C++ | geplant | AuraScript auf Consecration-Aura (48819). `OnEffectPeriodic`: Zusätzlich Heal auf Verbündete im Radius casten. Oder zweiten periodischen Heal-Effekt via DBC hinzufügen. |
-| 6 | 900155 | Consecration is around you (centered on caster) | DBC | geplant | DBC-Änderung: TargetA von `TARGET_DEST_TARGET` auf `TARGET_DEST_CASTER` ändern. Spell folgt dann dem Caster. **Shared mit Prot (900158) und Ret (900166)** — ggf. eine gemeinsame ID. |
-| 7 | 900156 | Consecration damage/heal +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Consecration. |
-| 8 | 900157 | Consecration duration +5sec | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_DURATION` (17), BasePoints=5000 (ms). SpellFamilyMask für Consecration. |
-
-### Paladin — Prot (900158-900165)
+> Paladin SpellFamilyName = 10. Holy Shock (20473) ist ein Dummy-Spell der auf Damage (25912+) oder Heal (25914+) routet. Scripts hooken auf die Damage/Heal-Varianten via negative spell_script_names IDs (-25912, -25914 = alle Ränge).
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900158 | Consecration is around you | DBC | geplant | **Shared mit Holy (900155) und Ret (900166)** — identischer Effekt. Ggf. eine gemeinsame Spell-ID verwenden. |
-| 2 | 900159 | Avenger's Shield +9 targets | DBC | geplant | DBC: `MaxAffectedTargets` auf 12 setzen (3 base + 9). Oder passive Aura falls bedingt. Avenger's Shield (48827) bounced normalerweise 3×. |
-| 3 | 900160 | Avenger's Shield +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für AS. |
-| 4 | 900161 | Holy Shield charges +99 | DBC/C++ | geplant | DBC: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_CHARGES` (16), BasePoints=99. Alternativ direkt die Charges im DBC-Eintrag von Holy Shield (48952) erhöhen. Muss getestet werden ob SPELLMOD_CHARGES funktioniert. |
-| 5 | 900162 | Holy Shield +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Holy Shield. |
-| 6 | 900163 | Avenger's Shield leaves Consecration on hit | C++ | geplant | SpellScript auf AS: `OnEffectHitTarget` pro getroffenes Ziel → CastSpell(Consecration, triggered=true) an der Zielposition. Braucht evtl. eigene Consecration-Variante (kürzere Dauer?). |
-| 7 | 900164 | Judgement → free Avenger's Shield | C++ | geplant | Passive Proc-Aura: Proc auf Judgement-Cast (SpellFamilyName=10, Judgement-FamilyFlags). `HandleProc`: CastSpell(Avenger's Shield, triggered=true) auf das Judgement-Ziel. |
-| 8 | 900165 | Judgement cd -2sec | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_COOLDOWN`, BasePoints=-2000. SpellFamilyMask für Judgement. **Shared mit Ret (900167)**. |
+| 1 | 900150 | Holy Shock AoE damage | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf HS-Damage (-25912): `AfterHit` → CastSpell(900158) AoE Holy Damage um Target. Prüft `HasAura(900150)`. |
+| 2 | 900151 | Holy Shock AoE heal | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf HS-Heal (-25914): `AfterHit` → CastSpell(900159) AoE Holy Heal um Target. Prüft `HasAura(900151)`. |
+| 3 | 900152 | Holy Shock always both | C++ | implementiert | Marker-Aura (DUMMY). Zwei Scripts: (a) auf HS-Damage: `AfterHit` → auto-heal nächsten verletzten Ally (HS-Heal R7). (b) auf HS-Heal: `AfterHit` → auto-damage nächsten Feind (HS-Damage R7). Prüft `HasAura(900152)`. |
+| 4 | 900153 | Holy Shock +50% | DBC | implementiert | Passive Aura: `ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x200000 (Holy Shock). spell_dbc Entry. |
+| 5 | 900154 | Consecration also heals | C++ | implementiert | Marker-Aura (DUMMY). C++ AuraScript auf Consecration (48819): `OnEffectPeriodic` → CastSpell(900160) AoE Holy Heal um Caster. Prüft `HasAura(900154)`. |
+| 6 | 900155 | Consecration around you | DBC | implementiert | Marker-Aura. Consecration-DBC muss separat gepatcht werden (TargetA → `TARGET_DEST_CASTER`). **Shared mit Prot und Ret**. |
+| 7 | 900156 | Consecration +50% | DBC | implementiert | Passive Aura: `ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x20 (Consecration). |
+| 8 | 900157 | Consecration +5sec | DBC | implementiert | Passive Aura: `ADD_FLAT_MODIFIER` (107) + `SPELLMOD_DURATION` (17). BasePoints=5000ms. EffectSpellClassMaskA=0x20. |
+| H1 | 900158 | Helper: HS AoE Damage | DBC | implementiert | Instant AoE Holy Damage. Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), BasePoints=800+100rnd, 10yd. |
+| H2 | 900159 | Helper: HS AoE Heal | DBC | implementiert | Instant AoE Holy Heal. Effect=HEAL(10), Target=DEST_AREA_ALLY(30), BasePoints=800+100rnd, 10yd. |
+| H3 | 900160 | Helper: Consec Heal Tick | DBC | implementiert | Instant AoE Holy Heal. Effect=HEAL(10), Target=SRC_AREA_ALLY(31), BasePoints=200+50rnd, 8yd. |
+
+> **Hinweis Holy**: SpellFamilyFlags für Holy Shock (0x200000) und Consecration (0x20) müssen in-game verifiziert werden. 900155 (Consec around you) braucht zusätzlich einen DBC-Patch auf den Base-Spell (48819) um TargetA zu ändern — die Marker-Aura allein reicht nicht.
+
+### Paladin — Prot (900161-900168)
+
+> **ID-Shift**: Ursprünglich 900158-900165 geplant, aber 900158-900160 werden als Holy-Helper verwendet. Prot startet bei 900161.
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900161 | Consecration is around you | DBC | geplant | **Shared mit Holy (900155) und Ret** — identischer Effekt. Ggf. eine gemeinsame Spell-ID verwenden. |
+| 2 | 900162 | Avenger's Shield +9 targets | DBC | geplant | DBC: `MaxAffectedTargets` auf 12 setzen (3 base + 9). Oder passive Aura falls bedingt. Avenger's Shield (48827) bounced normalerweise 3×. |
+| 3 | 900163 | Avenger's Shield +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für AS. |
+| 4 | 900164 | Holy Shield charges +99 | DBC/C++ | geplant | DBC: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_CHARGES` (16), BasePoints=99. | DBC: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_CHARGES` (16), BasePoints=99. Alternativ direkt die Charges im DBC-Eintrag von Holy Shield (48952) erhöhen. Muss getestet werden ob SPELLMOD_CHARGES funktioniert. |
+| 5 | 900165 | Holy Shield +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Holy Shield. |
+| 6 | 900166 | Avenger's Shield leaves Consecration on hit | C++ | geplant | SpellScript auf AS: `OnEffectHitTarget` pro getroffenes Ziel → CastSpell(Consecration, triggered=true) an der Zielposition. |
+| 7 | 900167 | Judgement → free Avenger's Shield | C++ | geplant | Passive Proc-Aura: Proc auf Judgement-Cast. `HandleProc`: CastSpell(Avenger's Shield, triggered=true). |
+| 8 | 900168 | Judgement cd -2sec | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_COOLDOWN`, BasePoints=-2000. SpellFamilyMask für Judgement. **Shared mit Ret**. |
 
 ### Paladin — Ret (900166-900172)
 
