@@ -175,7 +175,7 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
     {
         DoCheckProc += AuraCheckProcFn(spell_custom_bloody_whirlwind_passive::CheckProc);
         OnEffectProc += AuraEffectProcFn(spell_custom_bloody_whirlwind_passive::HandleProc,
-            EFFECT_1, SPELL_AURA_PROC_TRIGGER_SPELL);
+            EFFECT_0, SPELL_AURA_DUMMY);
     }
 };
 
