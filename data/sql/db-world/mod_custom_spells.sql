@@ -1,5 +1,11 @@
 -- Link custom spell IDs to their SpellScript names
 DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -31935, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -421, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -2643, 75, 900534, 900566, -8921, 901004, -779, 62078, 901066, 900603, -1752, -16511, -44425, -30451, -1449, 12051, 900708, 900713, -133, -11366, -116, -30455, 31687, 900771, 900800, 900802, 900834, -3110, 47994, 18788, -686, -50796, -17, 900933, 900966, 900967, 901101, 901102, 901103, 901104);
+-- NOTE: AoE +9 target spells now use DBC SPELLMOD_JUMP_TARGETS instead of C++ AfterHit:
+-- Removed script registrations: spell_custom_ret_cs_aoe, spell_custom_dkb_hs_aoe,
+-- spell_custom_ele_cl_aoe, spell_custom_bal_mf_aoe, spell_custom_rog_ss_aoe,
+-- spell_custom_rog_hemo_aoe, spell_custom_mage_abarr_aoe, spell_custom_mage_ab_aoe,
+-- spell_custom_mage_fb_aoe, spell_custom_mage_pyro_aoe, spell_custom_mage_frostbolt_aoe,
+-- spell_custom_mage_icelance_aoe, spell_custom_wlk_sb_aoe, spell_custom_wlk_cb_aoe
 -- Cleanup: remove stale entries from older versions that used highest rank instead of first rank
 DELETE FROM `spell_script_names` WHERE `spell_id` IN (-59172, -49271, -49048, -48827, -48660, -48638, -48562, -48463, -48066, -47964, -47809, -44781, -42921, -42914, -42897, -42891, -42842, -42833);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
@@ -27,8 +33,7 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (-31935, 'spell_custom_pprot_as_consec'),
 -- Paladin Prot: Judgement → free AS (on Judgement damage spell)
 (54158, 'spell_custom_pprot_judge_as'),
--- Paladin Ret: CS +9 targets (all ranks via negative ID)
-(-35395, 'spell_custom_ret_cs_aoe'),
+-- Paladin Ret: CS +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
 -- Paladin Ret: Exorcism buff proc passive
 (900274, 'spell_custom_ret_exorcism_proc'),
 -- Paladin Ret: Exorcism consume stacks (on Exorcism max rank)
@@ -37,8 +42,7 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (49028, 'spell_dk_dancing_rune_weapon'),
 (49028, 'spell_custom_dkb_3_rune_weapons'),
 (49028, 'spell_custom_dkb_double_cast'),
--- DK Blood: Heart Strike +9 targets (all ranks via negative ID)
-(-55050, 'spell_custom_dkb_hs_aoe'),
+-- DK Blood: Heart Strike +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
 -- DK Blood: Death Coil proc passive
 (900304, 'spell_custom_dkb_deathcoil_proc'),
 -- DK Frost: Frost Wyrm (on Raise Dead 46584)
@@ -48,8 +52,7 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900368, 'spell_custom_frost_breath'),
 -- DK Unholy: DoT → Shadow AoE proc passive
 (900366, 'spell_custom_dku_dot_aoe'),
--- Shaman Ele: Chain Lightning +6 targets (on all CL ranks)
-(-421, 'spell_custom_ele_cl_aoe'),
+-- Shaman Ele: Chain Lightning +6 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
 -- Shaman Ele: Totem follow (900401 is marker aura, PlayerScript handles logic)
 -- Shaman Ele: Ragnaros (on Fire Elemental Totem 2894)
 (2894, 'spell_custom_ele_ragnaros'),
@@ -74,8 +77,7 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900534, 'spell_custom_hunt_barrage'),
 -- Hunter Surv: Explosive trap proc passive
 (900566, 'spell_custom_hunt_surv_trap_proc'),
--- Druid Balance: Moonfire +9 targets (all ranks via negative ID)
-(-8921, 'spell_custom_bal_mf_aoe'),
+-- Druid Balance: Moonfire +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
 -- Druid Balance: Spell dmg reduces Starfall CD (proc aura)
 (901004, 'spell_custom_bal_sf_cd_reduce'),
 -- Druid Feral: Swipe Bear applies bleed (all ranks via negative ID)
@@ -86,16 +88,13 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (901066, 'spell_custom_drst_hot_treant'),
 -- Rogue Assa: Poison Nova proc passive
 (900603, 'spell_custom_rog_poison_nova'),
--- Rogue Combat: SS +9 targets (all ranks via negative ID)
-(-1752, 'spell_custom_rog_ss_aoe'),
--- Rogue Sub: Hemorrhage +9 targets (all ranks via negative ID)
-(-16511, 'spell_custom_rog_hemo_aoe'),
--- Mage Arcane: Arcane Barrage +9 targets (all ranks via negative ID)
-(-44425, 'spell_custom_mage_abarr_aoe'),
+-- Rogue Combat: SS +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
+-- Rogue Sub: Hemorrhage +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
+-- Mage Arcane: Arcane Barrage +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
 -- Mage Arcane: Arcane Blast +9 targets + charges to 8 (all ranks via negative ID)
 -- Re-insert core script deleted by our DELETE above
 (-30451, 'spell_mage_arcane_blast'),
-(-30451, 'spell_custom_mage_ab_aoe'),
+-- Mage Arcane: AB +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
 (-30451, 'spell_custom_mage_ab_charges'),
 -- Mage Arcane: Arcane Explosion generates charge (all ranks via negative ID)
 (-1449, 'spell_custom_mage_ae_charges'),
@@ -105,15 +104,11 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900708, 'spell_custom_mage_emergency_shield'),
 -- Mage Arcane: Targeted Blink (active spell)
 (900713, 'spell_custom_mage_targeted_blink'),
--- Mage Fire: Fireball +9 targets (all ranks via negative ID)
-(-133, 'spell_custom_mage_fb_aoe'),
--- Mage Fire: Pyroblast +9 targets + Hot Streak (all ranks via negative ID)
-(-11366, 'spell_custom_mage_pyro_aoe'),
+-- Mage Fire: Fireball +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
+-- Mage Fire: Pyroblast +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
 (-11366, 'spell_custom_mage_pyro_hotstreak'),
--- Mage Frost: Frostbolt +9 targets (all ranks via negative ID)
-(-116, 'spell_custom_mage_frostbolt_aoe'),
--- Mage Frost: Ice Lance +9 targets (all ranks via negative ID)
-(-30455, 'spell_custom_mage_icelance_aoe'),
+-- Mage Frost: Frostbolt +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
+-- Mage Frost: Ice Lance +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
 -- Mage Frost: Water Elemental permanent (on Summon Water Elemental)
 (31687, 'spell_mage_summon_water_elemental'),
 (31687, 'spell_custom_mage_permanent_water_ele'),
@@ -131,10 +126,8 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (47994, 'spell_custom_wlk_fg_unlim'),
 -- Warlock Demonology: Demonic Sacrifice grants ALL bonuses
 (18788, 'spell_custom_wlk_sacrifice_all'),
--- Warlock Destruction: Shadow Bolt +9 targets (hooked on all ranks)
-(-686, 'spell_custom_wlk_sb_aoe'),
--- Warlock Destruction: Chaos Bolt +9 targets (hooked on all ranks)
-(-50796, 'spell_custom_wlk_cb_aoe'),
+-- Warlock Destruction: Shadow Bolt +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
+-- Warlock Destruction: Chaos Bolt +9 targets → now DBC-only (SPELLMOD_JUMP_TARGETS)
 -- Priest Discipline: Shields explode on break/fade (hooked on PW:S all ranks)
 -- Re-insert core script deleted by our DELETE above
 (-17, 'spell_pri_power_word_shield'),
@@ -363,8 +356,8 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900272: Crusader Strike +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- CS SpellFamilyFlags[0]=0x1 (verify!)
 (900272, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 10, 2286, 0, 0, 'Ret: CS +50%', 0x003F3F),
--- 900273: CS +9 targets (marker aura, logic in C++ on -35395)
-(900273, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 10, 2286, 0, 0, 'Ret: CS AoE', 0x003F3F),
+-- 900273: CS +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, CS flags[0]=0x1)
+(900273, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x1, 0, 10, 2286, 0, 0, 'Ret: CS +9 Targets', 0x003F3F),
 -- 900274: Exorcism buff proc passive (DUMMY, proc via spell_proc + C++)
 (900274, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 10, 2286, 0, 0, 'Ret: Exorcism Proc', 0x003F3F),
 -- 900275: Exorcism buff (stacking, +50% Exorcism damage per stack, max 10)
@@ -409,8 +402,8 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900302: Heart Strike +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- Heart Strike SpellFamilyFlags[0]=0x2000000 (verify!)
 (900302, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2000000, 0, 15, 3547, 0, 0, 'DKB: HS +50%', 0x003F3F),
--- 900303: Heart Strike +9 targets (marker, C++ on -55050)
-(900303, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 3547, 0, 0, 'DKB: HS AoE', 0x003F3F),
+-- 900303: Heart Strike +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, HS flags[0]=0x2000000)
+(900303, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x2000000, 0, 15, 3547, 0, 0, 'DKB: HS +9 Targets', 0x003F3F),
 -- 900304: Death Coil proc (DUMMY, proc via spell_proc + C++)
 (900304, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 136, 0, 0, 'DKB: DC Proc', 0x003F3F),
 -- 900333: Replace Ghoul with Frost Wyrm (marker, C++ on 46584)
@@ -496,8 +489,8 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 -- ============================================================
 DELETE FROM `spell_dbc` WHERE `ID` IN (900400, 900401, 900402, 900403, 900404, 900405, 900406, 900407, 900408);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
--- 900400: CL +6 targets (marker, C++ on -421)
-(900400, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 62, 0, 0, 'Ele: CL AoE', 0x003F3F),
+-- 900400: CL +6 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, CL flags[0]=0x2)
+(900400, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 6, 1, 107, 17, 0, 0x2, 0, 11, 62, 0, 0, 'Ele: CL +6 Targets', 0x003F3F),
 -- 900401: Totems follow (DUMMY marker, PlayerScript handles logic via OnUpdate)
 (900401, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Ele: Totem Follow', 0x003F3F),
 -- 900402: Ragnaros (marker, C++ on 2894)
@@ -664,8 +657,8 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 -- ============================================================
 DELETE FROM `spell_dbc` WHERE `ID` IN (901000, 901001, 901002, 901003, 901004, 901005, 901033, 901034, 901049, 901050, 901051, 901066, 901067, 901068, 901069, 901070, 901071, 901072, 901073);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
--- 901000: Moonfire +9 targets (DUMMY marker, C++ on -8921)
-(901000, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Bal: MF +9 Targets', 0x003F3F),
+-- 901000: Moonfire +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, MF flags[0]=0x2)
+(901000, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x2, 0, 0, 7, 132, 0, 0, 'Bal: MF +9 Targets', 0x003F3F),
 -- 901001: Moonfire +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- EffectSpellClassMaskA=0x2 targets Moonfire family
 (901001, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2, 0, 0, 7, 132, 0, 0, 'Bal: MF +50%', 0x003F3F),
@@ -787,8 +780,8 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- Combat: 900633 SS +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- SS SpellFamilyFlags[0]=0x2
 (900633, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2, 0, 0, 8, 132, 0, 0, 'Combat: SS +50%', 0x003F3F),
--- Combat: 900634 SS +9 targets (DUMMY marker, C++ on -1752)
-(900634, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 8, 132, 0, 0, 'Combat: SS AoE', 0x003F3F),
+-- Combat: 900634 SS +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, SS flags[0]=0x2)
+(900634, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x2, 0, 0, 8, 132, 0, 0, 'Combat: SS +9 Targets', 0x003F3F),
 -- Combat: 900635 Blade Flurry 2min duration (ADD_FLAT_MODIFIER + SPELLMOD_DURATION=17)
 -- BF SpellFamilyFlags[1]=0x800, BasePoints=+105000ms (15s base + 105s = 120s)
 (900635, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 105000, 1, 107, 17, 0, 0, 0x800, 0, 8, 132, 0, 0, 'Combat: BF 2min', 0x003F3F),
@@ -804,8 +797,8 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- Sub: 900667 Hemorrhage +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- Hemorrhage SpellFamilyFlags[0]=0x2000000
 (900667, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2000000, 0, 0, 8, 132, 0, 0, 'Sub: Hemo +50%', 0x003F3F),
--- Sub: 900668 Hemorrhage +9 targets (DUMMY marker, C++ on -16511)
-(900668, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 8, 132, 0, 0, 'Sub: Hemo AoE', 0x003F3F),
+-- Sub: 900668 Hemorrhage +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, Hemo flags[0]=0x2000000)
+(900668, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x2000000, 0, 0, 8, 132, 0, 0, 'Sub: Hemo +9 Targets', 0x003F3F),
 -- Sub: 900669 Helper - Hemorrhage bounce damage (instant Physical single-target)
 (900669, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 8, 132, 1, 0, 'Deep Cut', 0x003F3F);
 
@@ -832,13 +825,13 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900701: Arcane Barrage +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- EffectSpellClassMaskB=0x1000000 targets Arcane Barrage (verify!)
 (900701, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0, 0x1000000, 0, 3, 33, 0, 0, 'Arcane: Barrage +50%', 0x003F3F),
--- 900702: Arcane Barrage +9 targets (DUMMY marker, C++ on -44425)
-(900702, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: Barrage AoE', 0x003F3F),
+-- 900702: Arcane Barrage +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, ABarr flags[1]=0x1000000)
+(900702, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0, 0x1000000, 0, 3, 33, 0, 0, 'Arcane: Barrage +9', 0x003F3F),
 -- 900703: Arcane Blast cast time -50% (ADD_PCT_MODIFIER + SPELLMOD_CASTING_TIME=14)
 -- EffectSpellClassMaskA=0x20000000 targets Arcane Blast (verify!)
 (900703, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, -50, 1, 108, 14, 0, 0x20000000, 0, 0, 3, 33, 0, 0, 'Arcane: Blast -50% Cast', 0x003F3F),
--- 900704: Arcane Blast +9 targets (DUMMY marker, C++ on -30451)
-(900704, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: Blast AoE', 0x003F3F),
+-- 900704: Arcane Blast +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, AB flags[0]=0x20000000)
+(900704, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x20000000, 0, 0, 3, 33, 0, 0, 'Arcane: Blast +9', 0x003F3F),
 -- 900705: Arcane Charges stack to 8 (DUMMY marker, C++ on -30451)
 (900705, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: Charges x8', 0x003F3F),
 -- 900706: Arcane Explosion generates charge (DUMMY marker, C++ on -1449)
@@ -875,10 +868,10 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900733: Fireball +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- EffectSpellClassMaskA=0x1 targets Fireball (verify!)
 (900733, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 0, 3, 185, 4, 0, 'Fire: Fireball +50%', 0x003F3F),
--- 900734: Fireball +9 targets (DUMMY marker, C++ on -133)
-(900734, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 185, 0, 0, 'Fire: Fireball AoE', 0x003F3F),
--- 900735: Pyroblast +9 targets (DUMMY marker, C++ on -11366)
-(900735, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 1726, 0, 0, 'Fire: Pyro AoE', 0x003F3F),
+-- 900734: Fireball +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, FB flags[0]=0x1)
+(900734, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x1, 0, 0, 3, 185, 0, 0, 'Fire: Fireball +9', 0x003F3F),
+-- 900735: Pyroblast +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, Pyro flags[0]=0x400000)
+(900735, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x400000, 0, 0, 3, 1726, 0, 0, 'Fire: Pyro +9', 0x003F3F),
 -- 900736: Pyroblast +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- EffectSpellClassMaskA=0x400000 targets Pyroblast (verify!)
 (900736, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x400000, 0, 0, 3, 1726, 4, 0, 'Fire: Pyro +50%', 0x003F3F),
@@ -906,13 +899,13 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900766: Frostbolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- EffectSpellClassMaskA=0x20 targets Frostbolt (verify!)
 (900766, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x20, 0, 0, 3, 188, 16, 0, 'Frost: Frostbolt +50%', 0x003F3F),
--- 900767: Frostbolt +9 targets (DUMMY marker, C++ on -116)
-(900767, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 188, 0, 0, 'Frost: Frostbolt AoE', 0x003F3F),
+-- 900767: Frostbolt +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, FB flags[0]=0x20)
+(900767, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x20, 0, 0, 3, 188, 0, 0, 'Frost: Frostbolt +9', 0x003F3F),
 -- 900768: Ice Lance +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- EffectSpellClassMaskA=0x20000 targets Ice Lance (verify!)
 (900768, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x20000, 0, 0, 3, 2723, 16, 0, 'Frost: Ice Lance +50%', 0x003F3F),
--- 900769: Ice Lance +9 targets (DUMMY marker, C++ on -30455)
-(900769, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 2723, 0, 0, 'Frost: Ice Lance AoE', 0x003F3F),
+-- 900769: Ice Lance +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, IL flags[0]=0x20000)
+(900769, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x20000, 0, 0, 3, 2723, 0, 0, 'Frost: Ice Lance +9', 0x003F3F),
 -- 900770: Water Elemental permanent (DUMMY marker, C++ on 31687)
 (900770, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 2735, 0, 0, 'Frost: Perm Elemental', 0x003F3F),
 -- 900771: Comet Shower (active spell, ground targeting, 40yd range, instant)
@@ -1074,8 +1067,8 @@ INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`,
 -- ============================================================
 DELETE FROM `spell_dbc` WHERE `ID` IN (900866, 900867, 900868, 900869, 900870, 900871, 900872);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
--- 900866: Shadow Bolt +9 targets (DUMMY marker, C++ on -686)
-(900866, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Destro: SB AoE', 0x003F3F),
+-- 900866: Shadow Bolt +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, SB flags[0]=0x1)
+(900866, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x1, 0, 0, 5, 313, 0, 0, 'Destro: SB +9', 0x003F3F),
 -- 900867: Shadow Bolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- EffectSpellClassMaskA=0x1 targets Shadow Bolt (verify!)
 (900867, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 0, 5, 313, 0, 0, 'Destro: SB +50%', 0x003F3F),
@@ -1085,8 +1078,8 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900869: Chaos Bolt CD -2s (ADD_FLAT_MODIFIER + SPELLMOD_COOLDOWN)
 -- EffectSpellClassMaskB=0x1000000 targets Chaos Bolt (verify!)
 (900869, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, -2000, 1, 107, 11, 0, 0, 0x1000000, 0, 5, 313, 0, 0, 'Destro: CB CD -2s', 0x003F3F),
--- 900870: Chaos Bolt +9 targets (DUMMY marker, C++ on -50796)
-(900870, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Destro: CB AoE', 0x003F3F),
+-- 900870: Chaos Bolt +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS, CB flags[1]=0x1000000)
+(900870, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0, 0x1000000, 0, 5, 313, 0, 0, 'Destro: CB +9', 0x003F3F),
 -- 900871: Helper - Shadow Bolt bounce (instant Shadow single-target damage)
 -- BasePoints via CastCustomSpell. SchoolMask=32 (Shadow)
 (900871, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Bolt Bounce', 0x003F3F),
