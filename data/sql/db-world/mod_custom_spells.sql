@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 900117, 900120, 900121, 1680, 57823, 47502, 900126, 900127, -25912, -25914, 48819, -48827, 54158);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 900117, 900120, 900121, 1680, 57823, 47502, 900126, 900127, -25912, -25914, 48819, -48827, 54158, -35395, 900175, 48801);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -24,7 +24,13 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Paladin Prot: AS leaves Consecration (all ranks via negative ID)
 (-48827, 'spell_custom_pprot_as_consec'),
 -- Paladin Prot: Judgement → free AS (on Judgement damage spell)
-(54158, 'spell_custom_pprot_judge_as');
+(54158, 'spell_custom_pprot_judge_as'),
+-- Paladin Ret: CS +9 targets (all ranks via negative ID)
+(-35395, 'spell_custom_ret_cs_aoe'),
+-- Paladin Ret: Exorcism buff proc passive
+(900175, 'spell_custom_ret_exorcism_proc'),
+-- Paladin Ret: Exorcism consume stacks (on Exorcism max rank)
+(48801, 'spell_custom_ret_exorcism_consume');
 
 -- ICD for Whirlwind proc aura (900114): 500ms cooldown to prevent
 -- recursive loop (Whirlwind hits count as auto-attacks → re-proc → crash)
@@ -163,3 +169,45 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900168: Judgement cd -2sec (ADD_FLAT_MODIFIER + SPELLMOD_COOLDOWN=11)
 -- EffectSpellClassMaskA=0x800000 targets Judgement spells. BasePoints=-2000 (ms).
 (900168, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, -2000, 1, 107, 11, 0, 0x800000, 0, 10, 3015, 0, 'PProt: Judge -2s CD', 0x003F3F);
+
+-- ============================================================
+-- Paladin Ret: spell_proc entry
+-- ============================================================
+
+-- Exorcism buff proc (900175): procs on melee spell damage (CS/Judge/DS).
+-- ProcFlags=0x10 (DONE_SPELL_MELEE_DMG_CLASS). C++ CheckProc filters to CS/Judge/DS.
+DELETE FROM `spell_proc` WHERE `SpellId` = 900175;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900175, 0, 0, 0, 0, 0, 0x10, 1, 2, 0, 0, 0, 0, 100, 0, 0);
+
+-- ============================================================
+-- Paladin Ret: spell_dbc entries (900169-900176)
+-- ============================================================
+-- Divine Storm SpellFamilyFlags: flags[1]=0x20000 (verify in-game!)
+-- Crusader Strike SpellFamilyFlags: flags[0]=0x1 (verify in-game!)
+-- Exorcism SpellFamilyFlags: flags[0]=0x200000 (same bit as HS? verify!)
+-- Judgement SpellFamilyFlags[0]: 0x800000
+
+DELETE FROM `spell_dbc` WHERE `ID` IN (900169, 900170, 900171, 900172, 900173, 900174, 900175, 900176);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900169: Consecration around you (marker, shared with Holy/Prot)
+(900169, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 10, 51, 0, 0, 'Ret: Consec Around', 0x003F3F),
+-- 900170: Judgement cd -2sec (same as Prot 900168 but separate ID for Ret)
+(900170, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, -2000, 1, 107, 11, 0, 0x800000, 0, 10, 3015, 0, 0, 'Ret: Judge -2s CD', 0x003F3F),
+-- 900171: Divine Storm +6 targets (marker aura; DS base spell needs MaxAffectedTargets DBC patch)
+(900171, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 10, 2292, 0, 0, 'Ret: DS +6 Targets', 0x003F3F),
+-- 900172: Divine Storm +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- DS SpellFamilyFlags[1]=0x20000 (verify!)
+(900172, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0, 0x20000, 10, 2292, 0, 0, 'Ret: DS +50%', 0x003F3F),
+-- 900173: Crusader Strike +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- CS SpellFamilyFlags[0]=0x1 (verify!)
+(900173, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 10, 2286, 0, 0, 'Ret: CS +50%', 0x003F3F),
+-- 900174: CS +9 targets (marker aura, logic in C++ on -35395)
+(900174, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 10, 2286, 0, 0, 'Ret: CS AoE', 0x003F3F),
+-- 900175: Exorcism buff proc passive (DUMMY, proc via spell_proc + C++)
+(900175, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 10, 2286, 0, 0, 'Ret: Exorcism Proc', 0x003F3F),
+-- 900176: Exorcism buff (stacking, +50% Exorcism damage per stack, max 10)
+-- ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0), SpellClassMaskA for Exorcism
+-- Duration: 30sec (DurationIndex=5), stackable (CumulativeAura=10)
+-- NOT passive — it's a visible buff with stacks
+(900176, 0x10000000, 0, 0, 0, 1, 5, 1, 6, 0, 50, 1, 108, 0, 0, 0x200000, 0, 10, 879, 0, 10, 'Exorcism Power', 0x003F3F);

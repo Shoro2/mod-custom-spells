@@ -97,6 +97,16 @@ enum CustomSpellIds
     SPELL_PPROT_AS_CONSEC_PASSIVE       = 900166, // AS leaves Consecration (C++)
     SPELL_PPROT_JUDGE_AS_PASSIVE        = 900167, // Judgement → free AS (C++)
     SPELL_PPROT_JUDGE_CD_PASSIVE        = 900168, // Judgement cd -2sec (DBC)
+
+    // ---- Paladin Ret (900169-900176) ----
+    SPELL_RET_CONSEC_AROUND_PASSIVE     = 900169, // Consecration around you (DBC marker)
+    SPELL_RET_JUDGE_CD_PASSIVE          = 900170, // Judgement cd -2sec (DBC)
+    SPELL_RET_DS_TARGETS_PASSIVE        = 900171, // Divine Storm +6 targets (DBC marker)
+    SPELL_RET_DS_DMG_PASSIVE            = 900172, // Divine Storm +50% (DBC)
+    SPELL_RET_CS_DMG_PASSIVE            = 900173, // Crusader Strike +50% (DBC)
+    SPELL_RET_CS_AOE_PASSIVE            = 900174, // Crusader Strike +9 targets (C++)
+    SPELL_RET_EXORCISM_PROC_PASSIVE     = 900175, // CS/Judge/DS → Exorcism buff (C++)
+    SPELL_RET_EXORCISM_BUFF             = 900176, // Exorcism +50% per stack (DBC buff)
 };
 
 // ---- Bloodthirst SpellFamilyFlags ----
@@ -134,6 +144,12 @@ constexpr uint32 SPELL_CONSECRATION_R8      = 48819;
 constexpr uint32 SPELL_AVENGERS_SHIELD_R3   = 48827;
 // Judgement damage spell (always triggered by all Judgement types)
 constexpr uint32 SPELL_JUDGEMENT_DAMAGE     = 54158;
+// Divine Storm
+constexpr uint32 SPELL_DIVINE_STORM        = 53385;
+// Crusader Strike (highest rank)
+constexpr uint32 SPELL_CRUSADER_STRIKE_R6   = 35395;
+// Exorcism (highest rank)
+constexpr uint32 SPELL_EXORCISM_R9          = 48801;
 
 // ============================================================
 //  SPELL 900106: Paragon Strike (SpellScript)
@@ -1027,6 +1043,157 @@ class spell_custom_pprot_judge_as : public SpellScript
     }
 };
 
+// ============================================================
+//  SPELL 900174: Crusader Strike +9 Targets (SpellScript)
+//  Hooked on Crusader Strike (35395). After hitting primary
+//  target, deals same damage to up to 9 additional enemies
+//  within 8yd of caster.
+//  Only active when player has passive 900174.
+// ============================================================
+class spell_custom_ret_cs_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_ret_cs_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_RET_CS_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 8.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, targets, check);
+        Cell::VisitObjects(caster, searcher, 8.0f);
+        targets.remove(mainTarget);
+
+        uint32 count = 0;
+        for (Unit* target : targets)
+        {
+            if (count >= 9)
+                break;
+            if (!target->IsAlive())
+                continue;
+
+            Unit::DealDamage(caster, target, static_cast<uint32>(damage),
+                nullptr, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL);
+            ++count;
+        }
+
+        if (count > 0)
+            LOG_INFO("module",
+                "mod-custom-spells: Player {} -> CS AoE hit {} extra targets",
+                player->GetName(), count);
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_ret_cs_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900175: Exorcism Buff System (AuraScript)
+//  Passive proc aura: when CS, Judgement, or Divine Storm
+//  hits an enemy, adds 1 stack of Exorcism buff (900176).
+//  Max 10 stacks. Each stack = +50% Exorcism damage (DBC).
+//  Stacks are consumed when Exorcism is cast.
+// ============================================================
+class spell_custom_ret_exorcism_proc : public AuraScript
+{
+    PrepareAuraScript(spell_custom_ret_exorcism_proc);
+
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+        if (!spellInfo)
+            return false;
+
+        // Only proc on CS (35395), Judgement Damage (54158), or DS (53385)
+        uint32 id = spellInfo->Id;
+        return id == SPELL_CRUSADER_STRIKE_R6
+            || id == SPELL_JUDGEMENT_DAMAGE
+            || id == SPELL_DIVINE_STORM;
+    }
+
+    void HandleProc(ProcEventInfo& /*eventInfo*/)
+    {
+        PreventDefaultAction();
+
+        Unit* target = GetTarget();
+        if (!target)
+            return;
+
+        Player* player = target->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Add one stack of the Exorcism buff (max 10)
+        player->CastSpell(player, SPELL_RET_EXORCISM_BUFF, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Exorcism buff stack added (now {})",
+            player->GetName(), player->GetAuraCount(SPELL_RET_EXORCISM_BUFF));
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_ret_exorcism_proc::CheckProc);
+        OnProc += AuraProcFn(spell_custom_ret_exorcism_proc::HandleProc);
+    }
+};
+
+// ============================================================
+//  Exorcism Consume: Hooked on Exorcism (48801).
+//  After casting Exorcism, consumes all stacks of 900176.
+//  Only active when player has the buff.
+// ============================================================
+class spell_custom_ret_exorcism_consume : public SpellScript
+{
+    PrepareSpellScript(spell_custom_ret_exorcism_consume);
+
+    void HandleAfterCast()
+    {
+        Unit* caster = GetCaster();
+        if (!caster)
+            return;
+
+        if (caster->HasAura(SPELL_RET_EXORCISM_BUFF))
+        {
+            uint32 stacks = caster->GetAuraCount(SPELL_RET_EXORCISM_BUFF);
+            caster->RemoveAurasDueToSpell(SPELL_RET_EXORCISM_BUFF);
+
+            if (Player* player = caster->ToPlayer())
+                LOG_INFO("module",
+                    "mod-custom-spells: Player {} -> Exorcism consumed {} stacks",
+                    player->GetName(), stacks);
+        }
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_ret_exorcism_consume::HandleAfterCast);
+    }
+};
+
 void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
@@ -1053,4 +1220,9 @@ void AddCustomSpellsScripts()
     // Paladin Prot
     RegisterSpellScript(spell_custom_pprot_as_consec);
     RegisterSpellScript(spell_custom_pprot_judge_as);
+
+    // Paladin Ret
+    RegisterSpellScript(spell_custom_ret_cs_aoe);
+    RegisterSpellScript(spell_custom_ret_exorcism_proc);
+    RegisterSpellScript(spell_custom_ret_exorcism_consume);
 }
