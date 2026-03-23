@@ -268,6 +268,18 @@ public:
         if (urand(1, 100) > 10)
             return;
 
+        // Clean up stale entries (players who logged out)
+        if (s_lastSpawn.size() > 200)
+        {
+            for (auto it = s_lastSpawn.begin(); it != s_lastSpawn.end(); )
+            {
+                if (now - it->second > 60)
+                    it = s_lastSpawn.erase(it);
+                else
+                    ++it;
+            }
+        }
+
         s_lastSpawn[guid] = now;
 
         // Determine lesser demon NPC based on pet entry
@@ -582,6 +594,52 @@ class spell_custom_wlk_cb_aoe : public SpellScript
 //  End Warlock Destruction section
 // ============================================================
 
+// ============================================================
+//  WARLOCK PET DAMAGE BOOST (900836, 900839)
+//  UnitScript: when a Warlock pet deals damage, boost it by 50%
+//  if the owner has the corresponding passive aura.
+//  900836 = Imp Firebolt +50%, 900839 = Felguard +50%
+//  NOTE: DBC-only ADD_PCT_MODIFIER cannot target pet spells
+//  (different SpellFamilyName), so C++ is required.
+// ============================================================
+class custom_wlk_pet_dmg_unitscript : public UnitScript
+{
+public:
+    custom_wlk_pet_dmg_unitscript()
+        : UnitScript("custom_wlk_pet_dmg_unitscript") {}
+
+    void OnDamage(Unit* attacker, Unit* /*victim*/, uint32& damage) override
+    {
+        if (!attacker)
+            return;
+
+        Creature* creature = attacker->ToCreature();
+        if (!creature || !creature->IsPet())
+            return;
+
+        Unit* ownerUnit = creature->GetOwner();
+        if (!ownerUnit)
+            return;
+
+        Player* owner = ownerUnit->ToPlayer();
+        if (!owner)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        uint32 entry = creature->GetEntry();
+
+        // Imp: +50% all damage if owner has 900836
+        if (entry == 416 && owner->HasAura(SPELL_WLK_DEMO_IMP_FB_DMG))
+            damage = static_cast<uint32>(damage * 1.5f);
+
+        // Felguard: +50% all damage if owner has 900839
+        if (entry == 17252 && owner->HasAura(SPELL_WLK_DEMO_FG_DMG))
+            damage = static_cast<uint32>(damage * 1.5f);
+    }
+};
+
 void AddWarlockSpellsScripts()
 {
     // Warlock Affliction
@@ -599,4 +657,7 @@ void AddWarlockSpellsScripts()
     // Warlock Destruction
     RegisterSpellScript(spell_custom_wlk_sb_aoe);
     RegisterSpellScript(spell_custom_wlk_cb_aoe);
+
+    // Warlock Pet Damage Boost
+    new custom_wlk_pet_dmg_unitscript();
 }

@@ -153,7 +153,7 @@ class spell_custom_pri_heal_fire : public AuraScript
         Acore::AnyUnfriendlyUnitInObjectRangeCheck check(healTarget, player, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(healTarget, enemies, check);
-        Cell::VisitObjects(healTarget, enemies, 10.0f);
+        Cell::VisitObjects(healTarget, searcher, 10.0f);
 
         for (Unit* enemy : enemies)
         {

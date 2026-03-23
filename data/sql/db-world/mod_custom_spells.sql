@@ -923,47 +923,49 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 -- Corruption SpellFamilyFlags[0]=0x2 (verify!)
 -- ============================================================
 DELETE FROM `spell_dbc` WHERE `ID` IN (900800, 900801, 900802, 900803);
-INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 -- 900800: DoT ticks → Shadow AoE (DUMMY, proc via spell_proc + C++)
-(900800, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT AoE', 0x003F3F),
+(900800, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT AoE', 0x003F3F),
 -- 900801: Corruption +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
 -- EffectSpellClassMaskA=0x2 targets Corruption (verify!)
-(900801, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2, 0, 0, 5, 313, 0, 0, 'Affl: Corruption +50%', 0x003F3F),
+(900801, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 0, 108, 0, 0, 0x2, 0, 0, 5, 313, 0, 0, 'Affl: Corruption +50%', 0x003F3F),
 -- 900802: DoT ticks → Spread to 2 targets (DUMMY, proc via spell_proc + C++)
-(900802, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT Spread', 0x003F3F),
+(900802, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT Spread', 0x003F3F),
 -- 900803: Helper - Shadow AoE (instant Shadow AoE damage, 8yd around target)
--- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=32 (Shadow)
-(900803, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Eruption', 0x003F3F);
+-- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), RadiusIndex=13(8yd), SchoolMask=32 (Shadow)
+(900803, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 13, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Eruption', 0x003F3F);
 
 -- ============================================================
 -- Warlock Demonology: spell_dbc entries (900833-900843)
 -- SpellFamilyName=5 (Warlock)
 -- ============================================================
 DELETE FROM `spell_dbc` WHERE `ID` IN (900833, 900834, 900835, 900836, 900837, 900838, 900839, 900840, 900841, 900842, 900843);
-INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 -- 900833: Kill extends Meta duration (DUMMY marker, C++ via PlayerScript)
-(900833, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Meta Kill Extend', 0x003F3F),
+(900833, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Meta Kill Extend', 0x003F3F),
 -- 900834: Demon Form periodic AoE+Heal (PERIODIC_DUMMY, 3s tick, permanent)
-(900834, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 226, 0, 0, 0, 0, 3000, 5, 313, 0, 0, 'Demo: Meta AoE+Heal', 0x003F3F),
+(900834, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 226, 0, 0, 0, 0, 3000, 5, 313, 0, 0, 'Demo: Meta AoE+Heal', 0x003F3F),
 -- 900835: Demons spawn lesser versions (DUMMY marker, C++ via UnitScript)
-(900835, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Lesser Spawn', 0x003F3F),
--- 900836: Imp Firebolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
--- Imp Firebolt SpellFamilyFlags unknown — using broad mask 0 (may need verify)
-(900836, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Imp FB +50%', 0x003F3F),
+(900835, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Lesser Spawn', 0x003F3F),
+-- 900836: Imp Firebolt +50% damage (DUMMY marker, C++ via UnitScript pet damage boost)
+-- NOTE: DBC ADD_PCT_MODIFIER cannot target pet spells (different SpellFamilyName)
+(900836, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Imp FB +50%', 0x003F3F),
 -- 900837: Imp Firebolt +9 targets (DUMMY marker, C++ on Imp Firebolt -47964)
-(900837, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Imp FB AoE', 0x003F3F),
+(900837, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Imp FB AoE', 0x003F3F),
 -- 900838: Felguard Cleave unlimited targets (DUMMY marker, C++ on 47994)
-(900838, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: FG Unlim', 0x003F3F),
--- 900839: Felguard +50% damage (MOD_DAMAGE_PERCENT_DONE, all schools)
-(900839, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 79, 127, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: FG +50%', 0x003F3F),
+(900838, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: FG Unlim', 0x003F3F),
+-- 900839: Felguard +50% damage (DUMMY marker, C++ via UnitScript pet damage boost)
+-- NOTE: DBC MOD_DAMAGE_PERCENT_DONE on player would boost player damage, not pet
+(900839, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: FG +50%', 0x003F3F),
 -- 900840: Sacrifice grants ALL bonuses (DUMMY marker, C++ on 18788)
-(900840, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Sacrifice All', 0x003F3F),
+(900840, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Sacrifice All', 0x003F3F),
 -- 900841: Helper - Imp Firebolt bounce (instant Fire single-target damage)
-(900841, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 4, 0, 'Imp Firebolt Bounce', 0x003F3F),
+(900841, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 5, 313, 4, 0, 'Imp Firebolt Bounce', 0x003F3F),
 -- 900842: Helper - Meta Shadow AoE (instant Shadow AoE, 8yd around caster)
-(900842, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 600, 22, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Meta Shadow Burst', 0x003F3F),
+-- RadiusIndex=13 (8yd) for SRC_AREA_ENEMY targeting
+(900842, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 600, 22, 13, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Meta Shadow Burst', 0x003F3F),
 -- 900843: Helper - Meta Self Heal (instant heal on caster)
-(900843, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 100, 400, 1, 0, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Meta Demon Heal', 0x003F3F);
+(900843, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 100, 400, 1, 0, 0, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Meta Demon Heal', 0x003F3F);
 
 -- ============================================================
 -- Warlock Demonology: creature_template entries (Lesser Demons)
@@ -1072,16 +1074,16 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- PW:Shield SpellFamilyFlags[0]=0x1 (verify!)
 -- ============================================================
 DELETE FROM `spell_dbc` WHERE `ID` IN (900900, 900901, 900902, 900903);
-INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 -- 900900: Shields explode on break/fade (DUMMY marker, C++ on -48066)
-(900900, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Disc: Shield Explode', 0x003F3F),
+(900900, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Disc: Shield Explode', 0x003F3F),
 -- 900901: Shields +50% absorb (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE on PW:S)
 -- EffectSpellClassMaskA=0x1 targets PW:Shield (verify!)
-(900901, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 0, 6, 566, 0, 0, 'Disc: Shield +50%', 0x003F3F),
+(900901, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 0, 108, 0, 0, 0x1, 0, 0, 6, 566, 0, 0, 'Disc: Shield +50%', 0x003F3F),
 -- 900903: Helper - Shield Explosion AoE (instant Holy AoE, 8yd around target)
--- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=2 (Holy)
+-- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), RadiusIndex=13(8yd), SchoolMask=2 (Holy)
 -- BasePoints via CastCustomSpell (scales with shield amount)
-(900903, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 15, 0, 0, 0, 0, 0, 0, 6, 566, 2, 0, 'Shield Explosion', 0x003F3F);
+(900903, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 15, 13, 0, 0, 0, 0, 0, 0, 6, 566, 2, 0, 'Shield Explosion', 0x003F3F);
 
 -- 900902: Weakened Soul duration override → 5 seconds
 -- This overrides the existing Weakened Soul debuff (6788) duration to 5s
@@ -1104,14 +1106,14 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- Priest Shadow: spell_dbc entries (900966-900968)
 -- ============================================================
 DELETE FROM `spell_dbc` WHERE `ID` IN (900966, 900967, 900968);
-INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 -- 900966: DoT ticks → Shadow AoE (DUMMY, proc via spell_proc + C++)
-(900966, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Shadow: DoT AoE', 0x003F3F),
+(900966, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Shadow: DoT AoE', 0x003F3F),
 -- 900967: DoT ticks → Spread to 2 targets (DUMMY, proc via spell_proc + C++)
-(900967, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Shadow: DoT Spread', 0x003F3F),
+(900967, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Shadow: DoT Spread', 0x003F3F),
 -- 900968: Helper - Shadow AoE (instant Shadow AoE damage, 8yd around target)
--- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=32 (Shadow)
-(900968, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 0, 0, 0, 0, 0, 0, 6, 566, 32, 0, 'Shadow Eruption', 0x003F3F);
+-- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), RadiusIndex=13(8yd), SchoolMask=32 (Shadow)
+(900968, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 13, 0, 0, 0, 0, 0, 0, 6, 566, 32, 0, 'Shadow Eruption', 0x003F3F);
 
 -- ============================================================
 -- Priest: spell_proc entries
@@ -1129,14 +1131,15 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 -- Non-Class Global: spell_dbc entries (901100-901107)
 -- SpellFamilyName=0 (Generic)
 -- ============================================================
-DELETE FROM `spell_dbc` WHERE `ID` IN (901100, 901101, 901102, 901103, 901104, 901105, 901106, 901107);
+DELETE FROM `spell_dbc` WHERE `ID` IN (901100, 901101, 901102, 901103, 901104, 901105, 901106, 901107, 901108);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
--- 901100: Cast while moving (SPELL_AURA_CAST_WHILE_WALKING = 330, DBC only)
-(901100, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 330, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Cast Moving', 0x003F3F),
+-- 901100: Cast while moving (DUMMY marker — SPELL_AURA_CAST_WHILE_WALKING=330 does NOT
+-- exist in WotLK 3.3.5a. Requires AzerothCore core backport or per-spell ATTR5 flags.)
+(901100, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Cast Moving', 0x003F3F),
 -- 901101: Kill → heal 5% HP (DUMMY, proc via spell_proc + C++)
 (901101, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Kill Heal', 0x003F3F),
 -- 901102: Extra Attack 25% (DUMMY, proc via spell_proc + C++)
--- C++ grants extra attack via helper with ADD_EXTRA_ATTACKS
+-- C++ grants extra attack via helper 901108 (SPELL_EFFECT_ADD_EXTRA_ATTACKS)
 (901102, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Extra Attack', 0x003F3F),
 -- 901103: 10% cleave to all enemies (DUMMY, proc via spell_proc + C++)
 (901103, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Cleave Proc', 0x003F3F),
@@ -1148,7 +1151,10 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- SchoolMask=1 (Physical) — damage type mirrors the original hit via CastCustomSpell
 (901106, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Cleave Hit', 0x003F3F),
 -- 901107: Helper - Counter Attack (instant Physical single-target, BasePoints via CastCustomSpell)
-(901107, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Counter Strike', 0x003F3F);
+(901107, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Counter Strike', 0x003F3F),
+-- 901108: Helper - Extra Attack (SPELL_EFFECT_ADD_EXTRA_ATTACKS=32, grants 1 extra melee swing)
+-- Target=SELF(1), BasePoints=1
+(901108, 0x10000000, 0, 0, 0, 1, 0, 1, 32, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Extra Attack Hit', 0x003F3F);
 
 -- ============================================================
 -- Non-Class Global: spell_proc entries
