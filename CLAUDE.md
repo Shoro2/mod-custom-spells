@@ -96,7 +96,11 @@ Nächste freie ID für neue Spells: **900122+**
 | Shaman | Ele | 900250-900257 | 8 | geplant |
 | Shaman | Enhance | 900258-900263 | 6 | geplant |
 | Shaman | Resto | 900264-900265 | 2 | geplant |
-| (weitere Klassen) | — | ab 900300+ | — | Wartet auf weitere Teile |
+| Hunter | Shared | 900300-900301 | 2 | geplant |
+| Hunter | BM | 900302-900304 | 3 | geplant |
+| Hunter | MM | 900305-900306 | 2 | geplant |
+| Hunter | Surv | 900307 | 1 | geplant |
+| (weitere Klassen) | — | ab 900350+ | — | Wartet auf weitere Teile |
 
 ---
 
@@ -261,6 +265,42 @@ Nächste freie ID für neue Spells: **900122+**
 > **Helper-Spells Shaman**: 900251/900258/900264 (Totem-Replacement) ist ein gemeinsames System — braucht evtl. mehrere Helper-NPCs pro Totem-Typ (Fire, Earth, Water, Air Totem-Creatures). 900261 (Wolf-Summon) braucht eigenen Wolf-NPC + Summon-Spell. 900259 (Maelstrom Empower) braucht AoE-Buff-Spell für Summons. IDs ab 900266+ für Helper verfügbar.
 
 > **Besonders aufwändig**: Das Totem-Replacement-System (900251/900258/900264) ist das ambitionierteste Feature bisher — jedes Totem braucht ein eigenes folgendes Creature mit passender AI. Ragnaros-Replacement (900252) braucht Custom-Boss-NPC mit Fire-AI. Spirit Wolf Haste-Inheritance (900262) braucht dynamische Stat-Synchronisation.
+
+---
+
+### Hunter — Shared (900300-900301)
+
+> Hunter SpellFamilyName = 9. "Get back arrows" und "Multishot unlimited targets" gelten für alle 3 Specs → shared Spells.
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900300 | Get back arrows (no ammo consumption) | C++ | geplant | Hunter verbraucht Ammo bei jedem Ranged-Angriff. Ansatz: `PlayerScript::OnBeforeItemUse` oder `SpellScript` auf Auto Shot (75) → nach Schuss Ammo-Count wiederherstellen. Oder: Passive Aura die Ammo-Verbrauch auf 0 setzt. Core-seitig: `Player::RemoveAmmo()` Hook → Skip wenn Aura aktiv. Alternativ einfacher: periodisch Ammo-Stack auf Max setzen. |
+| 2 | 900301 | Multi-Shot unlimited targets | DBC/C++ | geplant | Multi-Shot (2643) trifft normalerweise 3 Ziele. DBC: `MaxAffectedTargets` entfernen/sehr hoch setzen. C++: `OnObjectAreaTargetSelect` → keine Target-Limit-Filterung. Spell trifft dann alle Feinde im Cone/Radius. |
+
+### Hunter — Beast Mastery (900302-900304)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900302 | Pet damage +50% | DBC | geplant | Passive Aura auf Hunter: `SPELL_AURA_MOD_DAMAGE_PERCENT_DONE` +50% für Pet. Oder: Aura mit `SPELL_AURA_MOD_DAMAGE_DONE_FOR_MECHANIC` auf Pet anwenden. SpellFamilyName=9, Target=Pet. Ähnlich wie bestehende Pet-Talent-Buffs (z.B. Unleashed Fury). |
+| 2 | 900303 | Pet attack speed +50% | DBC | geplant | Passive Aura: `SPELL_AURA_MOD_ATTACKSPEED` -50% (= 50% schneller) auf Pet. Target: Owner's Pet. Vergleichbar mit Serpent's Swiftness (Talent) aber stärker. |
+| 3 | 900304 | Pet chance to deal AoE damage | C++ | geplant | Proc-Aura auf Pet: `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` (0x4). `HandleProc`: Chance X% → CastSpell(AoE-Damage-Spell, triggered=true) zentriert auf Pet's Target. Braucht Helper-AoE-Spell (z.B. 900308). `spell_proc` mit Chance + ICD. |
+
+### Hunter — Marksmanship (900305-900306)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900305 | Auto Shot bounces +9 targets | C++ | geplant | Auto Shot (75) ist normalerweise Single-Target. SpellScript `AfterHit`: Bei Auto Shot → Chain-Bounce-Logik: Finde bis zu 9 weitere Feinde im Radius um Target → CastSpell(Auto-Shot-Damage, triggered=true) auf jedes. Damage kann pro Bounce gleich bleiben (kein Reduce wie Chain Lightning). Braucht Helper-Damage-Spell (z.B. 900309) für den Bounce-Damage. |
+| 2 | 900306 | Autocast Multi-Shot every 0.1s for 2s, 50% slow while channeling | C++ | geplant | Aktivierter Spell: Beim Cast → Channel-Aura (2s Duration). Periodic Tick alle 100ms → CastSpell(Multi-Shot, triggered=true). Gleichzeitig: `SPELL_AURA_MOD_SPEED_SLOW_ALL` -50% auf Caster während Channel. 20 Multi-Shots in 2s = extrem hoher Burst. Braucht eigene Channel-Spell-DBC + PeriodicTrigger-Logik. Balancing-Warnung: Enormer Damage-Output. |
+
+### Hunter — Survival (900307)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900307 | Chance to drop Explosive Trap on damage dealt | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_RANGED_AUTO_ATTACK|DONE_SPELL_RANGED_DMG_CLASS` (0x44). `HandleProc`: Chance X% → CastSpell(Explosive Trap, triggered=true) an Target-Position. Explosive Trap (49067) normalerweise am Caster platziert — braucht evtl. modifizierte Version die am Ziel spawnt (`SummonGameObject` an Target-Coords). Oder: Direkt den Explosion-Damage-Spell (49064) am Target casten. |
+
+> **Helper-Spells Hunter**: 900304 (Pet AoE) braucht AoE-Damage-Spell (z.B. 900308). 900305 (Auto Shot Bounce) braucht Bounce-Damage-Spell (z.B. 900309). 900306 (Multi-Shot Channel) braucht eigene Channel-Spell-DBC-Entry. 900307 (Explosive Trap on Damage) braucht evtl. modifizierte Trap-Spell-Variante. IDs ab 900308+ für Helper verfügbar.
+
+> **Besonders aufwändig**: 900306 (Multi-Shot Autocast Channel) ist ein neuartiges Konzept — 20 Multi-Shots in 2s braucht sorgfältiges Balancing und Performance-Tests (viele Projectiles gleichzeitig). 900305 (Auto Shot Bounce) ist ein Custom-Chain-System das es im Base-Game nicht gibt.
 
 ---
 
