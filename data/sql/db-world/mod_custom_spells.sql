@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -78,7 +78,13 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Druid Feral: Swipe Cat applies bleed
 (62078, 'spell_custom_feral_cat_swipe_bleed'),
 -- Druid Resto: HoTs summon treant (proc aura)
-(901066, 'spell_custom_drst_hot_treant');
+(901066, 'spell_custom_drst_hot_treant'),
+-- Rogue Assa: Poison Nova proc passive
+(900603, 'spell_custom_rog_poison_nova'),
+-- Rogue Combat: SS +9 targets (all ranks via negative ID)
+(-48638, 'spell_custom_rog_ss_aoe'),
+-- Rogue Sub: Hemorrhage +9 targets (all ranks via negative ID)
+(-48660, 'spell_custom_rog_hemo_aoe');
 -- 900500: Get back arrows → PlayerScript (no spell_script_names needed)
 -- 900501: Multi-Shot AoE → checked via HasAura (hooked on Multi-Shot via -49048 above)
 -- 900502/900503/900504: Pet passives → UnitScript/PlayerScript (no spell_script_names needed)
@@ -650,3 +656,62 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
 DELETE FROM `creature_template_model` WHERE `CreatureID` = 901066;
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
 (901066, 0, 3889, 1, 1, 12340);
+
+-- ============================================================
+-- Rogue: spell_proc entries
+-- ============================================================
+
+-- Poison Nova proc (900603): procs on Nature spell damage (poison).
+-- ProcFlags=0x10000 (DONE_SPELL_MAGIC_DMG_CLASS_NEG). 15% chance, 3s ICD.
+DELETE FROM `spell_proc` WHERE `SpellId` = 900603;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900603, 8, 8, 0, 0, 0, 0x10000, 1, 2, 0, 0, 0, 0, 15, 3000, 0);
+
+-- ============================================================
+-- Rogue: spell_dbc entries (900600-900669)
+-- SpellFamilyName=8 (Rogue)
+-- Mutilate SpellFamilyFlags[1]=0x200000 (verify!)
+-- Sinister Strike SpellFamilyFlags[0]=0x2 (verify!)
+-- Hemorrhage SpellFamilyFlags[0]=0x2000000 (verify!)
+-- Blade Flurry SpellFamilyFlags[1]=0x800 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900600, 900601, 900602, 900603, 900604, 900633, 900634, 900635, 900636, 900637, 900638, 900666, 900667, 900668, 900669);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- Assa: 900600 Energy regen +50% (MOD_POWER_REGEN_PERCENT, MiscValue=3 Energy)
+(900600, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 110, 3, 0, 0, 0, 0, 8, 132, 0, 0, 'Assa: Energy +50%', 0x003F3F),
+-- Assa: 900601 Mutilate +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- MutilateSpellFamilyFlags[1]=0x200000
+(900601, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0, 0x200000, 0, 8, 132, 0, 0, 'Assa: Muti +50%', 0x003F3F),
+-- Assa: 900602 Poison damage +50% (ADD_PCT_MODIFIER on poison school mask=8 Nature)
+-- Poison spells share common flags. Using broad approach with SchoolMask filter in C++ if needed.
+-- For DBC: target all Rogue Nature-school spells. SpellFamilyFlags for Instant Poison etc.
+(900602, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x8000, 0x10000, 0, 8, 132, 0, 0, 'Assa: Poison +50%', 0x003F3F),
+-- Assa: 900603 Poison Nova proc (DUMMY, proc via spell_proc + C++)
+(900603, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 8, 132, 0, 0, 'Assa: Poison Nova', 0x003F3F),
+-- Assa: 900604 Helper - Poison Nova AoE (instant AoE Nature damage, 8yd)
+-- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=8(Nature)
+(900604, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 0, 0, 0, 0, 0, 0, 8, 132, 8, 0, 'Poison Nova', 0x003F3F),
+-- Combat: 900633 SS +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- SS SpellFamilyFlags[0]=0x2
+(900633, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2, 0, 0, 8, 132, 0, 0, 'Combat: SS +50%', 0x003F3F),
+-- Combat: 900634 SS +9 targets (DUMMY marker, C++ on -48638)
+(900634, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 8, 132, 0, 0, 'Combat: SS AoE', 0x003F3F),
+-- Combat: 900635 Blade Flurry 2min duration (ADD_FLAT_MODIFIER + SPELLMOD_DURATION=17)
+-- BF SpellFamilyFlags[1]=0x800, BasePoints=+105000ms (15s base + 105s = 120s)
+(900635, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 105000, 1, 107, 17, 0, 0, 0x800, 0, 8, 132, 0, 0, 'Combat: BF 2min', 0x003F3F),
+-- Combat: 900636 Blade Flurry +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS=17)
+-- BF SpellFamilyFlags[1]=0x800, BasePoints=9
+(900636, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0, 0x800, 0, 8, 132, 0, 0, 'Combat: BF +9 Targets', 0x003F3F),
+-- Combat: 900637 Energy regen +50% (MOD_POWER_REGEN_PERCENT, MiscValue=3 Energy)
+(900637, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 110, 3, 0, 0, 0, 0, 8, 132, 0, 0, 'Combat: Energy +50%', 0x003F3F),
+-- Combat: 900638 Helper - SS bounce damage (instant Physical single-target)
+(900638, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 8, 132, 1, 0, 'Sinister Slash', 0x003F3F),
+-- Sub: 900666 Energy regen +50% (MOD_POWER_REGEN_PERCENT, MiscValue=3 Energy)
+(900666, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 110, 3, 0, 0, 0, 0, 8, 132, 0, 0, 'Sub: Energy +50%', 0x003F3F),
+-- Sub: 900667 Hemorrhage +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- Hemorrhage SpellFamilyFlags[0]=0x2000000
+(900667, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2000000, 0, 0, 8, 132, 0, 0, 'Sub: Hemo +50%', 0x003F3F),
+-- Sub: 900668 Hemorrhage +9 targets (DUMMY marker, C++ on -48660)
+(900668, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 8, 132, 0, 0, 'Sub: Hemo AoE', 0x003F3F),
+-- Sub: 900669 Helper - Hemorrhage bounce damage (instant Physical single-target)
+(900669, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 8, 132, 1, 0, 'Deep Cut', 0x003F3F);

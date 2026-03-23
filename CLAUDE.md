@@ -28,11 +28,19 @@ AzerothCore module for defining custom spell effects via C++ SpellScripts. Each 
 mod-custom-spells/
 ├── src/
 │   ├── mod_custom_spells_loader.cpp  # Module entry point, registers scripts
-│   └── custom_spells.cpp            # Custom spell logic (main file to edit)
+│   ├── custom_spells_common.h        # Shared header: enum, constants, includes
+│   ├── custom_spells.cpp             # Main: calls per-class registration functions
+│   ├── custom_spells_warrior.cpp     # Warrior (Arms/Fury/Prot)
+│   ├── custom_spells_paladin.cpp     # Paladin (Holy/Prot/Ret)
+│   ├── custom_spells_dk.cpp          # Death Knight (Blood/Frost/Unholy)
+│   ├── custom_spells_shaman.cpp      # Shaman (Ele/Enhance/Resto)
+│   ├── custom_spells_hunter.cpp      # Hunter (BM/MM/Surv)
+│   ├── custom_spells_rogue.cpp       # Rogue (Assa/Combat/Sub)
+│   └── custom_spells_druid.cpp       # Druid (Balance/Feral/Resto)
 ├── conf/
-│   └── mod_custom_spells.conf.dist  # Config: CustomSpells.Enable
+│   └── mod_custom_spells.conf.dist   # Config: CustomSpells.Enable
 └── data/sql/db-world/
-    └── mod_custom_spells.sql         # spell_script_names registration
+    └── mod_custom_spells.sql          # spell_script_names, spell_dbc, spell_proc
 ```
 
 ## Workflow: Custom Spell erstellen (Schritt für Schritt)
@@ -562,7 +570,9 @@ Spell IDs 900500-900567 (Hunter Shared + BM + MM + Surv + Helpers) existieren in
 Spell IDs 901000-901073 (Druid Balance + Feral + Resto + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
 NPC 901066 (Healing Treant) existiert in `creature_template` für HoT-Treant-Proc.
 
-Nächste freie Klassen-Blöcke: **900600+** (Rogue), **900700+** (Mage), etc.
+Spell IDs 900600-900669 (Rogue Assa + Combat + Sub + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+
+Nächste freie Klassen-Blöcke: **900700+** (Mage), **900800+** (Warlock), etc.
 
 ---
 
@@ -612,6 +622,9 @@ Nächste freie Klassen-Blöcke: **900600+** (Rogue), **900700+** (Mage), etc.
 | Druid | Feral Tank | 901033-901034 (2) | 901035-901048 (14) | implementiert |
 | Druid | Feral DPS | 901049-901051 (3) | 901052-901065 (14) | implementiert |
 | Druid | Resto | 901066-901073 (8) | 901074-901099 (26) | implementiert |
+| Rogue | Assa | 900600-900604 (5) | 900605-900632 (28) | implementiert |
+| Rogue | Combat | 900633-900638 (6) | 900639-900665 (27) | implementiert |
+| Rogue | Sub | 900666-900669 (4) | 900670-900699 (30) | implementiert |
 
 ---
 
@@ -877,41 +890,39 @@ Nächste freie Klassen-Blöcke: **900600+** (Rogue), **900700+** (Mage), etc.
 
 ---
 
-### Rogue — Shared (900600-900632)
-
-> Rogue SpellFamilyName = 8. "Energy regen +50%" gilt für alle 3 Specs → shared Spell.
-
-| # | Spell ID | Effekt | Ansatz | Status | Details |
-|---|----------|--------|--------|--------|---------|
-| 1 | 900600 | Energy regeneration +50% | DBC | geplant | Passive Aura: `SPELL_AURA_MOD_POWER_REGEN_PERCENT` +50% für Energy (Power Type 3). Rogue Base Energy Regen = 10/s → wird 15/s. Vergleichbar mit Vitality-Talent. SpellFamilyName=8, Target=Self. |
-
 ### Rogue — Assassination (900600-900632)
 
+> Rogue SpellFamilyName = 8. Mutilate flags[1]=0x200000, Poison flags[0]=0x8000+flags[1]=0x10000 (verify!).
+
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900601 | Mutilate damage +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Mutilate (SpellFamilyFlags für Mutilate 5374/27576). Oder `SPELL_AURA_MOD_DAMAGE_DONE_FOR_MECHANIC` spezifisch. Einfacher Damage-Multiplikator. |
-| 2 | 900602 | Poison damage +50% | DBC/C++ | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf alle Poison-Spells (Instant Poison 57965, Deadly Poison 57970, Wound Poison 57975, etc.). Alle Poison-Spells haben gemeinsame SpellFamilyFlags → ein Aura-Effekt kann mehrere abdecken. Alternativ C++: `OnDamage`-Hook → Wenn Damage-Spell School=Nature + SpellFamily=Rogue → ×1.5. |
-| 3 | 900603 | Poison damage has chance to unleash Poison Nova | C++ | geplant | Proc-Aura: `PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_POS|NEG` mit SpellFamily-Filter auf Poison-Spells. `HandleProc`: Chance X% → CastSpell(Poison Nova Helper, triggered=true) am Target. Poison Nova = AoE Nature Damage um Target. Braucht Helper-AoE-Spell (z.B. 900604). ICD empfohlen (z.B. 3s). |
+| 1 | 900600 | Energy regen +50% | DBC | implementiert | SPELL_AURA_MOD_POWER_REGEN_PERCENT (110), MiscValue=3 (Energy). BasePoints=50. |
+| 2 | 900601 | Mutilate +50% damage | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskB=0x200000 targets Mutilate. |
+| 3 | 900602 | Poison damage +50% | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskA=0x8000 + EffectSpellClassMaskB=0x10000 targets Poison spells. |
+| 4 | 900603 | Poison Nova proc (15%, 3s ICD) | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x10000 (spell magic dmg), SchoolMask=8(Nature), SpellFamily=8(Rogue), 15% Chance, 3s ICD. C++ HandleProc → CastSpell(900604 Poison Nova). |
+| H1 | 900604 | Helper: Poison Nova AoE | DBC | implementiert | Instant AoE Nature Damage. Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=8(Nature), 800+200rnd, 8yd. |
 
 ### Rogue — Combat (900633-900665)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900633 | Sinister Strike damage +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Sinister Strike (48638). SpellFamilyFlags für SS identifizieren. Einfacher Damage-Multiplikator. |
-| 2 | 900634 | Sinister Strike +9 targets | C++/DBC | geplant | Sinister Strike (48638) ist Single-Target Melee. Ansatz: SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Melee-Radius. CastSpell(SS-Damage-Helper, triggered=true) auf jedes Target. Ähnlich wie Hunter Auto Shot Bounce (900305). Braucht Helper-Spell (z.B. 900637). |
-| 3 | 900635 | Blade Dance (Blade Flurry) duration 2 min | DBC | geplant | Blade Flurry (13877) hat normalerweise 15s Duration. DBC-Patch: Duration auf 120000ms (2 min) setzen. Einfache DBC-Änderung. |
-| 4 | 900636 | Blade Dance (Blade Flurry) +9 targets | C++/DBC | geplant | Blade Flurry (13877) trifft normalerweise 1 zusätzliches Ziel. DBC: `MaxAffectedTargets` auf 10 setzen. C++: Falls Target-Limit hardcoded → `OnObjectAreaTargetSelect` überschreiben. Blade Flurry kopiert Melee-Damage auf zusätzliche Targets → alle 9 extra Targets bekommen den Damage. |
+| 1 | 900633 | SS +50% damage | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskA=0x2 targets SS. |
+| 2 | 900634 | SS +9 targets | C++ | implementiert | DUMMY Marker. C++ SpellScript auf SS (-48638): `AfterHit` → findet bis zu 9 Feinde im 8yd Radius → CastCustomSpell(900638, damage) auf jeden. Prüft `HasAura(900634)`. |
+| 3 | 900635 | Blade Flurry 2min duration | DBC | implementiert | ADD_FLAT_MODIFIER (107) + SPELLMOD_DURATION (17). BasePoints=105000 (15s base +105s = 120s). EffectSpellClassMaskB=0x800. |
+| 4 | 900636 | Blade Flurry +9 targets | DBC | implementiert | ADD_FLAT_MODIFIER (107) + SPELLMOD_JUMP_TARGETS (17). BasePoints=9. EffectSpellClassMaskB=0x800. |
+| 5 | 900637 | Energy regen +50% | DBC | implementiert | SPELL_AURA_MOD_POWER_REGEN_PERCENT (110), MiscValue=3 (Energy). BasePoints=50. |
+| H1 | 900638 | Helper: Sinister Slash | DBC | implementiert | Instant Physical single-target damage. BasePoints via CastCustomSpell. |
 
 ### Rogue — Subtlety (900666-900699)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900666 | Hemorrhage damage +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Hemorrhage (48660). SpellFamilyFlags für Hemorrhage. Einfacher Damage-Multiplikator wie Mutilate (900351). |
-| 2 | 900667 | Hemorrhage +9 targets | C++ | geplant | Hemorrhage (48660) ist Single-Target Melee. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Melee-Radius. CastSpell(Hemorrhage-Damage-Helper, triggered=true) auf jedes. Gleicher Ansatz wie SS +9 (900355). Braucht Helper-Spell (z.B. 900668). |
+| 1 | 900666 | Energy regen +50% | DBC | implementiert | SPELL_AURA_MOD_POWER_REGEN_PERCENT (110), MiscValue=3 (Energy). BasePoints=50. |
+| 2 | 900667 | Hemorrhage +50% damage | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskA=0x2000000 targets Hemo. |
+| 3 | 900668 | Hemorrhage +9 targets | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Hemo (-48660): `AfterHit` → findet bis zu 9 Feinde im 8yd Radius → CastCustomSpell(900669, damage) auf jeden. Prüft `HasAura(900668)`. |
+| H1 | 900669 | Helper: Deep Cut | DBC | implementiert | Instant Physical single-target damage. BasePoints via CastCustomSpell. |
 
-> **Helper-Spells Rogue**: 900353 (Poison Nova) braucht AoE-Nature-Damage-Spell (z.B. 900604). 900634 (SS +9) braucht Chain-Damage-Helper (z.B. 900637). 900667 (Hemorrhage +9) braucht Chain-Damage-Helper (z.B. 900668). IDs ab 900604+ für Helper verfügbar.
-
-> **Besonders aufwändig**: 900634 (SS +9 targets) und 900667 (Hemorrhage +9 targets) sind Custom-Chain-Melee-Systeme — Melee-Abilities auf mehrere Targets verteilen ist ungewöhnlich im Base-Game. 900636 (Blade Flurry +9 targets) könnte Performance-intensiv sein bei vielen Mobs.
+> **Hinweis Rogue**: SpellFamilyFlags verifizieren: SS=0x2(flags[0]), Mutilate=0x200000(flags[1]), Hemorrhage=0x2000000(flags[0]), BF=0x800(flags[1]). 900602 (Poison +50%) nutzt breite Mask — verifizieren ob alle Poison-Spells korrekt gemapped werden. 900635/900636 (BF Duration/Targets) nutzen SPELLMOD_DURATION bzw SPELLMOD_JUMP_TARGETS auf gleicher BF-Mask — können sich gegenseitig nicht stören da verschiedene MiscValues.
 
 ---
 
