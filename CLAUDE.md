@@ -111,7 +111,10 @@ Nächste freie ID für neue Spells: **900122+**
 | Warlock | Affli | 900450-900452 | 3 | geplant |
 | Warlock | Demo | 900453-900460 | 8 | geplant |
 | Warlock | Destro | 900461-900465 | 5 | geplant |
-| (weitere Klassen) | — | ab 900500+ | — | Wartet auf weitere Teile |
+| Priest | Disc | 900500-900502 | 3 | geplant |
+| Priest | Holy | 900503 | 1 | geplant |
+| Priest | Shadow | 900504-900505 | 2 | geplant |
+| (weitere Klassen) | — | ab 900550+ | — | Wartet auf weitere Teile |
 
 ---
 
@@ -439,6 +442,35 @@ Nächste freie ID für neue Spells: **900122+**
 > **Helper-Spells Warlock**: 900450 (DoT AoE) → Shadow-AoE-Helper 900466. 900457 (Imp Firebolt +9) → Helper 900467. 900461 (SB +9) → Helper 900468. 900465 (CB +9) → Helper 900469. 900455 (Lesser Demons) braucht Custom Creature-Templates. IDs ab 900466+ für Helper verfügbar.
 
 > **Besonders aufwändig**: 900452 (DoT Spread) kann exponentiell wachsen — braucht Target-Cap um Server-Performance zu schützen. 900455 (Lesser Demon Spawn) braucht Custom Creature-Templates pro Pet-Typ mit eigener AI. 900460 (Sacrifice All Bonuses) muss alle Pet-Typ-Buffs korrekt identifizieren und stacken. 900453 (Meta Duration Extension) + 900454 (Meta AoE+Heal) zusammen machen Demo-Lock zu einem permanent transformierten AoE-Healer-Tank-Hybrid.
+
+---
+
+### Priest — Discipline (900500-900502)
+
+> Priest SpellFamilyName = 6. Disc fokussiert auf Shield-Enhancement.
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900500 | Shields explode on breaking/fading | C++ | geplant | Power Word: Shield (48066) und andere Absorb-Shields. AuraScript `OnRemove`: Wenn RemoveMode = EXPIRE (fade) oder ENEMY_SPELL (break durch Damage) → CastSpell(Shield-Explosion-Helper, triggered=true) zentriert auf Shield-Target. Explosion = Holy/Shadow AoE Damage im Radius, Damage skaliert mit verbleibendem/absorbiertem Shield-Amount. Braucht Helper-AoE-Spell (z.B. 900506). Sehr cool thematisch — Disc wird zum AoE-DPS via Shields. |
+| 2 | 900501 | Shields +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf PW:Shield (48066) Absorb-Amount. SpellFamilyName=6, SpellFamilyFlags für PW:S. Erhöht Absorb-Wert um 50%. Stackt mit existierenden Talents (Improved PW:S, Twin Disciplines, etc.). |
+| 3 | 900502 | Weakened Soul only 5 sec CD | DBC | geplant | Weakened Soul (6788) Debuff hat normalerweise 15s Duration. DBC: Duration auf 5000ms setzen. Ermöglicht viel häufigeres Re-Shielding. Einfache DBC-Duration-Änderung. Synergiert stark mit 900500 (Shield Explosion) — mehr Shields = mehr Explosions. |
+
+### Priest — Holy (900503)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900503 | Direct heals have chance to cast Holy Fire on enemies in 10y radius of target | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_POS` (Positive Spell = Heal). `HandleProc`: Wenn Direct Heal (Flash Heal 48071, Greater Heal 48063, etc. — kein HoT) → Chance X% → Finde alle Feinde im 10yd Radius um Heal-Target → CastSpell(Holy Fire 48135, triggered=true) auf jeden. Dual-Purpose-Heal: Heilen + gleichzeitig AoE DPS. Braucht SpellFamily-Filter um nur Direct Heals zu triggern (nicht Renew/PoM). ICD empfohlen. |
+
+### Priest — Shadow (900504-900505)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900504 | DoTs have a chance to deal shadow damage AoE | C++ | geplant | Gleicher Ansatz wie Warlock 900450. Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC`. `HandleProc`: Wenn Shadow-DoT-Tick (SW:Pain 48125, VT 48160, Devouring Plague 48300) → Chance X% → CastSpell(Shadow-AoE-Helper, triggered=true) am Target. Braucht Helper-AoE-Spell (z.B. 900507). ICD empfohlen. |
+| 2 | 900505 | DoTs have a chance to spread to 2 additional targets on tick | C++ | geplant | Gleicher Ansatz wie Warlock 900452. Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC`. `HandleProc`: DoT-Tick → Chance X% → Finde 2 nächste Feinde ohne den DoT → ApplyAura(gleicher DoT). Muss DoT-Spell-ID aus ProcEventInfo extrahieren. Gleiche Warnung: kann exponentiell wachsen, braucht Target-Cap. |
+
+> **Helper-Spells Priest**: 900500 (Shield Explosion) → Holy/Shadow-AoE-Helper 900506. 900504 (DoT AoE) → Shadow-AoE-Helper 900507. IDs ab 900506+ für Helper verfügbar.
+
+> **Besonders aufwändig**: 900500 (Shield Explosion) braucht korrekte `OnRemove`-Detection (fade vs. dispel vs. break) und Damage-Skalierung basierend auf Shield-Amount. 900503 (Heal → Holy Fire AoE) ist ein neuartiges Dual-Purpose-Konzept — muss sauber zwischen Direct Heals und HoTs unterscheiden. Shadow-DoT-Mechaniken (900504/900505) sind identisch zu Warlock — Code kann geshared werden.
 
 ---
 
