@@ -153,6 +153,53 @@ enum CustomSpellIds
     // ---- Shaman Resto (900466-900499) ----
     SPELL_RST_TOTEM_FOLLOW_PASSIVE      = 900466, // Totems follow (reuse PlayerScript)
     SPELL_RST_MANA_REGEN_PASSIVE        = 900467, // Mana regen +2% per missing mana% (C++)
+
+    // ---- Hunter Shared (900500-900501) ----
+    SPELL_HUNT_ARROWS_PASSIVE           = 900500, // Get back arrows (no ammo consumption)
+    SPELL_HUNT_MULTISHOT_AOE_PASSIVE    = 900501, // Multi-Shot unlimited targets (C++)
+
+    // ---- Hunter BM (900502-900532) ----
+    SPELL_HUNT_BM_PET_DMG_PASSIVE       = 900502, // Pet damage +50% (C++)
+    SPELL_HUNT_BM_PET_SPEED_PASSIVE     = 900503, // Pet attack speed +50% (C++)
+    SPELL_HUNT_BM_PET_AOE_PASSIVE       = 900504, // Pet AoE on hit (C++)
+    SPELL_HUNT_BM_PET_AOE_HELPER        = 900505, // Helper: Pet AoE damage
+
+    // ---- Hunter MM (900533-900565) ----
+    SPELL_HUNT_MM_AUTOSHOT_BOUNCE       = 900533, // Auto Shot bounces +9 targets (C++)
+    SPELL_HUNT_MM_BARRAGE_PASSIVE       = 900534, // Multi-Shot barrage channel (C++)
+    SPELL_HUNT_MM_BOUNCE_HELPER         = 900535, // Helper: Auto Shot bounce damage
+    SPELL_HUNT_MM_BARRAGE_SLOW          = 900536, // Helper: Barrage slow debuff
+
+    // ---- Hunter Surv (900566-900599) ----
+    SPELL_HUNT_SURV_TRAP_PROC_PASSIVE   = 900566, // Chance to drop explosion on dmg (C++)
+    SPELL_HUNT_SURV_TRAP_HELPER         = 900567, // Helper: Explosive burst damage
+
+    // ---- Druid Balance (901000-901032) ----
+    SPELL_BAL_MF_AOE_PASSIVE            = 901000, // Moonfire +9 targets (C++)
+    SPELL_BAL_MF_DMG_PASSIVE            = 901001, // Moonfire +50% damage (DBC)
+    SPELL_BAL_SF_TARGETS_PASSIVE        = 901002, // Starfall +9 targets (DBC)
+    SPELL_BAL_SF_DMG_PASSIVE            = 901003, // Starfall +50% damage (DBC)
+    SPELL_BAL_SF_CD_REDUCE_PASSIVE      = 901004, // Spell dmg reduces Starfall CD (C++)
+    SPELL_BAL_SF_STACKS_PASSIVE         = 901005, // Starfall stacks up to 10 (DBC)
+
+    // ---- Druid Feral Tank (901033-901048) ----
+    SPELL_FERAL_BEAR_SWIPE_BLEED        = 901033, // Swipe Bear applies bleed (C++)
+    SPELL_FERAL_BEAR_SWIPE_BLEED_DOT    = 901034, // Helper: Bear Swipe bleed DoT
+
+    // ---- Druid Feral DPS (901049-901065) ----
+    SPELL_FERAL_CAT_SWIPE_BLEED         = 901049, // Swipe Cat applies bleed (C++)
+    SPELL_FERAL_CAT_SWIPE_BLEED_DOT     = 901050, // Helper: Cat Swipe bleed DoT
+    SPELL_FERAL_CAT_ENERGY_REGEN        = 901051, // Energy regen +50% (DBC)
+
+    // ---- Druid Resto (901066-901099) ----
+    SPELL_DRST_HOT_TREANT_PASSIVE       = 901066, // HoTs chance to summon FoN (C++)
+    SPELL_DRST_SUMMON_SCALE_PASSIVE     = 901067, // Summons scale with healing power (C++)
+    SPELL_DRST_SUMMON_HEAL_PASSIVE      = 901068, // Summons heal on death/despawn (C++)
+    SPELL_DRST_THORNS_REJUV_PASSIVE     = 901069, // Thorns chance to cast Rejuv (C++)
+    SPELL_DRST_HOT_HEAL_PASSIVE         = 901070, // HoTs +50% healing (DBC)
+    SPELL_DRST_HOT_HASTE_PASSIVE        = 901071, // HoTs tick 2x fast, 2x duration (C++)
+    SPELL_DRST_MANA_REGEN_PASSIVE       = 901072, // Mana regen per missing mana% (C++)
+    SPELL_DRST_TREANT_HEAL_HELPER       = 901073, // Helper: Treant heal on despawn
 };
 
 // ---- DK constants ----
@@ -181,6 +228,29 @@ constexpr uint32 NPC_SPIRIT_WOLF            = 29264;  // Spirit Wolf NPC
 constexpr uint32 NPC_CUSTOM_WOLF            = 900436; // Custom summoned wolf
 constexpr uint32 SPELL_CL_R6               = 49271;  // Chain Lightning rank 6
 // Flame Shock SpellFamilyFlags[0] = 0x10000000, SpellFamilyName = 11
+
+// ---- Druid constants ----
+constexpr uint32 SPELL_MOONFIRE_R14        = 48463;  // Moonfire highest rank
+constexpr uint32 SPELL_STARFALL_R2         = 53201;  // Starfall highest rank
+constexpr uint32 SPELL_SWIPE_BEAR_R6       = 48562;  // Swipe (Bear) highest rank
+constexpr uint32 SPELL_SWIPE_CAT           = 62078;  // Swipe (Cat)
+constexpr uint32 SPELL_THORNS_R8           = 53307;  // Thorns highest rank
+constexpr uint32 SPELL_REJUV_R15           = 48441;  // Rejuvenation highest rank
+constexpr uint32 SPELL_FORCE_OF_NATURE     = 33831;  // Force of Nature (summon treants)
+constexpr uint32 NPC_TREANT                = 1964;   // Treant NPC entry
+constexpr uint32 NPC_CUSTOM_TREANT         = 901066; // Custom Treant NPC entry
+constexpr uint32 SPELLFAMILY_DRUID_ID      = 7;
+// Moonfire SpellFamilyFlags[0] = 0x2 (verify!)
+// Starfall SpellFamilyFlags[0] = 0x100 (verify!)
+// Rejuvenation SpellFamilyFlags[0] = 0x10 (verify!)
+
+// ---- Hunter constants ----
+constexpr uint32 SPELL_AUTO_SHOT            = 75;     // Auto Shot
+constexpr uint32 SPELL_MULTISHOT_R6         = 49048;  // Multi-Shot highest rank
+constexpr uint32 SPELL_EXPLOSIVE_TRAP_R4    = 49067;  // Explosive Trap highest rank
+constexpr uint32 SPELL_EXPLOSIVE_TRAP_DMG   = 49064;  // Explosive Trap damage effect
+constexpr uint32 SPELLFAMILY_HUNTER_ID      = 9;
+// Multi-Shot SpellFamilyFlags[0] = 0x200 (verify!)
 
 // ---- Bloodthirst SpellFamilyFlags ----
 // Bloodthirst (23881): SpellFamilyName=4, SpellFamilyFlags[1]=0x00000400 (bit 42)
@@ -2375,7 +2445,816 @@ public:
 };
 
 // ============================================================
-//  Extend totem follow PlayerScript to also check 900433 + 900466
+//  HUNTER: Shared - Get back arrows (900500)
+//  PlayerScript: after every ranged attack, restore the ammo
+//  that was consumed. Effectively infinite arrows.
+// ============================================================
+class custom_hunter_arrows_playerscript : public PlayerScript
+{
+public:
+    custom_hunter_arrows_playerscript() : PlayerScript("custom_hunter_arrows_playerscript") {}
+
+    void OnSpellCast(Player* player, Spell* spell, bool /*skipCheck*/) override
+    {
+        if (!player || !player->IsAlive())
+            return;
+
+        if (!player->HasAura(SPELL_HUNT_ARROWS_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        SpellInfo const* spellInfo = spell->GetSpellInfo();
+        if (!spellInfo)
+            return;
+
+        // Only ranged auto-attacks and ranged spells consume ammo
+        // Check if this spell uses ammo (ranged attacks)
+        if (!(spellInfo->Attributes & SPELL_ATTR0_USES_RANGED_SLOT))
+            return;
+
+        uint32 ammoId = player->GetUInt32Value(PLAYER_AMMO_ID);
+        if (!ammoId)
+            return;
+
+        // Restore 1 ammo after each shot
+        player->StoreNewItemInBestSlots(ammoId, 1);
+    }
+};
+
+// ============================================================
+//  HUNTER: Shared - Multi-Shot unlimited targets (900501)
+//  Hooked on Multi-Shot (all ranks via -49048). After hitting
+//  the main target, finds ALL additional enemies in 10yd and
+//  deals the same damage.
+// ============================================================
+class spell_custom_hunt_multishot_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_hunt_multishot_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_HUNT_MULTISHOT_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        // Find all enemies within 10yd of the main target
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, targets, check);
+        Cell::VisitObjects(mainTarget, searcher, 10.0f);
+        targets.remove(mainTarget);
+
+        for (Unit* target : targets)
+        {
+            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
+                continue;
+
+            Unit::DealDamage(caster, target, static_cast<uint32>(damage),
+                nullptr, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL);
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_hunt_multishot_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  HUNTER BM: Pet damage +50% and Pet attack speed +50% (900502/900503)
+//  UnitScript: intercepts all pet damage and multiplies by 1.5x
+//  if owner has the passive. Also modifies pet attack speed.
+// ============================================================
+class custom_hunter_pet_unitscript : public UnitScript
+{
+public:
+    custom_hunter_pet_unitscript() : UnitScript("custom_hunter_pet_unitscript") {}
+
+    void OnDamage(Unit* attacker, Unit* /*victim*/, uint32& damage) override
+    {
+        if (!attacker)
+            return;
+
+        // Only for creatures (pets)
+        Creature* pet = attacker->ToCreature();
+        if (!pet)
+            return;
+
+        Unit* owner = pet->GetOwner();
+        if (!owner)
+            return;
+
+        Player* player = owner->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Pet damage +50%
+        if (player->HasAura(SPELL_HUNT_BM_PET_DMG_PASSIVE))
+            damage = static_cast<uint32>(damage * 1.5f);
+    }
+};
+
+// ============================================================
+//  HUNTER BM: Pet attack speed +50% (900503)
+//  PlayerScript: when player summons a pet or updates, apply
+//  50% attack speed increase to their pet.
+// ============================================================
+class custom_hunter_pet_speed_playerscript : public PlayerScript
+{
+public:
+    custom_hunter_pet_speed_playerscript() : PlayerScript("custom_hunter_pet_speed_playerscript") {}
+
+    void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
+    {
+        if (!player || !player->IsAlive())
+            return;
+
+        if (!player->HasAura(SPELL_HUNT_BM_PET_SPEED_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Throttle: only every 3 seconds
+        uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
+        static std::unordered_map<ObjectGuid, uint32> s_lastCheck;
+        ObjectGuid guid = player->GetGUID();
+        if (s_lastCheck.count(guid) && (now - s_lastCheck[guid]) < 3)
+            return;
+        s_lastCheck[guid] = now;
+
+        Pet* pet = player->GetPet();
+        if (!pet || !pet->IsAlive())
+            return;
+
+        // Apply 50% faster attack speed (halve the attack time)
+        uint32 baseAttack = pet->GetAttackTime(BASE_ATTACK);
+        uint32 desired = static_cast<uint32>(pet->GetCreateAttackTime() * 0.5f);
+        if (baseAttack != desired)
+            pet->SetAttackTime(BASE_ATTACK, desired);
+    }
+};
+
+// ============================================================
+//  HUNTER BM: Pet chance to deal AoE damage (900504)
+//  UnitScript: On pet melee hit, 15% chance to cast AoE helper.
+// ============================================================
+class custom_hunter_pet_aoe_unitscript : public UnitScript
+{
+public:
+    custom_hunter_pet_aoe_unitscript() : UnitScript("custom_hunter_pet_aoe_unitscript") {}
+
+    void OnDamage(Unit* attacker, Unit* victim, uint32& /*damage*/) override
+    {
+        if (!attacker || !victim || !victim->IsAlive())
+            return;
+
+        Creature* pet = attacker->ToCreature();
+        if (!pet)
+            return;
+
+        Unit* owner = pet->GetOwner();
+        if (!owner)
+            return;
+
+        Player* player = owner->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_HUNT_BM_PET_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // 15% chance
+        if (!roll_chance_i(15))
+            return;
+
+        // Cast AoE damage helper centered on victim
+        pet->CastSpell(victim, SPELL_HUNT_BM_PET_AOE_HELPER, true);
+    }
+};
+
+// ============================================================
+//  HUNTER MM: Auto Shot bounces +9 targets (900533)
+//  Hooked on Auto Shot (75). After hitting main target,
+//  bounces to up to 9 additional enemies within 10yd.
+// ============================================================
+class spell_custom_hunt_autoshot_bounce : public SpellScript
+{
+    PrepareSpellScript(spell_custom_hunt_autoshot_bounce);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_HUNT_MM_AUTOSHOT_BOUNCE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        // Find up to 9 additional enemies within 10yd of target
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, targets, check);
+        Cell::VisitObjects(mainTarget, searcher, 10.0f);
+        targets.remove(mainTarget);
+
+        uint32 count = 0;
+        for (Unit* target : targets)
+        {
+            if (count >= 9)
+                break;
+            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
+                continue;
+
+            caster->CastCustomSpell(target, SPELL_HUNT_MM_BOUNCE_HELPER,
+                &damage, nullptr, nullptr, true);
+            ++count;
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_hunt_autoshot_bounce::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  HUNTER MM: Multi-Shot Barrage (900534)
+//  Active spell: 2s duration periodic (ticks every 100ms).
+//  Each tick auto-casts Multi-Shot. Applies 50% slow during channel.
+//  Implemented as AuraScript on the barrage spell itself.
+// ============================================================
+class spell_custom_hunt_barrage : public AuraScript
+{
+    PrepareAuraScript(spell_custom_hunt_barrage);
+
+    void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        // Apply 50% slow while channeling
+        caster->CastSpell(caster, SPELL_HUNT_MM_BARRAGE_SLOW, true);
+    }
+
+    void OnRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        // Remove slow when barrage ends
+        caster->RemoveAura(SPELL_HUNT_MM_BARRAGE_SLOW);
+    }
+
+    void HandlePeriodic(AuraEffect const* /*aurEff*/)
+    {
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Get current target
+        Unit* target = ObjectAccessor::GetUnit(*player, player->GetTarget());
+        if (!target || !target->IsAlive() || !player->IsValidAttackTarget(target))
+            return;
+
+        // Cast Multi-Shot (triggered, no cost/CD)
+        player->CastSpell(target, SPELL_MULTISHOT_R6, true);
+    }
+
+    void Register() override
+    {
+        OnEffectApply += AuraEffectApplyFn(spell_custom_hunt_barrage::OnApply,
+            EFFECT_0, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
+        OnEffectRemove += AuraEffectRemoveFn(spell_custom_hunt_barrage::OnRemove,
+            EFFECT_0, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
+        OnEffectPeriodic += AuraEffectPeriodicFn(spell_custom_hunt_barrage::HandlePeriodic,
+            EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
+    }
+};
+
+// ============================================================
+//  HUNTER SURV: Chance to drop explosion on damage (900566)
+//  Proc passive: on ranged damage dealt, 15% chance to cast
+//  Explosive Burst at the target location. 2s ICD.
+// ============================================================
+class spell_custom_hunt_surv_trap_proc : public AuraScript
+{
+    PrepareAuraScript(spell_custom_hunt_surv_trap_proc);
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        Unit* target = eventInfo.GetActionTarget();
+        if (!target || !target->IsAlive())
+            return;
+
+        // Cast Explosive Burst AoE at target
+        player->CastSpell(target, SPELL_HUNT_SURV_TRAP_HELPER, true);
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(spell_custom_hunt_surv_trap_proc::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  End Hunter section
+// ============================================================
+
+// ============================================================
+//  DRUID BALANCE: Moonfire +9 targets (901000)
+//  Hooked on Moonfire (all ranks via -48463). After hitting
+//  the main target, finds up to 9 additional enemies in 10yd
+//  and applies Moonfire to each.
+// ============================================================
+class spell_custom_bal_mf_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_bal_mf_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_BAL_MF_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Find up to 9 additional enemies within 10yd of target
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, targets, check);
+        Cell::VisitObjects(mainTarget, searcher, 10.0f);
+        targets.remove(mainTarget);
+
+        uint32 count = 0;
+        for (Unit* target : targets)
+        {
+            if (count >= 9)
+                break;
+            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
+                continue;
+
+            // Cast Moonfire on each additional target (triggered, no cost/GCD)
+            caster->CastSpell(target, SPELL_MOONFIRE_R14, true);
+            ++count;
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_bal_mf_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  DRUID BALANCE: Spell damage reduces Starfall CD (901004)
+//  Proc passive: on spell damage dealt, reduce Starfall CD
+//  by 1 second. 100% chance, no ICD (CD reduction per hit).
+// ============================================================
+class spell_custom_bal_sf_cd_reduce : public AuraScript
+{
+    PrepareAuraScript(spell_custom_bal_sf_cd_reduce);
+
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        // Only on spell damage (not melee)
+        SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+        if (!spellInfo)
+            return false;
+
+        // Must be druid spell family
+        return spellInfo->SpellFamilyName == SPELLFAMILY_DRUID_ID;
+    }
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
+    {
+        PreventDefaultAction();
+
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Reduce Starfall cooldown by 1 second
+        player->ModifySpellCooldown(SPELL_STARFALL_R2, -1000);
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_bal_sf_cd_reduce::CheckProc);
+        OnEffectProc += AuraEffectProcFn(spell_custom_bal_sf_cd_reduce::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  DRUID FERAL: Swipe Bear applies bleed (901033)
+//  Hooked on Swipe Bear (all ranks via -48562). After hitting
+//  each target, applies a bleed DoT.
+// ============================================================
+class spell_custom_feral_bear_swipe_bleed : public SpellScript
+{
+    PrepareSpellScript(spell_custom_feral_bear_swipe_bleed);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_FERAL_BEAR_SWIPE_BLEED))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Apply bleed DoT to target
+        caster->CastSpell(target, SPELL_FERAL_BEAR_SWIPE_BLEED_DOT, true);
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_feral_bear_swipe_bleed::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  DRUID FERAL: Swipe Cat applies bleed (901049)
+//  Hooked on Swipe Cat (62078). After hitting each target,
+//  applies a bleed DoT.
+// ============================================================
+class spell_custom_feral_cat_swipe_bleed : public SpellScript
+{
+    PrepareSpellScript(spell_custom_feral_cat_swipe_bleed);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_FERAL_CAT_SWIPE_BLEED))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Apply bleed DoT to target
+        caster->CastSpell(target, SPELL_FERAL_CAT_SWIPE_BLEED_DOT, true);
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_feral_cat_swipe_bleed::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  DRUID RESTO: HoTs chance to summon Force of Nature (901066)
+//  Proc passive: on periodic healing done, 5% chance to
+//  summon a custom Treant at the healed target's location.
+// ============================================================
+class spell_custom_drst_hot_treant : public AuraScript
+{
+    PrepareAuraScript(spell_custom_drst_hot_treant);
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        Unit* target = eventInfo.GetActionTarget();
+        if (!target)
+            target = caster;
+
+        // Summon a treant at the target's location (30s duration)
+        if (Creature* treant = player->SummonCreature(NPC_CUSTOM_TREANT,
+            target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),
+            player->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 30000))
+        {
+            treant->SetOwnerGUID(player->GetGUID());
+            treant->SetCreatorGUID(player->GetGUID());
+            treant->SetFaction(player->GetFaction());
+
+            // If there's a hostile target nearby, attack it
+            Unit* victim = player->GetVictim();
+            if (victim && victim->IsAlive())
+            {
+                treant->Attack(victim, true);
+                treant->GetMotionMaster()->MoveChase(victim);
+            }
+            else
+            {
+                treant->GetMotionMaster()->MoveFollow(player, 3.0f, M_PI / 4);
+            }
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(spell_custom_drst_hot_treant::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  DRUID RESTO: Summons scale with healing power (901067)
+//  PlayerScript: periodically check player's healing power
+//  and apply it to any owned treants as bonus damage/health.
+// ============================================================
+class custom_druid_summon_scale_playerscript : public PlayerScript
+{
+public:
+    custom_druid_summon_scale_playerscript() : PlayerScript("custom_druid_summon_scale_playerscript") {}
+
+    void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
+    {
+        if (!player || !player->IsAlive())
+            return;
+
+        if (!player->HasAura(SPELL_DRST_SUMMON_SCALE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Throttle: only every 3 seconds
+        uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
+        static std::unordered_map<ObjectGuid, uint32> s_lastCheck;
+        ObjectGuid guid = player->GetGUID();
+        if (s_lastCheck.count(guid) && (now - s_lastCheck[guid]) < 3)
+            return;
+        s_lastCheck[guid] = now;
+
+        // Get player's bonus healing (spell power)
+        int32 healPower = player->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_ALL);
+
+        // Scale all owned summons
+        for (auto itr = player->m_Controlled.begin(); itr != player->m_Controlled.end(); ++itr)
+        {
+            Unit* controlled = *itr;
+            if (!controlled || !controlled->IsAlive())
+                continue;
+
+            Creature* summon = controlled->ToCreature();
+            if (!summon)
+                continue;
+
+            // Scale health based on healing power (1 spell power = 10 HP)
+            uint32 bonusHP = static_cast<uint32>(healPower * 10);
+            uint32 baseHP = summon->GetCreateHealth();
+            uint32 desiredHP = baseHP + bonusHP;
+            if (summon->GetMaxHealth() != desiredHP)
+            {
+                summon->SetMaxHealth(desiredHP);
+                summon->SetHealth(desiredHP);
+            }
+        }
+    }
+};
+
+// ============================================================
+//  DRUID RESTO: Summons heal on death/despawn (901068)
+//  UnitScript: when a creature with a druid owner dies,
+//  heal all nearby allies for a burst amount.
+// ============================================================
+class custom_druid_summon_heal_unitscript : public UnitScript
+{
+public:
+    custom_druid_summon_heal_unitscript() : UnitScript("custom_druid_summon_heal_unitscript") {}
+
+    void OnUnitDeath(Unit* unit) override
+    {
+        if (!unit)
+            return;
+
+        Creature* summon = unit->ToCreature();
+        if (!summon)
+            return;
+
+        Unit* owner = summon->GetOwner();
+        if (!owner)
+            return;
+
+        Player* player = owner->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_DRST_SUMMON_HEAL_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Cast heal helper on self (AoE heal around summon's position)
+        summon->CastSpell(summon, SPELL_DRST_TREANT_HEAL_HELPER, true);
+    }
+};
+
+// ============================================================
+//  DRUID RESTO: Thorns has chance to cast Rejuv (901069)
+//  UnitScript: when damage is dealt to a player with
+//  Thorns and the passive, 20% chance to cast Rejuv on self.
+// ============================================================
+class custom_druid_thorns_rejuv_unitscript : public UnitScript
+{
+public:
+    custom_druid_thorns_rejuv_unitscript() : UnitScript("custom_druid_thorns_rejuv_unitscript") {}
+
+    void OnDamage(Unit* /*attacker*/, Unit* victim, uint32& /*damage*/) override
+    {
+        if (!victim || !victim->IsAlive())
+            return;
+
+        Player* player = victim->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_DRST_THORNS_REJUV_PASSIVE))
+            return;
+
+        // Must have Thorns active
+        if (!player->HasAura(SPELL_THORNS_R8))
+        {
+            // Check all ranks of Thorns (SpellFamilyName=7, flags vary)
+            bool hasThorns = false;
+            for (auto const& aura : player->GetAppliedAuras())
+            {
+                SpellInfo const* si = aura.second->GetBase()->GetSpellInfo();
+                if (si && si->SpellFamilyName == SPELLFAMILY_DRUID_ID &&
+                    si->SpellIconID == 53) // Thorns icon
+                {
+                    hasThorns = true;
+                    break;
+                }
+            }
+            if (!hasThorns)
+                return;
+        }
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // 20% chance
+        if (!roll_chance_i(20))
+            return;
+
+        // Cast Rejuvenation on self (triggered)
+        player->CastSpell(player, SPELL_REJUV_R15, true);
+    }
+};
+
+// ============================================================
+//  DRUID RESTO: HoTs tick 2x fast + 2x duration (901071)
+//  This is a DBC-only approach where possible.
+//  However, combining double tick speed with double duration
+//  needs two separate DBC auras. We use marker + DBC auras:
+//  - One aura halves tick interval (ADD_PCT_MODIFIER on SPELL_AURA_PERIODIC)
+//  - One aura doubles duration (ADD_PCT_MODIFIER on duration)
+//  Both handled via DBC — no C++ needed for this spell.
+// ============================================================
+// (No C++ class needed — pure DBC passive)
+
+// ============================================================
+//  DRUID RESTO: Mana regen per missing mana% (901072)
+//  PlayerScript: same pattern as Shaman Resto (900467).
+//  Every 5 seconds, regenerate mana based on missing%.
+// ============================================================
+class custom_druid_mana_regen_playerscript : public PlayerScript
+{
+public:
+    custom_druid_mana_regen_playerscript() : PlayerScript("custom_druid_mana_regen_playerscript") {}
+
+    void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
+    {
+        if (!player || !player->IsAlive())
+            return;
+
+        if (!player->HasAura(SPELL_DRST_MANA_REGEN_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Throttle: only every 5 seconds
+        uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
+        static std::unordered_map<ObjectGuid, uint32> s_lastRegen;
+        ObjectGuid guid = player->GetGUID();
+        if (s_lastRegen.count(guid) && (now - s_lastRegen[guid]) < 5)
+            return;
+        s_lastRegen[guid] = now;
+
+        uint32 maxMana = player->GetMaxPower(POWER_MANA);
+        uint32 curMana = player->GetPower(POWER_MANA);
+        if (maxMana == 0)
+            return;
+
+        float missingPct = 100.0f * (1.0f - static_cast<float>(curMana) / maxMana);
+        int32 bonus = static_cast<int32>(maxMana * (missingPct * 0.02f) / 100.0f);
+        if (bonus > 0)
+            player->EnergizeBySpell(player, SPELL_DRST_MANA_REGEN_PASSIVE,
+                bonus, POWER_MANA);
+    }
+};
+
+// ============================================================
+//  End Druid section
 // ============================================================
 
 void AddCustomSpellsScripts()
@@ -2445,4 +3324,42 @@ void AddCustomSpellsScripts()
     // Shaman Resto
     new custom_mana_regen_playerscript();
     // 900466: Totem follow reuses custom_totem_follow_playerscript
+
+    // Hunter Shared
+    new custom_hunter_arrows_playerscript();
+    RegisterSpellScript(spell_custom_hunt_multishot_aoe);
+
+    // Hunter BM
+    new custom_hunter_pet_unitscript();
+    new custom_hunter_pet_speed_playerscript();
+    new custom_hunter_pet_aoe_unitscript();
+
+    // Hunter MM
+    RegisterSpellScript(spell_custom_hunt_autoshot_bounce);
+    RegisterSpellScript(spell_custom_hunt_barrage);
+
+    // Hunter Surv
+    RegisterSpellScript(spell_custom_hunt_surv_trap_proc);
+
+    // Druid Balance
+    RegisterSpellScript(spell_custom_bal_mf_aoe);
+    RegisterSpellScript(spell_custom_bal_sf_cd_reduce);
+    // 901001: Moonfire +50% → DBC-only
+    // 901002: Starfall +9 targets → DBC-only
+    // 901003: Starfall +50% → DBC-only
+    // 901005: Starfall stacks 10 → DBC-only
+
+    // Druid Feral
+    RegisterSpellScript(spell_custom_feral_bear_swipe_bleed);
+    RegisterSpellScript(spell_custom_feral_cat_swipe_bleed);
+    // 901051: Energy regen +50% → DBC-only
+
+    // Druid Resto
+    RegisterSpellScript(spell_custom_drst_hot_treant);
+    new custom_druid_summon_scale_playerscript();
+    new custom_druid_summon_heal_unitscript();
+    new custom_druid_thorns_rejuv_unitscript();
+    new custom_druid_mana_regen_playerscript();
+    // 901070: HoTs +50% → DBC-only
+    // 901071: HoTs tick 2x fast + 2x duration → DBC-only
 }

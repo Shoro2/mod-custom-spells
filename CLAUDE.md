@@ -557,7 +557,12 @@ Spell IDs 900433-900440 (Shaman Enhance + Helper) existieren in `spell_dbc` Tabe
 NPC 900436 (Spirit Wolf) existiert in `creature_template` für Wolf-Summon-Proc.
 Spell IDs 900466-900467 (Shaman Resto) existieren in `spell_dbc` Tabelle und sind implementiert.
 
-Nächste freie Klassen-Blöcke: **900500+** (Hunter), **900600+** (Rogue), etc.
+Spell IDs 900500-900567 (Hunter Shared + BM + MM + Surv + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+
+Spell IDs 901000-901073 (Druid Balance + Feral + Resto + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+NPC 901066 (Healing Treant) existiert in `creature_template` für HoT-Treant-Proc.
+
+Nächste freie Klassen-Blöcke: **900600+** (Rogue), **900700+** (Mage), etc.
 
 ---
 
@@ -599,6 +604,14 @@ Nächste freie Klassen-Blöcke: **900500+** (Hunter), **900600+** (Rogue), etc.
 | Shaman | Ele | 900400-900408 (9) | 900409-900432 (24) | implementiert |
 | Shaman | Enh | 900433-900440 (8) | 900441-900465 (25) | implementiert |
 | Shaman | Resto | 900466-900467 (2) | 900468-900499 (32) | implementiert |
+| Hunter | Shared | 900500-900501 (2) | — | implementiert |
+| Hunter | BM | 900502-900505 (4) | 900506-900532 (27) | implementiert |
+| Hunter | MM | 900533-900536 (4) | 900537-900565 (29) | implementiert |
+| Hunter | Surv | 900566-900567 (2) | 900568-900599 (32) | implementiert |
+| Druid | Balance | 901000-901005 (6) | 901006-901032 (27) | implementiert |
+| Druid | Feral Tank | 901033-901034 (2) | 901035-901048 (14) | implementiert |
+| Druid | Feral DPS | 901049-901051 (3) | 901052-901065 (14) | implementiert |
+| Druid | Resto | 901066-901073 (8) | 901074-901099 (26) | implementiert |
 
 ---
 
@@ -781,39 +794,86 @@ Nächste freie Klassen-Blöcke: **900500+** (Hunter), **900600+** (Rogue), etc.
 
 ---
 
-### Hunter — Shared (900500-900532)
+### Hunter — Shared (900500-900501)
 
 > Hunter SpellFamilyName = 9. "Get back arrows" und "Multishot unlimited targets" gelten für alle 3 Specs → shared Spells.
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900900 | Get back arrows (no ammo consumption) | C++ | geplant | Hunter verbraucht Ammo bei jedem Ranged-Angriff. Ansatz: `PlayerScript::OnBeforeItemUse` oder `SpellScript` auf Auto Shot (75) → nach Schuss Ammo-Count wiederherstellen. Oder: Passive Aura die Ammo-Verbrauch auf 0 setzt. Core-seitig: `Player::RemoveAmmo()` Hook → Skip wenn Aura aktiv. Alternativ einfacher: periodisch Ammo-Stack auf Max setzen. |
-| 2 | 900901 | Multi-Shot unlimited targets | DBC/C++ | geplant | Multi-Shot (2643) trifft normalerweise 3 Ziele. DBC: `MaxAffectedTargets` entfernen/sehr hoch setzen. C++: `OnObjectAreaTargetSelect` → keine Target-Limit-Filterung. Spell trifft dann alle Feinde im Cone/Radius. |
+| 1 | 900500 | Get back arrows (no ammo consumption) | C++/PlayerScript | implementiert | DUMMY Marker. `custom_hunter_arrows_playerscript::OnSpellCast` → nach jedem Ranged-Spell (SPELL_ATTR0_USES_RANGED_SLOT) → StoreNewItemInBestSlots(ammoId, 1). Prüft `HasAura(900500)`. |
+| 2 | 900501 | Multi-Shot unlimited targets | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Multi-Shot (-49048): `AfterHit` → findet ALLE Feinde im 10yd Radius um Target → DealDamage mit vollem Multi-Shot-Damage auf jeden. Prüft `HasAura(900501)`. |
 
-### Hunter — Beast Mastery (900500-900532)
+### Hunter — Beast Mastery (900502-900532)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900902 | Pet damage +50% | DBC | geplant | Passive Aura auf Hunter: `SPELL_AURA_MOD_DAMAGE_PERCENT_DONE` +50% für Pet. Oder: Aura mit `SPELL_AURA_MOD_DAMAGE_DONE_FOR_MECHANIC` auf Pet anwenden. SpellFamilyName=9, Target=Pet. Ähnlich wie bestehende Pet-Talent-Buffs (z.B. Unleashed Fury). |
-| 2 | 900933 | Pet attack speed +50% | DBC | geplant | Passive Aura: `SPELL_AURA_MOD_ATTACKSPEED` -50% (= 50% schneller) auf Pet. Target: Owner's Pet. Vergleichbar mit Serpent's Swiftness (Talent) aber stärker. |
-| 3 | 900966 | Pet chance to deal AoE damage | C++ | geplant | Proc-Aura auf Pet: `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` (0x4). `HandleProc`: Chance X% → CastSpell(AoE-Damage-Spell, triggered=true) zentriert auf Pet's Target. Braucht Helper-AoE-Spell (z.B. 900505). `spell_proc` mit Chance + ICD. |
+| 1 | 900502 | Pet damage +50% | C++/UnitScript | implementiert | DUMMY Marker. `custom_hunter_pet_unitscript::OnDamage` → wenn Attacker=Pet + Owner HasAura(900502) → damage *= 1.5f. |
+| 2 | 900503 | Pet attack speed +50% | C++/PlayerScript | implementiert | DUMMY Marker. `custom_hunter_pet_speed_playerscript::OnPlayerUpdate` → alle 3s: SetAttackTime(BASE_ATTACK, CreateAttackTime * 0.5f) auf Pet. Prüft `HasAura(900503)`. |
+| 3 | 900504 | Pet AoE damage proc | C++/UnitScript | implementiert | DUMMY Marker. `custom_hunter_pet_aoe_unitscript::OnDamage` → wenn Pet hit + Owner HasAura(900504) → 15% chance → CastSpell(900505 Beast Cleave). |
+| H1 | 900505 | Helper: Beast Cleave AoE | DBC | implementiert | Instant AoE Physical Damage. Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), 800+200rnd, 8yd. |
 
 ### Hunter — Marksmanship (900533-900565)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900533 | Auto Shot bounces +9 targets | C++ | geplant | Auto Shot (75) ist normalerweise Single-Target. SpellScript `AfterHit`: Bei Auto Shot → Chain-Bounce-Logik: Finde bis zu 9 weitere Feinde im Radius um Target → CastSpell(Auto-Shot-Damage, triggered=true) auf jedes. Damage kann pro Bounce gleich bleiben (kein Reduce wie Chain Lightning). Braucht Helper-Damage-Spell (z.B. 900535) für den Bounce-Damage. |
-| 2 | 900534 | Autocast Multi-Shot every 0.1s for 2s, 50% slow while channeling | C++ | geplant | Aktivierter Spell: Beim Cast → Channel-Aura (2s Duration). Periodic Tick alle 100ms → CastSpell(Multi-Shot, triggered=true). Gleichzeitig: `SPELL_AURA_MOD_SPEED_SLOW_ALL` -50% auf Caster während Channel. 20 Multi-Shots in 2s = extrem hoher Burst. Braucht eigene Channel-Spell-DBC + PeriodicTrigger-Logik. Balancing-Warnung: Enormer Damage-Output. |
+| 1 | 900533 | Auto Shot bounces +9 targets | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Auto Shot (75): `AfterHit` → findet bis zu 9 Feinde im 10yd Radius um Target → CastCustomSpell(900535 Ricochet, damage) auf jeden. Prüft `HasAura(900533)`. |
+| 2 | 900534 | Multi-Shot Barrage (0.1s ticks for 2s, 50% slow) | C++ | implementiert | Aktiver Spell: 2s PERIODIC_DUMMY (Amplitude=100ms). AuraScript: `OnApply` → CastSpell(900536 Slow), `OnRemove` → RemoveAura(900536). `HandlePeriodic` → CastSpell(Multi-Shot 49048, triggered). 20 Multi-Shots in 2s. |
+| H1 | 900535 | Helper: Ricochet Shot | DBC | implementiert | Instant Physical single-target damage. BasePoints via CastCustomSpell. |
+| H2 | 900536 | Helper: Barrage Slow | DBC | implementiert | 2s APPLY_AURA MOD_DECREASE_SPEED -50% on caster. |
 
 ### Hunter — Survival (900566-900599)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900566 | Chance to drop Explosive Trap on damage dealt | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_RANGED_AUTO_ATTACK|DONE_SPELL_RANGED_DMG_CLASS` (0x44). `HandleProc`: Chance X% → CastSpell(Explosive Trap, triggered=true) an Target-Position. Explosive Trap (49067) normalerweise am Caster platziert — braucht evtl. modifizierte Version die am Ziel spawnt (`SummonGameObject` an Target-Coords). Oder: Direkt den Explosion-Damage-Spell (49064) am Target casten. |
+| 1 | 900566 | Chance to drop explosion on damage | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x44 (ranged auto + ranged spell), 15% Chance, 2s ICD. C++ HandleProc → CastSpell(900567 Explosive Burst, triggered) auf Target. |
+| H1 | 900567 | Helper: Explosive Burst | DBC | implementiert | Instant AoE Fire Damage. Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=4(Fire), 1000+200rnd, 8yd. |
 
-> **Helper-Spells Hunter**: 900304 (Pet AoE) braucht AoE-Damage-Spell (z.B. 900505). 900533 (Auto Shot Bounce) braucht Bounce-Damage-Spell (z.B. 900535). 900534 (Multi-Shot Channel) braucht eigene Channel-Spell-DBC-Entry. 900566 (Explosive Trap on Damage) braucht evtl. modifizierte Trap-Spell-Variante. IDs ab 900505+ für Helper verfügbar.
+> **Hinweis Hunter**: 900500 (Arrows) nutzt StoreNewItemInBestSlots was ein neues Item-Stack erstellt — bei vollen Bags könnte es fehlschlagen. 900534 (Barrage) castet 20 Multi-Shots in 2s — Performance bei vielen Mobs beobachten. Pet UnitScripts (900502/900504) feuern für ALLE Damage-Events — prüfen ob Creature ein Pet mit Owner ist um Performance zu schützen.
 
-> **Besonders aufwändig**: 900534 (Multi-Shot Autocast Channel) ist ein neuartiges Konzept — 20 Multi-Shots in 2s braucht sorgfältiges Balancing und Performance-Tests (viele Projectiles gleichzeitig). 900533 (Auto Shot Bounce) ist ein Custom-Chain-System das es im Base-Game nicht gibt.
+---
+
+### Druid — Balance (901000-901032)
+
+> Druid SpellFamilyName = 7. Moonfire flags[0]=0x2, Starfall flags[0]=0x100 (verify!).
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 901000 | Moonfire +9 targets | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Moonfire (-48463): `AfterHit` → findet bis zu 9 Feinde im 10yd Radius → CastSpell(Moonfire R14, triggered) auf jeden. Prüft `HasAura(901000)`. |
+| 2 | 901001 | Moonfire +50% damage | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskA=0x2 targets Moonfire. |
+| 3 | 901002 | Starfall +9 targets | DBC | implementiert | ADD_FLAT_MODIFIER (107) + SPELLMOD_JUMP_TARGETS (17). EffectSpellClassMaskA=0x100 targets Starfall. BasePoints=9. |
+| 4 | 901003 | Starfall +50% damage | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskA=0x100. |
+| 5 | 901004 | Spell dmg reduces Starfall CD | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x10010 (spell magic dmg), 100% Chance, 1s ICD. C++ HandleProc → ModifySpellCooldown(Starfall, -1000). CheckProc filtert auf Druid SpellFamily. |
+| 6 | 901005 | Starfall stacks to 10 | DBC | implementiert | ADD_FLAT_MODIFIER (107) + SPELLMOD_CHARGES (4). EffectSpellClassMaskA=0x100. BasePoints=9 (+9 charges). |
+
+### Druid — Feral Tank (901033-901048)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 901033 | Swipe Bear applies bleed | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Swipe Bear (-48562): `AfterHit` → CastSpell(901034 Swipe Bleed DoT, triggered). Prüft `HasAura(901033)`. |
+| H1 | 901034 | Helper: Swipe Bleed DoT | DBC | implementiert | APPLY_AURA PERIODIC_DAMAGE. 300+50rnd Physical per 3s tick, 12s duration. |
+
+### Druid — Feral DPS (901049-901065)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 901049 | Swipe Cat applies bleed | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Swipe Cat (62078): `AfterHit` → CastSpell(901050 Rake Bleed DoT, triggered). Prüft `HasAura(901049)`. |
+| H1 | 901050 | Helper: Rake Bleed DoT | DBC | implementiert | APPLY_AURA PERIODIC_DAMAGE. 300+50rnd Physical per 3s tick, 12s duration. |
+| 2 | 901051 | Energy regen +50% | DBC | implementiert | SPELL_AURA_MOD_POWER_REGEN_PERCENT (110), MiscValue=3 (Energy). BasePoints=50. |
+
+### Druid — Resto (901066-901099)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 901066 | HoTs chance to summon Force of Nature | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x40000 (periodic heal), 5% Chance, 5s ICD. C++ HandleProc → SummonCreature(901066 Healing Treant, 30s). Treant attacks enemy or follows player. |
+| 2 | 901067 | Summons scale with healing power | C++/PlayerScript | implementiert | DUMMY Marker. `custom_druid_summon_scale_playerscript::OnPlayerUpdate` → alle 3s: für jede Controlled Unit → SetMaxHealth(baseHP + spellPower*10). |
+| 3 | 901068 | Summons heal on death/despawn | C++/UnitScript | implementiert | DUMMY Marker. `custom_druid_summon_heal_unitscript::OnUnitDeath` → wenn Summon stirbt + Owner HasAura(901068) → CastSpell(901073 Nature Bloom). |
+| 4 | 901069 | Thorns → chance to cast Rejuv | C++/UnitScript | implementiert | DUMMY Marker. `custom_druid_thorns_rejuv_unitscript::OnDamage` → wenn Victim=Player + HasAura(901069) + has Thorns → 20% chance → CastSpell(Rejuv R15, triggered). |
+| 5 | 901070 | HoTs +50% healing | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskA=0x30 targets Rejuv+Regrowth. |
+| 6 | 901071 | HoTs tick 2x fast + 2x duration | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DURATION (17), BasePoints=100 (+100% duration). EffectSpellClassMaskA=0x30. Double duration = double ticks at same interval. |
+| 7 | 901072 | Mana regen per missing mana% (+2%) | C++/PlayerScript | implementiert | DUMMY Marker. `custom_druid_mana_regen_playerscript::OnPlayerUpdate` → alle 5s: missingPct × 0.02 × maxMana / 100 → EnergizeBySpell. Same pattern as Shaman Resto (900467). |
+| H1 | 901073 | Helper: Nature Bloom (treant death heal) | DBC | implementiert | Instant AoE Nature Heal. Effect=HEAL(10), Target=DEST_AREA_ALLY(30), 2000+500rnd, SchoolMask=8. |
+
+> **Hinweis Druid**: NPC 901066 (Healing Treant) existiert in creature_template. 901071 (HoTs 2x) nutzt Duration-Multiplikator — verdoppelt Duration heißt doppelt so viele Ticks bei gleichem Intervall. Für echtes "doppelt so schnelles Ticken" bräuchte man einen C++ Ansatz der EffectAmplitude halbiert. UnitScripts (901068/901069) feuern für ALLE Unit Events — Performance beobachten.
 
 ---
 

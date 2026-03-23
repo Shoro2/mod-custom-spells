@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -60,7 +60,31 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Shaman Enhance: Wolf summon proc (on 900436)
 (900436, 'spell_custom_enh_wolf_summon'),
 -- Shaman Enhance: Wolf haste (on Feral Spirit 51533)
-(51533, 'spell_custom_enh_wolf_haste');
+(51533, 'spell_custom_enh_wolf_haste'),
+-- Hunter: Multi-Shot unlimited targets (all ranks via negative ID)
+(-49048, 'spell_custom_hunt_multishot_aoe'),
+-- Hunter MM: Auto Shot bounces +9 targets
+(75, 'spell_custom_hunt_autoshot_bounce'),
+-- Hunter MM: Multi-Shot Barrage (active spell, AuraScript)
+(900534, 'spell_custom_hunt_barrage'),
+-- Hunter Surv: Explosive trap proc passive
+(900566, 'spell_custom_hunt_surv_trap_proc'),
+-- Druid Balance: Moonfire +9 targets (all ranks via negative ID)
+(-48463, 'spell_custom_bal_mf_aoe'),
+-- Druid Balance: Spell dmg reduces Starfall CD (proc aura)
+(901004, 'spell_custom_bal_sf_cd_reduce'),
+-- Druid Feral: Swipe Bear applies bleed (all ranks via negative ID)
+(-48562, 'spell_custom_feral_bear_swipe_bleed'),
+-- Druid Feral: Swipe Cat applies bleed
+(62078, 'spell_custom_feral_cat_swipe_bleed'),
+-- Druid Resto: HoTs summon treant (proc aura)
+(901066, 'spell_custom_drst_hot_treant');
+-- 900500: Get back arrows → PlayerScript (no spell_script_names needed)
+-- 900501: Multi-Shot AoE → checked via HasAura (hooked on Multi-Shot via -49048 above)
+-- 900502/900503/900504: Pet passives → UnitScript/PlayerScript (no spell_script_names needed)
+-- 900533: Auto Shot bounce → checked via HasAura (hooked on Auto Shot via 75 above)
+-- 901067/901068/901069/901072: Druid Resto → PlayerScript/UnitScript (no spell_script_names needed)
+-- 901001/901002/901003/901005/901051/901070/901071: DBC-only passives
 -- 900433/900466: Totem follow → PlayerScript (no spell_script_names needed)
 -- 900435: Summons +50% damage → DBC-only
 -- 900437/900438: Wolf haste/CL → checked via HasAura / UnitScript
@@ -464,3 +488,165 @@ INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entr
 DELETE FROM `creature_template_model` WHERE `CreatureID` = 900436;
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
 (900436, 0, 27074, 1, 1, 12340);
+
+-- ============================================================
+-- Hunter: spell_proc entries
+-- ============================================================
+
+-- Explosive trap proc (900566): procs on ranged auto + ranged spell damage.
+-- ProcFlags=0x44 (DONE_RANGED_AUTO_ATTACK 0x4 | DONE_SPELL_RANGED_DMG_CLASS 0x40).
+-- 15% chance, 2s ICD.
+DELETE FROM `spell_proc` WHERE `SpellId` = 900566;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900566, 0, 0, 0, 0, 0, 0x44, 1, 2, 0, 0, 0, 0, 15, 2000, 0);
+
+-- ============================================================
+-- Hunter: spell_dbc entries (900500-900567)
+-- SpellFamilyName=9 (Hunter)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900500, 900501, 900502, 900503, 900504, 900505, 900533, 900534, 900535, 900536, 900566, 900567);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900500: Get back arrows (DUMMY marker, PlayerScript)
+(900500, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'Hunt: Get Back Arrows', 0x003F3F),
+-- 900501: Multi-Shot unlimited targets (DUMMY marker, C++ on -49048)
+(900501, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'Hunt: Multishot AoE', 0x003F3F),
+-- 900502: Pet damage +50% (DUMMY marker, UnitScript)
+(900502, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'BM: Pet Damage +50%', 0x003F3F),
+-- 900503: Pet attack speed +50% (DUMMY marker, PlayerScript)
+(900503, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'BM: Pet Speed +50%', 0x003F3F),
+-- 900504: Pet AoE proc (DUMMY marker, UnitScript)
+(900504, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'BM: Pet AoE Proc', 0x003F3F),
+-- 900505: Helper - Pet AoE damage (instant AoE physical, 8yd around target)
+(900505, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 0, 0, 0, 0, 0, 0, 9, 132, 1, 0, 'Beast Cleave', 0x003F3F),
+-- 900533: Auto Shot bounces +9 (DUMMY marker, C++ on 75)
+(900533, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'MM: Autoshot Bounce', 0x003F3F),
+-- 900534: Multi-Shot Barrage (2s periodic, ticks every 100ms, PERIODIC_DUMMY)
+-- DurationIndex=4 (2000ms=2s), EffectAmplitude_1=100 (100ms ticks)
+(900534, 0x10000000, 0, 0, 0, 1, 4, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 100, 9, 132, 0, 0, 'MM: Barrage', 0x003F3F),
+-- 900535: Helper - Auto Shot bounce damage (instant Physical single-target)
+(900535, 0x10000000, 0, 0, 0, 1, 0, 4, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 9, 132, 1, 0, 'Ricochet Shot', 0x003F3F),
+-- 900536: Helper - Barrage slow debuff (-50% movement, 2s duration)
+-- Effect=APPLY_AURA(6), Aura=MOD_DECREASE_SPEED(11), BasePoints=-50
+(900536, 0x10000000, 0, 0, 0, 1, 4, 1, 6, 0, -50, 1, 11, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'Barrage Slow', 0x003F3F),
+-- 900566: Explosive trap proc passive (DUMMY, proc via spell_proc + C++)
+(900566, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 9, 132, 0, 0, 'Surv: Trap Proc', 0x003F3F),
+-- 900567: Helper - Explosive burst (instant AoE Fire damage, 8yd around target)
+-- SchoolMask=4 (Fire), Target=DEST_AREA_ENEMY(15)
+(900567, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 1000, 15, 0, 0, 0, 0, 0, 0, 9, 132, 4, 0, 'Explosive Burst', 0x003F3F);
+
+-- ============================================================
+-- Druid Balance: spell_proc entries
+-- ============================================================
+
+-- Spell damage reduces Starfall CD (901004): procs on spell damage dealt.
+-- ProcFlags=0x10000 (DONE_SPELL_MAGIC_DMG_CLASS_POS|NEG combined).
+-- Actually: 0x10000 = DONE_SPELL_MAGIC_DMG_CLASS_NEG. Let's use 0x10010.
+-- 100% chance, 1s ICD to prevent huge CD reduction from AoE.
+DELETE FROM `spell_proc` WHERE `SpellId` = 901004;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(901004, 0, 7, 0, 0, 0, 0x10010, 1, 2, 0, 0, 0, 0, 100, 1000, 0);
+
+-- ============================================================
+-- Druid Resto: spell_proc entries
+-- ============================================================
+
+-- HoTs summon treant (901066): procs on periodic healing done.
+-- ProcFlags=0x40000 (DONE_PERIODIC). 5% chance, 5s ICD.
+DELETE FROM `spell_proc` WHERE `SpellId` = 901066;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(901066, 0, 7, 0, 0, 0, 0x40000, 2, 0, 0, 0, 0, 0, 5, 5000, 0);
+
+-- ============================================================
+-- Druid: spell_dbc entries (901000-901073)
+-- SpellFamilyName=7 (Druid)
+-- Moonfire SpellFamilyFlags[0] = 0x2 (verify!)
+-- Starfall SpellFamilyFlags[0] = 0x100 (verify!)
+-- Rejuvenation SpellFamilyFlags[0] = 0x10 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (901000, 901001, 901002, 901003, 901004, 901005, 901033, 901034, 901049, 901050, 901051, 901066, 901067, 901068, 901069, 901070, 901071, 901072, 901073);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 901000: Moonfire +9 targets (DUMMY marker, C++ on -48463)
+(901000, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Bal: MF +9 Targets', 0x003F3F),
+-- 901001: Moonfire +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x2 targets Moonfire family
+(901001, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2, 0, 0, 7, 132, 0, 0, 'Bal: MF +50%', 0x003F3F),
+-- 901002: Starfall +9 targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS=17)
+-- EffectSpellClassMaskA=0x100 targets Starfall family (verify!)
+(901002, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x100, 0, 0, 7, 132, 0, 0, 'Bal: SF +9 Targets', 0x003F3F),
+-- 901003: Starfall +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+(901003, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x100, 0, 0, 7, 132, 0, 0, 'Bal: SF +50%', 0x003F3F),
+-- 901004: Spell dmg reduces Starfall CD (DUMMY, proc via spell_proc + C++)
+(901004, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Bal: SF CD Reduce', 0x003F3F),
+-- 901005: Starfall stacks up to 10 (ADD_FLAT_MODIFIER + SPELLMOD_CHARGES=4)
+-- EffectSpellClassMaskA=0x100 targets Starfall. BasePoints=9 (adds 9 charges → total 10).
+(901005, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 4, 0, 0x100, 0, 0, 7, 132, 0, 0, 'Bal: SF Stacks 10', 0x003F3F),
+-- 901033: Swipe Bear applies bleed (DUMMY marker, C++ on -48562)
+(901033, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Feral: Bear Bleed', 0x003F3F),
+-- 901034: Helper - Bear Swipe bleed DoT (Physical periodic damage, 12s, ticks every 3s)
+-- Effect=APPLY_AURA(6), Aura=PERIODIC_DAMAGE(3), BasePoints=300, Duration=12s(idx=21 is perm, use 32=12s)
+(901034, 0x10000000, 0, 0, 0, 1, 32, 1, 6, 50, 300, 6, 3, 0, 0, 0, 0, 3000, 7, 132, 1, 0, 'Swipe Bleed', 0x003F3F),
+-- 901049: Swipe Cat applies bleed (DUMMY marker, C++ on 62078)
+(901049, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Feral: Cat Bleed', 0x003F3F),
+-- 901050: Helper - Cat Swipe bleed DoT (Physical periodic damage, 12s, ticks every 3s)
+(901050, 0x10000000, 0, 0, 0, 1, 32, 1, 6, 50, 300, 6, 3, 0, 0, 0, 0, 3000, 7, 132, 1, 0, 'Rake Bleed', 0x003F3F),
+-- 901051: Energy regen +50% (SPELL_AURA_MOD_POWER_REGEN_PERCENT, MiscValue=3 for Energy)
+(901051, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 110, 3, 0, 0, 0, 0, 7, 132, 0, 0, 'Feral: Energy +50%', 0x003F3F),
+-- 901066: HoTs summon treant (DUMMY, proc via spell_proc + C++)
+(901066, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Resto: HoT Treant', 0x003F3F),
+-- 901067: Summons scale with healing power (DUMMY marker, PlayerScript)
+(901067, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Resto: Summon Scale', 0x003F3F),
+-- 901068: Summons heal on death (DUMMY marker, UnitScript)
+(901068, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Resto: Summon Heal', 0x003F3F),
+-- 901069: Thorns → Rejuv (DUMMY marker, UnitScript)
+(901069, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Resto: Thorns Rejuv', 0x003F3F),
+-- 901070: HoTs +50% healing (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE on HoT family)
+-- Rejuv flags[0]=0x10, Regrowth flags[0]=0x20, Lifebloom flags[1]=0x10 (verify!)
+-- We target the common HoT mask. Using broad flags to cover Rejuv+Regrowth+WG.
+(901070, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x30, 0, 0, 7, 132, 0, 0, 'Resto: HoTs +50%', 0x003F3F),
+-- 901071: HoTs tick 2x fast + 2x duration
+-- This is TWO effects: (1) -50% tick interval via ADD_PCT_MODIFIER SPELLMOD_HASTE=22 (not standard)
+-- Simpler: just double duration via ADD_PCT_MODIFIER + SPELLMOD_DURATION=17 (+100%)
+-- and let the extra ticks naturally happen. DBC approach = duration +100%.
+-- EffectSpellClassMaskA targets Rejuv+Regrowth+WG (0x30)
+(901071, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 100, 1, 108, 17, 0, 0x30, 0, 0, 7, 132, 0, 0, 'Resto: HoTs 2x', 0x003F3F),
+-- 901072: Mana regen per missing mana% (DUMMY marker, PlayerScript)
+(901072, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Resto: Mana Regen', 0x003F3F),
+-- 901073: Helper - Treant heal on despawn (instant AoE Nature heal, 15yd around caster)
+-- Effect=HEAL(10), Target=DEST_AREA_ALLY(30), SchoolMask=8(Nature)
+(901073, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 500, 2000, 30, 0, 0, 0, 0, 0, 0, 7, 132, 8, 0, 'Nature Bloom', 0x003F3F);
+
+-- ============================================================
+-- Druid Resto: Custom Treant NPC (901066)
+-- ============================================================
+DELETE FROM `creature_template` WHERE `entry` = 901066;
+INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`,
+    `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`,
+    `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`,
+    `detection_range`, `scale`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`,
+    `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`,
+    `dynamicflags`, `family`, `trainer_type`, `trainer_spell`, `trainer_class`, `trainer_race`,
+    `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`,
+    `PetSpellDataId`, `VehicleId`, `mingold`, `maxgold`,
+    `AIName`, `MovementType`, `HoverHeight`,
+    `HealthModifier`, `ManaModifier`, `ArmorModifier`,
+    `ExperienceModifier`, `RacialLeader`, `movementId`,
+    `RegenHealth`, `mechanic_immune_mask`, `spell_school_immune_mask`, `flags_extra`,
+    `ScriptName`, `VerifiedBuild`) VALUES
+(901066, 0, 0, 0,
+ 0, 0, 'Healing Treant', '', '', 0,
+ 80, 80, 2, 14, 0, 1, 1.14286,
+ 20, 0.8, 0, 0, 0.5, 2000,
+ 2000, 1, 1, 1, 0, 2048,
+ 0, 0, 0, 0, 0, 0,
+ 4, 0, 0, 0, 0,
+ 0, 0, 0, 0,
+ '', 0, 1,
+ 0.5, 0, 0.5,
+ 0, 0, 0,
+ 1, 0, 0, 0,
+ '', 12340);
+
+-- Treant display model (Force of Nature treant model)
+DELETE FROM `creature_template_model` WHERE `CreatureID` = 901066;
+INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
+(901066, 0, 3889, 1, 1, 12340);
