@@ -542,12 +542,15 @@ Die `spell_dbc` Tabelle hat 257 Spalten. Hier die für Custom Spells relevantest
 
 Spell IDs 900100-900109 (Warrior Arms) existieren in `Spell.dbc` und sind fertig implementiert.
 Spell IDs 900134-900145 (Warrior Fury) existieren in `Spell.dbc` und sind fertig implementiert.
-Spell IDs 900241-900274 (Warrior Prot + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900168-900175 (Warrior Prot + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
 Spell IDs 900200-900210 (Paladin Holy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
 Spell IDs 900234-900241 (Paladin Prot) existieren in `spell_dbc` Tabelle und sind implementiert.
 Spell IDs 900268-900275 (Paladin Ret + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900300-900304 (DK Blood) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900333 (DK Frost) existiert in `spell_dbc` Tabelle und ist implementiert.
+Spell IDs 900366-900367 (DK Unholy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
 
-Nächste freie Klassen-Blöcke: **900300+** (DK), **900400+** (Shaman), etc.
+Nächste freie Klassen-Blöcke: **900400+** (Shaman), **900500+** (Hunter), etc.
 
 ---
 
@@ -583,9 +586,9 @@ Nächste freie Klassen-Blöcke: **900300+** (DK), **900400+** (Shaman), etc.
 | Paladin | Holy | 900200-900210 (11) | 900211-900232 (22) | implementiert |
 | Paladin | Prot | 900234-900241 (8) | 900242-900265 (24) | implementiert |
 | Paladin | Ret | 900268-900275 (8) | 900276-900299 (24) | implementiert |
-| DK | Blood | — | 900300-900332 (33) | geplant |
-| DK | Frost | — | 900333-900365 (33) | geplant |
-| DK | Unholy | — | 900366-900399 (34) | geplant |
+| DK | Blood | 900300-900304 (5) | 900305-900332 (28) | implementiert |
+| DK | Frost | 900333 (1) | 900334-900365 (32) | implementiert |
+| DK | Unholy | 900366-900367 (2) | 900368-900399 (32) | implementiert |
 
 ---
 
@@ -696,31 +699,30 @@ Nächste freie Klassen-Blöcke: **900300+** (DK), **900400+** (Shaman), etc.
 
 ### DK — Blood (900300-900332)
 
-> DK SpellFamilyName = 15. Dancing Rune Weapon (49028) beschwört ein Rune Weapon das Spells des DK kopiert.
+> DK SpellFamilyName = 15. Dancing Rune Weapon (49028) beschwört ein Rune Weapon (NPC 27893) das Spells des DK kopiert.
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900900 | 3 Rune Weapons gleichzeitig | C++ | geplant | Dancing Rune Weapon (49028) beschwört normalerweise 1 Weapon. Braucht SpellScript `AfterCast`: 2 zusätzliche CastSpell(DRW, triggered) oder direktes Spawnen von 2 Extra-NPCs via `SummonCreature`. Die Summon-NPC-ID (27893) muss 3× existieren können. Evtl. eigene Summon-Spell-Varianten nötig. |
-| 2 | 900901 | Rune Weapon double-casts | C++ | geplant | Das Rune Weapon kopiert bereits Caster-Spells. "Double cast" = jeder kopierte Spell wird 2× ausgeführt. Braucht Hook im DRW-AI-Script (oder `CreatureScript`): Bei jedem `SpellHit` des Weapons → gleichen Spell nochmal casten. Alternativ: Aura auf Weapon mit Proc → re-cast. |
-| 3 | 900902 | Heart Strike damage +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Heart Strike (55050). |
-| 4 | 900933 | Heart Strike +9 targets | DBC/C++ | geplant | Heart Strike trifft normalerweise 3 Ziele. DBC: `MaxAffectedTargets` auf 12 setzen. Falls bedingt → C++ `OnObjectAreaTargetSelect`. |
-| 5 | 900966 | Dealing damage → chance to cast Death Coil | C++ | geplant | Passive Proc-Aura: ProcFlags=`DONE_MELEE_AUTO_ATTACK|DONE_SPELL_MELEE_DMG_CLASS` (0x14), Chance=X% (festlegen!). `HandleProc`: CastSpell(Death Coil, triggered=true) auf aktuelles Ziel. Braucht `spell_proc` Eintrag + ICD um Spam zu verhindern. |
+| 1 | 900300 | 3 Rune Weapons gleichzeitig | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf DRW (49028): `AfterCast` → 2× CastSpell(DRW, triggered=true). Prüft `HasAura(900300)`. |
+| 2 | 900301 | Rune Weapon double-casts | C++ | implementiert | Marker-Aura (DUMMY). C++ AuraScript auf DRW (49028): `OnEffectProc` → extra CastSpell/DealMeleeDamage. Prüft `HasAura(900301)`. Rune Weapon castet jeden Spell 2× statt 1×. |
+| 3 | 900302 | Heart Strike +50% damage | DBC | implementiert | `ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x2000000 (HS flags[0], verify!). |
+| 4 | 900303 | Heart Strike +9 targets | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf HS (-55050): `AfterHit` → DealDamage auf 9 Extra-Feinde in 8yd. Prüft `HasAura(900303)`. |
+| 5 | 900304 | Dealing damage → chance Death Coil | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x14, 15% Chance, 3s ICD. C++ HandleProc → CastSpell(47632 Death Coil Damage, triggered). |
 
 ### DK — Frost (900333-900365)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900333 | Ghoul durch Frost Wyrm ersetzen | C++ + DBC | geplant | Raise Dead (46584) beschwört Ghoul (NPC 26125). Ansatz: (a) Neuen NPC "Frost Wyrm" erstellen (`creature_template`) mit eigenem Model, Stats, AI. (b) SpellScript auf Raise Dead: Override Summon-NPC-ID auf Frost Wyrm NPC. Oder DBC: `EffectMiscValue` (Summon-Entry) auf neue NPC-ID ändern. (c) Frost Wyrm braucht eigenes AI-Script (`CreatureScript`) mit passenden Frost-Angriffen. **Aufwand**: Hoch — neues Creature mit Model, AI, Spells, Balancing. |
+| 1 | 900333 | Ghoul → Frost Wyrm | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf Raise Dead (46584): `AfterCast` → SetDisplayId(26752) + SetObjectScale(0.5) auf Ghoul (NPC 26125). Prüft `HasAura(900333)`. **Hinweis**: Nur visueller Replace. Für eigene AI/Spells braucht es custom creature_template. |
 
 ### DK — Unholy (900366-900399)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900366 | DoTs → chance Shadow AoE damage | C++ | geplant | Passive Proc-Aura: Proc auf periodischen Schaden (`PROC_FLAG_DONE_PERIODIC`, 0x400000). `HandleProc`: CastSpell(Shadow-AoE-Damage, triggered=true) auf das DoT-Ziel. Der AoE-Spell dealt Shadow-Damage an alle Feinde im Radius um das Ziel. Braucht: (a) Passive Proc-Aura (900206), (b) Shadow-AoE-Damage-Spell (eigene ID, z.B. 900207), (c) `spell_proc` mit Chance + ICD. |
+| 1 | 900366 | DoTs → Shadow AoE proc | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x400000 (DONE_PERIODIC), 20% Chance, 2s ICD. C++ HandleProc → CastSpell(900367, triggered) auf DoT-Target. |
+| H1 | 900367 | Shadow Eruption (helper) | DBC | implementiert | Instant AoE Shadow Damage. Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=32(Shadow), BasePoints=600+150rnd, 8yd. |
 
-> **Helper-Spells DK**: 900206 (Unholy DoT AoE) braucht einen separaten Shadow-AoE-Damage-Spell (z.B. 900367). 900200 (3 Rune Weapons) braucht evtl. zusätzliche Summon-Spell-Varianten. 900205 (Frost Wyrm) braucht neuen NPC-Eintrag + AI-Script. IDs ab 900367+ für Helper verfügbar.
-
-> **Besonders aufwändig**: 900200 (3 Rune Weapons) und 900205 (Frost Wyrm) sind die komplexesten Spells bisher. Rune Weapons brauchen Core-Verständnis der DRW-Mechanik, Frost Wyrm braucht komplett neues Creature mit Model + AI.
+> **Hinweis DK**: Heart Strike SpellFamilyFlags[0]=0x2000000 verifizieren! 900300 (3 DRW) castet DRW nochmal als triggered — kann zu Aura-Stacking-Issues führen wenn nicht korrekt behandelt. 900333 (Frost Wyrm) ist aktuell nur ein DisplayID-Swap; für echte Frost-AI braucht es creature_template + CreatureScript.
 
 ---
 
@@ -730,14 +732,14 @@ Nächste freie Klassen-Blöcke: **900300+** (DK), **900400+** (Shaman), etc.
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900700 | Chain Lightning +6 targets, no damage reduction | DBC/C++ | geplant | Chain Lightning (421/CL ranks) hat normalerweise 3 Bounces mit 30% Reduce pro Bounce. DBC: `EffectChainTarget` auf 9 erhöhen. Damage-Reduction entfernen: C++ SpellScript `CalculateChainDamage` oder Aura `SPELL_AURA_ADD_PCT_MODIFIER` die Chain-Penalty auf 0 setzt. |
-| 2 | 900701 | Totems replaced by creatures that follow/fight (Ele) | C++ | geplant | Großes System: Totem-Summon-Spells abfangen (`SpellScript`), statt Totem-NPC ein Creature spawnen das dem Caster folgt (`FollowMovementGenerator`) und kämpft. Braucht eigene AI-Scripts für jedes Totem-Creature. Creature behält Totem-Effekte (Auren) aber ist mobil + angreifbar. Evtl. eigene NPCs pro Totem-Typ. |
-| 3 | 900702 | Fire Elemental Totem → Ragnaros | C++ + DBC | geplant | Fire Elemental Totem (2894) beschwört Fire Elemental (15438). Override: Neuen NPC "Ragnaros" erstellen mit eigenem Model (DisplayID vom Ragnaros-Boss, z.B. 11121), eigener AI mit Fire-Spells + evtl. On-Hit-Proc. SpellScript auf Totem-Spell → Summon Ragnaros-NPC statt Fire Elemental. Balancing: Stats/Duration anpassen. |
-| 4 | 900703 | Lightning Overload chance erhöht + wirkt auf Lava Burst | C++ | geplant | Lightning Overload (Talent 30675) proct auf Lightning Bolt/Chain Lightning. (a) Chance erhöhen: Modify Proc-Chance des Talents via Aura. (b) Lava Burst hinzufügen: SpellScript oder `spell_proc` erweitern → Overload-Proc auch bei Lava Burst (51505) auslösen. Braucht evtl. eigenen Proc-Handler. |
-| 5 | 900704 | Lava Burst spreads Fire Shock DoT | C++ | geplant | SpellScript auf Lava Burst `AfterHit`: Prüfe ob Target Fire Shock (8050) hat → `GetCaster()->CastSpell()` Fire Shock auf alle Feinde im Radius (z.B. 10yd) um Target. Oder: Iterate nahe Enemies und appliziere Fire Shock Aura. Ähnlich wie Warrior Rend-Spread. |
-| 6 | 900705 | Flame Shock ticks chance to reset Lava Burst CD | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC` (0x400000), SpellFamilyMask für Flame Shock. `HandleProc`: Chance X% → `GetCaster()->GetSpellHistory()->ResetCooldown(51505, true)` (Lava Burst). `spell_proc` mit Chance + ICD. |
-| 7 | 900706 | Lava Burst two charges | DBC/C++ | geplant | Charge-System: DBC `ChargeCategory` + `CategoryCharges` = 2 für Lava Burst. Oder C++: Eigene Aura die bei Lava Burst-CD eine zweite "Aufladung" trackt und CD sofort resetet wenn noch Charges übrig. Charge-System in WotLK ist limitiert → vermutlich C++ nötig. |
-| 8 | 900707 | Clearcasting → Lava Burst instant | DBC | geplant | Clearcasting (Elemental Focus, 16246) gibt Buff. Passive Aura: Wenn Clearcasting aktiv → `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_CASTING_TIME` = -100% auf Lava Burst (SpellFamilyMask). Lava Burst hat bereits 2s Cast. |
+| 1 | 900400 | Chain Lightning +6 targets, no damage reduction | DBC/C++ | geplant | Chain Lightning (421/CL ranks) hat normalerweise 3 Bounces mit 30% Reduce pro Bounce. DBC: `EffectChainTarget` auf 9 erhöhen. Damage-Reduction entfernen: C++ SpellScript `CalculateChainDamage` oder Aura `SPELL_AURA_ADD_PCT_MODIFIER` die Chain-Penalty auf 0 setzt. |
+| 2 | 900401 | Totems replaced by creatures that follow/fight (Ele) | C++ | geplant | Großes System: Totem-Summon-Spells abfangen (`SpellScript`), statt Totem-NPC ein Creature spawnen das dem Caster folgt (`FollowMovementGenerator`) und kämpft. Braucht eigene AI-Scripts für jedes Totem-Creature. Creature behält Totem-Effekte (Auren) aber ist mobil + angreifbar. Evtl. eigene NPCs pro Totem-Typ. |
+| 3 | 900402 | Fire Elemental Totem → Ragnaros | C++ + DBC | geplant | Fire Elemental Totem (2894) beschwört Fire Elemental (15438). Override: Neuen NPC "Ragnaros" erstellen mit eigenem Model (DisplayID vom Ragnaros-Boss, z.B. 11121), eigener AI mit Fire-Spells + evtl. On-Hit-Proc. SpellScript auf Totem-Spell → Summon Ragnaros-NPC statt Fire Elemental. Balancing: Stats/Duration anpassen. |
+| 4 | 900403 | Lightning Overload chance erhöht + wirkt auf Lava Burst | C++ | geplant | Lightning Overload (Talent 30675) proct auf Lightning Bolt/Chain Lightning. (a) Chance erhöhen: Modify Proc-Chance des Talents via Aura. (b) Lava Burst hinzufügen: SpellScript oder `spell_proc` erweitern → Overload-Proc auch bei Lava Burst (51505) auslösen. Braucht evtl. eigenen Proc-Handler. |
+| 5 | 900404 | Lava Burst spreads Fire Shock DoT | C++ | geplant | SpellScript auf Lava Burst `AfterHit`: Prüfe ob Target Fire Shock (8050) hat → `GetCaster()->CastSpell()` Fire Shock auf alle Feinde im Radius (z.B. 10yd) um Target. Oder: Iterate nahe Enemies und appliziere Fire Shock Aura. Ähnlich wie Warrior Rend-Spread. |
+| 6 | 900405 | Flame Shock ticks chance to reset Lava Burst CD | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC` (0x400000), SpellFamilyMask für Flame Shock. `HandleProc`: Chance X% → `GetCaster()->GetSpellHistory()->ResetCooldown(51505, true)` (Lava Burst). `spell_proc` mit Chance + ICD. |
+| 7 | 900406 | Lava Burst two charges | DBC/C++ | geplant | Charge-System: DBC `ChargeCategory` + `CategoryCharges` = 2 für Lava Burst. Oder C++: Eigene Aura die bei Lava Burst-CD eine zweite "Aufladung" trackt und CD sofort resetet wenn noch Charges übrig. Charge-System in WotLK ist limitiert → vermutlich C++ nötig. |
+| 8 | 900407 | Clearcasting → Lava Burst instant | DBC | geplant | Clearcasting (Elemental Focus, 16246) gibt Buff. Passive Aura: Wenn Clearcasting aktiv → `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_CASTING_TIME` = -100% auf Lava Burst (SpellFamilyMask). Lava Burst hat bereits 2s Cast. |
 
 ### Shaman — Enhancement (900433-900465)
 

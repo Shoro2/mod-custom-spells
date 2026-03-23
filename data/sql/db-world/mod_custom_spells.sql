@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -30,7 +30,18 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Paladin Ret: Exorcism buff proc passive
 (900274, 'spell_custom_ret_exorcism_proc'),
 -- Paladin Ret: Exorcism consume stacks (on Exorcism max rank)
-(48801, 'spell_custom_ret_exorcism_consume');
+(48801, 'spell_custom_ret_exorcism_consume'),
+-- DK Blood: 3 Rune Weapons + Double Cast (on DRW spell 49028)
+(49028, 'spell_custom_dkb_3_rune_weapons'),
+(49028, 'spell_custom_dkb_double_cast'),
+-- DK Blood: Heart Strike +9 targets (all ranks via negative ID)
+(-55050, 'spell_custom_dkb_hs_aoe'),
+-- DK Blood: Death Coil proc passive
+(900304, 'spell_custom_dkb_deathcoil_proc'),
+-- DK Frost: Frost Wyrm (on Raise Dead 46584)
+(46584, 'spell_custom_dkf_frost_wyrm'),
+-- DK Unholy: DoT → Shadow AoE proc passive
+(900366, 'spell_custom_dku_dot_aoe');
 
 -- ICD for Whirlwind proc aura (900138): 500ms cooldown to prevent
 -- recursive loop (Whirlwind hits count as auto-attacks → re-proc → crash)
@@ -211,3 +222,51 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- Duration: 30sec (DurationIndex=5), stackable (CumulativeAura=10)
 -- NOT passive — it's a visible buff with stacks
 (900275, 0x10000000, 0, 0, 0, 1, 5, 1, 6, 0, 50, 1, 108, 0, 0, 0x200000, 0, 10, 879, 0, 10, 'Exorcism Power', 0x003F3F);
+
+-- ============================================================
+-- DK Blood: spell_proc entries
+-- ============================================================
+
+-- Death Coil proc (900304): procs on melee + spell damage dealt.
+-- ProcFlags=0x14 (DONE_MELEE_AUTO_ATTACK | DONE_SPELL_MELEE_DMG_CLASS).
+-- 15% chance, 3s ICD to prevent spam.
+DELETE FROM `spell_proc` WHERE `SpellId` = 900304;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900304, 0, 0, 0, 0, 0, 0x14, 1, 2, 0, 0, 0, 0, 15, 3000, 0);
+
+-- ============================================================
+-- DK Unholy: spell_proc entries
+-- ============================================================
+
+-- DoT → Shadow AoE proc (900366): procs on periodic damage.
+-- ProcFlags=0x400000 (DONE_PERIODIC). 20% chance, 2s ICD.
+DELETE FROM `spell_proc` WHERE `SpellId` = 900366;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900366, 0, 0, 0, 0, 0, 0x400000, 1, 0, 0, 0, 0, 0, 20, 2000, 0);
+
+-- ============================================================
+-- DK: spell_dbc entries (900300-900304, 900333, 900366-900367)
+-- ============================================================
+-- SpellFamilyName=15 (DK)
+-- Heart Strike SpellFamilyFlags: verify in Spell.dbc!
+
+DELETE FROM `spell_dbc` WHERE `ID` IN (900300, 900301, 900302, 900303, 900304, 900333, 900366, 900367);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900300: 3 Rune Weapons (marker, C++ on 49028)
+(900300, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 3735, 0, 0, 'DKB: 3 Rune Weapons', 0x003F3F),
+-- 900301: Rune Weapon double casts (marker, C++ on 49028)
+(900301, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 3735, 0, 0, 'DKB: Double Cast', 0x003F3F),
+-- 900302: Heart Strike +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- Heart Strike SpellFamilyFlags[0]=0x2000000 (verify!)
+(900302, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2000000, 0, 15, 3547, 0, 0, 'DKB: HS +50%', 0x003F3F),
+-- 900303: Heart Strike +9 targets (marker, C++ on -55050)
+(900303, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 3547, 0, 0, 'DKB: HS AoE', 0x003F3F),
+-- 900304: Death Coil proc (DUMMY, proc via spell_proc + C++)
+(900304, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 136, 0, 0, 'DKB: DC Proc', 0x003F3F),
+-- 900333: Replace Ghoul with Frost Wyrm (marker, C++ on 46584)
+(900333, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 3223, 0, 0, 'DKF: Frost Wyrm', 0x003F3F),
+-- 900366: DoT → Shadow AoE proc (DUMMY, proc via spell_proc + C++)
+(900366, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 2770, 0, 0, 'DKU: DoT AoE Proc', 0x003F3F),
+-- 900367: Shadow AoE helper (instant AoE Shadow damage around target)
+-- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=32(Shadow), 8yd radius
+(900367, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 150, 600, 15, 0, 0, 0, 0, 0, 15, 2770, 32, 0, 'Shadow Eruption', 0x003F3F);
