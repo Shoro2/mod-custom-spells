@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771, 900800, 900802);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -110,7 +110,11 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Mage Frost: Water Elemental permanent (on Summon Water Elemental)
 (31687, 'spell_custom_mage_permanent_water_ele'),
 -- Mage Frost: Comet Shower (active spell)
-(900771, 'spell_custom_mage_comet_shower');
+(900771, 'spell_custom_mage_comet_shower'),
+-- Warlock Affliction: DoT ticks deal Shadow AoE (proc aura)
+(900800, 'spell_custom_wlk_dot_aoe'),
+-- Warlock Affliction: DoT ticks spread to 2 additional targets (proc aura)
+(900802, 'spell_custom_wlk_dot_spread');
 -- 900500: Get back arrows → PlayerScript (no spell_script_names needed)
 -- 900501: Multi-Shot AoE → checked via HasAura (hooked on Multi-Shot via -49048 above)
 -- 900502/900503/900504: Pet passives → UnitScript/PlayerScript (no spell_script_names needed)
@@ -861,3 +865,34 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900774: Helper - Comet Impact (instant Frost single-target damage, high base)
 -- SchoolMask=16 (Frost). Base damage for the comet impact.
 (900774, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 500, 3000, 6, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frost Comet', 0x003F3F);
+
+-- ============================================================
+-- Warlock Affliction: spell_proc entries
+-- ============================================================
+
+-- DoT AoE proc (900800): procs on DONE_PERIODIC (0x40000).
+-- 20% chance, 2s ICD. C++ casts Shadow AoE helper on target.
+DELETE FROM `spell_proc` WHERE `SpellId` IN (900800, 900802);
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+-- 900800: DoT tick → Shadow AoE. ProcFlags=0x40000 (DONE_PERIODIC), 20% chance, 2s ICD.
+(900800, 0, 5, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 20, 2000, 0),
+-- 900802: DoT tick → Spread to 2. ProcFlags=0x40000 (DONE_PERIODIC), 15% chance, 3s ICD.
+(900802, 0, 5, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 15, 3000, 0);
+
+-- ============================================================
+-- Warlock Affliction: spell_dbc entries (900800-900803)
+-- SpellFamilyName=5 (Warlock)
+-- Corruption SpellFamilyFlags[0]=0x2 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900800, 900801, 900802, 900803);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900800: DoT ticks → Shadow AoE (DUMMY, proc via spell_proc + C++)
+(900800, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT AoE', 0x003F3F),
+-- 900801: Corruption +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x2 targets Corruption (verify!)
+(900801, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x2, 0, 0, 5, 313, 0, 0, 'Affl: Corruption +50%', 0x003F3F),
+-- 900802: DoT ticks → Spread to 2 targets (DUMMY, proc via spell_proc + C++)
+(900802, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT Spread', 0x003F3F),
+-- 900803: Helper - Shadow AoE (instant Shadow AoE damage, 8yd around target)
+-- Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=32 (Shadow)
+(900803, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Eruption', 0x003F3F);

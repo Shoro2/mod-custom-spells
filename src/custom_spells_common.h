@@ -212,6 +212,12 @@ enum CustomSpellIds
     SPELL_MAGE_FROST_IL_AOE_HELPER     = 900773,
     SPELL_MAGE_FROST_COMET_HELPER      = 900774,
 
+    // ---- Warlock Affliction (900800-900832) ----
+    SPELL_WLK_AFFL_DOT_AOE_PASSIVE     = 900800,
+    SPELL_WLK_AFFL_CORR_DMG_PASSIVE    = 900801,
+    SPELL_WLK_AFFL_DOT_SPREAD_PASSIVE  = 900802,
+    SPELL_WLK_AFFL_DOT_AOE_HELPER      = 900803,
+
     // ---- Druid Balance (901000-901032) ----
     SPELL_BAL_MF_AOE_PASSIVE            = 901000,
     SPELL_BAL_MF_DMG_PASSIVE            = 901001,
@@ -367,6 +373,12 @@ constexpr uint32 NPC_WATER_ELEMENTAL       = 510;    // Water Elemental NPC
 // Frostbolt SpellFamilyFlags[0] = 0x20 (verify!)
 // Ice Lance SpellFamilyFlags[0] = 0x20000 (verify!)
 
+// ---- Warlock constants ----
+constexpr uint32 SPELL_CORRUPTION_R10      = 47813;  // Corruption highest rank
+constexpr uint32 SPELLFAMILY_WARLOCK_ID    = 5;
+// Corruption SpellFamilyFlags[0] = 0x2 (verify!)
+// Warlock DoTs: Corruption, Curse of Agony, Immolate, Unstable Affliction, Seed of Corruption
+
 // Per-class registration functions
 void AddWarriorSpellsScripts();
 void AddPaladinSpellsScripts();
@@ -376,3 +388,4 @@ void AddHunterSpellsScripts();
 void AddRogueSpellsScripts();
 void AddDruidSpellsScripts();
 void AddMageSpellsScripts();
+void AddWarlockSpellsScripts();
