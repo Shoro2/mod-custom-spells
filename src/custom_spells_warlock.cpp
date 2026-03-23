@@ -149,7 +149,7 @@ public:
     custom_wlk_meta_kill_extend_playerscript()
         : PlayerScript("custom_wlk_meta_kill_extend_playerscript") {}
 
-    void OnCreatureKill(Player* player, Creature* /*victim*/) override
+    void OnPlayerCreatureKill(Player* player, Creature* /*victim*/) override
     {
         if (!player || !player->IsAlive())
             return;
@@ -425,7 +425,7 @@ class spell_custom_wlk_fg_unlim : public SpellScript
         Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 8.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, enemies, check);
-        Cell::VisitAllObjects(caster, searcher, 8.0f);
+        Cell::VisitObjects(caster, searcher, 8.0f);
 
         int32 damage = _savedDamage > 0 ? _savedDamage : 500;
 
