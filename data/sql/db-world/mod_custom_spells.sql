@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -102,7 +102,15 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (-42833, 'spell_custom_mage_fb_aoe'),
 -- Mage Fire: Pyroblast +9 targets + Hot Streak (all ranks via negative ID)
 (-42891, 'spell_custom_mage_pyro_aoe'),
-(-42891, 'spell_custom_mage_pyro_hotstreak');
+(-42891, 'spell_custom_mage_pyro_hotstreak'),
+-- Mage Frost: Frostbolt +9 targets (all ranks via negative ID)
+(-42842, 'spell_custom_mage_frostbolt_aoe'),
+-- Mage Frost: Ice Lance +9 targets (all ranks via negative ID)
+(-42914, 'spell_custom_mage_icelance_aoe'),
+-- Mage Frost: Water Elemental permanent (on Summon Water Elemental)
+(31687, 'spell_custom_mage_permanent_water_ele'),
+-- Mage Frost: Comet Shower (active spell)
+(900771, 'spell_custom_mage_comet_shower');
 -- 900500: Get back arrows → PlayerScript (no spell_script_names needed)
 -- 900501: Multi-Shot AoE → checked via HasAura (hooked on Multi-Shot via -49048 above)
 -- 900502/900503/900504: Pet passives → UnitScript/PlayerScript (no spell_script_names needed)
@@ -819,3 +827,37 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900740: Helper - Pyroblast bounce (instant Fire single-target damage)
 -- BasePoints via CastCustomSpell. SchoolMask=4 (Fire)
 (900740, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 1726, 4, 0, 'Pyroblast Bounce', 0x003F3F);
+
+-- ============================================================
+-- Mage Frost: spell_dbc entries (900766-900774)
+-- SpellFamilyName=3 (Mage)
+-- Frostbolt SpellFamilyFlags[0]=0x20 (verify!)
+-- Ice Lance SpellFamilyFlags[0]=0x20000 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900766, 900767, 900768, 900769, 900770, 900771, 900772, 900773, 900774);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900766: Frostbolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x20 targets Frostbolt (verify!)
+(900766, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x20, 0, 0, 3, 188, 16, 0, 'Frost: Frostbolt +50%', 0x003F3F),
+-- 900767: Frostbolt +9 targets (DUMMY marker, C++ on -42842)
+(900767, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 188, 0, 0, 'Frost: Frostbolt AoE', 0x003F3F),
+-- 900768: Ice Lance +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x20000 targets Ice Lance (verify!)
+(900768, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x20000, 0, 0, 3, 2723, 16, 0, 'Frost: Ice Lance +50%', 0x003F3F),
+-- 900769: Ice Lance +9 targets (DUMMY marker, C++ on -42914)
+(900769, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 2723, 0, 0, 'Frost: Ice Lance AoE', 0x003F3F),
+-- 900770: Water Elemental permanent (DUMMY marker, C++ on 31687)
+(900770, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 2735, 0, 0, 'Frost: Perm Elemental', 0x003F3F),
+-- 900771: Comet Shower (active spell, ground targeting, 40yd range, instant)
+-- Effect=DUMMY(3), ImplicitTargetA=16 (ground targeting), RangeIndex=5 (40yd)
+-- Needs client DBC patch for ground cursor.
+(900771, 0x10000000, 0, 0, 0, 1, 0, 5, 3, 0, 0, 16, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frost Comet Shower', 0x003F3F),
+-- 900772: Helper - Frostbolt bounce (instant Frost single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=16 (Frost)
+(900772, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frostbolt Bounce', 0x003F3F),
+-- 900773: Helper - Ice Lance bounce (instant Frost single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=16 (Frost)
+(900773, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 2723, 16, 0, 'Ice Lance Bounce', 0x003F3F),
+-- 900774: Helper - Comet Impact (instant Frost single-target damage, high base)
+-- SchoolMask=16 (Frost). Base damage for the comet impact.
+(900774, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 500, 3000, 6, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frost Comet', 0x003F3F);

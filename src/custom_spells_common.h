@@ -201,6 +201,17 @@ enum CustomSpellIds
     SPELL_MAGE_FIRE_FB_AOE_HELPER      = 900739,
     SPELL_MAGE_FIRE_PYRO_AOE_HELPER    = 900740,
 
+    // ---- Mage Frost (900766-900799) ----
+    SPELL_MAGE_FROST_FB_DMG_PASSIVE    = 900766,
+    SPELL_MAGE_FROST_FB_AOE_PASSIVE    = 900767,
+    SPELL_MAGE_FROST_IL_DMG_PASSIVE    = 900768,
+    SPELL_MAGE_FROST_IL_AOE_PASSIVE    = 900769,
+    SPELL_MAGE_FROST_PERM_ELE_PASSIVE  = 900770,
+    SPELL_MAGE_FROST_COMET_SHOWER      = 900771,
+    SPELL_MAGE_FROST_FB_AOE_HELPER     = 900772,
+    SPELL_MAGE_FROST_IL_AOE_HELPER     = 900773,
+    SPELL_MAGE_FROST_COMET_HELPER      = 900774,
+
     // ---- Druid Balance (901000-901032) ----
     SPELL_BAL_MF_AOE_PASSIVE            = 901000,
     SPELL_BAL_MF_DMG_PASSIVE            = 901001,
@@ -349,6 +360,12 @@ constexpr uint32 SPELL_FIRE_BLAST_R11      = 42873;  // Fire Blast highest rank
 constexpr uint32 SPELL_HOT_STREAK          = 48108;  // Hot Streak buff
 // Fireball SpellFamilyFlags[0] = 0x1 (verify!)
 // Pyroblast SpellFamilyFlags[0] = 0x400000 (verify!)
+constexpr uint32 SPELL_FROSTBOLT_R16       = 42842;  // Frostbolt highest rank
+constexpr uint32 SPELL_ICE_LANCE_R3        = 42914;  // Ice Lance highest rank
+constexpr uint32 SPELL_SUMMON_WATER_ELE    = 31687;  // Summon Water Elemental
+constexpr uint32 NPC_WATER_ELEMENTAL       = 510;    // Water Elemental NPC
+// Frostbolt SpellFamilyFlags[0] = 0x20 (verify!)
+// Ice Lance SpellFamilyFlags[0] = 0x20000 (verify!)
 
 // Per-class registration functions
 void AddWarriorSpellsScripts();

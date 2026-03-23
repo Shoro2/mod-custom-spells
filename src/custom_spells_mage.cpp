@@ -551,6 +551,227 @@ class spell_custom_mage_pyro_hotstreak : public SpellScript
 //  End Mage Fire section
 // ============================================================
 
+// ============================================================
+//  MAGE FROST: Frostbolt +9 targets (900767)
+//  Hooked on Frostbolt (all ranks via -42842).
+//  After hitting main target, deals same damage to up to 9
+//  additional enemies within 10yd.
+// ============================================================
+class spell_custom_mage_frostbolt_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_frostbolt_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_MAGE_FROST_FB_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, targets, check);
+        Cell::VisitObjects(mainTarget, searcher, 10.0f);
+        targets.remove(mainTarget);
+
+        uint32 count = 0;
+        for (Unit* target : targets)
+        {
+            if (count >= 9)
+                break;
+            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
+                continue;
+
+            caster->CastCustomSpell(target, SPELL_MAGE_FROST_FB_AOE_HELPER,
+                &damage, nullptr, nullptr, true);
+            ++count;
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_mage_frostbolt_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  MAGE FROST: Ice Lance +9 targets (900769)
+//  Hooked on Ice Lance (all ranks via -42914).
+//  After hitting main target, deals same damage to up to 9
+//  additional enemies within 10yd.
+// ============================================================
+class spell_custom_mage_icelance_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_icelance_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_MAGE_FROST_IL_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, targets, check);
+        Cell::VisitObjects(mainTarget, searcher, 10.0f);
+        targets.remove(mainTarget);
+
+        uint32 count = 0;
+        for (Unit* target : targets)
+        {
+            if (count >= 9)
+                break;
+            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
+                continue;
+
+            caster->CastCustomSpell(target, SPELL_MAGE_FROST_IL_AOE_HELPER,
+                &damage, nullptr, nullptr, true);
+            ++count;
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_mage_icelance_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  MAGE FROST: Water Elemental is permanent (900770)
+//  Hooked on Summon Water Elemental (31687).
+//  After summoning, sets the Water Elemental to permanent
+//  duration (no auto-despawn).
+// ============================================================
+class spell_custom_mage_permanent_water_ele : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_permanent_water_ele);
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster()->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_MAGE_FROST_PERM_ELE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Find the Water Elemental among controlled units and make permanent
+        for (Unit::ControlList::iterator itr = player->m_Controlled.begin();
+             itr != player->m_Controlled.end(); ++itr)
+        {
+            Unit* controlled = *itr;
+            if (!controlled || !controlled->IsAlive())
+                continue;
+
+            if (controlled->GetEntry() == NPC_WATER_ELEMENTAL)
+            {
+                if (TempSummon* summon = controlled->ToTempSummon())
+                    summon->SetTempSummonType(TEMPSUMMON_MANUAL_DESPAWN);
+            }
+        }
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_mage_permanent_water_ele::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  MAGE FROST: Comet Shower (900771)
+//  Active ground-targeted spell. Hits all enemies within 15yd
+//  of the target location with Frost Comet impacts.
+// ============================================================
+class spell_custom_mage_comet_shower : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_comet_shower);
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster()->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        WorldLocation const* dest = GetExplTargetDest();
+        if (!dest)
+            return;
+
+        float destX = dest->GetPositionX();
+        float destY = dest->GetPositionY();
+
+        // Search radius: distance from player to dest + 15yd comet radius
+        float distToDest = player->GetDistance(destX, destY, dest->GetPositionZ());
+        float searchRange = distToDest + 16.0f;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player, searchRange);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(player, targets, check);
+        Cell::VisitObjects(player, searcher, searchRange);
+
+        for (Unit* target : targets)
+        {
+            if (!target->IsAlive() || !player->IsValidAttackTarget(target))
+                continue;
+
+            // Check if target is within 15yd of the comet impact zone
+            float dx = target->GetPositionX() - destX;
+            float dy = target->GetPositionY() - destY;
+            if ((dx * dx + dy * dy) > 225.0f) // 15yd^2
+                continue;
+
+            // Hit each target with a frost comet impact
+            player->CastSpell(target, SPELL_MAGE_FROST_COMET_HELPER, true);
+        }
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_mage_comet_shower::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  End Mage Frost section
+// ============================================================
+
 void AddMageSpellsScripts()
 {
     // Mage Arcane
@@ -567,4 +788,10 @@ void AddMageSpellsScripts()
     RegisterSpellScript(spell_custom_mage_fb_aoe);
     RegisterSpellScript(spell_custom_mage_pyro_aoe);
     RegisterSpellScript(spell_custom_mage_pyro_hotstreak);
+
+    // Mage Frost
+    RegisterSpellScript(spell_custom_mage_frostbolt_aoe);
+    RegisterSpellScript(spell_custom_mage_icelance_aoe);
+    RegisterSpellScript(spell_custom_mage_permanent_water_ele);
+    RegisterSpellScript(spell_custom_mage_comet_shower);
 }
