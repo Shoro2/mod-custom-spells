@@ -87,6 +87,16 @@ enum CustomSpellIds
     SPELL_HOLY_HS_AOE_DMG_HELPER        = 900158, // AoE Holy damage around target
     SPELL_HOLY_HS_AOE_HEAL_HELPER       = 900159, // AoE Holy heal around target
     SPELL_HOLY_CONSEC_HEAL_HELPER       = 900160, // Consecration heal tick helper
+
+    // ---- Paladin Prot (900161-900168) ----
+    SPELL_PPROT_CONSEC_AROUND_PASSIVE   = 900161, // Consecration around you (DBC marker)
+    SPELL_PPROT_AS_TARGETS_PASSIVE      = 900162, // Avenger's Shield +9 targets (DBC)
+    SPELL_PPROT_AS_DMG_PASSIVE          = 900163, // Avenger's Shield +50% (DBC)
+    SPELL_PPROT_HS_CHARGES_PASSIVE      = 900164, // Holy Shield charges +99 (DBC)
+    SPELL_PPROT_HS_DMG_PASSIVE          = 900165, // Holy Shield +50% (DBC)
+    SPELL_PPROT_AS_CONSEC_PASSIVE       = 900166, // AS leaves Consecration (C++)
+    SPELL_PPROT_JUDGE_AS_PASSIVE        = 900167, // Judgement → free AS (C++)
+    SPELL_PPROT_JUDGE_CD_PASSIVE        = 900168, // Judgement cd -2sec (DBC)
 };
 
 // ---- Bloodthirst SpellFamilyFlags ----
@@ -120,6 +130,10 @@ constexpr uint32 SPELL_HOLY_SHOCK_DMG_R7    = 48824;
 constexpr uint32 SPELL_HOLY_SHOCK_HEAL_R7   = 48825;
 // Consecration highest rank
 constexpr uint32 SPELL_CONSECRATION_R8      = 48819;
+// Avenger's Shield highest rank
+constexpr uint32 SPELL_AVENGERS_SHIELD_R3   = 48827;
+// Judgement damage spell (always triggered by all Judgement types)
+constexpr uint32 SPELL_JUDGEMENT_DAMAGE     = 54158;
 
 // ============================================================
 //  SPELL 900106: Paragon Strike (SpellScript)
@@ -932,6 +946,87 @@ class spell_custom_holy_consec_heal : public AuraScript
     }
 };
 
+// ============================================================
+//  SPELL 900166: Avenger's Shield Leaves Consecration
+//  Hooked on Avenger's Shield (48827). After hitting each
+//  target, casts Consecration at the target's position.
+//  Only active when player has passive 900166.
+// ============================================================
+class spell_custom_pprot_as_consec : public SpellScript
+{
+    PrepareSpellScript(spell_custom_pprot_as_consec);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_PPROT_AS_CONSEC_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Cast Consecration (triggered) at target's location
+        caster->CastSpell(target, SPELL_CONSECRATION_R8, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> AS left Consecration on {}",
+            player->GetName(), target->GetName());
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_pprot_as_consec::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900167: Judgement → Free Avenger's Shield
+//  Hooked on Judgement Damage (54158). After Judgement hits,
+//  auto-casts Avenger's Shield at the same target.
+//  Only active when player has passive 900167.
+// ============================================================
+class spell_custom_pprot_judge_as : public SpellScript
+{
+    PrepareSpellScript(spell_custom_pprot_judge_as);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_PPROT_JUDGE_AS_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        caster->CastSpell(target, SPELL_AVENGERS_SHIELD_R3, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Judgement triggered free AS on {}",
+            player->GetName(), target->GetName());
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_pprot_judge_as::HandleAfterHit);
+    }
+};
+
 void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
@@ -954,4 +1049,8 @@ void AddCustomSpellsScripts()
     RegisterSpellScript(spell_custom_holy_hs_both_dmg);
     RegisterSpellScript(spell_custom_holy_hs_both_heal);
     RegisterSpellScript(spell_custom_holy_consec_heal);
+
+    // Paladin Prot
+    RegisterSpellScript(spell_custom_pprot_as_consec);
+    RegisterSpellScript(spell_custom_pprot_judge_as);
 }

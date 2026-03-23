@@ -543,8 +543,9 @@ Die `spell_dbc` Tabelle hat 257 Spalten. Hier die für Custom Spells relevantest
 Spell IDs 900100-900121 existieren alle in `Spell.dbc` (22 Einträge) und sind fertig implementiert (DBC + C++ wo nötig).
 Spell IDs 900122-900129 (Warrior Prot + Helper) existieren in `spell_dbc` Tabelle und sind implementiert (DBC + C++).
 Spell IDs 900150-900160 (Paladin Holy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert (DBC + C++).
+Spell IDs 900161-900168 (Paladin Prot) existieren in `spell_dbc` Tabelle und sind implementiert (DBC + C++).
 
-Nächste freie ID für neue Spells: **900161+** (Paladin Prot ab 900161)
+Nächste freie ID für neue Spells: **900169+** (Paladin Ret ab 900169)
 
 ---
 
@@ -560,8 +561,8 @@ Nächste freie ID für neue Spells: **900161+** (Paladin Prot ab 900161)
 | Warrior | Fury | 900110-900121 | 12 | getestet |
 | Warrior | Prot | 900122-900129 | 6+2 Helper | implementiert |
 | Paladin | Holy | 900150-900160 | 8+3 Helper | implementiert |
-| Paladin | Prot | 900161-900168 | 8 | geplant |
-| Paladin | Ret | 900166-900172 | 7 | geplant |
+| Paladin | Prot | 900161-900168 | 8 | implementiert |
+| Paladin | Ret | 900169-900175 | 7 | geplant |
 | DK | Blood | 900200-900204 | 5 | geplant |
 | DK | Frost | 900205 | 1 | geplant |
 | DK | Unholy | 900206 | 1 | geplant |
@@ -668,30 +669,32 @@ Nächste freie ID für neue Spells: **900161+** (Paladin Prot ab 900161)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900161 | Consecration is around you | DBC | geplant | **Shared mit Holy (900155) und Ret** — identischer Effekt. Ggf. eine gemeinsame Spell-ID verwenden. |
-| 2 | 900162 | Avenger's Shield +9 targets | DBC | geplant | DBC: `MaxAffectedTargets` auf 12 setzen (3 base + 9). Oder passive Aura falls bedingt. Avenger's Shield (48827) bounced normalerweise 3×. |
-| 3 | 900163 | Avenger's Shield +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für AS. |
-| 4 | 900164 | Holy Shield charges +99 | DBC/C++ | geplant | DBC: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_CHARGES` (16), BasePoints=99. | DBC: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_CHARGES` (16), BasePoints=99. Alternativ direkt die Charges im DBC-Eintrag von Holy Shield (48952) erhöhen. Muss getestet werden ob SPELLMOD_CHARGES funktioniert. |
-| 5 | 900165 | Holy Shield +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für Holy Shield. |
-| 6 | 900166 | Avenger's Shield leaves Consecration on hit | C++ | geplant | SpellScript auf AS: `OnEffectHitTarget` pro getroffenes Ziel → CastSpell(Consecration, triggered=true) an der Zielposition. |
-| 7 | 900167 | Judgement → free Avenger's Shield | C++ | geplant | Passive Proc-Aura: Proc auf Judgement-Cast. `HandleProc`: CastSpell(Avenger's Shield, triggered=true). |
-| 8 | 900168 | Judgement cd -2sec | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_FLAT_MODIFIER` + `SPELLMOD_COOLDOWN`, BasePoints=-2000. SpellFamilyMask für Judgement. **Shared mit Ret**. |
+| 1 | 900161 | Consecration around you | DBC | implementiert | Marker-Aura (DUMMY). Consecration-DBC muss separat gepatcht werden. **Shared mit Holy (900155) und Ret**. |
+| 2 | 900162 | Avenger's Shield +9 targets | DBC | implementiert | `ADD_FLAT_MODIFIER` (107) + `SPELLMOD_JUMP_TARGETS` (17). BasePoints=9. EffectSpellClassMaskA=0x4000. |
+| 3 | 900163 | Avenger's Shield +50% damage | DBC | implementiert | `ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x4000. |
+| 4 | 900164 | Holy Shield charges +99 | DBC | implementiert | `ADD_FLAT_MODIFIER` (107) + `SPELLMOD_CHARGES` (4). BasePoints=99. EffectSpellClassMaskB=0x20 (flags[1]). |
+| 5 | 900165 | Holy Shield +50% damage | DBC | implementiert | `ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskB=0x20 (flags[1]). |
+| 6 | 900166 | AS leaves Consecration | C++ | implementiert | Marker + C++ auf AS (-48827): `AfterHit` → CastSpell(Consec 48819, triggered). Prüft `HasAura(900166)`. |
+| 7 | 900167 | Judgement → free AS | C++ | implementiert | Marker + C++ auf Judgement Damage (54158): `AfterHit` → CastSpell(AS 48827, triggered). Prüft `HasAura(900167)`. |
+| 8 | 900168 | Judgement cd -2sec | DBC | implementiert | `ADD_FLAT_MODIFIER` (107) + `SPELLMOD_COOLDOWN` (11). BasePoints=-2000ms. EffectSpellClassMaskA=0x800000. |
 
-### Paladin — Ret (900166-900172)
+> **Hinweis Prot**: SpellFamilyFlags verifizieren: AS=0x4000(flags[0]), HolyShield=0x20(flags[1]), Judgement=0x800000(flags[0]). 900164 (charges +99) muss getestet werden ob SPELLMOD_CHARGES funktioniert.
+
+### Paladin — Ret (900169-900175)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900166 | Consecration is around you | DBC | geplant | **Shared mit Holy (900155) und Prot (900158)** — identischer Effekt. |
-| 2 | 900167 | Judgement cd -2sec | DBC | geplant | **Shared mit Prot (900165)** — identischer Effekt. |
-| 3 | 900168 | Divine Storm +6 targets | DBC | geplant | DBC: `MaxAffectedTargets` auf 10 setzen (4 base + 6). DS (53385) trifft normalerweise 4 Ziele. |
-| 4 | 900169 | Divine Storm +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für DS. |
-| 5 | 900170 | Crusader Strike +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für CS (35395). |
-| 6 | 900171 | Crusader Strike +9 targets | C++ | geplant | CS ist Single-Target. AoE-Umbau: DBC TargetA→`TARGET_UNIT_SRC_AREA_ENEMY` + SpellScript für Target-Cap. |
-| 7 | 900172 | CS/Judgement/DS → Exorcism +50% buff (max 10 stacks) | C++ | geplant | Passive Proc-Aura (wie Bloody Whirlwind System): Proc auf CS/Judgement/DS-Cast → stacking Buff auf Caster (+50% Exorcism damage pro Stack, max 10). Exorcism-SpellScript konsumiert Stacks. Braucht: Passive (900172) + Buff-Spell (eigene ID) + ggf. Exorcism-Hook (eigene ID). |
+| 1 | 900169 | Consecration is around you | DBC | geplant | **Shared mit Holy (900155) und Prot (900161)** — identischer Effekt. |
+| 2 | 900170 | Judgement cd -2sec | DBC | geplant | **Shared mit Prot (900168)** — identischer Effekt. |
+| 3 | 900171 | Divine Storm +6 targets | DBC | geplant | DBC: `MaxAffectedTargets` auf 10 setzen (4 base + 6). DS (53385) trifft normalerweise 4 Ziele. |
+| 4 | 900172 | Divine Storm +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für DS. |
+| 5 | 900173 | Crusader Strike +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_DAMAGE`, SpellFamilyMask für CS (35395). |
+| 6 | 900174 | Crusader Strike +9 targets | C++ | geplant | CS ist Single-Target. AoE-Umbau: DBC TargetA→`TARGET_UNIT_SRC_AREA_ENEMY` + SpellScript für Target-Cap. |
+| 7 | 900175 | CS/Judgement/DS → Exorcism +50% buff (max 10 stacks) | C++ | geplant | Passive Proc-Aura (wie Bloody Whirlwind System): Proc auf CS/Judgement/DS-Cast → stacking Buff auf Caster (+50% Exorcism damage pro Stack, max 10). Exorcism-SpellScript konsumiert Stacks. Braucht: Passive (900172) + Buff-Spell (eigene ID) + ggf. Exorcism-Hook (eigene ID). |
 
 > **Shared Spells Paladin**: "Consecration around you" (Holy/Prot/Ret) und "Judgement cd -2sec" (Prot/Ret) tauchen mehrfach auf. Optionen: (a) Eine gemeinsame ID pro Effekt, die allen Specs gegeben wird. (b) Separate IDs pro Spec für unabhängige Zuordnung. Empfehlung: Separate IDs, da Specs über ein Talent/Unlock-System zugewiesen werden und nicht alle Specs gleichzeitig aktiv sind.
 
-> **Helper-Spells Paladin**: 900172 (Exorcism-Buff-System) braucht 2-3 IDs: Passive Proc-Aura + Stacking Buff + evtl. Exorcism-Consume-Hook. 900163 (AS→Consecration) braucht evtl. eine eigene Consecration-Variante. Diese Helper-Spells können IDs ab 900173+ verwenden.
+> **Helper-Spells Paladin**: 900175 (Exorcism-Buff-System) braucht 2-3 IDs: Passive Proc-Aura + Stacking Buff + evtl. Exorcism-Consume-Hook. IDs ab 900176+ für Helper verfügbar.
 
 ---
 

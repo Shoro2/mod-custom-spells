@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 900117, 900120, 900121, 1680, 57823, 47502, 900126, 900127, -25912, -25914, 48819);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900116, 900117, 900120, 900121, 1680, 57823, 47502, 900126, 900127, -25912, -25914, 48819, -48827, 54158);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -20,7 +20,11 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (-25914, 'spell_custom_holy_hs_aoe_heal'),
 (-25914, 'spell_custom_holy_hs_both_heal'),
 -- Paladin Holy: Consecration heal hook (max rank)
-(48819, 'spell_custom_holy_consec_heal');
+(48819, 'spell_custom_holy_consec_heal'),
+-- Paladin Prot: AS leaves Consecration (all ranks via negative ID)
+(-48827, 'spell_custom_pprot_as_consec'),
+-- Paladin Prot: Judgement → free AS (on Judgement damage spell)
+(54158, 'spell_custom_pprot_judge_as');
 
 -- ICD for Whirlwind proc aura (900114): 500ms cooldown to prevent
 -- recursive loop (Whirlwind hits count as auto-attacks → re-proc → crash)
@@ -128,3 +132,34 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- 900160: Helper - Consecration heal tick (instant AoE heal around caster)
 -- Effect=HEAL(10), TARGET_UNIT_SRC_AREA_ALLY (31), 8yd radius
 (900160, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 50, 200, 31, 0, 0, 0, 0, 10, 51, 2, 'Consecration Heal', 0x003F3F);
+
+-- ============================================================
+-- Paladin Prot: spell_dbc entries (900161-900168)
+-- ============================================================
+-- Avenger's Shield SpellFamilyFlags[0]: 0x4000 (verify in-game!)
+-- Holy Shield SpellFamilyFlags[1]: 0x20 (verify in-game!)
+-- Judgement SpellFamilyFlags[0]: 0x800000 (verify in-game!)
+
+DELETE FROM `spell_dbc` WHERE `ID` IN (900161, 900162, 900163, 900164, 900165, 900166, 900167, 900168);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900161: Consecration around you (marker aura, shared concept with Holy 900155)
+(900161, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 10, 51, 0, 'PProt: Consec Around', 0x003F3F),
+-- 900162: Avenger's Shield +9 jump targets (ADD_FLAT_MODIFIER + SPELLMOD_JUMP_TARGETS=17)
+-- EffectSpellClassMaskA=0x4000 targets Avenger's Shield. BasePoints=9.
+(900162, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x4000, 0, 10, 3477, 0, 'PProt: AS +9 Targets', 0x003F3F),
+-- 900163: Avenger's Shield +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE=0)
+-- EffectSpellClassMaskA=0x4000 targets Avenger's Shield.
+(900163, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x4000, 0, 10, 3477, 0, 'PProt: AS +50%', 0x003F3F),
+-- 900164: Holy Shield charges +99 (ADD_FLAT_MODIFIER + SPELLMOD_CHARGES=4)
+-- EffectSpellClassMaskB=0x20 targets Holy Shield (flags[1]).
+(900164, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 99, 1, 107, 4, 0, 0, 0x20, 10, 293, 0, 'PProt: HS +99 Charges', 0x003F3F),
+-- 900165: Holy Shield +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE=0)
+-- EffectSpellClassMaskB=0x20 targets Holy Shield (flags[1]).
+(900165, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0, 0x20, 10, 293, 0, 'PProt: HS +50%', 0x003F3F),
+-- 900166: AS leaves Consecration (marker aura, logic in C++ on -48827)
+(900166, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 10, 3477, 0, 'PProt: AS Consec', 0x003F3F),
+-- 900167: Judgement → free AS (marker aura, logic in C++ on 54158)
+(900167, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 10, 3015, 0, 'PProt: Judge AS', 0x003F3F),
+-- 900168: Judgement cd -2sec (ADD_FLAT_MODIFIER + SPELLMOD_COOLDOWN=11)
+-- EffectSpellClassMaskA=0x800000 targets Judgement spells. BasePoints=-2000 (ms).
+(900168, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, -2000, 1, 107, 11, 0, 0x800000, 0, 10, 3015, 0, 'PProt: Judge -2s CD', 0x003F3F);
