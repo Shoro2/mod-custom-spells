@@ -218,6 +218,19 @@ enum CustomSpellIds
     SPELL_WLK_AFFL_DOT_SPREAD_PASSIVE  = 900802,
     SPELL_WLK_AFFL_DOT_AOE_HELPER      = 900803,
 
+    // ---- Warlock Demonology (900833-900865) ----
+    SPELL_WLK_DEMO_META_KILL_EXT       = 900833,
+    SPELL_WLK_DEMO_META_AOE_HEAL       = 900834,
+    SPELL_WLK_DEMO_LESSER_SPAWN        = 900835,
+    SPELL_WLK_DEMO_IMP_FB_DMG          = 900836,
+    SPELL_WLK_DEMO_IMP_FB_AOE          = 900837,
+    SPELL_WLK_DEMO_FG_UNLIM_TARGETS    = 900838,
+    SPELL_WLK_DEMO_FG_DMG              = 900839,
+    SPELL_WLK_DEMO_SACRIFICE_ALL       = 900840,
+    SPELL_WLK_DEMO_IMP_FB_HELPER       = 900841,
+    SPELL_WLK_DEMO_META_AOE_HELPER     = 900842,
+    SPELL_WLK_DEMO_META_HEAL_HELPER    = 900843,
+
     // ---- Druid Balance (901000-901032) ----
     SPELL_BAL_MF_AOE_PASSIVE            = 901000,
     SPELL_BAL_MF_DMG_PASSIVE            = 901001,
@@ -376,6 +389,19 @@ constexpr uint32 NPC_WATER_ELEMENTAL       = 510;    // Water Elemental NPC
 // ---- Warlock constants ----
 constexpr uint32 SPELL_CORRUPTION_R10      = 47813;  // Corruption highest rank
 constexpr uint32 SPELLFAMILY_WARLOCK_ID    = 5;
+constexpr uint32 SPELL_METAMORPHOSIS       = 47241;  // Metamorphosis demon form
+constexpr uint32 SPELL_IMP_FIREBOLT_R9     = 47964;  // Imp Firebolt highest rank
+constexpr uint32 SPELL_FELGUARD_CLEAVE     = 47994;  // Felguard Cleave
+constexpr uint32 SPELL_DEMONIC_SACRIFICE   = 18788;  // Demonic Sacrifice
+// Demonic Sacrifice buffs per pet type
+constexpr uint32 SPELL_SACRIFICE_IMP       = 18789;  // Imp: +15% Fire damage
+constexpr uint32 SPELL_SACRIFICE_VW        = 18790;  // Voidwalker: HP regen
+constexpr uint32 SPELL_SACRIFICE_SUCCUBUS  = 18791;  // Succubus: +15% Shadow damage
+constexpr uint32 SPELL_SACRIFICE_FELHUNTER = 18792;  // Felhunter: Mana regen
+// NPC entries for Lesser Demons
+constexpr uint32 NPC_LESSER_IMP            = 900835; // Lesser Imp
+constexpr uint32 NPC_LESSER_FELGUARD       = 900836; // Lesser Felguard
+constexpr uint32 NPC_LESSER_VOIDWALKER     = 900837; // Lesser Voidwalker
 // Corruption SpellFamilyFlags[0] = 0x2 (verify!)
 // Warlock DoTs: Corruption, Curse of Agony, Immolate, Unstable Affliction, Seed of Corruption
 
