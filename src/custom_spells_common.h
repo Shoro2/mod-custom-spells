@@ -240,6 +240,20 @@ enum CustomSpellIds
     SPELL_WLK_DEST_SB_HELPER           = 900871,
     SPELL_WLK_DEST_CB_HELPER           = 900872,
 
+    // ---- Priest Discipline (900900-900932) ----
+    SPELL_PRI_DISC_SHIELD_EXPLODE      = 900900,
+    SPELL_PRI_DISC_SHIELD_DMG          = 900901,
+    SPELL_PRI_DISC_WEAKENED_SOUL_CD    = 900902,
+    SPELL_PRI_DISC_EXPLODE_HELPER      = 900903,
+
+    // ---- Priest Holy (900933-900965) ----
+    SPELL_PRI_HOLY_HEAL_FIRE           = 900933,
+
+    // ---- Priest Shadow (900966-900999) ----
+    SPELL_PRI_SHADOW_DOT_AOE           = 900966,
+    SPELL_PRI_SHADOW_DOT_SPREAD        = 900967,
+    SPELL_PRI_SHADOW_AOE_HELPER        = 900968,
+
     // ---- Druid Balance (901000-901032) ----
     SPELL_BAL_MF_AOE_PASSIVE            = 901000,
     SPELL_BAL_MF_DMG_PASSIVE            = 901001,
@@ -418,6 +432,14 @@ constexpr uint32 SPELL_CHAOS_BOLT_R4       = 59172;  // Chaos Bolt highest rank
 // Chaos Bolt SpellFamilyFlags[1] = 0x1000000 (verify!)
 // Warlock DoTs: Corruption, Curse of Agony, Immolate, Unstable Affliction, Seed of Corruption
 
+// ---- Priest constants ----
+constexpr uint32 SPELL_PW_SHIELD_R14       = 48066;  // Power Word: Shield highest rank
+constexpr uint32 SPELL_WEAKENED_SOUL       = 6788;   // Weakened Soul debuff
+constexpr uint32 SPELL_HOLY_FIRE_R11       = 48135;  // Holy Fire highest rank
+constexpr uint32 SPELLFAMILY_PRIEST_ID     = 6;
+// PW:Shield SpellFamilyFlags[0] = 0x1 (verify!)
+// Holy Fire SpellFamilyFlags[0] = 0x8000 (verify!)
+
 // Per-class registration functions
 void AddWarriorSpellsScripts();
 void AddPaladinSpellsScripts();
@@ -428,3 +450,4 @@ void AddRogueSpellsScripts();
 void AddDruidSpellsScripts();
 void AddMageSpellsScripts();
 void AddWarlockSpellsScripts();
+void AddPriestSpellsScripts();
