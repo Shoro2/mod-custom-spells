@@ -93,7 +93,10 @@ Nächste freie ID für neue Spells: **900122+**
 | DK | Blood | 900200-900204 | 5 | geplant |
 | DK | Frost | 900205 | 1 | geplant |
 | DK | Unholy | 900206 | 1 | geplant |
-| (weitere Klassen) | — | ab 900250+ | — | Wartet auf weitere Teile |
+| Shaman | Ele | 900250-900257 | 8 | geplant |
+| Shaman | Enhance | 900258-900263 | 6 | geplant |
+| Shaman | Resto | 900264-900265 | 2 | geplant |
+| (weitere Klassen) | — | ab 900300+ | — | Wartet auf weitere Teile |
 
 ---
 
@@ -219,6 +222,45 @@ Nächste freie ID für neue Spells: **900122+**
 > **Helper-Spells DK**: 900206 (Unholy DoT AoE) braucht einen separaten Shadow-AoE-Damage-Spell (z.B. 900207). 900200 (3 Rune Weapons) braucht evtl. zusätzliche Summon-Spell-Varianten. 900205 (Frost Wyrm) braucht neuen NPC-Eintrag + AI-Script. IDs ab 900207+ für Helper verfügbar.
 
 > **Besonders aufwändig**: 900200 (3 Rune Weapons) und 900205 (Frost Wyrm) sind die komplexesten Spells bisher. Rune Weapons brauchen Core-Verständnis der DRW-Mechanik, Frost Wyrm braucht komplett neues Creature mit Model + AI.
+
+---
+
+### Shaman — Elemental (900250-900257)
+
+> Shaman SpellFamilyName = 11. Totem-Replacement ist ein Kern-Feature für alle 3 Specs — jede Spec braucht eigene Variante da unterschiedliche Totems/Creatures relevant sind.
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900250 | Chain Lightning +6 targets, no damage reduction | DBC/C++ | geplant | Chain Lightning (421/CL ranks) hat normalerweise 3 Bounces mit 30% Reduce pro Bounce. DBC: `EffectChainTarget` auf 9 erhöhen. Damage-Reduction entfernen: C++ SpellScript `CalculateChainDamage` oder Aura `SPELL_AURA_ADD_PCT_MODIFIER` die Chain-Penalty auf 0 setzt. |
+| 2 | 900251 | Totems replaced by creatures that follow/fight (Ele) | C++ | geplant | Großes System: Totem-Summon-Spells abfangen (`SpellScript`), statt Totem-NPC ein Creature spawnen das dem Caster folgt (`FollowMovementGenerator`) und kämpft. Braucht eigene AI-Scripts für jedes Totem-Creature. Creature behält Totem-Effekte (Auren) aber ist mobil + angreifbar. Evtl. eigene NPCs pro Totem-Typ. |
+| 3 | 900252 | Fire Elemental Totem → Ragnaros | C++ + DBC | geplant | Fire Elemental Totem (2894) beschwört Fire Elemental (15438). Override: Neuen NPC "Ragnaros" erstellen mit eigenem Model (DisplayID vom Ragnaros-Boss, z.B. 11121), eigener AI mit Fire-Spells + evtl. On-Hit-Proc. SpellScript auf Totem-Spell → Summon Ragnaros-NPC statt Fire Elemental. Balancing: Stats/Duration anpassen. |
+| 4 | 900253 | Lightning Overload chance erhöht + wirkt auf Lava Burst | C++ | geplant | Lightning Overload (Talent 30675) proct auf Lightning Bolt/Chain Lightning. (a) Chance erhöhen: Modify Proc-Chance des Talents via Aura. (b) Lava Burst hinzufügen: SpellScript oder `spell_proc` erweitern → Overload-Proc auch bei Lava Burst (51505) auslösen. Braucht evtl. eigenen Proc-Handler. |
+| 5 | 900254 | Lava Burst spreads Fire Shock DoT | C++ | geplant | SpellScript auf Lava Burst `AfterHit`: Prüfe ob Target Fire Shock (8050) hat → `GetCaster()->CastSpell()` Fire Shock auf alle Feinde im Radius (z.B. 10yd) um Target. Oder: Iterate nahe Enemies und appliziere Fire Shock Aura. Ähnlich wie Warrior Rend-Spread. |
+| 6 | 900255 | Flame Shock ticks chance to reset Lava Burst CD | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC` (0x400000), SpellFamilyMask für Flame Shock. `HandleProc`: Chance X% → `GetCaster()->GetSpellHistory()->ResetCooldown(51505, true)` (Lava Burst). `spell_proc` mit Chance + ICD. |
+| 7 | 900256 | Lava Burst two charges | DBC/C++ | geplant | Charge-System: DBC `ChargeCategory` + `CategoryCharges` = 2 für Lava Burst. Oder C++: Eigene Aura die bei Lava Burst-CD eine zweite "Aufladung" trackt und CD sofort resetet wenn noch Charges übrig. Charge-System in WotLK ist limitiert → vermutlich C++ nötig. |
+| 8 | 900257 | Clearcasting → Lava Burst instant | DBC | geplant | Clearcasting (Elemental Focus, 16246) gibt Buff. Passive Aura: Wenn Clearcasting aktiv → `SPELL_AURA_ADD_PCT_MODIFIER` + `SPELLMOD_CASTING_TIME` = -100% auf Lava Burst (SpellFamilyMask). Lava Burst hat bereits 2s Cast. |
+
+### Shaman — Enhancement (900258-900263)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900258 | Totems replaced by summons that follow/fight (Enhance) | C++ | geplant | Gleiche Kern-Mechanik wie 900251 (Ele Totem-Replacement), aber Enhance-spezifische Creatures mit Melee-AI statt Caster-AI. Shared Code-Basis mit 900251 möglich. |
+| 2 | 900259 | 5 Maelstrom stacks → summons empowered, AoE on attack 5s | C++ | geplant | Hook auf Maelstrom Weapon (53817) Stack-Erreichen (5 Stacks). Bei 5 Stacks: Buff auf alle aktiven Summons → `SPELL_AURA_PROC_TRIGGER_SPELL` oder AI-Flag das AoE-Damage bei jedem Angriff für 5s auslöst. Braucht Tracking welche Summons aktiv sind. |
+| 3 | 900260 | Summons +50% damage | DBC/C++ | geplant | Passive Aura auf Caster: Alle Summons (Pets/Guardians) erhalten `SPELL_AURA_MOD_DAMAGE_PERCENT_DONE` +50%. Oder: Aura auf Summon-Creatures via Owner-Check. |
+| 4 | 900261 | Auto attacks chance to summon a wolf | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` (0x4). `HandleProc`: Chance X% → `CastSpell(SummonWolf)`. Wolf-NPC: temporärer Guardian mit Timer (z.B. 15s), Melee-AI, Wolf-Model. Braucht eigenen NPC + Summon-Spell. |
+| 5 | 900262 | Spirit Wolves inherit your haste | C++ | geplant | Feral Spirit (51533) beschwört 2 Spirit Wolves (29264). CreatureScript/PetAI: Bei Summon → Owner Haste-Rating auslesen → Attackspeed des Wolves anpassen via `ApplyPercentModFloatValue(UNIT_FIELD_BASEATTACKTIME)`. Evtl. periodisch updaten falls Caster-Haste sich ändert. |
+| 6 | 900263 | Spirit Wolves 5% chance Chain Lightning on melee hit | C++ | geplant | CreatureScript für Spirit Wolf (29264): `OnMeleeHit` oder Proc-Aura auf Wolf → 5% Chance → `CastSpell(Chain Lightning, triggered=true)`. Chain Lightning Rank basierend auf Caster-Level. |
+
+### Shaman — Restoration (900264-900265)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 900264 | Totems replaced by creatures that follow/fight (Resto) | C++ | geplant | Gleiche Kern-Mechanik wie 900251/900258, aber Resto-spezifische Creatures mit Healer/Support-AI. Healing-Totems (Healing Stream etc.) werden zu folgenden Heal-Creatures. Shared Code-Basis. |
+| 2 | 900265 | Mana regen +2% per missing mana % | C++ | geplant | Passive Aura mit `SPELL_AURA_OBS_MOD_POWER` oder custom `HandlePeriodicManaRegen`. Berechnung: `missingManaPct = 1 - (currentMana / maxMana)` → `bonusRegen = missingManaPct * 2% * baseRegen`. Bei 50% Mana → +100% Regen, bei 10% Mana → +180% Regen. Skaliert umgekehrt proportional. |
+
+> **Helper-Spells Shaman**: 900251/900258/900264 (Totem-Replacement) ist ein gemeinsames System — braucht evtl. mehrere Helper-NPCs pro Totem-Typ (Fire, Earth, Water, Air Totem-Creatures). 900261 (Wolf-Summon) braucht eigenen Wolf-NPC + Summon-Spell. 900259 (Maelstrom Empower) braucht AoE-Buff-Spell für Summons. IDs ab 900266+ für Helper verfügbar.
+
+> **Besonders aufwändig**: Das Totem-Replacement-System (900251/900258/900264) ist das ambitionierteste Feature bisher — jedes Totem braucht ein eigenes folgendes Creature mit passender AI. Ragnaros-Replacement (900252) braucht Custom-Boss-NPC mit Fire-AI. Spirit Wolf Haste-Inheritance (900262) braucht dynamische Stat-Synchronisation.
 
 ---
 
