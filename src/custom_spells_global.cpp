@@ -98,24 +98,18 @@ class spell_custom_global_extra_attack : public AuraScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        // Prevent recursive procs: if the triggering spell was triggered
-        // (i.e. from an extra attack), do not proc again
-        SpellInfo const* procSpell = eventInfo.GetSpellInfo();
-        if (procSpell && eventInfo.GetTypeMask() & PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS)
-        {
-            // For spell-based melee, check if it was triggered
-            if (eventInfo.GetDamageInfo() && eventInfo.GetDamageInfo()->GetSpellInfo())
-            {
-                // Already a triggered extra attack — skip
-            }
-        }
+        // Prevent recursive procs: if the triggering event came from a
+        // triggered spell (i.e. from an extra attack proc), do not proc again
+        if (eventInfo.GetDamageInfo() && eventInfo.GetDamageInfo()->GetSpellInfo()
+            && eventInfo.GetDamageInfo()->GetSpellInfo()->Id == SPELL_GLOBAL_EXTRA_ATTACK_HELPER)
+            return;
 
         Unit* target = eventInfo.GetActionTarget();
         if (!target || !target->IsAlive())
             return;
 
-        // Grant 1 extra melee attack (same mechanism as Windfury/Sword Spec)
-        player->CastSpell(player, SPELL_GLOBAL_EXTRA_ATTACK, true);
+        // Grant 1 extra melee attack via helper spell (SPELL_EFFECT_ADD_EXTRA_ATTACKS)
+        player->CastSpell(player, SPELL_GLOBAL_EXTRA_ATTACK_HELPER, true);
     }
 
     void Register() override

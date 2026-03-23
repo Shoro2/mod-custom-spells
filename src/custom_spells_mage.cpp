@@ -361,6 +361,12 @@ class custom_mage_mana_regen_playerscript : public PlayerScript
 public:
     custom_mage_mana_regen_playerscript() : PlayerScript("custom_mage_mana_regen_playerscript") {}
 
+    void OnLogout(Player* player) override
+    {
+        if (player)
+            _lastRegen.erase(player->GetGUID());
+    }
+
     void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
     {
         if (!player || !player->IsAlive())
@@ -374,11 +380,10 @@ public:
 
         // Throttle: only every 5 seconds
         uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        static std::unordered_map<ObjectGuid, uint32> s_lastRegen;
         ObjectGuid guid = player->GetGUID();
-        if (s_lastRegen.count(guid) && (now - s_lastRegen[guid]) < 5)
+        if (_lastRegen.count(guid) && (now - _lastRegen[guid]) < 5)
             return;
-        s_lastRegen[guid] = now;
+        _lastRegen[guid] = now;
 
         uint32 maxMana = player->GetMaxPower(POWER_MANA);
         uint32 curMana = player->GetPower(POWER_MANA);
@@ -393,6 +398,9 @@ public:
             player->EnergizeBySpell(player, SPELL_MAGE_ARC_MANA_REGEN,
                 bonus, POWER_MANA);
     }
+
+private:
+    std::unordered_map<ObjectGuid, uint32> _lastRegen;
 };
 
 // ============================================================
