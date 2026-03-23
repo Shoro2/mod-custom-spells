@@ -1,5 +1,7 @@
 -- Link custom spell IDs to their SpellScript names
 DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -31935, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -421, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -2643, 75, 900534, 900566, -8921, 901004, -779, 62078, 901066, 900603, -1752, -16511, -44425, -30451, -1449, 12051, 900708, 900713, -133, -11366, -116, -30455, 31687, 900771, 900800, 900802, 900834, -3110, 47994, 18788, -686, -50796, -17, 900933, 900966, 900967, 901101, 901102, 901103, 901104);
+-- Cleanup: remove stale entries from older versions that used highest rank instead of first rank
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (-59172, -49271, -49048, -48827, -48660, -48638, -48562, -48463, -48066, -47964, -47809, -44781, -42921, -42914, -42897, -42891, -42842, -42833);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
