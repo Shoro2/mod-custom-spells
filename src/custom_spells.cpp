@@ -51,62 +51,63 @@ enum CustomSpellIds
     SPELL_CUSTOM_PARAGON_STRIKE         = 900106,
     // Each cast reduces Bladestorm (46927) cooldown by 0.5s
     SPELL_CUSTOM_BLADESTORM_CD_REDUCE   = 900107,
+    // ---- Warrior Fury (900134-900167) ----
     // Bloody Whirlwind buff: +50% Whirlwind damage per stack, consumed on WW cast
-    SPELL_BLOODY_WHIRLWIND_BUFF         = 900115,
-    // Bloody Whirlwind passive: procs 900115 on Bloodthirst hit
-    SPELL_BLOODY_WHIRLWIND_PASSIVE      = 900116,
+    SPELL_BLOODY_WHIRLWIND_BUFF         = 900139,
+    // Bloody Whirlwind passive: procs 900139 on Bloodthirst hit
+    SPELL_BLOODY_WHIRLWIND_PASSIVE      = 900140,
     // Speedy Bloodthirst: Whirlwind resets Bloodthirst cooldown
-    SPELL_CUSTOM_SPEEDY_BLOODTHIRST     = 900117,
+    SPELL_CUSTOM_SPEEDY_BLOODTHIRST     = 900141,
     // WW single-target: passive auras (markers checked via HasAura)
-    SPELL_WW_OVERPOWER_PASSIVE          = 900118,
-    SPELL_WW_SLAM_PASSIVE               = 900119,
+    SPELL_WW_OVERPOWER_PASSIVE          = 900142,
+    SPELL_WW_SLAM_PASSIVE               = 900143,
     // WW single-target: boosted damage spells (autocast)
-    SPELL_WW_OVERPOWER_BOOSTED          = 900120,
-    SPELL_WW_SLAM_BOOSTED               = 900121,
+    SPELL_WW_OVERPOWER_BOOSTED          = 900144,
+    SPELL_WW_SLAM_BOOSTED               = 900145,
 
-    // ---- Warrior Prot (900122-900129) ----
-    SPELL_PROT_REVENGE_DMG_PASSIVE      = 900122, // Revenge +50% damage (DBC-only)
-    SPELL_PROT_REVENGE_AOE_PASSIVE      = 900123, // Revenge unlimited targets (C++)
-    SPELL_PROT_TC_REND_SUNDER_PASSIVE   = 900124, // TC → Rend + 5× Sunder (C++)
-    SPELL_PROT_TC_DMG_PASSIVE           = 900125, // TC +50% damage (DBC-only)
-    SPELL_PROT_BLOCK_AOE_PASSIVE        = 900126, // AoE damage on Block (C++)
-    SPELL_PROT_BLOCK_TC_PASSIVE         = 900127, // 10% Block → Enhanced TC (C++)
-    SPELL_PROT_BLOCK_AOE_DAMAGE         = 900128, // Helper: AoE damage (triggered)
-    SPELL_PROT_ENHANCED_THUNDERCLAP     = 900129, // Helper: Enhanced TC (triggered)
+    // ---- Warrior Prot (900168-900199) ----
+    SPELL_PROT_REVENGE_DMG_PASSIVE      = 900168, // Revenge +50% damage (DBC-only)
+    SPELL_PROT_REVENGE_AOE_PASSIVE      = 900169, // Revenge unlimited targets (C++)
+    SPELL_PROT_TC_REND_SUNDER_PASSIVE   = 900170, // TC → Rend + 5× Sunder (C++)
+    SPELL_PROT_TC_DMG_PASSIVE           = 900171, // TC +50% damage (DBC-only)
+    SPELL_PROT_BLOCK_AOE_PASSIVE        = 900172, // AoE damage on Block (C++)
+    SPELL_PROT_BLOCK_TC_PASSIVE         = 900173, // 10% Block → Enhanced TC (C++)
+    SPELL_PROT_BLOCK_AOE_DAMAGE         = 900174, // Helper: AoE damage (triggered)
+    SPELL_PROT_ENHANCED_THUNDERCLAP     = 900175, // Helper: Enhanced TC (triggered)
 
-    // ---- Paladin Holy (900150-900161) ----
-    SPELL_HOLY_HS_AOE_DMG_PASSIVE       = 900150, // Holy Shock AoE damage (C++)
-    SPELL_HOLY_HS_AOE_HEAL_PASSIVE      = 900151, // Holy Shock AoE heal (C++)
-    SPELL_HOLY_HS_BOTH_PASSIVE          = 900152, // Holy Shock always both (C++)
-    SPELL_HOLY_HS_DMG_PASSIVE           = 900153, // Holy Shock +50% (DBC-only)
-    SPELL_HOLY_CONSEC_HEAL_PASSIVE      = 900154, // Consecration also heals (C++)
-    SPELL_HOLY_CONSEC_AROUND_PASSIVE    = 900155, // Consecration around you (DBC)
-    SPELL_HOLY_CONSEC_DMG_PASSIVE       = 900156, // Consecration +50% (DBC-only)
-    SPELL_HOLY_CONSEC_DUR_PASSIVE       = 900157, // Consecration +5sec (DBC-only)
+    // ---- Paladin Holy (900200-900233) ----
+    SPELL_HOLY_HS_AOE_DMG_PASSIVE       = 900200, // Holy Shock AoE damage (C++)
+    SPELL_HOLY_HS_AOE_HEAL_PASSIVE      = 900201, // Holy Shock AoE heal (C++)
+    SPELL_HOLY_HS_BOTH_PASSIVE          = 900202, // Holy Shock always both (C++)
+    SPELL_HOLY_HS_DMG_PASSIVE           = 900203, // Holy Shock +50% (DBC-only)
+    SPELL_HOLY_CONSEC_HEAL_PASSIVE      = 900204, // Consecration also heals (C++)
+    SPELL_HOLY_CONSEC_AROUND_PASSIVE    = 900205, // Consecration around you (DBC)
+    SPELL_HOLY_CONSEC_DMG_PASSIVE       = 900206, // Consecration +50% (DBC-only)
+    SPELL_HOLY_CONSEC_DUR_PASSIVE       = 900207, // Consecration +5sec (DBC-only)
     // Helper spells
-    SPELL_HOLY_HS_AOE_DMG_HELPER        = 900158, // AoE Holy damage around target
-    SPELL_HOLY_HS_AOE_HEAL_HELPER       = 900159, // AoE Holy heal around target
-    SPELL_HOLY_CONSEC_HEAL_HELPER       = 900160, // Consecration heal tick helper
+    SPELL_HOLY_HS_AOE_DMG_HELPER        = 900208, // AoE Holy damage around target
+    SPELL_HOLY_HS_AOE_HEAL_HELPER       = 900209, // AoE Holy heal around target
+    SPELL_HOLY_CONSEC_HEAL_HELPER       = 900210, // Consecration heal tick helper
 
-    // ---- Paladin Prot (900161-900168) ----
-    SPELL_PPROT_CONSEC_AROUND_PASSIVE   = 900161, // Consecration around you (DBC marker)
-    SPELL_PPROT_AS_TARGETS_PASSIVE      = 900162, // Avenger's Shield +9 targets (DBC)
-    SPELL_PPROT_AS_DMG_PASSIVE          = 900163, // Avenger's Shield +50% (DBC)
-    SPELL_PPROT_HS_CHARGES_PASSIVE      = 900164, // Holy Shield charges +99 (DBC)
-    SPELL_PPROT_HS_DMG_PASSIVE          = 900165, // Holy Shield +50% (DBC)
-    SPELL_PPROT_AS_CONSEC_PASSIVE       = 900166, // AS leaves Consecration (C++)
-    SPELL_PPROT_JUDGE_AS_PASSIVE        = 900167, // Judgement → free AS (C++)
-    SPELL_PPROT_JUDGE_CD_PASSIVE        = 900168, // Judgement cd -2sec (DBC)
+    // ---- Paladin Prot (900234-900267) ----
+    SPELL_PPROT_CONSEC_AROUND_PASSIVE   = 900234, // Consecration around you (DBC marker)
+    SPELL_PPROT_AS_TARGETS_PASSIVE      = 900235, // Avenger's Shield +9 targets (DBC)
+    SPELL_PPROT_AS_DMG_PASSIVE          = 900236, // Avenger's Shield +50% (DBC)
+    SPELL_PPROT_HS_CHARGES_PASSIVE      = 900237, // Holy Shield charges +99 (DBC)
+    SPELL_PPROT_HS_DMG_PASSIVE          = 900238, // Holy Shield +50% (DBC)
+    SPELL_PPROT_AS_CONSEC_PASSIVE       = 900239, // AS leaves Consecration (C++)
+    SPELL_PPROT_JUDGE_AS_PASSIVE        = 900240, // Judgement → free AS (C++)
+    SPELL_PPROT_JUDGE_CD_PASSIVE        = 900241, // Judgement cd -2sec (DBC)
 
-    // ---- Paladin Ret (900169-900176) ----
-    SPELL_RET_CONSEC_AROUND_PASSIVE     = 900169, // Consecration around you (DBC marker)
-    SPELL_RET_JUDGE_CD_PASSIVE          = 900170, // Judgement cd -2sec (DBC)
-    SPELL_RET_DS_TARGETS_PASSIVE        = 900171, // Divine Storm +6 targets (DBC marker)
-    SPELL_RET_DS_DMG_PASSIVE            = 900172, // Divine Storm +50% (DBC)
-    SPELL_RET_CS_DMG_PASSIVE            = 900173, // Crusader Strike +50% (DBC)
-    SPELL_RET_CS_AOE_PASSIVE            = 900174, // Crusader Strike +9 targets (C++)
-    SPELL_RET_EXORCISM_PROC_PASSIVE     = 900175, // CS/Judge/DS → Exorcism buff (C++)
-    SPELL_RET_EXORCISM_BUFF             = 900176, // Exorcism +50% per stack (DBC buff)
+    // ---- Paladin Ret (900268-900299) ----
+    SPELL_RET_CONSEC_AROUND_PASSIVE     = 900268, // Consecration around you (DBC marker)
+    SPELL_RET_JUDGE_CD_PASSIVE          = 900269, // Judgement cd -2sec (DBC)
+    SPELL_RET_DS_TARGETS_PASSIVE        = 900270, // Divine Storm +6 targets (DBC marker)
+    SPELL_RET_DS_DMG_PASSIVE            = 900271, // Divine Storm +50% (DBC)
+    SPELL_RET_CS_DMG_PASSIVE            = 900272, // Crusader Strike +50% (DBC)
+    SPELL_RET_CS_AOE_PASSIVE            = 900273, // Crusader Strike +9 targets (C++)
+    SPELL_RET_EXORCISM_PROC_PASSIVE     = 900274, // CS/Judge/DS → Exorcism buff (C++)
+    SPELL_RET_EXORCISM_BUFF             = 900275, // Exorcism +50% per stack (DBC buff)
 };
 
 // ---- Bloodthirst SpellFamilyFlags ----
@@ -269,7 +270,7 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
 };
 
 // ============================================================
-//  SPELL 900116: Bloody Whirlwind Passive (AuraScript)
+//  SPELL 900140: Bloody Whirlwind Passive (AuraScript)
 //  DBC has the proc aura on EFFECT_1 (not EFFECT_0).
 //  Bloodthirst (23881) SpellFamilyFlags[1]=0x00000400 (bit 42).
 //  This script explicitly filters procs to only fire on Bloodthirst.
@@ -318,9 +319,9 @@ class spell_custom_bloody_whirlwind_passive : public AuraScript
 //  + Single-target autocast (Overpower / Slam)
 //
 //  After Whirlwind finishes casting:
-//  1. Remove all stacks of the Bloody Whirlwind buff (900115)
-//  2. If WW hit exactly 1 target and player has passive 900118/900119,
-//     autocast boosted Overpower (900120) / Slam (900121) on the target
+//  1. Remove all stacks of the Bloody Whirlwind buff (900139)
+//  2. If WW hit exactly 1 target and player has passive 900142/900143,
+//     autocast boosted Overpower (900144) / Slam (900145) on the target
 // ============================================================
 class spell_custom_bloody_whirlwind_consume : public SpellScript
 {
@@ -396,7 +397,7 @@ class spell_custom_bloody_whirlwind_consume : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900117: Speedy Bloodthirst (AuraScript)
+//  SPELL 900141: Speedy Bloodthirst (AuraScript)
 //  Passive proc aura: when Whirlwind (1680) is cast,
 //  resets the cooldown of Bloodthirst (23881).
 //  DBC: EFFECT_0 = SPELL_EFFECT_APPLY_AURA / SPELL_AURA_PROC_TRIGGER_SPELL
@@ -411,12 +412,12 @@ class spell_custom_speedy_bloodthirst : public AuraScript
         SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
         if (!spellInfo)
         {
-            LOG_INFO("module", "mod-custom-spells: 900117 CheckProc -> "
+            LOG_INFO("module", "mod-custom-spells: 900141 CheckProc -> "
                 "NO spell info, returning false");
             return false;
         }
 
-        LOG_INFO("module", "mod-custom-spells: 900117 CheckProc -> "
+        LOG_INFO("module", "mod-custom-spells: 900141 CheckProc -> "
             "spell={}, typeMask=0x{:X}, spellFamily={}, "
             "flags[0]=0x{:08X} flags[1]=0x{:08X}",
             spellInfo->Id, eventInfo.GetTypeMask(),
@@ -434,7 +435,7 @@ class spell_custom_speedy_bloodthirst : public AuraScript
         Player* player = GetTarget()->ToPlayer();
         if (!player)
         {
-            LOG_INFO("module", "mod-custom-spells: 900117 HandleProc -> "
+            LOG_INFO("module", "mod-custom-spells: 900141 HandleProc -> "
                 "NO player, returning");
             return;
         }
@@ -442,7 +443,7 @@ class spell_custom_speedy_bloodthirst : public AuraScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        LOG_INFO("module", "mod-custom-spells: 900117 HandleProc -> "
+        LOG_INFO("module", "mod-custom-spells: 900141 HandleProc -> "
             "Player {} resetting Bloodthirst CD, hasBTCooldown={}",
             player->GetName(),
             player->HasSpellCooldown(SPELL_BLOODTHIRST) ? "yes" : "no");
@@ -460,7 +461,7 @@ class spell_custom_speedy_bloodthirst : public AuraScript
 };
 
 // ============================================================
-//  SPELL 900120: WW Boosted Overpower (SpellScript)
+//  SPELL 900144: WW Boosted Overpower (SpellScript)
 //  Autocast by Whirlwind when only 1 target is hit.
 //  Multiplies DBC base damage by Paragon bonus: +1% per level.
 //  Uses OnHit instead of OnEffectHitTarget to avoid DBC effect
@@ -499,7 +500,7 @@ class spell_custom_ww_overpower : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900121: WW Boosted Slam (SpellScript)
+//  SPELL 900145: WW Boosted Slam (SpellScript)
 //  Autocast by Whirlwind when only 1 target is hit.
 //  Multiplies DBC base damage by Paragon bonus: +1% per level.
 //  Uses OnHit instead of OnEffectHitTarget to avoid DBC effect
@@ -538,10 +539,10 @@ class spell_custom_ww_slam : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900123: Revenge Unlimited Targets (SpellScript)
+//  SPELL 900169: Revenge Unlimited Targets (SpellScript)
 //  Hooked on Revenge (57823). After hitting the primary target,
 //  deals the same damage to all enemies within 8yd of caster.
-//  Only active when player has passive aura 900123.
+//  Only active when player has passive aura 900169.
 // ============================================================
 class spell_custom_prot_revenge_aoe : public SpellScript
 {
@@ -596,10 +597,10 @@ class spell_custom_prot_revenge_aoe : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900124: Thunderclap → Rend + 5× Sunder Armor
+//  SPELL 900170: Thunderclap → Rend + 5× Sunder Armor
 //  Hooked on Thunderclap (47502). After hitting each target,
 //  applies Rend and 5 stacks of Sunder Armor.
-//  Only active when player has passive aura 900124.
+//  Only active when player has passive aura 900170.
 // ============================================================
 class spell_custom_prot_tc_rend_sunder : public SpellScript
 {
@@ -639,9 +640,9 @@ class spell_custom_prot_tc_rend_sunder : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900126: AoE Damage on Block (AuraScript)
+//  SPELL 900172: AoE Damage on Block (AuraScript)
 //  Passive proc aura: when the warrior blocks an attack,
-//  deals AoE physical damage (900128) to nearby enemies.
+//  deals AoE physical damage (900174) to nearby enemies.
 // ============================================================
 class spell_custom_prot_block_aoe : public AuraScript
 {
@@ -681,9 +682,9 @@ class spell_custom_prot_block_aoe : public AuraScript
 };
 
 // ============================================================
-//  SPELL 900127: 10% Block → Enhanced Thunderclap (AuraScript)
+//  SPELL 900173: 10% Block → Enhanced Thunderclap (AuraScript)
 //  Passive proc aura: when the warrior blocks an attack,
-//  10% chance to cast Enhanced Thunderclap (900129).
+//  10% chance to cast Enhanced Thunderclap (900175).
 // ============================================================
 class spell_custom_prot_block_tc : public AuraScript
 {
@@ -723,11 +724,11 @@ class spell_custom_prot_block_tc : public AuraScript
 };
 
 // ============================================================
-//  SPELL 900150: Holy Shock AoE Damage (SpellScript)
+//  SPELL 900200: Holy Shock AoE Damage (SpellScript)
 //  Hooked on Holy Shock damage spells (48824 etc.).
 //  After hitting a hostile target, casts AoE holy damage
-//  helper (900158) centered on the target.
-//  Only active when player has passive 900150.
+//  helper (900208) centered on the target.
+//  Only active when player has passive 900200.
 // ============================================================
 class spell_custom_holy_hs_aoe_dmg : public SpellScript
 {
@@ -764,11 +765,11 @@ class spell_custom_holy_hs_aoe_dmg : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900151: Holy Shock AoE Heal (SpellScript)
+//  SPELL 900201: Holy Shock AoE Heal (SpellScript)
 //  Hooked on Holy Shock heal spells (48825 etc.).
 //  After healing a friendly target, casts AoE holy heal
-//  helper (900159) centered on the target.
-//  Only active when player has passive 900151.
+//  helper (900209) centered on the target.
+//  Only active when player has passive 900201.
 // ============================================================
 class spell_custom_holy_hs_aoe_heal : public SpellScript
 {
@@ -805,11 +806,11 @@ class spell_custom_holy_hs_aoe_heal : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900152: Holy Shock Always Both (SpellScript)
+//  SPELL 900202: Holy Shock Always Both (SpellScript)
 //  Hooked on Holy Shock damage (48824) and heal (48825).
 //  After hitting a hostile target → also heal nearest ally.
 //  After healing a friendly target → also damage nearest enemy.
-//  Only active when player has passive 900152.
+//  Only active when player has passive 900202.
 // ============================================================
 class spell_custom_holy_hs_both_dmg : public SpellScript
 {
@@ -920,10 +921,10 @@ class spell_custom_holy_hs_both_heal : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900154: Consecration Also Heals (SpellScript)
+//  SPELL 900204: Consecration Also Heals (SpellScript)
 //  Hooked on Consecration (48819). On each periodic tick,
 //  also casts a heal helper on friendly units in the area.
-//  Only active when player has passive 900154.
+//  Only active when player has passive 900204.
 //
 //  Approach: AuraScript on Consecration's periodic aura.
 //  OnEffectPeriodic → cast heal helper on caster's location.
@@ -963,10 +964,10 @@ class spell_custom_holy_consec_heal : public AuraScript
 };
 
 // ============================================================
-//  SPELL 900166: Avenger's Shield Leaves Consecration
+//  SPELL 900239: Avenger's Shield Leaves Consecration
 //  Hooked on Avenger's Shield (48827). After hitting each
 //  target, casts Consecration at the target's position.
-//  Only active when player has passive 900166.
+//  Only active when player has passive 900239.
 // ============================================================
 class spell_custom_pprot_as_consec : public SpellScript
 {
@@ -1004,10 +1005,10 @@ class spell_custom_pprot_as_consec : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900167: Judgement → Free Avenger's Shield
+//  SPELL 900240: Judgement → Free Avenger's Shield
 //  Hooked on Judgement Damage (54158). After Judgement hits,
 //  auto-casts Avenger's Shield at the same target.
-//  Only active when player has passive 900167.
+//  Only active when player has passive 900240.
 // ============================================================
 class spell_custom_pprot_judge_as : public SpellScript
 {
@@ -1044,11 +1045,11 @@ class spell_custom_pprot_judge_as : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900174: Crusader Strike +9 Targets (SpellScript)
+//  SPELL 900273: Crusader Strike +9 Targets (SpellScript)
 //  Hooked on Crusader Strike (35395). After hitting primary
 //  target, deals same damage to up to 9 additional enemies
 //  within 8yd of caster.
-//  Only active when player has passive 900174.
+//  Only active when player has passive 900273.
 // ============================================================
 class spell_custom_ret_cs_aoe : public SpellScript
 {
@@ -1108,9 +1109,9 @@ class spell_custom_ret_cs_aoe : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900175: Exorcism Buff System (AuraScript)
+//  SPELL 900274: Exorcism Buff System (AuraScript)
 //  Passive proc aura: when CS, Judgement, or Divine Storm
-//  hits an enemy, adds 1 stack of Exorcism buff (900176).
+//  hits an enemy, adds 1 stack of Exorcism buff (900275).
 //  Max 10 stacks. Each stack = +50% Exorcism damage (DBC).
 //  Stacks are consumed when Exorcism is cast.
 // ============================================================
@@ -1163,7 +1164,7 @@ class spell_custom_ret_exorcism_proc : public AuraScript
 
 // ============================================================
 //  Exorcism Consume: Hooked on Exorcism (48801).
-//  After casting Exorcism, consumes all stacks of 900176.
+//  After casting Exorcism, consumes all stacks of 900275.
 //  Only active when player has the buff.
 // ============================================================
 class spell_custom_ret_exorcism_consume : public SpellScript
