@@ -184,7 +184,10 @@ public:
 
         // Apply 50% faster attack speed (halve the attack time)
         uint32 baseAttack = pet->GetAttackTime(BASE_ATTACK);
-        uint32 desired = static_cast<uint32>(pet->GetCreateAttackTime() * 0.5f);
+        CreatureTemplate const* cinfo = pet->GetCreatureTemplate();
+        if (!cinfo)
+            return;
+        uint32 desired = static_cast<uint32>(cinfo->BaseAttackTime * 0.5f);
         if (baseAttack != desired)
             pet->SetAttackTime(BASE_ATTACK, desired);
     }
