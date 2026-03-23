@@ -381,20 +381,34 @@ class spell_custom_wlk_imp_fb_aoe : public SpellScript
 
 // ============================================================
 //  900838: Felguard AoE unlimited targets
-//  Hooked on Felguard Cleave (47994). Override target selection
-//  to remove the target cap.
+//  Hooked on Felguard Cleave (47994). Uses AfterCast + helper
+//  to hit extra targets beyond the DBC MaxTargets cap.
+//  FilterTargets records which targets the spell already hits,
+//  then AfterCast finds remaining enemies and casts the helper.
 // ============================================================
 class spell_custom_wlk_fg_unlim : public SpellScript
 {
     PrepareSpellScript(spell_custom_wlk_fg_unlim);
 
-    void FilterTargets(std::list<WorldObject*>& targets)
+    void CollectOriginalTargets(std::list<WorldObject*>& targets)
+    {
+        _hitTargets.clear();
+        for (WorldObject* obj : targets)
+            _hitTargets.insert(obj->GetGUID());
+    }
+
+    void SaveDamage(SpellEffIndex /*effIndex*/)
+    {
+        if (_savedDamage == 0)
+            _savedDamage = GetHitDamage();
+    }
+
+    void HandleAfterCast()
     {
         Unit* caster = GetCaster();
         if (!caster)
             return;
 
-        // Check owner has the passive
         Unit* ownerUnit = caster->GetOwner();
         if (!ownerUnit)
             return;
@@ -406,16 +420,41 @@ class spell_custom_wlk_fg_unlim : public SpellScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        // No filtering — allow all targets (unlimited)
-        // The default hook would cap targets; we keep them all.
+        // Find all enemies in 8yd not already hit by the original Cleave
+        std::list<Unit*> enemies;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 8.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, enemies, check);
+        Cell::VisitAllObjects(caster, searcher, 8.0f);
+
+        int32 damage = _savedDamage > 0 ? _savedDamage : 500;
+
+        for (Unit* enemy : enemies)
+        {
+            if (_hitTargets.count(enemy->GetGUID()))
+                continue;
+
+            caster->CastCustomSpell(
+                SPELL_WLK_DEMO_FG_CLEAVE_HELPER, SPELLVALUE_BASE_POINT0,
+                damage, enemy, true);
+        }
     }
 
     void Register() override
     {
         OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(
-            spell_custom_wlk_fg_unlim::FilterTargets,
+            spell_custom_wlk_fg_unlim::CollectOriginalTargets,
             EFFECT_0, TARGET_UNIT_CONE_ENEMY_24);
+        OnEffectHitTarget += SpellEffectFn(
+            spell_custom_wlk_fg_unlim::SaveDamage,
+            EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+        AfterCast += SpellCastFn(
+            spell_custom_wlk_fg_unlim::HandleAfterCast);
     }
+
+private:
+    GuidUnorderedSet _hitTargets;
+    int32 _savedDamage = 0;
 };
 
 // ============================================================

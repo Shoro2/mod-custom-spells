@@ -230,6 +230,7 @@ enum CustomSpellIds
     SPELL_WLK_DEMO_IMP_FB_HELPER       = 900841,
     SPELL_WLK_DEMO_META_AOE_HELPER     = 900842,
     SPELL_WLK_DEMO_META_HEAL_HELPER    = 900843,
+    SPELL_WLK_DEMO_FG_CLEAVE_HELPER    = 900844,
 
     // ---- Warlock Destruction (900866-900899) ----
     SPELL_WLK_DEST_SB_AOE              = 900866,

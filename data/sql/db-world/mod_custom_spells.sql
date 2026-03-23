@@ -939,7 +939,7 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- Warlock Demonology: spell_dbc entries (900833-900843)
 -- SpellFamilyName=5 (Warlock)
 -- ============================================================
-DELETE FROM `spell_dbc` WHERE `ID` IN (900833, 900834, 900835, 900836, 900837, 900838, 900839, 900840, 900841, 900842, 900843);
+DELETE FROM `spell_dbc` WHERE `ID` IN (900833, 900834, 900835, 900836, 900837, 900838, 900839, 900840, 900841, 900842, 900843, 900844);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 -- 900833: Kill extends Meta duration (DUMMY marker, C++ via PlayerScript)
 (900833, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Demo: Meta Kill Extend', 0x003F3F),
@@ -965,7 +965,9 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 -- RadiusIndex=13 (8yd) for SRC_AREA_ENEMY targeting
 (900842, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 200, 600, 22, 13, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Meta Shadow Burst', 0x003F3F),
 -- 900843: Helper - Meta Self Heal (instant heal on caster)
-(900843, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 100, 400, 1, 0, 0, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Meta Demon Heal', 0x003F3F);
+(900843, 0x10000000, 0, 0, 0, 1, 0, 1, 10, 100, 400, 1, 0, 0, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Meta Demon Heal', 0x003F3F),
+-- 900844: Helper - Felguard Cleave Extra Hit (instant Physical single-target, BasePoints via CastCustomSpell)
+(900844, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 5, 313, 1, 0, 'FG Cleave Hit', 0x003F3F);
 
 -- ============================================================
 -- Warlock Demonology: creature_template entries (Lesser Demons)
@@ -1087,12 +1089,10 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 
 -- 900902: Weakened Soul duration override → 5 seconds
 -- This overrides the existing Weakened Soul debuff (6788) duration to 5s
+-- DurationIndex=28 = 5000ms (5s) from SpellDuration.dbc
 DELETE FROM `spell_dbc` WHERE `ID` = 6788;
 INSERT INTO `spell_dbc` (`ID`, `DurationIndex`) VALUES
-(6788, 1);
--- NOTE: DurationIndex=1 = 6s (closest standard duration to 5s).
--- For exact 5s, a custom SpellDuration.dbc entry or C++ override may be needed.
--- Alternative approach: use a field-by-field override that only sets DurationIndex.
+(6788, 28);
 
 -- ============================================================
 -- Priest Holy: spell_dbc entries (900933)
