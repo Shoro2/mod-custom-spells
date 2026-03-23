@@ -24,6 +24,8 @@
 #include "Config.h"
 #include "Log.h"
 #include "ObjectAccessor.h"
+#include "GridNotifiers.h"
+#include "CellImpl.h"
 
 /*
  * ==========================================================================
@@ -59,6 +61,16 @@ enum CustomSpellIds
     // WW single-target: boosted damage spells (autocast)
     SPELL_WW_OVERPOWER_BOOSTED          = 900120,
     SPELL_WW_SLAM_BOOSTED               = 900121,
+
+    // ---- Warrior Prot (900122-900129) ----
+    SPELL_PROT_REVENGE_DMG_PASSIVE      = 900122, // Revenge +50% damage (DBC-only)
+    SPELL_PROT_REVENGE_AOE_PASSIVE      = 900123, // Revenge unlimited targets (C++)
+    SPELL_PROT_TC_REND_SUNDER_PASSIVE   = 900124, // TC → Rend + 5× Sunder (C++)
+    SPELL_PROT_TC_DMG_PASSIVE           = 900125, // TC +50% damage (DBC-only)
+    SPELL_PROT_BLOCK_AOE_PASSIVE        = 900126, // AoE damage on Block (C++)
+    SPELL_PROT_BLOCK_TC_PASSIVE         = 900127, // 10% Block → Enhanced TC (C++)
+    SPELL_PROT_BLOCK_AOE_DAMAGE         = 900128, // Helper: AoE damage (triggered)
+    SPELL_PROT_ENHANCED_THUNDERCLAP     = 900129, // Helper: Enhanced TC (triggered)
 };
 
 // ---- Bloodthirst SpellFamilyFlags ----
@@ -78,6 +90,10 @@ constexpr int32  BLADESTORM_CD_REDUCE_MS = -500;  // -0.5 seconds (in ms)
 
 // ---- Speedy Bloodthirst constants ----
 constexpr uint32 SPELL_BLOODTHIRST    = 23881;
+
+// ---- Warrior Prot constants ----
+constexpr uint32 SPELL_REND_R10       = 47465;
+constexpr uint32 SPELL_SUNDER_ARMOR   = 58567;
 
 // ============================================================
 //  SPELL 900106: Paragon Strike (SpellScript)
@@ -465,6 +481,191 @@ class spell_custom_ww_slam : public SpellScript
     }
 };
 
+// ============================================================
+//  SPELL 900123: Revenge Unlimited Targets (SpellScript)
+//  Hooked on Revenge (57823). After hitting the primary target,
+//  deals the same damage to all enemies within 8yd of caster.
+//  Only active when player has passive aura 900123.
+// ============================================================
+class spell_custom_prot_revenge_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_prot_revenge_aoe);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_PROT_REVENGE_AOE_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 8.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(caster, targets, check);
+        Cell::VisitObjects(caster, searcher, 8.0f);
+        targets.remove(mainTarget);
+
+        for (Unit* target : targets)
+        {
+            if (!target->IsAlive())
+                continue;
+
+            Unit::DealDamage(caster, target, static_cast<uint32>(damage),
+                nullptr, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL);
+
+            LOG_INFO("module",
+                "mod-custom-spells: Player {} -> Revenge AoE {} dmg on {}",
+                player->GetName(), damage, target->GetName());
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_prot_revenge_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900124: Thunderclap → Rend + 5× Sunder Armor
+//  Hooked on Thunderclap (47502). After hitting each target,
+//  applies Rend and 5 stacks of Sunder Armor.
+//  Only active when player has passive aura 900124.
+// ============================================================
+class spell_custom_prot_tc_rend_sunder : public SpellScript
+{
+    PrepareSpellScript(spell_custom_prot_tc_rend_sunder);
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_PROT_TC_REND_SUNDER_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        caster->CastSpell(target, SPELL_REND_R10, true);
+
+        for (uint8 i = 0; i < 5; ++i)
+            caster->CastSpell(target, SPELL_SUNDER_ARMOR, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> TC applied Rend + 5x Sunder on {}",
+            player->GetName(), target->GetName());
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_prot_tc_rend_sunder::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900126: AoE Damage on Block (AuraScript)
+//  Passive proc aura: when the warrior blocks an attack,
+//  deals AoE physical damage (900128) to nearby enemies.
+// ============================================================
+class spell_custom_prot_block_aoe : public AuraScript
+{
+    PrepareAuraScript(spell_custom_prot_block_aoe);
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Unit* target = GetTarget();
+        if (!target)
+            return;
+
+        Player* player = target->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        if (!(eventInfo.GetHitMask() & PROC_HIT_BLOCK))
+            return;
+
+        player->CastSpell(player, SPELL_PROT_BLOCK_AOE_DAMAGE, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Block -> AoE damage triggered",
+            player->GetName());
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_prot_block_aoe::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  SPELL 900127: 10% Block → Enhanced Thunderclap (AuraScript)
+//  Passive proc aura: when the warrior blocks an attack,
+//  10% chance to cast Enhanced Thunderclap (900129).
+// ============================================================
+class spell_custom_prot_block_tc : public AuraScript
+{
+    PrepareAuraScript(spell_custom_prot_block_tc);
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Unit* target = GetTarget();
+        if (!target)
+            return;
+
+        Player* player = target->ToPlayer();
+        if (!player)
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        if (!(eventInfo.GetHitMask() & PROC_HIT_BLOCK))
+            return;
+
+        player->CastSpell(player, SPELL_PROT_ENHANCED_THUNDERCLAP, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Block -> Enhanced TC triggered",
+            player->GetName());
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_prot_block_tc::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
 void AddCustomSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
@@ -474,4 +675,10 @@ void AddCustomSpellsScripts()
     RegisterSpellScript(spell_custom_speedy_bloodthirst);
     RegisterSpellScript(spell_custom_ww_overpower);
     RegisterSpellScript(spell_custom_ww_slam);
+
+    // Warrior Prot
+    RegisterSpellScript(spell_custom_prot_revenge_aoe);
+    RegisterSpellScript(spell_custom_prot_tc_rend_sunder);
+    RegisterSpellScript(spell_custom_prot_block_aoe);
+    RegisterSpellScript(spell_custom_prot_block_tc);
 }
