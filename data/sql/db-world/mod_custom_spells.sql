@@ -178,11 +178,8 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- 900408: CL AoE helper (no script needed, pure DBC damage)
 -- 900400, 900402-900404, 900406-900408: marker auras / DBC-only, no script registration needed
 
--- ICD for Whirlwind proc aura (900138): 500ms cooldown to prevent
--- recursive loop (Whirlwind hits count as auto-attacks → re-proc → crash)
+-- 900138 is a DUMMY marker aura (Cleave unlimited targets), no proc needed
 DELETE FROM `spell_proc` WHERE `SpellId` = 900138;
-INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900138, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0);
 
 -- Bladestorm CD Reduce passive (900107): procs on melee damage dealt.
 -- ProcFlags=0x14 (DONE_MELEE_AUTO_ATTACK | DONE_SPELL_MELEE_DMG_CLASS).
@@ -656,7 +653,7 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 -- ProcFlags=0x40000 (DONE_PERIODIC). 5% chance, 5s ICD.
 DELETE FROM `spell_proc` WHERE `SpellId` = 901066;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(901066, 0, 7, 0, 0, 0, 0x400000, 2, 0, 0, 0, 0, 0, 5, 5000, 0);
+(901066, 0, 7, 0, 0, 0, 0x400000, 0, 0, 0, 0, 0, 0, 5, 5000, 0);
 
 -- ============================================================
 -- Druid: spell_dbc entries (901000-901073)
