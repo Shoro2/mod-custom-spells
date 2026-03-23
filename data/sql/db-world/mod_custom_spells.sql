@@ -91,6 +91,8 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Mage Arcane: Arcane Barrage +9 targets (all ranks via negative ID)
 (-44425, 'spell_custom_mage_abarr_aoe'),
 -- Mage Arcane: Arcane Blast +9 targets + charges to 8 (all ranks via negative ID)
+-- Re-insert core script deleted by our DELETE above
+(-30451, 'spell_mage_arcane_blast'),
 (-30451, 'spell_custom_mage_ab_aoe'),
 (-30451, 'spell_custom_mage_ab_charges'),
 -- Mage Arcane: Arcane Explosion generates charge (all ranks via negative ID)
@@ -132,6 +134,8 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Warlock Destruction: Chaos Bolt +9 targets (hooked on all ranks)
 (-50796, 'spell_custom_wlk_cb_aoe'),
 -- Priest Discipline: Shields explode on break/fade (hooked on PW:S all ranks)
+-- Re-insert core script deleted by our DELETE above
+(-17, 'spell_pri_power_word_shield'),
 (-17, 'spell_custom_pri_shield_explode'),
 -- Priest Holy: Direct heals → Holy Fire on enemies (proc aura)
 (900933, 'spell_custom_pri_heal_fire'),
