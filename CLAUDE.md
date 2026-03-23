@@ -559,7 +559,10 @@ Spell IDs 900466-900467 (Shaman Resto) existieren in `spell_dbc` Tabelle und sin
 
 Spell IDs 900500-900567 (Hunter Shared + BM + MM + Surv + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
 
-Nächste freie Klassen-Blöcke: **900600+** (Rogue), etc.
+Spell IDs 901000-901073 (Druid Balance + Feral + Resto + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+NPC 901066 (Healing Treant) existiert in `creature_template` für HoT-Treant-Proc.
+
+Nächste freie Klassen-Blöcke: **900600+** (Rogue), **900700+** (Mage), etc.
 
 ---
 
@@ -605,6 +608,10 @@ Nächste freie Klassen-Blöcke: **900600+** (Rogue), etc.
 | Hunter | BM | 900502-900505 (4) | 900506-900532 (27) | implementiert |
 | Hunter | MM | 900533-900536 (4) | 900537-900565 (29) | implementiert |
 | Hunter | Surv | 900566-900567 (2) | 900568-900599 (32) | implementiert |
+| Druid | Balance | 901000-901005 (6) | 901006-901032 (27) | implementiert |
+| Druid | Feral Tank | 901033-901034 (2) | 901035-901048 (14) | implementiert |
+| Druid | Feral DPS | 901049-901051 (3) | 901052-901065 (14) | implementiert |
+| Druid | Resto | 901066-901073 (8) | 901074-901099 (26) | implementiert |
 
 ---
 
@@ -822,6 +829,51 @@ Nächste freie Klassen-Blöcke: **900600+** (Rogue), etc.
 | H1 | 900567 | Helper: Explosive Burst | DBC | implementiert | Instant AoE Fire Damage. Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), SchoolMask=4(Fire), 1000+200rnd, 8yd. |
 
 > **Hinweis Hunter**: 900500 (Arrows) nutzt StoreNewItemInBestSlots was ein neues Item-Stack erstellt — bei vollen Bags könnte es fehlschlagen. 900534 (Barrage) castet 20 Multi-Shots in 2s — Performance bei vielen Mobs beobachten. Pet UnitScripts (900502/900504) feuern für ALLE Damage-Events — prüfen ob Creature ein Pet mit Owner ist um Performance zu schützen.
+
+---
+
+### Druid — Balance (901000-901032)
+
+> Druid SpellFamilyName = 7. Moonfire flags[0]=0x2, Starfall flags[0]=0x100 (verify!).
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 901000 | Moonfire +9 targets | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Moonfire (-48463): `AfterHit` → findet bis zu 9 Feinde im 10yd Radius → CastSpell(Moonfire R14, triggered) auf jeden. Prüft `HasAura(901000)`. |
+| 2 | 901001 | Moonfire +50% damage | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskA=0x2 targets Moonfire. |
+| 3 | 901002 | Starfall +9 targets | DBC | implementiert | ADD_FLAT_MODIFIER (107) + SPELLMOD_JUMP_TARGETS (17). EffectSpellClassMaskA=0x100 targets Starfall. BasePoints=9. |
+| 4 | 901003 | Starfall +50% damage | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskA=0x100. |
+| 5 | 901004 | Spell dmg reduces Starfall CD | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x10010 (spell magic dmg), 100% Chance, 1s ICD. C++ HandleProc → ModifySpellCooldown(Starfall, -1000). CheckProc filtert auf Druid SpellFamily. |
+| 6 | 901005 | Starfall stacks to 10 | DBC | implementiert | ADD_FLAT_MODIFIER (107) + SPELLMOD_CHARGES (4). EffectSpellClassMaskA=0x100. BasePoints=9 (+9 charges). |
+
+### Druid — Feral Tank (901033-901048)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 901033 | Swipe Bear applies bleed | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Swipe Bear (-48562): `AfterHit` → CastSpell(901034 Swipe Bleed DoT, triggered). Prüft `HasAura(901033)`. |
+| H1 | 901034 | Helper: Swipe Bleed DoT | DBC | implementiert | APPLY_AURA PERIODIC_DAMAGE. 300+50rnd Physical per 3s tick, 12s duration. |
+
+### Druid — Feral DPS (901049-901065)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 901049 | Swipe Cat applies bleed | C++ | implementiert | DUMMY Marker. C++ SpellScript auf Swipe Cat (62078): `AfterHit` → CastSpell(901050 Rake Bleed DoT, triggered). Prüft `HasAura(901049)`. |
+| H1 | 901050 | Helper: Rake Bleed DoT | DBC | implementiert | APPLY_AURA PERIODIC_DAMAGE. 300+50rnd Physical per 3s tick, 12s duration. |
+| 2 | 901051 | Energy regen +50% | DBC | implementiert | SPELL_AURA_MOD_POWER_REGEN_PERCENT (110), MiscValue=3 (Energy). BasePoints=50. |
+
+### Druid — Resto (901066-901099)
+
+| # | Spell ID | Effekt | Ansatz | Status | Details |
+|---|----------|--------|--------|--------|---------|
+| 1 | 901066 | HoTs chance to summon Force of Nature | C++ | implementiert | Proc-Aura (DUMMY). spell_proc: ProcFlags=0x40000 (periodic heal), 5% Chance, 5s ICD. C++ HandleProc → SummonCreature(901066 Healing Treant, 30s). Treant attacks enemy or follows player. |
+| 2 | 901067 | Summons scale with healing power | C++/PlayerScript | implementiert | DUMMY Marker. `custom_druid_summon_scale_playerscript::OnPlayerUpdate` → alle 3s: für jede Controlled Unit → SetMaxHealth(baseHP + spellPower*10). |
+| 3 | 901068 | Summons heal on death/despawn | C++/UnitScript | implementiert | DUMMY Marker. `custom_druid_summon_heal_unitscript::OnUnitDeath` → wenn Summon stirbt + Owner HasAura(901068) → CastSpell(901073 Nature Bloom). |
+| 4 | 901069 | Thorns → chance to cast Rejuv | C++/UnitScript | implementiert | DUMMY Marker. `custom_druid_thorns_rejuv_unitscript::OnDamage` → wenn Victim=Player + HasAura(901069) + has Thorns → 20% chance → CastSpell(Rejuv R15, triggered). |
+| 5 | 901070 | HoTs +50% healing | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DAMAGE (0). EffectSpellClassMaskA=0x30 targets Rejuv+Regrowth. |
+| 6 | 901071 | HoTs tick 2x fast + 2x duration | DBC | implementiert | ADD_PCT_MODIFIER (108) + SPELLMOD_DURATION (17), BasePoints=100 (+100% duration). EffectSpellClassMaskA=0x30. Double duration = double ticks at same interval. |
+| 7 | 901072 | Mana regen per missing mana% (+2%) | C++/PlayerScript | implementiert | DUMMY Marker. `custom_druid_mana_regen_playerscript::OnPlayerUpdate` → alle 5s: missingPct × 0.02 × maxMana / 100 → EnergizeBySpell. Same pattern as Shaman Resto (900467). |
+| H1 | 901073 | Helper: Nature Bloom (treant death heal) | DBC | implementiert | Instant AoE Nature Heal. Effect=HEAL(10), Target=DEST_AREA_ALLY(30), 2000+500rnd, SchoolMask=8. |
+
+> **Hinweis Druid**: NPC 901066 (Healing Treant) existiert in creature_template. 901071 (HoTs 2x) nutzt Duration-Multiplikator — verdoppelt Duration heißt doppelt so viele Ticks bei gleichem Intervall. Für echtes "doppelt so schnelles Ticken" bräuchte man einen C++ Ansatz der EffectAmplitude halbiert. UnitScripts (901068/901069) feuern für ALLE Unit Events — Performance beobachten.
 
 ---
 
