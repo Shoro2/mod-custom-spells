@@ -31,6 +31,7 @@
  *    custom_spells_hunter.cpp   - Hunter (BM/MM/Surv)
  *    custom_spells_rogue.cpp    - Rogue (Assa/Combat/Sub)
  *    custom_spells_druid.cpp    - Druid (Balance/Feral/Resto)
+ *    custom_spells_mage.cpp     - Mage (Arcane/Fire/Frost)
  *
  *  Shared constants and spell IDs are in custom_spells_common.h
  */
@@ -44,4 +45,5 @@ void AddCustomSpellsScripts()
     AddHunterSpellsScripts();
     AddRogueSpellsScripts();
     AddDruidSpellsScripts();
+    AddMageSpellsScripts();
 }

@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -48827, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -49271, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -49048, 75, 900534, 900566, -48463, 901004, -48562, 62078, 901066, 900603, -48638, -48660, -44781, -42897, -42921, 12051, 900708, 900713, -42833, -42891, -42842, -42914, 31687, 900771);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -84,7 +84,33 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- Rogue Combat: SS +9 targets (all ranks via negative ID)
 (-48638, 'spell_custom_rog_ss_aoe'),
 -- Rogue Sub: Hemorrhage +9 targets (all ranks via negative ID)
-(-48660, 'spell_custom_rog_hemo_aoe');
+(-48660, 'spell_custom_rog_hemo_aoe'),
+-- Mage Arcane: Arcane Barrage +9 targets (all ranks via negative ID)
+(-44781, 'spell_custom_mage_abarr_aoe'),
+-- Mage Arcane: Arcane Blast +9 targets + charges to 8 (all ranks via negative ID)
+(-42897, 'spell_custom_mage_ab_aoe'),
+(-42897, 'spell_custom_mage_ab_charges'),
+-- Mage Arcane: Arcane Explosion generates charge (all ranks via negative ID)
+(-42921, 'spell_custom_mage_ae_charges'),
+-- Mage Arcane: Evocation increases spell damage (hooked on Evocation)
+(12051, 'spell_custom_mage_evocation_power'),
+-- Mage Arcane: Emergency Mana Shield proc passive
+(900708, 'spell_custom_mage_emergency_shield'),
+-- Mage Arcane: Targeted Blink (active spell)
+(900713, 'spell_custom_mage_targeted_blink'),
+-- Mage Fire: Fireball +9 targets (all ranks via negative ID)
+(-42833, 'spell_custom_mage_fb_aoe'),
+-- Mage Fire: Pyroblast +9 targets + Hot Streak (all ranks via negative ID)
+(-42891, 'spell_custom_mage_pyro_aoe'),
+(-42891, 'spell_custom_mage_pyro_hotstreak'),
+-- Mage Frost: Frostbolt +9 targets (all ranks via negative ID)
+(-42842, 'spell_custom_mage_frostbolt_aoe'),
+-- Mage Frost: Ice Lance +9 targets (all ranks via negative ID)
+(-42914, 'spell_custom_mage_icelance_aoe'),
+-- Mage Frost: Water Elemental permanent (on Summon Water Elemental)
+(31687, 'spell_custom_mage_permanent_water_ele'),
+-- Mage Frost: Comet Shower (active spell)
+(900771, 'spell_custom_mage_comet_shower');
 -- 900500: Get back arrows → PlayerScript (no spell_script_names needed)
 -- 900501: Multi-Shot AoE → checked via HasAura (hooked on Multi-Shot via -49048 above)
 -- 900502/900503/900504: Pet passives → UnitScript/PlayerScript (no spell_script_names needed)
@@ -715,3 +741,123 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 (900668, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 8, 132, 0, 0, 'Sub: Hemo AoE', 0x003F3F),
 -- Sub: 900669 Helper - Hemorrhage bounce damage (instant Physical single-target)
 (900669, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 8, 132, 1, 0, 'Deep Cut', 0x003F3F);
+
+-- ============================================================
+-- Mage Arcane: spell_proc entries
+-- ============================================================
+
+-- Emergency Mana Shield (900708): procs on TAKEN_DAMAGE (0x100000).
+-- C++ HandleProc checks health < 30%. 100% chance, 60s ICD.
+DELETE FROM `spell_proc` WHERE `SpellId` = 900708;
+INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
+(900708, 0, 0, 0, 0, 0, 0x100000, 0, 0, 0, 0, 0, 0, 100, 60000, 0);
+
+-- ============================================================
+-- Mage Arcane: spell_dbc entries (900700-900713)
+-- SpellFamilyName=3 (Mage)
+-- Arcane Barrage SpellFamilyFlags[1]=0x1000000 (verify!)
+-- Arcane Blast SpellFamilyFlags[0]=0x20000000 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900700, 900701, 900702, 900703, 900704, 900705, 900706, 900707, 900708, 900709, 900710, 900711, 900712, 900713);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900700: Mana regen per missing mana% (DUMMY marker, PlayerScript)
+(900700, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: Mana Regen', 0x003F3F),
+-- 900701: Arcane Barrage +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskB=0x1000000 targets Arcane Barrage (verify!)
+(900701, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0, 0x1000000, 0, 3, 33, 0, 0, 'Arcane: Barrage +50%', 0x003F3F),
+-- 900702: Arcane Barrage +9 targets (DUMMY marker, C++ on -44781)
+(900702, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: Barrage AoE', 0x003F3F),
+-- 900703: Arcane Blast cast time -50% (ADD_PCT_MODIFIER + SPELLMOD_CASTING_TIME=14)
+-- EffectSpellClassMaskA=0x20000000 targets Arcane Blast (verify!)
+(900703, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, -50, 1, 108, 14, 0, 0x20000000, 0, 0, 3, 33, 0, 0, 'Arcane: Blast -50% Cast', 0x003F3F),
+-- 900704: Arcane Blast +9 targets (DUMMY marker, C++ on -42897)
+(900704, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: Blast AoE', 0x003F3F),
+-- 900705: Arcane Charges stack to 8 (DUMMY marker, C++ on -42897)
+(900705, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: Charges x8', 0x003F3F),
+-- 900706: Arcane Explosion generates charge (DUMMY marker, C++ on -42921)
+(900706, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: AE Charges', 0x003F3F),
+-- 900707: Evocation increases spell damage (DUMMY marker, AuraScript on 12051)
+(900707, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: Evoc Power', 0x003F3F),
+-- 900708: Emergency Mana Shield (DUMMY, proc via spell_proc + C++)
+(900708, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 33, 0, 0, 'Arcane: Emergency Shield', 0x003F3F),
+-- 900709: Blink target location (DUMMY marker)
+(900709, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 258, 0, 0, 'Arcane: Blink Target', 0x003F3F),
+-- 900710: Helper - Arcane Barrage bounce (instant Arcane single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=64 (Arcane)
+(900710, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 33, 64, 0, 'Arcane Barrage Bounce', 0x003F3F),
+-- 900711: Helper - Arcane Blast bounce (instant Arcane single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=64 (Arcane)
+(900711, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 33, 64, 0, 'Arcane Blast Bounce', 0x003F3F),
+-- 900712: Evocation Power buff (+20% spell damage per stack, max 4, 60s duration)
+-- Effect=APPLY_AURA(6), Aura=MOD_DAMAGE_PERCENT_DONE(79), MiscValue=127(all schools)
+-- DurationIndex=3 (60s), CumulativeAura=4
+(900712, 0x10000000, 0, 0, 0, 1, 3, 1, 6, 0, 20, 1, 79, 127, 0, 0, 0, 0, 3, 33, 0, 4, 'Evocation Power', 0x003F3F),
+-- 900713: Targeted Blink (active spell, ground targeting, 40yd range)
+-- Effect=DUMMY(3), ImplicitTargetA=16 (ground targeting), RangeIndex=5 (40yd)
+-- SpellIconID=258 (Blink icon). Needs client DBC patch for ground cursor.
+(900713, 0x10000000, 0, 0, 0, 1, 0, 5, 3, 0, 0, 16, 0, 0, 0, 0, 0, 0, 3, 258, 0, 0, 'Targeted Blink', 0x003F3F);
+
+-- ============================================================
+-- Mage Fire: spell_dbc entries (900733-900740)
+-- SpellFamilyName=3 (Mage)
+-- Fireball SpellFamilyFlags[0]=0x1 (verify!)
+-- Pyroblast SpellFamilyFlags[0]=0x400000 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900733, 900734, 900735, 900736, 900737, 900738, 900739, 900740);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900733: Fireball +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x1 targets Fireball (verify!)
+(900733, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 0, 3, 185, 4, 0, 'Fire: Fireball +50%', 0x003F3F),
+-- 900734: Fireball +9 targets (DUMMY marker, C++ on -42833)
+(900734, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 185, 0, 0, 'Fire: Fireball AoE', 0x003F3F),
+-- 900735: Pyroblast +9 targets (DUMMY marker, C++ on -42891)
+(900735, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 1726, 0, 0, 'Fire: Pyro AoE', 0x003F3F),
+-- 900736: Pyroblast +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x400000 targets Pyroblast (verify!)
+(900736, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x400000, 0, 0, 3, 1726, 4, 0, 'Fire: Pyro +50%', 0x003F3F),
+-- 900737: Fire Blast off GCD + cast while casting (DUMMY marker)
+-- NOTE: Actual behavior requires DBC patch on Fire Blast (42873):
+--   StartRecoveryCategory=0, AttributesEx4 |= SPELL_ATTR4_CAN_CAST_WHILE_CASTING
+(900737, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 12, 0, 0, 'Fire: Blast Off GCD', 0x003F3F),
+-- 900738: Pyroblast triggers Hot Streak (DUMMY marker, C++ on -42891)
+(900738, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 1726, 0, 0, 'Fire: Pyro Hot Streak', 0x003F3F),
+-- 900739: Helper - Fireball bounce (instant Fire single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=4 (Fire)
+(900739, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 185, 4, 0, 'Fireball Bounce', 0x003F3F),
+-- 900740: Helper - Pyroblast bounce (instant Fire single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=4 (Fire)
+(900740, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 1726, 4, 0, 'Pyroblast Bounce', 0x003F3F);
+
+-- ============================================================
+-- Mage Frost: spell_dbc entries (900766-900774)
+-- SpellFamilyName=3 (Mage)
+-- Frostbolt SpellFamilyFlags[0]=0x20 (verify!)
+-- Ice Lance SpellFamilyFlags[0]=0x20000 (verify!)
+-- ============================================================
+DELETE FROM `spell_dbc` WHERE `ID` IN (900766, 900767, 900768, 900769, 900770, 900771, 900772, 900773, 900774);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAmplitude_1`, `SpellFamilyName`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+-- 900766: Frostbolt +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x20 targets Frostbolt (verify!)
+(900766, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x20, 0, 0, 3, 188, 16, 0, 'Frost: Frostbolt +50%', 0x003F3F),
+-- 900767: Frostbolt +9 targets (DUMMY marker, C++ on -42842)
+(900767, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 188, 0, 0, 'Frost: Frostbolt AoE', 0x003F3F),
+-- 900768: Ice Lance +50% damage (ADD_PCT_MODIFIER + SPELLMOD_DAMAGE)
+-- EffectSpellClassMaskA=0x20000 targets Ice Lance (verify!)
+(900768, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x20000, 0, 0, 3, 2723, 16, 0, 'Frost: Ice Lance +50%', 0x003F3F),
+-- 900769: Ice Lance +9 targets (DUMMY marker, C++ on -42914)
+(900769, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 2723, 0, 0, 'Frost: Ice Lance AoE', 0x003F3F),
+-- 900770: Water Elemental permanent (DUMMY marker, C++ on 31687)
+(900770, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 2735, 0, 0, 'Frost: Perm Elemental', 0x003F3F),
+-- 900771: Comet Shower (active spell, ground targeting, 40yd range, instant)
+-- Effect=DUMMY(3), ImplicitTargetA=16 (ground targeting), RangeIndex=5 (40yd)
+-- Needs client DBC patch for ground cursor.
+(900771, 0x10000000, 0, 0, 0, 1, 0, 5, 3, 0, 0, 16, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frost Comet Shower', 0x003F3F),
+-- 900772: Helper - Frostbolt bounce (instant Frost single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=16 (Frost)
+(900772, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frostbolt Bounce', 0x003F3F),
+-- 900773: Helper - Ice Lance bounce (instant Frost single-target damage)
+-- BasePoints via CastCustomSpell. SchoolMask=16 (Frost)
+(900773, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 2723, 16, 0, 'Ice Lance Bounce', 0x003F3F),
+-- 900774: Helper - Comet Impact (instant Frost single-target damage, high base)
+-- SchoolMask=16 (Frost). Base damage for the comet impact.
+(900774, 0x10000000, 0, 0, 0, 1, 0, 1, 2, 500, 3000, 6, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frost Comet', 0x003F3F);
