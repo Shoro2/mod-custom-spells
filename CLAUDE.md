@@ -456,29 +456,6 @@ Die `spell_dbc` Tabelle hat 257 Spalten. Hier die für Custom Spells relevantest
 | 11 | Shaman |
 | 15 | Death Knight |
 
-## Current Custom Spells (Implemented)
-
-| Spell ID | Script Name | Type | Effect |
-|----------|-------------|------|--------|
-| 900106 | `spell_custom_paragon_strike` | SpellScript | SCHOOL_DAMAGE: Base 666 + 66% AP, +1%/Paragon level |
-| 900107 | `spell_custom_bladestorm_cd_reduce` | AuraScript | PROC: On melee damage dealt → reduce Bladestorm (46927) CD by 0.5s |
-| 900139 | (DBC-only buff) | — | +50% Whirlwind damage per stack, max 5, 10s duration |
-| 900140 | `spell_custom_bloody_whirlwind_passive` | AuraScript | PROC: On Bloodthirst hit → apply buff 900139 |
-| 900141 | `spell_custom_speedy_bloodthirst` | AuraScript | PROC: On Whirlwind cast → reset Bloodthirst (23881) cooldown |
-| 900142 | (DBC-only passive marker) | — | WW→Overpower passive: checked via HasAura in 1680 script |
-| 900143 | (DBC-only passive marker) | — | WW→Slam passive: checked via HasAura in 1680 script |
-| 900144 | `spell_custom_ww_overpower` | SpellScript | OnHit: Multiplies damage by Paragon bonus |
-| 900145 | `spell_custom_ww_slam` | SpellScript | OnHit: Multiplies damage by Paragon bonus |
-| 1680 | `spell_custom_bloody_whirlwind_consume` | SpellScript | AFTER_CAST: Removes 900139 stacks + single-target autocast |
-
-### Bloody Whirlwind System (900139/900140)
-
-- **900140** (passive aura, EFFECT_1 = `SPELL_AURA_PROC_TRIGGER_SPELL`): Sits on the player, procs on Bloodthirst hits
-- **900139** (buff): +50% Whirlwind damage per stack, max 5 stacks, 10s duration
-- **1680** (Whirlwind override): Consumes all 900139 stacks after cast
-- **Bloodthirst detection**: `SpellFamilyName=4, SpellFamilyFlags[1]=0x00000400` (Bit 42)
-- **Important**: The DBC `EffectSpellClassMask` (Class Mask Target Spells) is NOT used by the proc system — filtering is done entirely in the C++ `CheckProc` handler
-
 ## DBC Status
 
 Spell IDs 900100-900109 (Warrior Arms) existieren in `Spell.dbc` und sind fertig implementiert.
