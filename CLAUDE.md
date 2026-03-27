@@ -482,7 +482,12 @@ NPC 901066 (Healing Treant) existiert in `creature_template` für HoT-Treant-Pro
 
 Spell IDs 900600-900669 (Rogue Assa + Combat + Sub + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
 
-Nächste freie Klassen-Blöcke: **900700+** (Mage), **900800+** (Warlock), etc.
+Spell IDs 900700-900774 (Mage Arcane + Fire + Frost + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900800-900872 (Warlock Affli + Demo + Destro + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900900-900968 (Priest Disc + Holy + Shadow + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 901100-901108 (Global Spells + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+
+Alle Klassen-Blöcke sind belegt. Nächste freie IDs innerhalb der bestehenden Blöcke (siehe CustomSpells.md Aktuelle Belegung).
 
 ---
 
