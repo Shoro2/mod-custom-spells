@@ -459,7 +459,7 @@ Die `spell_dbc` Tabelle hat 257 Spalten. Hier die für Custom Spells relevantest
 ## DBC Status
 
 Spell IDs 900100-900109 (Warrior Arms) existieren in `Spell.dbc` und sind fertig implementiert.
-Spell IDs 900134-900145 (Warrior Fury) existieren in `Spell.dbc` und sind fertig implementiert.
+Spell IDs 900108-900121 (Warrior Fury) existieren in `Spell.dbc` (manuell erstellt, rein DBC-basiert, kein C++). Die alten IDs 900138-900145 wurden entfernt.
 Spell IDs 900168-900175 (Warrior Prot + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
 Spell IDs 900200-900210 (Paladin Holy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
 Spell IDs 900234-900241 (Paladin Prot) existieren in `spell_dbc` Tabelle und sind implementiert.

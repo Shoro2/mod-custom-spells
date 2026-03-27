@@ -43,14 +43,6 @@ enum CustomSpellIds
     SPELL_CUSTOM_PARAGON_STRIKE         = 900106,
     // Each cast reduces Bladestorm (46927) cooldown by 0.5s
     SPELL_CUSTOM_BLADESTORM_CD_REDUCE   = 900107,
-    // ---- Warrior Fury (900134-900167) ----
-    SPELL_BLOODY_WHIRLWIND_BUFF         = 900139,
-    SPELL_BLOODY_WHIRLWIND_PASSIVE      = 900140,
-    SPELL_CUSTOM_SPEEDY_BLOODTHIRST     = 900141,
-    SPELL_WW_OVERPOWER_PASSIVE          = 900142,
-    SPELL_WW_SLAM_PASSIVE               = 900143,
-    SPELL_WW_OVERPOWER_BOOSTED          = 900144,
-    SPELL_WW_SLAM_BOOSTED               = 900145,
 
     // ---- Warrior Prot (900168-900199) ----
     SPELL_PROT_REVENGE_DMG_PASSIVE      = 900168,
@@ -355,11 +347,6 @@ constexpr uint32 SPELL_EXPLOSIVE_TRAP_DMG   = 49064;  // Explosive Trap damage e
 constexpr uint32 SPELLFAMILY_HUNTER_ID      = 9;
 // Multi-Shot SpellFamilyFlags[0] = 0x200 (verify!)
 
-// ---- Bloodthirst SpellFamilyFlags ----
-// Bloodthirst (23881): SpellFamilyName=4, SpellFamilyFlags[1]=0x00000400 (bit 42)
-constexpr uint32 SPELLFAMILY_WARRIOR_ID        = 4;
-constexpr uint32 BLOODTHIRST_FAMILY_FLAG1      = 0x00000400;
-
 // ---- Paragon Strike constants ----
 constexpr uint32 AURA_PARAGON_LEVEL   = 100000;
 constexpr int32  CUSTOM_BASE_DAMAGE   = 666;
@@ -369,9 +356,6 @@ constexpr float  CUSTOM_PARAGON_BONUS = 0.01f;    // +1% damage per Paragon leve
 // ---- Bladestorm CD Reduction constants ----
 constexpr uint32 SPELL_BLADESTORM     = 46924;
 constexpr int32  BLADESTORM_CD_REDUCE_MS = -500;  // -0.5 seconds (in ms)
-
-// ---- Speedy Bloodthirst constants ----
-constexpr uint32 SPELL_BLOODTHIRST    = 23881;
 
 // ---- Warrior Prot constants ----
 constexpr uint32 SPELL_REND_R10       = 47465;

@@ -24,8 +24,8 @@
 
 | Klasse | Spec | Belegt | Frei | Status |
 |--------|------|--------|------|--------|
-| Warrior | Arms | 900100-900109 (10) | 900110-900132 (23) | getestet |
-| Warrior | Fury | 900134-900145 (12) | 900146-900165 (20) | getestet |
+| Warrior | Arms | 900100-900107 (8) | 900108-900132 (25) | getestet |
+| Warrior | Fury | 900108-900121 (14) | 900122-900165 (44) | getestet |
 | Warrior | Prot | 900168-900175 (8) | 900176-900199 (24) | implementiert |
 | Paladin | Holy | 900200-900210 (11) | 900211-900232 (22) | implementiert |
 | Paladin | Prot | 900234-900241 (8) | 900242-900265 (24) | implementiert |
@@ -60,7 +60,7 @@
 
 ---
 
-### Warrior — Arms (900100-900132)
+### Warrior — Arms (900100-900107)
 
 | # | Spell ID | Effekt | Ansatz | Status |
 |---|----------|--------|--------|--------|
@@ -72,27 +72,30 @@
 | 6 | 900105 | 20% Crit-Chance → Enhanced Execute (5 stacks) | C++ | getestet |
 | 7 | 900106 | Enhanced Execute (Damage Spell = Paragon Strike) | C++ | getestet |
 | 8 | 900107 | Phys. Damage → Bladestorm CD -0.5s | C++ | getestet |
-| 9 | 900108 | Whirlwind unlimited targets | DBC | getestet |
-| 10a | 900109 | WW 1 target → autocast Overpower | C++ | getestet |
-| 10b | *neue ID* | Thunderclap → Rend + 5× Sunder Armor | C++ | geplant |
 
-**TC→Rend+Sunder Details**: SpellScript auf Thunderclap. `AfterHit` pro Target: Rend casten + 5× Sunder Armor applyen. Wird auch von Prot geteilt. Braucht eigene Spell-ID (passive Marker-Aura) + Hook auf Original-TC oder eigene TC-Variante.
+### Warrior — Fury (900108-900121)
 
-### Warrior — Fury (900133-900165)
+> **Besonderheit**: Die Fury-Spells wurden manuell direkt in Spell.dbc erstellt (IDs 900108-900121),
+> nicht über das ID-Block-Schema (900133-900165). Sie liegen daher im Arms-Bereich der ID-Tabelle,
+> sind aber funktional Fury-Spells. Kein C++ nötig — alle Effekte laufen über DBC passive Auras,
+> Proc-Trigger und spell_proc. Die alten C++/SQL-Einträge (900138-900145) wurden entfernt.
 
 | # | Spell ID | Effekt | Ansatz | Status |
 |---|----------|--------|--------|--------|
-| 1 | 900134 | Bloodthirst +50% damage | DBC | getestet |
-| 2 | 900135 | Bloodthirst +9 targets (AoE) | DBC+C++ | getestet |
-| 3 | 900136 | Whirlwind damage +50% | DBC | getestet |
-| 4 | 900137 | Whirlwind unlimited targets | DBC | getestet |
-| 5 | 900138 | Cleave unlimited targets | DBC | getestet |
-| 6 | 900139 | 20% Auto-Attack → free Whirlwind | C++ | getestet |
-| 7 | 900140 | BT → next WW +50% damage (Bloody WW passive) | C++ | getestet |
-| 8 | 900141 | WW resets Bloodthirst CD | C++ | getestet |
-| 9 | 900142+900144 | WW 1 target → autocast Overpower | C++ | getestet |
-| — | 900143+900145 | WW 1 target → autocast Slam | C++ | getestet |
-| 10 | (DBC) | Remove WW stance requirement | DBC | getestet |
+| 1 | 900108 | Whirlwind unlimited targets | DBC | getestet |
+| 2 | 900109 | Improved Bloodthirst Damage | DBC | getestet |
+| 3 | 900110 | Bloodthirst Cleave | DBC | getestet |
+| 4 | 900111 | Improved Whirlwind Damage | DBC | getestet |
+| 5 | 900112 | Cleave unlimited targets | DBC | getestet |
+| 6 | 900113 | Whirly Attacks (Proc) | DBC | getestet |
+| 7 | 900114 | Whirly Attacks (Passive) | DBC | getestet |
+| 8 | 900115 | Bloody Whirlwind (Aura) | DBC | getestet |
+| 9 | 900116 | Bloody Whirlwind (Passive) | DBC | getestet |
+| 10 | 900117 | Speedy Bloodthirst (Passive) | DBC | getestet |
+| 11 | 900118 | Whirlwind: Overpower (Passive) | DBC | getestet |
+| 12 | 900119 | Whirlwind: Bloodthirst (Passive) | DBC | getestet |
+| 13 | 900120 | Whirlwind: Overpower (Proc) | DBC | getestet |
+| 14 | 900121 | Whirlwind: Bloodthirst (Proc) | DBC | getestet |
 
 ### Warrior — Prot (900166-900199)
 

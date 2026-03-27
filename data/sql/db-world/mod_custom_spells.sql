@@ -1,5 +1,5 @@
 -- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 900140, 900141, 900144, 900145, 1680, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -31935, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -421, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -2643, 75, 900534, 900566, -8921, 901004, -779, 62078, 901066, 900603, -1752, -16511, -44425, -30451, -1449, 12051, 900708, 900713, -133, -11366, -116, -30455, 31687, 900771, 900800, 900802, 900834, -3110, 47994, 18788, -686, -50796, -17, 900933, 900966, 900967, 901101, 901102, 901103, 901104);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -31935, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -421, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -2643, 75, 900534, 900566, -8921, 901004, -779, 62078, 901066, 900603, -1752, -16511, -44425, -30451, -1449, 12051, 900708, 900713, -133, -11366, -116, -30455, 31687, 900771, 900800, 900802, 900834, -3110, 47994, 18788, -686, -50796, -17, 900933, 900966, 900967, 901101, 901102, 901103, 901104);
 -- NOTE: AoE +9 target spells now use DBC SPELLMOD_JUMP_TARGETS instead of C++ AfterHit:
 -- Removed script registrations: spell_custom_ret_cs_aoe, spell_custom_dkb_hs_aoe,
 -- spell_custom_ele_cl_aoe, spell_custom_bal_mf_aoe, spell_custom_rog_ss_aoe,
@@ -11,11 +11,6 @@ DELETE FROM `spell_script_names` WHERE `spell_id` IN (-59172, -49271, -49048, -4
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
-(900140, 'spell_custom_bloody_whirlwind_passive'),
-(900141, 'spell_custom_speedy_bloodthirst'),
-(900144, 'spell_custom_ww_overpower'),
-(900145, 'spell_custom_ww_slam'),
-(1680, 'spell_custom_bloody_whirlwind_consume'),
 -- Warrior Prot
 (57823, 'spell_custom_prot_revenge_aoe'),
 (47502, 'spell_custom_prot_tc_rend_sunder'),
@@ -171,27 +166,12 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 -- 900408: CL AoE helper (no script needed, pure DBC damage)
 -- 900400, 900402-900404, 900406-900408: marker auras / DBC-only, no script registration needed
 
--- 900138 is a DUMMY marker aura (Cleave unlimited targets), no proc needed
-DELETE FROM `spell_proc` WHERE `SpellId` = 900138;
-
 -- Bladestorm CD Reduce passive (900107): procs on melee damage dealt.
 -- ProcFlags=0x14 (DONE_MELEE_AUTO_ATTACK | DONE_SPELL_MELEE_DMG_CLASS).
 -- C++ CheckProc filters: only when Bladestorm is on cooldown.
 DELETE FROM `spell_proc` WHERE `SpellId` = 900107;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
 (900107, 0, 0, 0, 0, 0, 0x14, 1, 2, 0, 0, 0, 0, 100, 0, 0);
-
--- Bloody Whirlwind passive (900140): C++ AuraScript handles Bloodthirst filtering.
--- ProcFlags=0x10 (PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS) matches Bloodthirst's melee dmg class.
-DELETE FROM `spell_proc` WHERE `SpellId` = 900140;
-INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900140, 0, 0, 0, 0, 0, 0x10, 1, 2, 0, 0, 0, 0, 100, 0, 0);
-
--- Speedy Bloodthirst (900141): Whirlwind resets Bloodthirst CD.
--- ProcFlags=0x10 (PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS), SpellPhaseMask=4 (FINISH).
-DELETE FROM `spell_proc` WHERE `SpellId` = 900141;
-INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900141, 0, 0, 0, 0, 0, 0x10, 1, 4, 0, 0, 0, 0, 100, 0, 0);
 
 -- ============================================================
 -- Warrior Prot: spell_proc entries
@@ -209,23 +189,9 @@ DELETE FROM `spell_proc` WHERE `SpellId` = 900173;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
 (900173, 0, 0, 0, 0, 0, 0x2, 0, 0, 0, 0, 0, 0, 10, 3000, 0);
 
--- ============================================================
--- Warrior Fury: spell_dbc entries (900138, 900140-900145)
--- These spells need spell_dbc entries since they are not in Spell.dbc
--- ============================================================
-
-DELETE FROM `spell_dbc` WHERE `ID` IN (900138, 900140, 900141, 900144, 900145);
-INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `SpellClassSet`, `SpellIconID`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
--- 900138: Cleave unlimited targets (passive marker aura)
-(900138, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 4, 132, 'Fury: Cleave Unlim', 0x003F3F),
--- 900140: Bloody Whirlwind passive (proc aura, C++ handles filtering via DUMMY on EFFECT_0)
-(900140, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 4, 132, 'Fury: Bloody WW', 0x003F3F),
--- 900141: Speedy Bloodthirst (proc aura, C++ handles via DUMMY on EFFECT_0)
-(900141, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 4, 132, 'Fury: Speedy BT', 0x003F3F),
--- 900144: WW Boosted Overpower (instant physical damage helper)
-(900144, 0x10000000, 0, 0, 0, 1, 0, 4, 2, 0, 500, 6, 0, 0, 0, 0, 4, 132, 'WW Overpower', 0x003F3F),
--- 900145: WW Boosted Slam (instant physical damage helper)
-(900145, 0x10000000, 0, 0, 0, 1, 0, 4, 2, 0, 500, 6, 0, 0, 0, 0, 4, 132, 'WW Slam', 0x003F3F);
+-- NOTE: Warrior Fury spells (900108-900121) are defined purely in Spell.dbc
+-- (manually created). The old 900138-900145 spell_dbc entries have been removed.
+-- No server-side spell_dbc needed for Fury.
 
 -- ============================================================
 -- Warrior Prot: spell_dbc entries (900168-900175)
