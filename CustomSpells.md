@@ -8,7 +8,7 @@
 
 | Klasse | Block | Spec 1 | Spec 2 | Spec 3 |
 |--------|-------|--------|--------|--------|
-| **Warrior** | 900100-900199 | Arms: 900100-900132 | Fury: 900133-900238 | Prot: 900239-900199 |
+| **Warrior** | 900100-900199 | Arms: 900100-900132 | Fury: 900133-900165 | Prot: 900166-900199 |
 | **Paladin** | 900200-900299 | Holy: 900200-900232 | Prot: 900233-900265 | Ret: 900266-900299 |
 | **DK** | 900300-900399 | Blood: 900300-900332 | Frost: 900333-900365 | Unholy: 900366-900399 |
 | **Shaman** | 900400-900499 | Ele: 900400-900432 | Enhance: 900433-900465 | Resto: 900466-900499 |
@@ -24,15 +24,15 @@
 
 | Klasse | Spec | Belegt | Frei | Status |
 |--------|------|--------|------|--------|
-| Warrior | Arms | 900100-900109 (10) | 900110-900132 (23) | getestet |
-| Warrior | Fury | 900134-900145 (12) | 900146-900165 (20) | getestet |
+| Warrior | Arms | 900100-900107 (8) | 900108-900132 (25) | getestet |
+| Warrior | Fury | 900108-900121 (14) | 900122-900165 (44) | getestet |
 | Warrior | Prot | 900168-900175 (8) | 900176-900199 (24) | implementiert |
 | Paladin | Holy | 900200-900210 (11) | 900211-900232 (22) | implementiert |
 | Paladin | Prot | 900234-900241 (8) | 900242-900265 (24) | implementiert |
 | Paladin | Ret | 900268-900275 (8) | 900276-900299 (24) | implementiert |
 | DK | Blood | 900300-900304 (5) | 900305-900332 (28) | implementiert |
 | DK | Frost | 900333 (1) | 900334-900365 (32) | implementiert |
-| DK | Unholy | 900366-900367 (2) | 900368-900399 (32) | implementiert |
+| DK | Unholy | 900366-900368 (3) | 900369-900399 (31) | implementiert |
 | Shaman | Ele | 900400-900408 (9) | 900409-900432 (24) | implementiert |
 | Shaman | Enh | 900433-900440 (8) | 900441-900465 (25) | implementiert |
 | Shaman | Resto | 900466-900467 (2) | 900468-900499 (32) | implementiert |
@@ -47,10 +47,20 @@
 | Rogue | Assa | 900600-900604 (5) | 900605-900632 (28) | implementiert |
 | Rogue | Combat | 900633-900638 (6) | 900639-900665 (27) | implementiert |
 | Rogue | Sub | 900666-900669 (4) | 900670-900699 (30) | implementiert |
+| Mage | Arcane | 900700-900713 (14) | 900714-900732 (19) | implementiert |
+| Mage | Fire | 900733-900740 (8) | 900741-900765 (25) | implementiert |
+| Mage | Frost | 900766-900774 (9) | 900775-900799 (25) | implementiert |
+| Warlock | Affli | 900800-900803 (4) | 900804-900832 (29) | implementiert |
+| Warlock | Demo | 900833-900844 (12) | 900845-900865 (21) | implementiert |
+| Warlock | Destro | 900866-900872 (7) | 900873-900899 (27) | implementiert |
+| Priest | Disc | 900900-900903 (4) | 900904-900932 (29) | implementiert |
+| Priest | Holy | 900933 (1) | 900934-900965 (32) | implementiert |
+| Priest | Shadow | 900966-900968 (3) | 900969-900999 (31) | implementiert |
+| Non-Class | Global | 901100-901108 (9) | 901109-901199 (91) | implementiert |
 
 ---
 
-### Warrior — Arms (900100-900132)
+### Warrior — Arms (900100-900107)
 
 | # | Spell ID | Effekt | Ansatz | Status |
 |---|----------|--------|--------|--------|
@@ -62,27 +72,30 @@
 | 6 | 900105 | 20% Crit-Chance → Enhanced Execute (5 stacks) | C++ | getestet |
 | 7 | 900106 | Enhanced Execute (Damage Spell = Paragon Strike) | C++ | getestet |
 | 8 | 900107 | Phys. Damage → Bladestorm CD -0.5s | C++ | getestet |
-| 9 | 900108 | Whirlwind unlimited targets | DBC | getestet |
-| 10a | 900109 | WW 1 target → autocast Overpower | C++ | getestet |
-| 10b | *neue ID* | Thunderclap → Rend + 5× Sunder Armor | C++ | geplant |
 
-**TC→Rend+Sunder Details**: SpellScript auf Thunderclap. `AfterHit` pro Target: Rend casten + 5× Sunder Armor applyen. Wird auch von Prot geteilt. Braucht eigene Spell-ID (passive Marker-Aura) + Hook auf Original-TC oder eigene TC-Variante.
+### Warrior — Fury (900108-900121)
 
-### Warrior — Fury (900133-900165)
+> **Besonderheit**: Die Fury-Spells wurden manuell direkt in Spell.dbc erstellt (IDs 900108-900121),
+> nicht über das ID-Block-Schema (900133-900165). Sie liegen daher im Arms-Bereich der ID-Tabelle,
+> sind aber funktional Fury-Spells. Kein C++ nötig — alle Effekte laufen über DBC passive Auras,
+> Proc-Trigger und spell_proc. Die alten C++/SQL-Einträge (900138-900145) wurden entfernt.
 
 | # | Spell ID | Effekt | Ansatz | Status |
 |---|----------|--------|--------|--------|
-| 1 | 900134 | Bloodthirst +50% damage | DBC | getestet |
-| 2 | 900135 | Bloodthirst +9 targets (AoE) | DBC+C++ | getestet |
-| 3 | 900136 | Whirlwind damage +50% | DBC | getestet |
-| 4 | 900137 | Whirlwind unlimited targets | DBC | getestet |
-| 5 | 900138 | Cleave unlimited targets | DBC | getestet |
-| 6 | 900139 | 20% Auto-Attack → free Whirlwind | C++ | getestet |
-| 7 | 900140 | BT → next WW +50% damage (Bloody WW passive) | C++ | getestet |
-| 8 | 900141 | WW resets Bloodthirst CD | C++ | getestet |
-| 9 | 900142+900144 | WW 1 target → autocast Overpower | C++ | getestet |
-| — | 900143+900145 | WW 1 target → autocast Slam | C++ | getestet |
-| 10 | (DBC) | Remove WW stance requirement | DBC | getestet |
+| 1 | 900108 | Whirlwind unlimited targets | DBC | getestet |
+| 2 | 900109 | Improved Bloodthirst Damage | DBC | getestet |
+| 3 | 900110 | Bloodthirst Cleave | DBC | getestet |
+| 4 | 900111 | Improved Whirlwind Damage | DBC | getestet |
+| 5 | 900112 | Cleave unlimited targets | DBC | getestet |
+| 6 | 900113 | Whirly Attacks (Proc) | DBC | getestet |
+| 7 | 900114 | Whirly Attacks (Passive) | DBC | getestet |
+| 8 | 900115 | Bloody Whirlwind (Aura) | DBC | getestet |
+| 9 | 900116 | Bloody Whirlwind (Passive) | DBC | getestet |
+| 10 | 900117 | Speedy Bloodthirst (Passive) | DBC | getestet |
+| 11 | 900118 | Whirlwind: Overpower (Passive) | DBC | getestet |
+| 12 | 900119 | Whirlwind: Bloodthirst (Passive) | DBC | getestet |
+| 13 | 900120 | Whirlwind: Overpower (Proc) | DBC | getestet |
+| 14 | 900121 | Whirlwind: Bloodthirst (Proc) | DBC | getestet |
 
 ### Warrior — Prot (900166-900199)
 
@@ -107,13 +120,13 @@
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900900 | Holy Shock AoE damage | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf HS-Damage (-25912): `AfterHit` → CastSpell(900208) AoE Holy Damage um Target. Prüft `HasAura(900200)`. |
-| 2 | 900901 | Holy Shock AoE heal | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf HS-Heal (-25914): `AfterHit` → CastSpell(900209) AoE Holy Heal um Target. Prüft `HasAura(900201)`. |
-| 3 | 900902 | Holy Shock always both | C++ | implementiert | Marker-Aura (DUMMY). Zwei Scripts: (a) auf HS-Damage: `AfterHit` → auto-heal nächsten verletzten Ally (HS-Heal R7). (b) auf HS-Heal: `AfterHit` → auto-damage nächsten Feind (HS-Damage R7). Prüft `HasAura(900202)`. |
-| 4 | 900933 | Holy Shock +50% | DBC | implementiert | Passive Aura: `ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x200000 (Holy Shock). spell_dbc Entry. |
-| 5 | 900966 | Consecration also heals | C++ | implementiert | Marker-Aura (DUMMY). C++ AuraScript auf Consecration (48819): `OnEffectPeriodic` → CastSpell(900210) AoE Holy Heal um Caster. Prüft `HasAura(900204)`. |
-| 6 | 900333 | Consecration around you | DBC | implementiert | Marker-Aura. Consecration-DBC muss separat gepatcht werden (TargetA → `TARGET_DEST_CASTER`). **Shared mit Prot und Ret**. |
-| 7 | 900366 | Consecration +50% | DBC | implementiert | Passive Aura: `ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x20 (Consecration). |
+| 1 | 900200 | Holy Shock AoE damage | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf HS-Damage (-25912): `AfterHit` → CastSpell(900208) AoE Holy Damage um Target. Prüft `HasAura(900200)`. |
+| 2 | 900201 | Holy Shock AoE heal | C++ | implementiert | Marker-Aura (DUMMY). C++ SpellScript auf HS-Heal (-25914): `AfterHit` → CastSpell(900209) AoE Holy Heal um Target. Prüft `HasAura(900201)`. |
+| 3 | 900202 | Holy Shock always both | C++ | implementiert | Marker-Aura (DUMMY). Zwei Scripts: (a) auf HS-Damage: `AfterHit` → auto-heal nächsten verletzten Ally (HS-Heal R7). (b) auf HS-Heal: `AfterHit` → auto-damage nächsten Feind (HS-Damage R7). Prüft `HasAura(900202)`. |
+| 4 | 900203 | Holy Shock +50% | DBC | implementiert | Passive Aura: `ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x200000 (Holy Shock). spell_dbc Entry. |
+| 5 | 900204 | Consecration also heals | C++ | implementiert | Marker-Aura (DUMMY). C++ AuraScript auf Consecration (48819): `OnEffectPeriodic` → CastSpell(900210) AoE Holy Heal um Caster. Prüft `HasAura(900204)`. |
+| 6 | 900205 | Consecration around you | DBC | implementiert | Marker-Aura. Consecration-DBC muss separat gepatcht werden (TargetA → `TARGET_DEST_CASTER`). **Shared mit Prot und Ret**. |
+| 7 | 900206 | Consecration +50% | DBC | implementiert | Passive Aura: `ADD_PCT_MODIFIER` (108) + `SPELLMOD_DAMAGE` (0). EffectSpellClassMaskA=0x20 (Consecration). |
 | 8 | 900207 | Consecration +5sec | DBC | implementiert | Passive Aura: `ADD_FLAT_MODIFIER` (107) + `SPELLMOD_DURATION` (17). BasePoints=5000ms. EffectSpellClassMaskA=0x20. |
 | H1 | 900208 | Helper: HS AoE Damage | DBC | implementiert | Instant AoE Holy Damage. Effect=SCHOOL_DAMAGE(2), Target=DEST_AREA_ENEMY(15), BasePoints=800+100rnd, 10yd. |
 | H2 | 900209 | Helper: HS AoE Heal | DBC | implementiert | Instant AoE Holy Heal. Effect=HEAL(10), Target=DEST_AREA_ALLY(30), BasePoints=800+100rnd, 10yd. |
@@ -354,47 +367,47 @@
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900700 | Channeling Evocation increases spell damage | C++ | geplant | Evocation (12051) ist ein Channel-Spell (8s). Ansatz: AuraScript auf Evocation → `OnApply`: Buff mit `SPELL_AURA_MOD_DAMAGE_PERCENT_DONE` (ALL_SCHOOLS) auf Caster stacken, pro Tick steigend. `OnRemove`: Buff bleibt X Sekunden oder permanent. Alternativ: Während Channel stacking Aura, z.B. +10% Spell Damage pro Sekunde Channel → bis +80% nach vollem Channel. Duration des Buffs nach Channel konfigurierbar. |
+| 1 | 900700 | Channeling Evocation increases spell damage | C++ | implementiert | Evocation (12051) ist ein Channel-Spell (8s). Ansatz: AuraScript auf Evocation → `OnApply`: Buff mit `SPELL_AURA_MOD_DAMAGE_PERCENT_DONE` (ALL_SCHOOLS) auf Caster stacken, pro Tick steigend. `OnRemove`: Buff bleibt X Sekunden oder permanent. Alternativ: Während Channel stacking Aura, z.B. +10% Spell Damage pro Sekunde Channel → bis +80% nach vollem Channel. Duration des Buffs nach Channel konfigurierbar. |
 
 ### Mage — Arcane (900700-900732)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900701 | Mana regen +2% per missing mana % | C++ | geplant | Dynamische Mana-Regen-Skalierung. `PlayerScript::OnUpdateManaRegen` oder periodic Aura-Tick: Berechne fehlende Mana% → setze Regen-Bonus = fehlende% × 2%. Bei 50% Mana fehlen → +100% Mana Regen. Bei 90% fehlen → +180%. Passive Aura mit `SPELL_AURA_OBS_MOD_POWER` oder C++ Hook auf `Player::RegenerateMana()`. Sehr starke Mana-Sustain-Mechanik. |
-| 2 | 900702 | Arcane Barrage +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Arcane Barrage (44781). SpellFamilyName=3, SpellFamilyFlags für Barrage. Einfacher Damage-Multiplikator. |
-| 3 | 900703 | Arcane Barrage +9 targets | DBC/C++ | geplant | Arcane Barrage (44781) trifft normalerweise 3 Targets. DBC: `MaxAffectedTargets` auf 10+ setzen. Oder C++: `OnObjectAreaTargetSelect` → Target-Limit entfernen. |
-| 4 | 900704 | Arcane Blast cast time -50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` (SPELLMOD_CASTING_TIME) -50% auf Arcane Blast (42897). Base Cast Time 2.5s → 1.25s. Stapelt mit Arcane Blast Debuff (noch schneller mit Stacks). |
-| 5 | 900705 | Arcane Blast +9 targets | C++ | geplant | Arcane Blast (42897) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Radius. CastSpell(AB-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900710). |
-| 6 | 900706 | Arcane Charges stack up to 8 | DBC/C++ | geplant | Arcane Blast Debuff (36032) stackt normalerweise bis 4. DBC: `StackAmount` auf 8 setzen. C++: Falls hardcoded → `AuraScript::OnStackChange` → Allow stacks >4. Jeder Stack erhöht AB Damage +15% und Mana Cost +150% (Base-Werte). 8 Stacks = +120% Damage, +1200% Mana Cost. Balancing beachten! |
-| 7 | 900707 | Arcane Explosion generates 1 Arcane Charge (like Arcane Blast) | C++ | geplant | Arcane Explosion (42921) ist AoE Instant. SpellScript `AfterCast` → ApplyAura(Arcane Blast Debuff 36032, 1 Stack) auf Caster. Gleiche Mechanik wie AB aber ohne Consume. AE wird zu einem AoE Arcane Charge Generator. |
-| 8 | 900708 | Below 30% health → activate Mana Shield + restore all mana | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_TAKEN_DAMAGE` (0x4000). `HandleProc`: Wenn Health <30% → CastSpell(Mana Shield 43020, triggered=true) + SetPower(MANA, MaxMana). ICD empfohlen (z.B. 60s) um Abuse zu verhindern. Sehr starke Überlebens-Mechanik: Volle Mana + Shield bei Low HP. |
-| 9 | 900709 | Blink target location selection | C++ | geplant | Blink (1953) teleportiert normalerweise 20yd vorwärts. Ansatz: Override Blink → Click-to-Blink mit Target-Location. SpellScript `HandleDummy`: Lese SpellDestination → Teleport Caster dorthin (max Range z.B. 40yd). DBC: Spell Target-Type auf `TARGET_DEST_DEST` ändern. Braucht Client-seitig: Spell zeigt Ground-Target-Cursor. Vergleichbar mit Heroic Leap Targeting. |
+| 1 | 900701 | Mana regen +2% per missing mana % | C++ | implementiert | Dynamische Mana-Regen-Skalierung. `PlayerScript::OnUpdateManaRegen` oder periodic Aura-Tick: Berechne fehlende Mana% → setze Regen-Bonus = fehlende% × 2%. Bei 50% Mana fehlen → +100% Mana Regen. Bei 90% fehlen → +180%. Passive Aura mit `SPELL_AURA_OBS_MOD_POWER` oder C++ Hook auf `Player::RegenerateMana()`. Sehr starke Mana-Sustain-Mechanik. |
+| 2 | 900702 | Arcane Barrage +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Arcane Barrage (44781). SpellFamilyName=3, SpellFamilyFlags für Barrage. Einfacher Damage-Multiplikator. |
+| 3 | 900703 | Arcane Barrage +9 targets | DBC/C++ | implementiert | Arcane Barrage (44781) trifft normalerweise 3 Targets. DBC: `MaxAffectedTargets` auf 10+ setzen. Oder C++: `OnObjectAreaTargetSelect` → Target-Limit entfernen. |
+| 4 | 900704 | Arcane Blast cast time -50% | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` (SPELLMOD_CASTING_TIME) -50% auf Arcane Blast (42897). Base Cast Time 2.5s → 1.25s. Stapelt mit Arcane Blast Debuff (noch schneller mit Stacks). |
+| 5 | 900705 | Arcane Blast +9 targets | C++ | implementiert | Arcane Blast (42897) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Radius. CastSpell(AB-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900710). |
+| 6 | 900706 | Arcane Charges stack up to 8 | DBC/C++ | implementiert | Arcane Blast Debuff (36032) stackt normalerweise bis 4. DBC: `StackAmount` auf 8 setzen. C++: Falls hardcoded → `AuraScript::OnStackChange` → Allow stacks >4. Jeder Stack erhöht AB Damage +15% und Mana Cost +150% (Base-Werte). 8 Stacks = +120% Damage, +1200% Mana Cost. Balancing beachten! |
+| 7 | 900707 | Arcane Explosion generates 1 Arcane Charge (like Arcane Blast) | C++ | implementiert | Arcane Explosion (42921) ist AoE Instant. SpellScript `AfterCast` → ApplyAura(Arcane Blast Debuff 36032, 1 Stack) auf Caster. Gleiche Mechanik wie AB aber ohne Consume. AE wird zu einem AoE Arcane Charge Generator. |
+| 8 | 900708 | Below 30% health → activate Mana Shield + restore all mana | C++ | implementiert | Passive Proc-Aura: `PROC_FLAG_TAKEN_DAMAGE` (0x4000). `HandleProc`: Wenn Health <30% → CastSpell(Mana Shield 43020, triggered=true) + SetPower(MANA, MaxMana). ICD empfohlen (z.B. 60s) um Abuse zu verhindern. Sehr starke Überlebens-Mechanik: Volle Mana + Shield bei Low HP. |
+| 9 | 900709 | Blink target location selection | C++ | implementiert | Blink (1953) teleportiert normalerweise 20yd vorwärts. Ansatz: Override Blink → Click-to-Blink mit Target-Location. SpellScript `HandleDummy`: Lese SpellDestination → Teleport Caster dorthin (max Range z.B. 40yd). DBC: Spell Target-Type auf `TARGET_DEST_DEST` ändern. Braucht Client-seitig: Spell zeigt Ground-Target-Cursor. Vergleichbar mit Heroic Leap Targeting. |
 
 ### Mage — Fire (900733-900765)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900733 | Fireball +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Fireball (42833). SpellFamilyName=3, SpellFamilyFlags für Fireball. Einfacher Damage-Multiplikator. |
-| 2 | 900734 | Fireball +9 targets | C++ | geplant | Fireball (42833) ist Single-Target Projectile. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Radius. CastSpell(Fireball-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900739). |
-| 3 | 900735 | Pyroblast +9 targets | C++ | geplant | Pyroblast (42891) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(Pyro-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900740). |
-| 4 | 900736 | Pyroblast +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Pyroblast (42891). Einfacher Damage-Multiplikator. |
-| 5 | 900737 | Fire Blast off GCD and usable while casting | DBC/C++ | geplant | Fire Blast (42873): DBC → `StartRecoveryCategory` = 0 (off GCD). Attribute `SPELL_ATTR4_CAN_CAST_WHILE_CASTING` setzen. Ermöglicht Fire Blast als Weave-Spell während Fireball/Pyroblast Cast. Vergleichbar mit Retail-Fire-Mage Design. |
-| 6 | 900738 | Pyroblast now triggers Hot Streak | C++ | geplant | Hot Streak (48108) proct normalerweise bei 2 aufeinanderfolgenden Crits. Ansatz: Pyroblast Cast (auch non-crit) → automatisch Hot Streak Buff (48108) applyen. SpellScript auf Pyroblast `AfterCast` → AuraScript: ApplyAura(Hot Streak). Effekt: Jeder Pyroblast gibt guaranteed nächsten Instant Pyroblast. Extrem starker Damage-Loop! |
+| 1 | 900733 | Fireball +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Fireball (42833). SpellFamilyName=3, SpellFamilyFlags für Fireball. Einfacher Damage-Multiplikator. |
+| 2 | 900734 | Fireball +9 targets | C++ | implementiert | Fireball (42833) ist Single-Target Projectile. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Radius. CastSpell(Fireball-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900739). |
+| 3 | 900735 | Pyroblast +9 targets | C++ | implementiert | Pyroblast (42891) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(Pyro-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900740). |
+| 4 | 900736 | Pyroblast +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Pyroblast (42891). Einfacher Damage-Multiplikator. |
+| 5 | 900737 | Fire Blast off GCD and usable while casting | DBC/C++ | implementiert | Fire Blast (42873): DBC → `StartRecoveryCategory` = 0 (off GCD). Attribute `SPELL_ATTR4_CAN_CAST_WHILE_CASTING` setzen. Ermöglicht Fire Blast als Weave-Spell während Fireball/Pyroblast Cast. Vergleichbar mit Retail-Fire-Mage Design. |
+| 6 | 900738 | Pyroblast now triggers Hot Streak | C++ | implementiert | Hot Streak (48108) proct normalerweise bei 2 aufeinanderfolgenden Crits. Ansatz: Pyroblast Cast (auch non-crit) → automatisch Hot Streak Buff (48108) applyen. SpellScript auf Pyroblast `AfterCast` → AuraScript: ApplyAura(Hot Streak). Effekt: Jeder Pyroblast gibt guaranteed nächsten Instant Pyroblast. Extrem starker Damage-Loop! |
 
 ### Mage — Frost (900766-900799)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900766 | Frostbolt +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Frostbolt (42842). Einfacher Damage-Multiplikator. |
-| 2 | 900767 | Frostbolt +9 targets | C++ | geplant | Frostbolt (42842) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(Frostbolt-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900772). |
-| 3 | 900768 | Ice Lance +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Ice Lance (42914). Einfacher Damage-Multiplikator. |
-| 4 | 900769 | Ice Lance +9 targets | C++ | geplant | Ice Lance (42914) ist Single-Target Instant. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(Ice-Lance-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900773). |
-| 5 | 900770 | Water Elemental is permanent | DBC/C++ | geplant | Summon Water Elemental (31687) hat normalerweise 45s Duration. DBC: Duration auf -1 (permanent) oder sehr hohen Wert setzen. C++: Falls Duration hardcoded → `OnSummon` Hook → SetDuration(0) (permanent). Ähnlich wie Hunter Pet — Water Ele bleibt bis Tod/Dismiss. |
-| 6 | 900771 | Frost Comet Shower spell | C++ | geplant | Neuer aktiver Spell: Channel oder Instant → Spawnt mehrere Frost-Comets an zufälligen Positionen im Target-Bereich über X Sekunden. Jeder Comet = AoE Frost Damage + Slow. Implementierung: Periodic Trigger → SummonGameObject oder CastSpell(Comet-Impact-Helper) an Random-Position im Radius. Visuell: Blizzard-ähnlich aber mit größeren Einzel-Impacts. Braucht Helper-Spells + ggf. Custom Visual. Vergleichbar mit Meteor (Fire) aber Frost-themed. |
+| 1 | 900766 | Frostbolt +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Frostbolt (42842). Einfacher Damage-Multiplikator. |
+| 2 | 900767 | Frostbolt +9 targets | C++ | implementiert | Frostbolt (42842) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(Frostbolt-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900772). |
+| 3 | 900768 | Ice Lance +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Ice Lance (42914). Einfacher Damage-Multiplikator. |
+| 4 | 900769 | Ice Lance +9 targets | C++ | implementiert | Ice Lance (42914) ist Single-Target Instant. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(Ice-Lance-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900773). |
+| 5 | 900770 | Water Elemental is permanent | DBC/C++ | implementiert | Summon Water Elemental (31687) hat normalerweise 45s Duration. DBC: Duration auf -1 (permanent) oder sehr hohen Wert setzen. C++: Falls Duration hardcoded → `OnSummon` Hook → SetDuration(0) (permanent). Ähnlich wie Hunter Pet — Water Ele bleibt bis Tod/Dismiss. |
+| 6 | 900771 | Frost Comet Shower spell | C++ | implementiert | Neuer aktiver Spell: Channel oder Instant → Spawnt mehrere Frost-Comets an zufälligen Positionen im Target-Bereich über X Sekunden. Jeder Comet = AoE Frost Damage + Slow. Implementierung: Periodic Trigger → SummonGameObject oder CastSpell(Comet-Impact-Helper) an Random-Position im Radius. Visuell: Blizzard-ähnlich aber mit größeren Einzel-Impacts. Braucht Helper-Spells + ggf. Custom Visual. Vergleichbar mit Meteor (Fire) aber Frost-themed. |
 
-> **Helper-Spells Mage**: 900705 (AB +9) → Helper 900422. 900734 (Fireball +9) → Helper 900423. 900735 (Pyro +9) → Helper 900424. 900767 (Frostbolt +9) → Helper 900425. 900769 (Ice Lance +9) → Helper 900426. 900771 (Comet Shower) braucht Impact-Helper + evtl. Visual-Spells. IDs ab 900710+ für Helper verfügbar.
+> **Helper-Spells Mage**: 900702 (ABarr AoE) → Helper 900710. 900705 (AB +9) → Helper 900711. 900700 (Evoc Power) → Buff 900712. 900709 (Blink) → Helper 900713. 900734 (Fireball +9) → Helper 900739. 900735 (Pyro +9) → Helper 900740. 900767 (Frostbolt +9) → Helper 900772. 900769 (Ice Lance +9) → Helper 900773. 900771 (Comet Shower) → Helper 900774.
 
-> **Besonders aufwändig**: 900701 (Mana Regen Scaling) braucht dynamische Berechnung pro Regen-Tick. 900709 (Blink Target Location) braucht Client-seitig Ground-Target-Cursor — evtl. DBC-Spell-Target-Type-Patch nötig. 900738 (Pyro → Hot Streak Loop) ist ein guaranteed Instant-Pyro-Chain — extrem starker Burst, Balancing kritisch. 900771 (Frost Comet Shower) ist ein komplett neuer Spell mit Custom-Visuals. Fire Meteor (nicht explizit als ID, wird in 900421-Beschreibung referenziert) ist ähnlich aufwändig.
+> **Besonders aufwändig**: 900701 (Mana Regen Scaling) braucht dynamische Berechnung pro Regen-Tick. 900709 (Blink Target Location) braucht Client-seitig Ground-Target-Cursor — evtl. DBC-Spell-Target-Type-Patch nötig. 900738 (Pyro → Hot Streak Loop) ist ein guaranteed Instant-Pyro-Chain — extrem starker Burst, Balancing kritisch. 900771 (Frost Comet Shower) ist ein komplett neuer Spell mit Custom-Visuals. Fire Meteor ist ähnlich aufwändig.
 
 ---
 
@@ -404,34 +417,34 @@
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900800 | DoTs have a chance to deal shadow damage AoE | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC` (0x400000). `HandleProc`: Wenn Periodic-Damage-Tick von Warlock-DoT → Chance X% → CastSpell(Shadow-AoE-Helper, triggered=true) zentriert auf DoT-Target. Shadow AoE = Area Damage um das Target. Braucht Helper-AoE-Spell (z.B. 900803). ICD empfohlen (z.B. 2s). |
-| 2 | 900801 | Corruption +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Corruption (47813). SpellFamilyName=5, SpellFamilyFlags für Corruption. Einfacher Damage-Multiplikator für Periodic + Initial Damage. |
-| 3 | 900802 | DoTs have a chance to spread to 2 additional targets on tick | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC`. `HandleProc`: Wenn DoT-Tick → Chance X% → Finde 2 nächste Feinde im Radius die den DoT NICHT haben → ApplyAura(gleicher DoT) auf sie. Muss DoT-Spell-ID aus ProcEventInfo extrahieren und auf neue Targets casten. Sehr starke Spread-Mechanik — kann exponentiell wachsen! Braucht evtl. Max-Target-Cap pro Cast. |
+| 1 | 900800 | DoTs have a chance to deal shadow damage AoE | C++ | implementiert | Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC` (0x400000). `HandleProc`: Wenn Periodic-Damage-Tick von Warlock-DoT → Chance X% → CastSpell(Shadow-AoE-Helper, triggered=true) zentriert auf DoT-Target. Shadow AoE = Area Damage um das Target. Braucht Helper-AoE-Spell (z.B. 900803). ICD empfohlen (z.B. 2s). |
+| 2 | 900801 | Corruption +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Corruption (47813). SpellFamilyName=5, SpellFamilyFlags für Corruption. Einfacher Damage-Multiplikator für Periodic + Initial Damage. |
+| 3 | 900802 | DoTs have a chance to spread to 2 additional targets on tick | C++ | implementiert | Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC`. `HandleProc`: Wenn DoT-Tick → Chance X% → Finde 2 nächste Feinde im Radius die den DoT NICHT haben → ApplyAura(gleicher DoT) auf sie. Muss DoT-Spell-ID aus ProcEventInfo extrahieren und auf neue Targets casten. Sehr starke Spread-Mechanik — kann exponentiell wachsen! Braucht evtl. Max-Target-Cap pro Cast. |
 
 ### Warlock — Demonology (900833-900865)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900833 | Killing an enemy increases Demon Form duration | C++ | geplant | Metamorphosis (47241) hat 30s Duration. `PlayerScript::OnKill` oder `KillCredit`-Hook: Wenn Player in Metamorphosis (HasAura 47241) → ExtendAura Duration um X Sekunden (z.B. +5s pro Kill). `Aura::SetDuration(GetDuration() + 5000)`. Kein Cap oder mit Cap (z.B. max 120s). Farming-Sustain-Mechanik. |
-| 2 | 900834 | Demon Form: periodic shadow AoE + self heal | C++ | geplant | Passive Aura aktiv nur während Metamorphosis (47241). Periodic Tick alle X Sekunden → CastSpell(Shadow-AoE-Helper, triggered=true) um Caster + CastSpell(Heal-Helper, triggered=true) auf Caster. Heal = % des Damage dealt oder flat. Ansatz: AuraScript auf Metamorphosis → `OnPeriodicTick` oder separater Periodic-Trigger-Spell der nur aktiv ist wenn Meta-Aura vorhanden. |
-| 3 | 900835 | Demons have chance to spawn lesser version of themselves | C++ | geplant | Proc-Aura auf Warlock-Pet: `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` (0x4). `HandleProc`: Chance X% → SummonCreature(Lesser-Version-NPC) an Pet-Position. Lesser Version: Temporärer NPC (z.B. 30s Duration), reduzierte Stats (50% HP/Damage), gleicher NPC-Typ aber mit Suffix. Braucht Custom Creature-Templates pro Pet-Typ (Lesser Imp, Lesser Felguard, etc.). ICD empfohlen (z.B. 30s). |
-| 4 | 900836 | Imp Firebolt +50% damage | DBC | geplant | Passive Aura auf Warlock (transferred to Pet): `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Imp Firebolt (47964). Oder: Aura direkt auf Pet via Owner-Aura-Scaling. Einfacher Damage-Multiplikator. |
-| 5 | 900837 | Imp Firebolt +9 targets | C++ | geplant | Imp Firebolt (47964) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Radius. CastSpell(Firebolt-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900841). Imp wird zum AoE-Caster. |
-| 6 | 900838 | Felguard AoE unlimited targets | DBC/C++ | geplant | Felguard Cleave (47994) trifft normalerweise begrenzte Targets. DBC: `MaxAffectedTargets` entfernen/sehr hoch. C++: `OnObjectAreaTargetSelect` → kein Target-Limit. |
-| 7 | 900839 | Felguard +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_MOD_DAMAGE_PERCENT_DONE` +50% auf Felguard (alle Schools). Applied via Owner-to-Pet Aura Scaling. Einfacher Damage-Multiplikator für alle Felguard-Abilities. |
-| 8 | 900840 | Sacrificing pet grants ALL pet bonuses | C++ | geplant | Demonic Sacrifice (18788) gibt normalerweise einen Buff abhängig vom geopferten Pet-Typ (Imp→Fire Dmg, VW→HP Regen, etc.). Ansatz: SpellScript Override → Beim Sacrifice → ApplyAura für ALLE Pet-Typ-Buffs gleichzeitig (Imp-Bonus + VW-Bonus + Succubus-Bonus + Felhunter-Bonus + Felguard-Bonus). Braucht Liste aller Sacrifice-Buff-IDs und Apply aller auf einmal. |
+| 1 | 900833 | Killing an enemy increases Demon Form duration | C++ | implementiert | Metamorphosis (47241) hat 30s Duration. `PlayerScript::OnKill` oder `KillCredit`-Hook: Wenn Player in Metamorphosis (HasAura 47241) → ExtendAura Duration um X Sekunden (z.B. +5s pro Kill). `Aura::SetDuration(GetDuration() + 5000)`. Kein Cap oder mit Cap (z.B. max 120s). Farming-Sustain-Mechanik. |
+| 2 | 900834 | Demon Form: periodic shadow AoE + self heal | C++ | implementiert | Passive Aura aktiv nur während Metamorphosis (47241). Periodic Tick alle X Sekunden → CastSpell(Shadow-AoE-Helper, triggered=true) um Caster + CastSpell(Heal-Helper, triggered=true) auf Caster. Heal = % des Damage dealt oder flat. Ansatz: AuraScript auf Metamorphosis → `OnPeriodicTick` oder separater Periodic-Trigger-Spell der nur aktiv ist wenn Meta-Aura vorhanden. |
+| 3 | 900835 | Demons have chance to spawn lesser version of themselves | C++ | implementiert | Proc-Aura auf Warlock-Pet: `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` (0x4). `HandleProc`: Chance X% → SummonCreature(Lesser-Version-NPC) an Pet-Position. Lesser Version: Temporärer NPC (z.B. 30s Duration), reduzierte Stats (50% HP/Damage), gleicher NPC-Typ aber mit Suffix. Braucht Custom Creature-Templates pro Pet-Typ (Lesser Imp, Lesser Felguard, etc.). ICD empfohlen (z.B. 30s). |
+| 4 | 900836 | Imp Firebolt +50% damage | DBC | implementiert | Passive Aura auf Warlock (transferred to Pet): `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Imp Firebolt (47964). Oder: Aura direkt auf Pet via Owner-Aura-Scaling. Einfacher Damage-Multiplikator. |
+| 5 | 900837 | Imp Firebolt +9 targets | C++ | implementiert | Imp Firebolt (47964) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden im Radius. CastSpell(Firebolt-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900841). Imp wird zum AoE-Caster. |
+| 6 | 900838 | Felguard AoE unlimited targets | DBC/C++ | implementiert | Felguard Cleave (47994) trifft normalerweise begrenzte Targets. DBC: `MaxAffectedTargets` entfernen/sehr hoch. C++: `OnObjectAreaTargetSelect` → kein Target-Limit. |
+| 7 | 900839 | Felguard +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_MOD_DAMAGE_PERCENT_DONE` +50% auf Felguard (alle Schools). Applied via Owner-to-Pet Aura Scaling. Einfacher Damage-Multiplikator für alle Felguard-Abilities. |
+| 8 | 900840 | Sacrificing pet grants ALL pet bonuses | C++ | implementiert | Demonic Sacrifice (18788) gibt normalerweise einen Buff abhängig vom geopferten Pet-Typ (Imp→Fire Dmg, VW→HP Regen, etc.). Ansatz: SpellScript Override → Beim Sacrifice → ApplyAura für ALLE Pet-Typ-Buffs gleichzeitig (Imp-Bonus + VW-Bonus + Succubus-Bonus + Felhunter-Bonus + Felguard-Bonus). Braucht Liste aller Sacrifice-Buff-IDs und Apply aller auf einmal. |
 
 ### Warlock — Destruction (900866-900899)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900866 | Shadow Bolt +9 targets | C++ | geplant | Shadow Bolt (47809) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(SB-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900871). |
-| 2 | 900867 | Shadow Bolt +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Shadow Bolt (47809). Einfacher Damage-Multiplikator. |
-| 3 | 900868 | Chaos Bolt +50% damage | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Chaos Bolt (59172). Einfacher Damage-Multiplikator. |
-| 4 | 900869 | Chaos Bolt cooldown -2 sec | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_FLAT_MODIFIER` (SPELLMOD_COOLDOWN) -2000ms auf Chaos Bolt (59172). Base CD 12s → 10s. Oder DBC direkt: `RecoveryTime` reduzieren. |
-| 5 | 900870 | Chaos Bolt +9 targets | C++ | geplant | Chaos Bolt (59172) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(CB-Damage-Helper, triggered=true). Chaos Bolt ignoriert Resistances — Helper-Spell sollte das ebenfalls tun (Attribute `SPELL_ATTR0_NO_IMMUNITIES` o.ä.). Braucht Helper-Spell (z.B. 900872). |
+| 1 | 900866 | Shadow Bolt +9 targets | C++ | implementiert | Shadow Bolt (47809) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(SB-Damage-Helper, triggered=true). Braucht Helper-Spell (z.B. 900871). |
+| 2 | 900867 | Shadow Bolt +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Shadow Bolt (47809). Einfacher Damage-Multiplikator. |
+| 3 | 900868 | Chaos Bolt +50% damage | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf Chaos Bolt (59172). Einfacher Damage-Multiplikator. |
+| 4 | 900869 | Chaos Bolt cooldown -2 sec | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_FLAT_MODIFIER` (SPELLMOD_COOLDOWN) -2000ms auf Chaos Bolt (59172). Base CD 12s → 10s. Oder DBC direkt: `RecoveryTime` reduzieren. |
+| 5 | 900870 | Chaos Bolt +9 targets | C++ | implementiert | Chaos Bolt (59172) ist Single-Target. SpellScript `AfterHit` → Chain zu 9 weiteren Feinden. CastSpell(CB-Damage-Helper, triggered=true). Chaos Bolt ignoriert Resistances — Helper-Spell sollte das ebenfalls tun (Attribute `SPELL_ATTR0_NO_IMMUNITIES` o.ä.). Braucht Helper-Spell (z.B. 900872). |
 
-> **Helper-Spells Warlock**: 900800 (DoT AoE) → Shadow-AoE-Helper 900466. 900837 (Imp Firebolt +9) → Helper 900467. 900866 (SB +9) → Helper 900468. 900870 (CB +9) → Helper 900469. 900835 (Lesser Demons) braucht Custom Creature-Templates. IDs ab 900803+ für Helper verfügbar.
+> **Helper-Spells Warlock**: 900800 (DoT AoE) → Shadow-AoE-Helper 900803. 900837 (Imp Firebolt +9) → Helper 900841. 900834 (Meta AoE) → Helper 900842. 900834 (Meta Heal) → Helper 900843. 900838 (FG Cleave) → Helper 900844. 900866 (SB +9) → Helper 900871. 900870 (CB +9) → Helper 900872. 900835 (Lesser Demons) braucht Custom Creature-Templates.
 
 > **Besonders aufwändig**: 900802 (DoT Spread) kann exponentiell wachsen — braucht Target-Cap um Server-Performance zu schützen. 900835 (Lesser Demon Spawn) braucht Custom Creature-Templates pro Pet-Typ mit eigener AI. 900840 (Sacrifice All Bonuses) muss alle Pet-Typ-Buffs korrekt identifizieren und stacken. 900833 (Meta Duration Extension) + 900834 (Meta AoE+Heal) zusammen machen Demo-Lock zu einem permanent transformierten AoE-Healer-Tank-Hybrid.
 
@@ -443,24 +456,24 @@
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900900 | Shields explode on breaking/fading | C++ | geplant | Power Word: Shield (48066) und andere Absorb-Shields. AuraScript `OnRemove`: Wenn RemoveMode = EXPIRE (fade) oder ENEMY_SPELL (break durch Damage) → CastSpell(Shield-Explosion-Helper, triggered=true) zentriert auf Shield-Target. Explosion = Holy/Shadow AoE Damage im Radius, Damage skaliert mit verbleibendem/absorbiertem Shield-Amount. Braucht Helper-AoE-Spell (z.B. 900903). Sehr cool thematisch — Disc wird zum AoE-DPS via Shields. |
-| 2 | 900901 | Shields +50% | DBC | geplant | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf PW:Shield (48066) Absorb-Amount. SpellFamilyName=6, SpellFamilyFlags für PW:S. Erhöht Absorb-Wert um 50%. Stackt mit existierenden Talents (Improved PW:S, Twin Disciplines, etc.). |
-| 3 | 900902 | Weakened Soul only 5 sec CD | DBC | geplant | Weakened Soul (6788) Debuff hat normalerweise 15s Duration. DBC: Duration auf 5000ms setzen. Ermöglicht viel häufigeres Re-Shielding. Einfache DBC-Duration-Änderung. Synergiert stark mit 900900 (Shield Explosion) — mehr Shields = mehr Explosions. |
+| 1 | 900900 | Shields explode on breaking/fading | C++ | implementiert | Power Word: Shield (48066) und andere Absorb-Shields. AuraScript `OnRemove`: Wenn RemoveMode = EXPIRE (fade) oder ENEMY_SPELL (break durch Damage) → CastSpell(Shield-Explosion-Helper, triggered=true) zentriert auf Shield-Target. Explosion = Holy/Shadow AoE Damage im Radius, Damage skaliert mit verbleibendem/absorbiertem Shield-Amount. Braucht Helper-AoE-Spell (z.B. 900903). Sehr cool thematisch — Disc wird zum AoE-DPS via Shields. |
+| 2 | 900901 | Shields +50% | DBC | implementiert | Passive Aura: `SPELL_AURA_ADD_PCT_MODIFIER` +50% auf PW:Shield (48066) Absorb-Amount. SpellFamilyName=6, SpellFamilyFlags für PW:S. Erhöht Absorb-Wert um 50%. Stackt mit existierenden Talents (Improved PW:S, Twin Disciplines, etc.). |
+| 3 | 900902 | Weakened Soul only 5 sec CD | DBC | implementiert | Weakened Soul (6788) Debuff hat normalerweise 15s Duration. DBC: Duration auf 5000ms setzen. Ermöglicht viel häufigeres Re-Shielding. Einfache DBC-Duration-Änderung. Synergiert stark mit 900900 (Shield Explosion) — mehr Shields = mehr Explosions. |
 
 ### Priest — Holy (900933-900965)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900933 | Direct heals have chance to cast Holy Fire on enemies in 10y radius of target | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_POS` (Positive Spell = Heal). `HandleProc`: Wenn Direct Heal (Flash Heal 48071, Greater Heal 48063, etc. — kein HoT) → Chance X% → Finde alle Feinde im 10yd Radius um Heal-Target → CastSpell(Holy Fire 48135, triggered=true) auf jeden. Dual-Purpose-Heal: Heilen + gleichzeitig AoE DPS. Braucht SpellFamily-Filter um nur Direct Heals zu triggern (nicht Renew/PoM). ICD empfohlen. |
+| 1 | 900933 | Direct heals have chance to cast Holy Fire on enemies in 10y radius of target | C++ | implementiert | Passive Proc-Aura: `PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_POS` (Positive Spell = Heal). `HandleProc`: Wenn Direct Heal (Flash Heal 48071, Greater Heal 48063, etc. — kein HoT) → Chance X% → Finde alle Feinde im 10yd Radius um Heal-Target → CastSpell(Holy Fire 48135, triggered=true) auf jeden. Dual-Purpose-Heal: Heilen + gleichzeitig AoE DPS. Braucht SpellFamily-Filter um nur Direct Heals zu triggern (nicht Renew/PoM). ICD empfohlen. |
 
 ### Priest — Shadow (900966-900999)
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 900966 | DoTs have a chance to deal shadow damage AoE | C++ | geplant | Gleicher Ansatz wie Warlock 900800. Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC`. `HandleProc`: Wenn Shadow-DoT-Tick (SW:Pain 48125, VT 48160, Devouring Plague 48300) → Chance X% → CastSpell(Shadow-AoE-Helper, triggered=true) am Target. Braucht Helper-AoE-Spell (z.B. 900968). ICD empfohlen. |
-| 2 | 900967 | DoTs have a chance to spread to 2 additional targets on tick | C++ | geplant | Gleicher Ansatz wie Warlock 900802. Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC`. `HandleProc`: DoT-Tick → Chance X% → Finde 2 nächste Feinde ohne den DoT → ApplyAura(gleicher DoT). Muss DoT-Spell-ID aus ProcEventInfo extrahieren. Gleiche Warnung: kann exponentiell wachsen, braucht Target-Cap. |
+| 1 | 900966 | DoTs have a chance to deal shadow damage AoE | C++ | implementiert | Gleicher Ansatz wie Warlock 900800. Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC`. `HandleProc`: Wenn Shadow-DoT-Tick (SW:Pain 48125, VT 48160, Devouring Plague 48300) → Chance X% → CastSpell(Shadow-AoE-Helper, triggered=true) am Target. Braucht Helper-AoE-Spell (z.B. 900968). ICD empfohlen. |
+| 2 | 900967 | DoTs have a chance to spread to 2 additional targets on tick | C++ | implementiert | Gleicher Ansatz wie Warlock 900802. Passive Proc-Aura: `PROC_FLAG_DONE_PERIODIC`. `HandleProc`: DoT-Tick → Chance X% → Finde 2 nächste Feinde ohne den DoT → ApplyAura(gleicher DoT). Muss DoT-Spell-ID aus ProcEventInfo extrahieren. Gleiche Warnung: kann exponentiell wachsen, braucht Target-Cap. |
 
-> **Helper-Spells Priest**: 900900 (Shield Explosion) → Holy/Shadow-AoE-Helper 900506. 900966 (DoT AoE) → Shadow-AoE-Helper 900507. IDs ab 900903+ für Helper verfügbar.
+> **Helper-Spells Priest**: 900900 (Shield Explosion) → Holy/Shadow-AoE-Helper 900903. 900966 (DoT AoE) → Shadow-AoE-Helper 900968.
 
 > **Besonders aufwändig**: 900900 (Shield Explosion) braucht korrekte `OnRemove`-Detection (fade vs. dispel vs. break) und Damage-Skalierung basierend auf Shield-Amount. 900933 (Heal → Holy Fire AoE) ist ein neuartiges Dual-Purpose-Konzept — muss sauber zwischen Direct Heals und HoTs unterscheiden. Shadow-DoT-Mechaniken (900966/900967) sind identisch zu Warlock — Code kann geshared werden.
 
@@ -472,13 +485,13 @@
 
 | # | Spell ID | Effekt | Ansatz | Status | Details |
 |---|----------|--------|--------|--------|---------|
-| 1 | 901100 | Cast while moving | DBC/C++ | geplant | Passive Aura: Muss alle Spells des Spielers betreffen. Ansatz: `SPELL_ATTR5_CAN_CHANNEL_WHEN_MOVING` reicht nur für Channels. Für alle Casts: C++ Hook auf `Spell::CheckCast()` → Skip `SPELL_FAILED_MOVING` Check wenn Aura aktiv. Oder: `Player::isMoving()` Override. Alternativ DBC: Aura mit `SPELL_AURA_CAST_WHILE_WALKING` (Aura 330, existiert in WotLK-DBC). Mächtigster globaler Buff — eliminiert Cast-Time-Weakness komplett für alle Caster-Klassen. |
-| 2 | 901101 | Kill enemy → heal 5% total HP | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_KILL` (0x1). `HandleProc`: `GetCaster()->CastCustomSpell(Heal-Helper, SPELLVALUE_BASE_POINT0, MaxHealth * 5 / 100, GetCaster(), triggered=true)`. Oder: `GetCaster()->ModifyHealth(MaxHealth * 0.05)`. Einfacher On-Kill-Heal. Kein ICD nötig (Kill-Events sind natürlich rate-limited). Braucht ggf. Helper-Heal-Spell (z.B. 901105) für Combat-Log-Visibility. |
-| 3 | 901102 | Attacks 25% chance to hit again (Extra Attack) | C++/DBC | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` (0x4) + `PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS` (0x10). Chance 25%. `HandleProc`: CastSpell(Extra-Attack-Helper, triggered=true) auf Target — wiederholt den letzten Angriff. Für Melee: `SPELL_AURA_ADD_EXTRA_ATTACKS` (wie Windfury/Sword Spec). Für Ranged/Spell: SpellScript `AfterHit` → CastSpell(gleicher Spell, triggered=true) mit 25% Chance. Achtung: Muss rekursive Procs verhindern (Extra-Attack triggert nicht nochmal). |
-| 4 | 901103 | Spells/abilities 10% chance to hit all enemies within 10y | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_NEG` + `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` + `PROC_FLAG_DONE_RANGED_AUTO_ATTACK`. Chance 10%. `HandleProc`: Finde alle Feinde im 10yd Radius um Target → CastSpell(Damage-Helper, triggered=true) auf jedes. Damage = gleicher Amount wie Original-Hit. Braucht ProcEventInfo → GetDamageInfo → GetDamage() für Damage-Wert. Braucht Helper-Damage-Spell (z.B. 901106). ICD empfohlen (z.B. 1s). |
-| 5 | 901104 | Avoid attack → counter attack | C++ | geplant | Passive Proc-Aura: `PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK` (0x2) mit `PROC_HIT_DODGE|PROC_HIT_PARRY|PROC_HIT_BLOCK` (Avoid-Events). `HandleProc`: Wenn Dodge/Parry/Block → CastSpell(Counter-Attack-Helper, triggered=true) auf Attacker. Counter Attack = Instant Melee-Damage zurück. Vergleichbar mit Rogue Riposte oder Warrior Overpower Proc — aber automatisch und für alle Klassen. Braucht Helper-Damage-Spell (z.B. 901107). |
+| 1 | 901100 | Cast while moving | DBC/C++ | implementiert | Passive Aura: Muss alle Spells des Spielers betreffen. Ansatz: `SPELL_ATTR5_CAN_CHANNEL_WHEN_MOVING` reicht nur für Channels. Für alle Casts: C++ Hook auf `Spell::CheckCast()` → Skip `SPELL_FAILED_MOVING` Check wenn Aura aktiv. Oder: `Player::isMoving()` Override. Alternativ DBC: Aura mit `SPELL_AURA_CAST_WHILE_WALKING` (Aura 330, existiert in WotLK-DBC). Mächtigster globaler Buff — eliminiert Cast-Time-Weakness komplett für alle Caster-Klassen. |
+| 2 | 901101 | Kill enemy → heal 5% total HP | C++ | implementiert | Passive Proc-Aura: `PROC_FLAG_KILL` (0x1). `HandleProc`: `GetCaster()->CastCustomSpell(Heal-Helper, SPELLVALUE_BASE_POINT0, MaxHealth * 5 / 100, GetCaster(), triggered=true)`. Oder: `GetCaster()->ModifyHealth(MaxHealth * 0.05)`. Einfacher On-Kill-Heal. Kein ICD nötig (Kill-Events sind natürlich rate-limited). Braucht ggf. Helper-Heal-Spell (z.B. 901105) für Combat-Log-Visibility. |
+| 3 | 901102 | Attacks 25% chance to hit again (Extra Attack) | C++/DBC | implementiert | Passive Proc-Aura: `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` (0x4) + `PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS` (0x10). Chance 25%. `HandleProc`: CastSpell(Extra-Attack-Helper, triggered=true) auf Target — wiederholt den letzten Angriff. Für Melee: `SPELL_AURA_ADD_EXTRA_ATTACKS` (wie Windfury/Sword Spec). Für Ranged/Spell: SpellScript `AfterHit` → CastSpell(gleicher Spell, triggered=true) mit 25% Chance. Achtung: Muss rekursive Procs verhindern (Extra-Attack triggert nicht nochmal). |
+| 4 | 901103 | Spells/abilities 10% chance to hit all enemies within 10y | C++ | implementiert | Passive Proc-Aura: `PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_NEG` + `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` + `PROC_FLAG_DONE_RANGED_AUTO_ATTACK`. Chance 10%. `HandleProc`: Finde alle Feinde im 10yd Radius um Target → CastSpell(Damage-Helper, triggered=true) auf jedes. Damage = gleicher Amount wie Original-Hit. Braucht ProcEventInfo → GetDamageInfo → GetDamage() für Damage-Wert. Braucht Helper-Damage-Spell (z.B. 901106). ICD empfohlen (z.B. 1s). |
+| 5 | 901104 | Avoid attack → counter attack | C++ | implementiert | Passive Proc-Aura: `PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK` (0x2) mit `PROC_HIT_DODGE|PROC_HIT_PARRY|PROC_HIT_BLOCK` (Avoid-Events). `HandleProc`: Wenn Dodge/Parry/Block → CastSpell(Counter-Attack-Helper, triggered=true) auf Attacker. Counter Attack = Instant Melee-Damage zurück. Vergleichbar mit Rogue Riposte oder Warrior Overpower Proc — aber automatisch und für alle Klassen. Braucht Helper-Damage-Spell (z.B. 901107). |
 
-> **Helper-Spells Non-Class**: 901101 (Kill Heal) → Heal-Helper 900555. 901103 (AoE Proc) → Damage-Helper 900556. 901104 (Counter Attack) → Damage-Helper 900557. IDs ab 901105+ für Helper verfügbar.
+> **Helper-Spells Non-Class**: 901101 (Kill Heal) → Heal-Helper 901105. 901102 (Extra Attack) → Helper 901108. 901103 (AoE Proc) → Damage-Helper 901106. 901104 (Counter Attack) → Damage-Helper 901107.
 
 > **Besonders aufwändig**: 901100 (Cast While Moving) ist der mächtigste Buff im gesamten System — verändert das Gameplay fundamental für alle Caster. Muss robust implementiert sein (Channel + Cast + Interruptible-Spells). 901102 (Extra Attack 25%) muss rekursive Procs sauber verhindern. 901103 (10% AoE Proc) braucht ICD um Spam bei schnellen DoT-Ticks zu verhindern.
 
