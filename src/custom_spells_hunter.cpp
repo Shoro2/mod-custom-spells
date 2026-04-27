@@ -101,8 +101,8 @@ class spell_custom_hunt_multishot_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            Unit::DealDamage(caster, target, static_cast<uint32>(damage),
-                nullptr, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL);
+            caster->CastCustomSpell(target, SPELL_HUNT_MULTISHOT_AOE_HELPER,
+                &damage, nullptr, nullptr, true);
         }
     }
 
