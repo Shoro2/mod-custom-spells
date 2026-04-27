@@ -173,11 +173,11 @@ class spell_custom_dkb_hs_aoe : public SpellScript
         {
             if (count >= 9)
                 break;
-            if (!target->IsAlive())
+            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            Unit::DealDamage(caster, target, static_cast<uint32>(damage),
-                nullptr, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL);
+            caster->CastCustomSpell(target, SPELL_DKB_HS_AOE_HELPER,
+                &damage, nullptr, nullptr, true);
             ++count;
         }
 

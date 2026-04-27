@@ -180,11 +180,11 @@ class spell_custom_prot_revenge_aoe : public SpellScript
 
         for (Unit* target : targets)
         {
-            if (!target->IsAlive())
+            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            Unit::DealDamage(caster, target, static_cast<uint32>(damage),
-                nullptr, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL);
+            caster->CastCustomSpell(target, SPELL_PROT_REVENGE_AOE_HELPER,
+                &damage, nullptr, nullptr, true);
 
             LOG_INFO("module",
                 "mod-custom-spells: Player {} -> Revenge AoE {} dmg on {}",

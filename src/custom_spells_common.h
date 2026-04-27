@@ -53,6 +53,7 @@ enum CustomSpellIds
     SPELL_PROT_BLOCK_TC_PASSIVE         = 900173,
     SPELL_PROT_BLOCK_AOE_DAMAGE         = 900174,
     SPELL_PROT_ENHANCED_THUNDERCLAP     = 900175,
+    SPELL_PROT_REVENGE_AOE_HELPER       = 900176,
 
     // ---- Paladin Holy (900200-900233) ----
     SPELL_HOLY_HS_AOE_DMG_PASSIVE       = 900200,
@@ -86,6 +87,7 @@ enum CustomSpellIds
     SPELL_RET_CS_AOE_PASSIVE            = 900273,
     SPELL_RET_EXORCISM_PROC_PASSIVE     = 900274,
     SPELL_RET_EXORCISM_BUFF             = 900275,
+    SPELL_RET_CS_AOE_HELPER             = 900276,
 
     // ---- DK Blood (900300-900332) ----
     SPELL_DKB_3_RUNE_WEAPONS_PASSIVE    = 900300,
@@ -93,6 +95,7 @@ enum CustomSpellIds
     SPELL_DKB_HS_DMG_PASSIVE            = 900302,
     SPELL_DKB_HS_AOE_PASSIVE            = 900303,
     SPELL_DKB_DEATHCOIL_PROC_PASSIVE    = 900304,
+    SPELL_DKB_HS_AOE_HELPER             = 900305,
 
     // ---- DK Frost (900333-900365) ----
     SPELL_DKF_FROST_WYRM_PASSIVE        = 900333,
@@ -126,9 +129,10 @@ enum CustomSpellIds
     SPELL_RST_TOTEM_FOLLOW_PASSIVE      = 900466,
     SPELL_RST_MANA_REGEN_PASSIVE        = 900467,
 
-    // ---- Hunter Shared (900500-900501) ----
+    // ---- Hunter Shared (900500-900501, 900506) ----
     SPELL_HUNT_ARROWS_PASSIVE           = 900500,
     SPELL_HUNT_MULTISHOT_AOE_PASSIVE    = 900501,
+    SPELL_HUNT_MULTISHOT_AOE_HELPER     = 900506,
 
     // ---- Hunter BM (900502-900532) ----
     SPELL_HUNT_BM_PET_DMG_PASSIVE       = 900502,
