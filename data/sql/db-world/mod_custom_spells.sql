@@ -67,4 +67,6 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (901101, 'spell_custom_global_kill_heal'),
 (901102, 'spell_custom_global_extra_attack'),
 (901103, 'spell_custom_global_cleave_proc'),
-(901104, 'spell_custom_global_counter_attack');
+(901104, 'spell_custom_global_counter_attack'),
+(-35395, 'spell_custom_ret_cs_aoe'),
+(-55050, 'spell_custom_dkb_hs_aoe');
