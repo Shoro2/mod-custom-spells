@@ -96,13 +96,17 @@ class spell_custom_hunt_multishot_aoe : public SpellScript
         Cell::VisitObjects(mainTarget, searcher, 10.0f);
         targets.remove(mainTarget);
 
+        SpellInfo const* spellInfo = GetSpellInfo();
+
         for (Unit* target : targets)
         {
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_HUNT_MULTISHOT_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo->Id, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
         }
     }
 
