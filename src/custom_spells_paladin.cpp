@@ -377,6 +377,8 @@ class spell_custom_ret_cs_aoe : public SpellScript
         Cell::VisitObjects(caster, searcher, 8.0f);
         targets.remove(mainTarget);
 
+        SpellInfo const* spellInfo = GetSpellInfo();
+
         uint32 count = 0;
         for (Unit* target : targets)
         {
@@ -385,8 +387,10 @@ class spell_custom_ret_cs_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_RET_CS_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo->Id, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
 
