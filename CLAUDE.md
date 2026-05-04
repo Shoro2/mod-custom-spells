@@ -1,11 +1,15 @@
 # CLAUDE.md - mod-custom-spells
 
 > **Zentrales Projekt-Wiki**: Dieses Modul ist Teil eines Multi-Repo WoW-Server-Projekts. Die übergreifende Dokumentation, Zusatzinfos und Python-Tools befinden sich im [share-public](https://github.com/Shoro2/share-public) Repository:
-> - [`CLAUDE.md`](https://github.com/Shoro2/share-public/blob/main/CLAUDE.md) — Gesamtarchitektur, SpellScript/DBC-Referenz, alle Custom-IDs, Modul-Übersicht, **komplette DB-Struktur (304 Tabellen)**, **DBC-Inventar (246 Dateien)**
+> - [`docs/custom-spells/`](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells) — **Kuratierte Spec-Doku** (ein File pro Klassen-Spec mit Status, Source-Links, Implementation Notes), plus Querschnitts-Themen ([`05-complex-spells.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/05-complex-spells.md): Rekursionsschutz, Target-Caps, ICDs, Custom-NPCs, OnRemove-Detection, Channel/Cast, Owner→Pet) und ID-Block-Schema ([`02-id-blocks.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/02-id-blocks.md))
+> - [`docs/03-spell-system.md`](https://github.com/Shoro2/share-public/blob/main/docs/03-spell-system.md) — SpellScript-/AuraScript-Klassen-Hierarchie + Proc-Pipeline + DBC-Override
+> - [`CLAUDE.md`](https://github.com/Shoro2/share-public/blob/main/CLAUDE.md) — Gesamtarchitektur (alt, 60 KB Tiefenreferenz)
 > - [`claude_log.md`](https://github.com/Shoro2/share-public/blob/main/claude_log.md) — Änderungshistorie, Projektpläne, priorisierte TODOs
 > - [`python_scripts/`](https://github.com/Shoro2/share-public/tree/main/python_scripts) — DBC-Patching-Tools (`patch_dbc.py`, `copy_spells_dbc.py`), Paragon-Spell-Generator (`add_paragon_spell.py`)
 > - [`dbc/`](https://github.com/Shoro2/share-public/tree/main/dbc) — Alle 246 WoW-Client DBC-Dateien (Spell.dbc, SpellItemEnchantment.dbc, etc.)
 > - [`mysqldbextracts/`](https://github.com/Shoro2/share-public/tree/main/mysqldbextracts) — Komplette DB-Spaltenstruktur (`mysql_column_list_all.txt`), CSV-Exporte (`creature_template.csv`, `item_template.csv`)
+>
+> **CustomSpells.md** in diesem Repo bleibt der Master-ID-Katalog (Source of Truth für IDs, Effekte, Status). `share-public/docs/custom-spells/` ist die navigierbare, querverlinkte Sicht für Dev/AI-Sessions.
 >
 > **Alle Änderungen an diesem oder den anderen Repos müssen dort geloggt werden.**
 >
@@ -21,6 +25,16 @@
 ## Project Overview
 
 AzerothCore module for defining custom spell effects via C++ SpellScripts. Each custom spell gets its own SpellScript class that hooks into the spell's DBC effects (e.g. School Damage) and overrides the damage/behavior.
+
+## Doku-Cross-Refs
+
+| Was suchst du? | Hier nachsehen |
+|----------------|----------------|
+| ID-Range einer Klasse / nächste freie ID | [`docs/custom-spells/02-id-blocks.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/02-id-blocks.md) |
+| Was tut Spell X? Status? Implementation Notes? | `docs/custom-spells/specs/<klasse>-<spec>.md` (z. B. [`warrior-arms`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-arms.md)) |
+| `spell_proc`-Setup, ProcFlags-Werte, Off-by-One BasePoints | [`docs/custom-spells/03-procs-and-flags.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md) |
+| Step-by-Step für neuen Spell | [`docs/custom-spells/04-adding-a-spell.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/04-adding-a-spell.md) |
+| Heikles Pattern (Rekursion, Target-Caps, Custom-NPCs, …) | [`docs/custom-spells/05-complex-spells.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/05-complex-spells.md) |
 
 ## Module Structure
 
@@ -361,16 +375,16 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`,
  0);        -- Charges: 0 = unbegrenzt
 ```
 
-**Häufige ProcFlags:**
+**Häufige ProcFlags:** Vollständige korrigierte Tabelle in [`PROCFLAGS_REFERENCE.md`](./PROCFLAGS_REFERENCE.md) und in [`share-public/docs/custom-spells/03-procs-and-flags.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md).
 
 | Flag | Hex | Bedeutung |
 |------|-----|-----------|
 | `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` | `0x4` | Eigener Melee-Autoattack |
-| `PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK` | `0x2` | Gegnerischer Melee-Autoattack |
+| `PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK` | `0x8` | Gegnerischer Melee-Autoattack |
 | `PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS` | `0x10` | Eigener Melee-Spell (Bloodthirst etc.) |
-| `PROC_FLAG_DONE_PERIODIC` | `0x400000` | Eigener DoT-Tick |
-| `PROC_FLAG_KILL` | `0x1` | Gegner getötet |
-| `PROC_FLAG_TAKEN_DAMAGE` | `0x4000` | Schaden erhalten |
+| `PROC_FLAG_DONE_PERIODIC` | `0x40000` | Eigener DoT-Tick |
+| `PROC_FLAG_KILL` | `0x2` | Gegner getötet |
+| `PROC_FLAG_TAKEN_DAMAGE` | `0x100000` | Schaden erhalten |
 | Kombination: Melee+Spell | `0x14` | Autoattack ODER Melee-Spell |
 
 **Häufige PROC_HIT Masken (für C++ eventInfo.GetHitMask()):**
@@ -381,10 +395,6 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`,
 | `PROC_HIT_DODGE` | Angriff wurde ausgewichen |
 | `PROC_HIT_PARRY` | Angriff wurde pariert |
 | `PROC_HIT_CRITICAL` | Kritischer Treffer |
-
----
-
-
 
 ---
 
@@ -403,6 +413,7 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`,
 □ Build erfolgreich (0 Errors)
 □ In-Game getestet
 □ CLAUDE.md Status auf "implementiert" → "getestet" aktualisiert
+□ share-public/docs/custom-spells/specs/<spec>.md Status updaten
 ```
 
 ---
@@ -457,6 +468,8 @@ Die `spell_dbc` Tabelle hat 257 Spalten. Hier die für Custom Spells relevantest
 | 15 | Death Knight |
 
 ## DBC Status
+
+> **Kuratierte Per-Spec-Sicht** mit Status, Source-Links und Implementation Notes: [`share-public/docs/custom-spells/specs/`](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells/specs). Diese Sektion bleibt als Quick-Overview im Mod-Repo.
 
 Spell IDs 900100-900109 (Warrior Arms) existieren in `Spell.dbc` und sind fertig implementiert.
 Spell IDs 900108-900121 (Warrior Fury) existieren in `Spell.dbc` (manuell erstellt, rein DBC-basiert, kein C++). Die alten IDs 900138-900145 wurden entfernt.
