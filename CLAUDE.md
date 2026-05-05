@@ -1,40 +1,40 @@
 # CLAUDE.md - mod-custom-spells
 
-> **Zentrales Projekt-Wiki**: Dieses Modul ist Teil eines Multi-Repo WoW-Server-Projekts. Die übergreifende Dokumentation, Zusatzinfos und Python-Tools befinden sich im [share-public](https://github.com/Shoro2/share-public) Repository:
-> - [`docs/custom-spells/`](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells) — **Kuratierte Spec-Doku** (ein File pro Klassen-Spec mit Status, Source-Links, Implementation Notes), plus Querschnitts-Themen ([`05-complex-spells.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/05-complex-spells.md): Rekursionsschutz, Target-Caps, ICDs, Custom-NPCs, OnRemove-Detection, Channel/Cast, Owner→Pet) und ID-Block-Schema ([`02-id-blocks.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/02-id-blocks.md))
-> - [`docs/03-spell-system.md`](https://github.com/Shoro2/share-public/blob/main/docs/03-spell-system.md) — SpellScript-/AuraScript-Klassen-Hierarchie + Proc-Pipeline + DBC-Override
-> - [`CLAUDE.md`](https://github.com/Shoro2/share-public/blob/main/CLAUDE.md) — Gesamtarchitektur (alt, 60 KB Tiefenreferenz)
-> - [`claude_log.md`](https://github.com/Shoro2/share-public/blob/main/claude_log.md) — Änderungshistorie, Projektpläne, priorisierte TODOs
-> - [`python_scripts/`](https://github.com/Shoro2/share-public/tree/main/python_scripts) — DBC-Patching-Tools (`patch_dbc.py`, `copy_spells_dbc.py`), Paragon-Spell-Generator (`add_paragon_spell.py`)
-> - [`dbc/`](https://github.com/Shoro2/share-public/tree/main/dbc) — Alle 246 WoW-Client DBC-Dateien (Spell.dbc, SpellItemEnchantment.dbc, etc.)
-> - [`mysqldbextracts/`](https://github.com/Shoro2/share-public/tree/main/mysqldbextracts) — Komplette DB-Spaltenstruktur (`mysql_column_list_all.txt`), CSV-Exporte (`creature_template.csv`, `item_template.csv`)
+> **Central project wiki**: This module is part of a multi-repo WoW server project. The cross-cutting documentation, additional info, and Python tools live in the [share-public](https://github.com/Shoro2/share-public) repository:
+> - [`docs/custom-spells/`](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells) — **Curated spec docs** (one file per class spec with status, source links, implementation notes), plus cross-cutting topics ([`05-complex-spells.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/05-complex-spells.md): recursion guard, target caps, ICDs, custom NPCs, OnRemove detection, channel/cast, owner→pet) and the ID block scheme ([`02-id-blocks.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/02-id-blocks.md))
+> - [`docs/03-spell-system.md`](https://github.com/Shoro2/share-public/blob/main/docs/03-spell-system.md) — SpellScript/AuraScript class hierarchy + proc pipeline + DBC override
+> - [`CLAUDE.md`](https://github.com/Shoro2/share-public/blob/main/CLAUDE.md) — Overall architecture (legacy, 60 KB deep reference)
+> - [`claude_log.md`](https://github.com/Shoro2/share-public/blob/main/claude_log.md) — Change history, project plans, prioritized TODOs
+> - [`python_scripts/`](https://github.com/Shoro2/share-public/tree/main/python_scripts) — DBC patching tools (`patch_dbc.py`, `copy_spells_dbc.py`), Paragon spell generator (`add_paragon_spell.py`)
+> - [`dbc/`](https://github.com/Shoro2/share-public/tree/main/dbc) — All 246 WoW client DBC files (Spell.dbc, SpellItemEnchantment.dbc, etc.)
+> - [`mysqldbextracts/`](https://github.com/Shoro2/share-public/tree/main/mysqldbextracts) — Complete DB column structure (`mysql_column_list_all.txt`), CSV exports (`creature_template.csv`, `item_template.csv`)
 >
-> **CustomSpells.md** in diesem Repo bleibt der Master-ID-Katalog (Source of Truth für IDs, Effekte, Status). `share-public/docs/custom-spells/` ist die navigierbare, querverlinkte Sicht für Dev/AI-Sessions.
+> **CustomSpells.md** in this repo remains the master ID catalog (source of truth for IDs, effects, status). `share-public/docs/custom-spells/` is the navigable, cross-linked view for dev/AI sessions.
 >
-> **Alle Änderungen an diesem oder den anderen Repos müssen dort geloggt werden.**
+> **All changes to this or the other repos must be logged there.**
 >
-> **Beim Arbeiten an Custom Spells beachten:**
-> - Numerische Werte (Damage, Healing, Absorption) sind immer **reale In-Game-Werte**, nicht interne DBC-Encodings (BasePoints = Spielerwert, Editor konvertiert zu DBC-Format: `EffectBasePoints = BasePoints - 1`)
-> - WotLK-Balancing beachten: Low-Level 30–150, Mid 200–600, High 800–2500, Boss 3000–10000+
-> - Spells haben max. 3 Effects (Effect1/2/3 in spell.dbc)
-> - Periodic Effects: AmplitudeSeconds für Tick-Intervall, DurationSeconds für Gesamtdauer
-> - Bei Summon-Spells muss DurationSeconds gesetzt sein (bestimmt Summon-Dauer)
-> - Spell-Tooltips können Tokens verwenden: `$d` (Duration), `$s1` (BasePoints Effect 1), etc.
-> - Icon wird als semantischer Hint angegeben (z.B. "frost", "fiery melee strike") — der Editor resolved per Fuzzy-Match gegen SpellIcon.dbc
+> **When working on custom spells, keep in mind:**
+> - Numeric values (damage, healing, absorption) are always **real in-game values**, not internal DBC encodings (BasePoints = player value, the editor converts to DBC format: `EffectBasePoints = BasePoints - 1`)
+> - Respect WotLK balancing: low-level 30–150, mid 200–600, high 800–2500, boss 3000–10000+
+> - Spells have at most 3 effects (Effect1/2/3 in spell.dbc)
+> - Periodic effects: AmplitudeSeconds for the tick interval, DurationSeconds for the total duration
+> - Summon spells must have DurationSeconds set (determines summon duration)
+> - Spell tooltips can use tokens: `$d` (duration), `$s1` (BasePoints effect 1), etc.
+> - The icon is given as a semantic hint (e.g. "frost", "fiery melee strike") — the editor resolves it via fuzzy match against SpellIcon.dbc
 
 ## Project Overview
 
 AzerothCore module for defining custom spell effects via C++ SpellScripts. Each custom spell gets its own SpellScript class that hooks into the spell's DBC effects (e.g. School Damage) and overrides the damage/behavior.
 
-## Doku-Cross-Refs
+## Doc cross-refs
 
-| Was suchst du? | Hier nachsehen |
+| What are you looking for? | Look here |
 |----------------|----------------|
-| ID-Range einer Klasse / nächste freie ID | [`docs/custom-spells/02-id-blocks.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/02-id-blocks.md) |
-| Was tut Spell X? Status? Implementation Notes? | `docs/custom-spells/specs/<klasse>-<spec>.md` (z. B. [`warrior-arms`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-arms.md)) |
-| `spell_proc`-Setup, ProcFlags-Werte, Off-by-One BasePoints | [`docs/custom-spells/03-procs-and-flags.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md) |
-| Step-by-Step für neuen Spell | [`docs/custom-spells/04-adding-a-spell.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/04-adding-a-spell.md) |
-| Heikles Pattern (Rekursion, Target-Caps, Custom-NPCs, …) | [`docs/custom-spells/05-complex-spells.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/05-complex-spells.md) |
+| ID range of a class / next free ID | [`docs/custom-spells/02-id-blocks.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/02-id-blocks.md) |
+| What does spell X do? Status? Implementation notes? | `docs/custom-spells/specs/<class>-<spec>.md` (e.g. [`warrior-arms`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-arms.md)) |
+| `spell_proc` setup, ProcFlags values, off-by-one BasePoints | [`docs/custom-spells/03-procs-and-flags.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md) |
+| Step-by-step for a new spell | [`docs/custom-spells/04-adding-a-spell.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/04-adding-a-spell.md) |
+| Tricky pattern (recursion, target caps, custom NPCs, …) | [`docs/custom-spells/05-complex-spells.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/05-complex-spells.md) |
 
 ## Module Structure
 
@@ -57,49 +57,49 @@ mod-custom-spells/
     └── mod_custom_spells.sql          # spell_script_names, spell_dbc, spell_proc
 ```
 
-## Workflow: Custom Spell erstellen (Schritt für Schritt)
+## Workflow: creating a custom spell (step by step)
 
-### Übersicht: Zwei Wege für Custom Spells
+### Overview: two paths for custom spells
 
 ```
                     ┌──────────────────────────┐
-                    │  Neuen Custom Spell planen │
+                    │  Plan a new custom spell  │
                     └────────────┬─────────────┘
                                  │
                     ┌────────────▼─────────────┐
-                    │  Braucht der Spell C++?   │
+                    │  Does the spell need C++? │
                     └──┬───────────────────┬───┘
                        │                   │
-                  Nein │                   │ Ja
+                  No   │                   │ Yes
                        │                   │
            ┌───────────▼──────┐  ┌─────────▼──────────┐
-           │  Weg A: Nur DBC  │  │  Weg B: DBC + C++  │
+           │  Path A: DBC only│  │  Path B: DBC + C++ │
            │  (spell_dbc SQL) │  │  (DBC + SpellScript)│
            └───────────┬──────┘  └─────────┬──────────┘
                        │                   │
                        └─────────┬─────────┘
                                  │
                     ┌────────────▼─────────────┐
-                    │  Client-DBC patchen       │
-                    │  (Spell.dbc für Tooltips) │
+                    │  Patch the client DBC    │
+                    │  (Spell.dbc for tooltips) │
                     └────────────┬─────────────┘
                                  │
                     ┌────────────▼─────────────┐
-                    │  Server bauen + testen    │
+                    │  Build the server + test │
                     └──────────────────────────┘
 ```
 
-### Weg A: Rein DBC-basierter Spell (kein C++)
+### Path A: pure DBC-based spell (no C++)
 
-Geeignet für: Damage +X%, Cooldown -Xs, passive Stat-Modifier, SpellFamilyMask-basierte Buffs.
+Suitable for: Damage +X%, Cooldown -Xs, passive stat modifiers, SpellFamilyMask-based buffs.
 
-**Schritt 1: Spell-ID reservieren**
-- Nächste freie ID aus dem Master Plan wählen (siehe ID-Block-Schema unten)
-- ID in CLAUDE.md dokumentieren
+**Step 1: reserve a spell ID**
+- Pick the next free ID from the master plan (see ID block scheme below)
+- Document the ID in CLAUDE.md
 
-**Schritt 2: spell_dbc INSERT in SQL erstellen**
+**Step 2: build the spell_dbc INSERT in SQL**
 
-Die `spell_dbc` Tabelle überschreibt beim Server-Start die Werte aus `Spell.dbc`. Neue Spell-IDs werden komplett aus der DB geladen. Relevante Spalten für passive Auren:
+The `spell_dbc` table overrides the values from `Spell.dbc` at server start. New spell IDs are loaded entirely from the DB. Relevant columns for passive auras:
 
 ```sql
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx3`,
@@ -109,110 +109,110 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx3`,
     `EffectSpellClassMaskA_1`,
     `SpellFamilyName`, `SpellIconID`,
     `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
-(900168,                     -- ID: Eindeutige Spell-ID
+(900168,                     -- ID: unique spell ID
  0x10000040,                 -- Attributes: PASSIVE (0x40) + NOT_SHAPESHIFT (0x10000000)
  0x10000000,                 -- AttributesEx3: DEATH_PERSISTENT
- 1,                          -- CastingTimeIndex: 1 = Instant
- 21,                         -- DurationIndex: 21 = Permanent (-1)
- 1,                          -- RangeIndex: 1 = Self
+ 1,                          -- CastingTimeIndex: 1 = instant
+ 21,                         -- DurationIndex: 21 = permanent (-1)
+ 1,                          -- RangeIndex: 1 = self
  6,                          -- Effect_1: SPELL_EFFECT_APPLY_AURA
- 50,                         -- EffectBasePoints_1: +50% (Wert des Modifiers)
+ 50,                         -- EffectBasePoints_1: +50% (modifier value)
  1,                          -- ImplicitTargetA_1: TARGET_UNIT_CASTER
  108,                        -- EffectAura_1: SPELL_AURA_ADD_PCT_MODIFIER
  0,                          -- EffectMiscValue_1: SPELLMOD_DAMAGE (0)
- 0x400,                      -- EffectSpellClassMaskA_1: Ziel-Spell FamilyFlags[0]
- 4,                          -- SpellFamilyName: 4 = Warrior
- 132,                        -- SpellIconID: beliebiges Icon
- 'Prot: Revenge Damage',     -- Name (englisch)
- 0x003F3F);                  -- Name_Lang_Mask: alle Locales nutzen enUS
+ 0x400,                      -- EffectSpellClassMaskA_1: target spell FamilyFlags[0]
+ 4,                          -- SpellFamilyName: 4 = warrior
+ 132,                        -- SpellIconID: any icon
+ 'Prot: Revenge Damage',     -- name (English)
+ 0x003F3F);                  -- Name_Lang_Mask: all locales use enUS
 ```
 
-**Wichtige DBC-Attribute:**
+**Important DBC attributes:**
 
-| Attribut | Hex-Wert | Bedeutung |
+| Attribute | Hex value | Meaning |
 |----------|----------|-----------|
-| `SPELL_ATTR0_PASSIVE` | `0x40` | Spell ist unsichtbar, immer aktiv |
-| `SPELL_ATTR0_NOT_SHAPESHIFT` | `0x10000000` | Bleibt in allen Stances |
-| `SPELL_ATTR3_DEATH_PERSISTENT` | `0x10000000` | Überlebt Tod |
+| `SPELL_ATTR0_PASSIVE` | `0x40` | Spell is invisible, always active |
+| `SPELL_ATTR0_NOT_SHAPESHIFT` | `0x10000000` | Stays in all stances |
+| `SPELL_ATTR3_DEATH_PERSISTENT` | `0x10000000` | Survives death |
 
-**Häufige EffectAura-Werte:**
+**Common EffectAura values:**
 
-| Aura-ID | Name | MiscValue | Anwendung |
+| Aura ID | Name | MiscValue | Use |
 |---------|------|-----------|-----------|
-| 108 | `ADD_PCT_MODIFIER` | 0=DAMAGE, 11=COOLDOWN, 14=CAST_TIME | Spell-Modifier prozentual |
-| 107 | `ADD_FLAT_MODIFIER` | 0=DAMAGE, 11=COOLDOWN | Spell-Modifier flat |
-| 4 | `DUMMY` | — | Marker-Aura (C++ prüft via HasAura) |
-| 42 | `PROC_TRIGGER_SPELL` | — | Triggert anderen Spell bei Proc |
+| 108 | `ADD_PCT_MODIFIER` | 0=DAMAGE, 11=COOLDOWN, 14=CAST_TIME | percentage spell modifier |
+| 107 | `ADD_FLAT_MODIFIER` | 0=DAMAGE, 11=COOLDOWN | flat spell modifier |
+| 4 | `DUMMY` | — | marker aura (C++ checks via HasAura) |
+| 42 | `PROC_TRIGGER_SPELL` | — | triggers another spell on proc |
 
-**EffectSpellClassMask — Ziel-Spell identifizieren:**
+**EffectSpellClassMask — identify the target spell:**
 
-Die Mask muss auf die SpellFamilyFlags des Ziel-Spells matchen. Drei 32-Bit-Felder:
+The mask must match the SpellFamilyFlags of the target spell. Three 32-bit fields:
 - `EffectSpellClassMaskA_1` → SpellFamilyFlags[0]
 - `EffectSpellClassMaskB_1` → SpellFamilyFlags[1]
 - `EffectSpellClassMaskC_1` → SpellFamilyFlags[2]
 
-> **WICHTIG**: SpellFamilyFlags IMMER aus der eigenen Spell.dbc verifizieren, nicht aus Online-DBs!
+> **IMPORTANT**: ALWAYS verify SpellFamilyFlags against your own Spell.dbc, not against online DBs!
 
-**Schritt 3: SQL in `mod_custom_spells.sql` einfügen**
+**Step 3: insert the SQL into `mod_custom_spells.sql`**
 
 ```sql
--- Am Ende der Datei anhängen
+-- Append at the end of the file
 DELETE FROM `spell_dbc` WHERE `ID` = 900168;
 INSERT INTO `spell_dbc` (...) VALUES (...);
 ```
 
-**Schritt 4: Client-DBC patchen** (siehe Abschnitt unten)
+**Step 4: patch the client DBC** (see section below)
 
-**Schritt 5: Server bauen und testen** (siehe Abschnitt unten)
+**Step 5: build and test the server** (see section below)
 
 ---
 
-### Weg B: Spell mit C++ SpellScript
+### Path B: spell with C++ SpellScript
 
-Geeignet für: Conditional Procs, Multi-Spell-Triggers, AoE-Umbau, Block-Procs, Custom Formeln.
+Suitable for: conditional procs, multi-spell triggers, AoE conversion, block procs, custom formulas.
 
-**Schritt 1: DBC-Entry erstellen (wie Weg A)**
+**Step 1: create the DBC entry (like path A)**
 
-Auch C++-Spells brauchen einen DBC-Entry. Für Marker-Auren (HasAura-Check) reicht eine DUMMY-Aura:
+C++ spells also need a DBC entry. For marker auras (HasAura check), a DUMMY aura is enough:
 
 ```sql
--- Marker-Aura: kein eigener Effekt, nur für HasAura() Check
+-- Marker aura: no own effect, only for HasAura() check
 (900169, 0x10000040, 0, 0, 0x10000000, 1, 21, 1,
  6, 0, 0, 1, 4, 0, 0, 0, 4, 132, 'Prot: Revenge AoE', 0x003F3F),
 ```
 
-Für Proc-Auren (die über das spell_proc-System getriggert werden):
+For proc auras (triggered through the spell_proc system):
 ```sql
--- Proc-Aura: DUMMY-Effekt, Proc-Verhalten über spell_proc + C++
+-- Proc aura: DUMMY effect, proc behavior via spell_proc + C++
 (900172, 0x10000040, 0, 0, 0x10000000, 1, 21, 1,
  6, 0, 0, 1, 4, 0, 0, 0, 4, 132, 'Prot: Block AoE', 0x003F3F),
 ```
 
-Für Helper-Spells (getriggerte Damage/Heal-Spells):
+For helper spells (triggered damage/heal spells):
 ```sql
--- Helper: Instant AoE Physical Damage, TARGET_UNIT_SRC_AREA_ENEMY (22)
+-- Helper: instant AoE physical damage, TARGET_UNIT_SRC_AREA_ENEMY (22)
 (900174, 0x10000000, 0, 0, 0, 1, 0, 1,
  2, 100, 500, 22, 0, 0, 0, 0, 4, 132, 'Block Shield Burst', 0x003F3F),
 --       Effect=SCHOOL_DAMAGE(2), DieSides=100(random), BasePoints=500
 ```
 
-**Schritt 2: Enum-Konstante hinzufügen** in `src/custom_spells.cpp`:
+**Step 2: add an enum constant** in `src/custom_spells.cpp`:
 
 ```cpp
 enum CustomSpellIds
 {
-    // ... bestehende IDs ...
+    // ... existing IDs ...
     SPELL_PROT_REVENGE_AOE_PASSIVE = 900169,
 };
 ```
 
-**Schritt 3: SpellScript/AuraScript-Klasse erstellen**
+**Step 3: create the SpellScript/AuraScript class**
 
-Es gibt 4 Haupt-Patterns:
+There are 4 main patterns:
 
-**Pattern A: SpellScript mit AfterHit (Hook auf bestehenden Spell)**
+**Pattern A: SpellScript with AfterHit (hook on an existing spell)**
 ```cpp
-// Hooked auf Revenge (57823) via spell_script_names
+// Hooked onto Revenge (57823) via spell_script_names
 class spell_custom_prot_revenge_aoe : public SpellScript
 {
     PrepareSpellScript(spell_custom_prot_revenge_aoe);
@@ -226,14 +226,14 @@ class spell_custom_prot_revenge_aoe : public SpellScript
         Player* player = caster->ToPlayer();
         if (!player) return;
 
-        // Marker-Aura prüfen
+        // Check the marker aura
         if (!player->HasAura(SPELL_PROT_REVENGE_AOE_PASSIVE))
             return;
 
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        // Custom Logik hier
+        // Custom logic here
         int32 damage = GetHitDamage();
         caster->CastSpell(target, HELPER_SPELL_ID, true);
     }
@@ -245,7 +245,7 @@ class spell_custom_prot_revenge_aoe : public SpellScript
 };
 ```
 
-**Pattern B: AuraScript mit Proc (passive Proc-Aura)**
+**Pattern B: AuraScript with Proc (passive proc aura)**
 ```cpp
 class spell_custom_prot_block_aoe : public AuraScript
 {
@@ -261,7 +261,7 @@ class spell_custom_prot_block_aoe : public AuraScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        // HitMask prüfen (Block, Dodge, Parry, Crit etc.)
+        // Check HitMask (block, dodge, parry, crit, etc.)
         if (!(eventInfo.GetHitMask() & PROC_HIT_BLOCK))
             return;
 
@@ -277,7 +277,7 @@ class spell_custom_prot_block_aoe : public AuraScript
 };
 ```
 
-**Pattern C: AuraScript mit CheckProc (gefilterte Procs)**
+**Pattern C: AuraScript with CheckProc (filtered procs)**
 ```cpp
 class spell_custom_speedy_bloodthirst : public AuraScript
 {
@@ -287,7 +287,7 @@ class spell_custom_speedy_bloodthirst : public AuraScript
     {
         SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
         if (!spellInfo) return false;
-        // Nur auf Whirlwind (1680) procen
+        // Only proc on Whirlwind (1680)
         return spellInfo->Id == 1680;
     }
 
@@ -307,7 +307,7 @@ class spell_custom_speedy_bloodthirst : public AuraScript
 };
 ```
 
-**Pattern D: SpellScript mit OnEffectHitTarget (Damage Override)**
+**Pattern D: SpellScript with OnEffectHitTarget (damage override)**
 ```cpp
 class spell_custom_paragon_strike : public SpellScript
 {
@@ -315,7 +315,7 @@ class spell_custom_paragon_strike : public SpellScript
 
     void HandleDamage(SpellEffIndex /*effIndex*/)
     {
-        // Custom Damage-Formel
+        // Custom damage formula
         int32 totalDmg = CalculateCustomDamage();
         SetHitDamage(totalDmg);
     }
@@ -329,29 +329,29 @@ class spell_custom_paragon_strike : public SpellScript
 };
 ```
 
-**Schritt 4: Script registrieren** in `AddCustomSpellsScripts()`:
+**Step 4: register the script** in `AddCustomSpellsScripts()`:
 
 ```cpp
 void AddCustomSpellsScripts()
 {
-    // ... bestehende ...
+    // ... existing ones ...
     RegisterSpellScript(spell_custom_prot_revenge_aoe);
 };
 ```
 
-**Schritt 5: spell_script_names SQL** — Verknüpft Spell-ID mit C++ Klasse:
+**Step 5: spell_script_names SQL** — links the spell ID with the C++ class:
 
 ```sql
--- Für eigene Custom-Spell-IDs:
+-- For your own custom spell IDs:
 (900172, 'spell_custom_prot_block_aoe'),
--- Für Hooks auf bestehende Blizzard-Spells:
-(57823, 'spell_custom_prot_revenge_aoe'),  -- hooked auf Revenge
-(47502, 'spell_custom_prot_tc_rend_sunder'), -- hooked auf Thunderclap
+-- For hooks on existing Blizzard spells:
+(57823, 'spell_custom_prot_revenge_aoe'),  -- hooked onto Revenge
+(47502, 'spell_custom_prot_tc_rend_sunder'), -- hooked onto Thunderclap
 ```
 
-> **Wichtig**: Hook auf bestehende Spells (57823, 47502, 1680) → die C++ Klasse wird bei JEDEM Cast dieses Spells ausgeführt. Immer `HasAura()` prüfen damit der Effekt nur aktiv ist wenn der Spieler die Passive hat!
+> **Important**: hooking onto existing spells (57823, 47502, 1680) → the C++ class runs on EVERY cast of that spell. Always check `HasAura()` so the effect is only active when the player has the passive!
 
-**Schritt 6: spell_proc SQL** (nur für Proc-basierte Auren):
+**Step 6: spell_proc SQL** (only for proc-based auras):
 
 ```sql
 DELETE FROM `spell_proc` WHERE `SpellId` = 900172;
@@ -361,99 +361,99 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`,
     `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`,
     `Chance`, `Cooldown`, `Charges`) VALUES
 (900172,    -- SpellId
- 0,         -- SchoolMask (0 = alle)
- 0,         -- SpellFamilyName (0 = alle, 4 = Warrior etc.)
- 0, 0, 0,   -- SpellFamilyMask0/1/2 (0 = alle Spells, C++ filtert)
+ 0,         -- SchoolMask (0 = all)
+ 0,         -- SpellFamilyName (0 = all, 4 = warrior, etc.)
+ 0, 0, 0,   -- SpellFamilyMask0/1/2 (0 = all spells, C++ filters)
  0x2,       -- ProcFlags: PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK
- 0,         -- SpellTypeMask (0 = alle)
- 0,         -- SpellPhaseMask (0=alle, 2=HIT, 4=FINISH)
- 0,         -- HitMask (0 = alle, C++ prüft PROC_HIT_BLOCK)
+ 0,         -- SpellTypeMask (0 = all)
+ 0,         -- SpellPhaseMask (0=all, 2=HIT, 4=FINISH)
+ 0,         -- HitMask (0 = all, C++ checks PROC_HIT_BLOCK)
  0, 0,      -- AttributesMask, DisableEffectsMask
- 0,         -- ProcsPerMinute (0 = nutzt Chance statt PPM)
- 100,       -- Chance: 100% (C++ filtert zusätzlich)
+ 0,         -- ProcsPerMinute (0 = use Chance instead of PPM)
+ 100,       -- Chance: 100% (C++ filters additionally)
  1000,      -- Cooldown: 1000ms (ICD)
- 0);        -- Charges: 0 = unbegrenzt
+ 0);        -- Charges: 0 = unlimited
 ```
 
-**Häufige ProcFlags:** Vollständige korrigierte Tabelle in [`PROCFLAGS_REFERENCE.md`](./PROCFLAGS_REFERENCE.md) und in [`share-public/docs/custom-spells/03-procs-and-flags.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md).
+**Common ProcFlags:** the full corrected table is in [`PROCFLAGS_REFERENCE.md`](./PROCFLAGS_REFERENCE.md) and in [`share-public/docs/custom-spells/03-procs-and-flags.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md).
 
-| Flag | Hex | Bedeutung |
+| Flag | Hex | Meaning |
 |------|-----|-----------|
-| `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` | `0x4` | Eigener Melee-Autoattack |
-| `PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK` | `0x8` | Gegnerischer Melee-Autoattack |
-| `PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS` | `0x10` | Eigener Melee-Spell (Bloodthirst etc.) |
-| `PROC_FLAG_DONE_PERIODIC` | `0x40000` | Eigener DoT-Tick |
-| `PROC_FLAG_KILL` | `0x2` | Gegner getötet |
-| `PROC_FLAG_TAKEN_DAMAGE` | `0x100000` | Schaden erhalten |
-| Kombination: Melee+Spell | `0x14` | Autoattack ODER Melee-Spell |
+| `PROC_FLAG_DONE_MELEE_AUTO_ATTACK` | `0x4` | Own melee auto-attack |
+| `PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK` | `0x8` | Enemy melee auto-attack |
+| `PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS` | `0x10` | Own melee spell (Bloodthirst etc.) |
+| `PROC_FLAG_DONE_PERIODIC` | `0x40000` | Own DoT tick |
+| `PROC_FLAG_KILL` | `0x2` | Killed an enemy |
+| `PROC_FLAG_TAKEN_DAMAGE` | `0x100000` | Damage taken |
+| Combination: melee+spell | `0x14` | auto-attack OR melee spell |
 
-**Häufige PROC_HIT Masken (für C++ eventInfo.GetHitMask()):**
+**Common PROC_HIT masks (for C++ eventInfo.GetHitMask()):**
 
-| Mask | Bedeutung |
+| Mask | Meaning |
 |------|-----------|
-| `PROC_HIT_BLOCK` | Angriff wurde geblockt |
-| `PROC_HIT_DODGE` | Angriff wurde ausgewichen |
-| `PROC_HIT_PARRY` | Angriff wurde pariert |
-| `PROC_HIT_CRITICAL` | Kritischer Treffer |
+| `PROC_HIT_BLOCK` | Attack was blocked |
+| `PROC_HIT_DODGE` | Attack was dodged |
+| `PROC_HIT_PARRY` | Attack was parried |
+| `PROC_HIT_CRITICAL` | Critical hit |
 
 ---
 
-### Checkliste: Neuer Custom Spell
+### Checklist: new custom spell
 
 ```
-□ Spell-ID reserviert und in CLAUDE.md dokumentiert
+□ Spell ID reserved and documented in CLAUDE.md
 □ spell_dbc INSERT in mod_custom_spells.sql
-□ (wenn C++) Enum-Konstante in custom_spells.cpp
-□ (wenn C++) SpellScript/AuraScript Klasse implementiert
-□ (wenn C++) RegisterSpellScript() in AddCustomSpellsScripts()
-□ (wenn C++) spell_script_names INSERT in mod_custom_spells.sql
-□ (wenn Proc) spell_proc INSERT in mod_custom_spells.sql
-□ (wenn Helper) Helper-Spell DBC + ggf. C++ Script
-□ Client-Spell.dbc gepatcht (für Tooltips)
-□ Build erfolgreich (0 Errors)
-□ In-Game getestet
-□ CLAUDE.md Status auf "implementiert" → "getestet" aktualisiert
-□ share-public/docs/custom-spells/specs/<spec>.md Status updaten
+□ (if C++) enum constant in custom_spells.cpp
+□ (if C++) SpellScript/AuraScript class implemented
+□ (if C++) RegisterSpellScript() in AddCustomSpellsScripts()
+□ (if C++) spell_script_names INSERT in mod_custom_spells.sql
+□ (if proc) spell_proc INSERT in mod_custom_spells.sql
+□ (if helper) helper spell DBC + optional C++ script
+□ Client Spell.dbc patched (for tooltips)
+□ Build successful (0 errors)
+□ Tested in-game
+□ CLAUDE.md status updated from "implemented" → "tested"
+□ share-public/docs/custom-spells/specs/<spec>.md status updated
 ```
 
 ---
 
-### spell_dbc Spalten-Referenz (wichtigste Felder)
+### spell_dbc column reference (most important fields)
 
-Die `spell_dbc` Tabelle hat 257 Spalten. Hier die für Custom Spells relevantesten:
+The `spell_dbc` table has 257 columns. Here are the most relevant for custom spells:
 
-| Spalte | Typ | Beschreibung |
+| Column | Type | Description |
 |--------|-----|-------------|
-| `ID` | uint | Eindeutige Spell-ID |
+| `ID` | uint | Unique spell ID |
 | `Attributes` | uint | Flags: 0x40=PASSIVE, 0x10000000=NOT_SHAPESHIFT |
-| `AttributesEx` | uint | Extended Flags 1 |
-| `AttributesEx2` | uint | Extended Flags 2 |
-| `AttributesEx3` | uint | Extended Flags 3 (0x10000000=DEATH_PERSISTENT) |
-| `CastingTimeIndex` | uint | 1=Instant, andere Werte → SpellCastTimes.dbc |
-| `DurationIndex` | uint | 0=Instant, 21=Permanent, andere → SpellDuration.dbc |
-| `RangeIndex` | uint | 1=Self, 4=30yd, 6=100yd → SpellRange.dbc |
-| `ProcTypeMask` | uint | Proc-Trigger-Flags (überschrieben durch spell_proc) |
-| `ProcChance` | uint | Proc-Wahrscheinlichkeit (überschrieben durch spell_proc) |
+| `AttributesEx` | uint | Extended flags 1 |
+| `AttributesEx2` | uint | Extended flags 2 |
+| `AttributesEx3` | uint | Extended flags 3 (0x10000000=DEATH_PERSISTENT) |
+| `CastingTimeIndex` | uint | 1=instant, other values → SpellCastTimes.dbc |
+| `DurationIndex` | uint | 0=instant, 21=permanent, other → SpellDuration.dbc |
+| `RangeIndex` | uint | 1=self, 4=30yd, 6=100yd → SpellRange.dbc |
+| `ProcTypeMask` | uint | Proc trigger flags (overridden by spell_proc) |
+| `ProcChance` | uint | Proc chance (overridden by spell_proc) |
 | `Effect_1/2/3` | uint | 2=SCHOOL_DAMAGE, 6=APPLY_AURA, 3=DUMMY |
-| `EffectDieSides_1/2/3` | int | Random-Range für Damage (0=kein Random) |
-| `EffectBasePoints_1/2/3` | int | Basis-Wert (Damage, Modifier-%, etc.) |
+| `EffectDieSides_1/2/3` | int | Random range for damage (0=no random) |
+| `EffectBasePoints_1/2/3` | int | Base value (damage, modifier %, etc.) |
 | `ImplicitTargetA_1/2/3` | uint | 1=SELF, 6=ENEMY, 22=SRC_AREA_ENEMY |
 | `EffectRadiusIndex_1/2/3` | uint | 8=5yd, 13=8yd, 14=10yd, 28=30yd |
-| `EffectAura_1/2/3` | uint | Aura-Typ: 4=DUMMY, 108=ADD_PCT_MODIFIER |
-| `EffectMiscValue_1/2/3` | int | Aura-spezifisch: 0=SPELLMOD_DAMAGE, 11=SPELLMOD_COOLDOWN |
-| `EffectTriggerSpell_1/2/3` | uint | Spell-ID die bei Proc getriggert wird |
-| `EffectSpellClassMaskA/B/C_1` | uint | SpellFamilyFlags[0/1/2] des Ziel-Spells |
+| `EffectAura_1/2/3` | uint | Aura type: 4=DUMMY, 108=ADD_PCT_MODIFIER |
+| `EffectMiscValue_1/2/3` | int | Aura specific: 0=SPELLMOD_DAMAGE, 11=SPELLMOD_COOLDOWN |
+| `EffectTriggerSpell_1/2/3` | uint | Spell ID triggered on proc |
+| `EffectSpellClassMaskA/B/C_1` | uint | SpellFamilyFlags[0/1/2] of the target spell |
 | `SpellFamilyName` | uint | 0=Generic, 4=Warrior, 10=Paladin, 15=DK |
-| `SpellClassMask_1/2/3` | uint | SpellFamilyFlags dieses Spells (für Proc-Matching) |
-| `SpellIconID` | uint | Icon-ID aus SpellIcon.dbc |
-| `MaxTargets` | uint | Max Targets (0=unlimited) |
+| `SpellClassMask_1/2/3` | uint | SpellFamilyFlags of this spell (for proc matching) |
+| `SpellIconID` | uint | Icon ID from SpellIcon.dbc |
+| `MaxTargets` | uint | Max targets (0=unlimited) |
 | `SchoolMask` | uint | 1=Physical, 2=Holy, 4=Fire, 16=Shadow, 32=Arcane |
-| `Name_Lang_enUS` | string | Spell-Name (englisch) |
-| `Name_Lang_Mask` | uint | 0x003F3F = alle Locales nutzen enUS |
+| `Name_Lang_enUS` | string | Spell name (English) |
+| `Name_Lang_Mask` | uint | 0x003F3F = all locales use enUS |
 
-### SpellFamilyName Werte
+### SpellFamilyName values
 
-| Wert | Klasse |
+| Value | Class |
 |------|--------|
 | 0 | Generic |
 | 3 | Mage |
@@ -469,72 +469,72 @@ Die `spell_dbc` Tabelle hat 257 Spalten. Hier die für Custom Spells relevantest
 
 ## DBC Status
 
-> **Kuratierte Per-Spec-Sicht** mit Status, Source-Links und Implementation Notes: [`share-public/docs/custom-spells/specs/`](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells/specs). Diese Sektion bleibt als Quick-Overview im Mod-Repo.
+> **Curated per-spec view** with status, source links and implementation notes: [`share-public/docs/custom-spells/specs/`](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells/specs). This section stays here as a quick overview in the mod repo.
 
-Spell IDs 900100-900109 (Warrior Arms) existieren in `Spell.dbc` und sind fertig implementiert.
-Spell IDs 900108-900121 (Warrior Fury) existieren in `Spell.dbc` (manuell erstellt, rein DBC-basiert, kein C++). Die alten IDs 900138-900145 wurden entfernt.
-Spell IDs 900168-900175 (Warrior Prot + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
-Spell IDs 900200-900210 (Paladin Holy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
-Spell IDs 900234-900241 (Paladin Prot) existieren in `spell_dbc` Tabelle und sind implementiert.
-Spell IDs 900268-900275 (Paladin Ret + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
-Spell IDs 900300-900304 (DK Blood) existieren in `spell_dbc` Tabelle und sind implementiert.
-Spell IDs 900333, 900368 (DK Frost + Frost Breath helper) existieren in `spell_dbc` Tabelle und sind implementiert.
-NPC 900333 (Frost Wyrm) existiert in `creature_template` mit AI-Script `npc_custom_frost_wyrm`.
-Spell IDs 900366-900367 (DK Unholy + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900100-900109 (Warrior Arms) exist in `Spell.dbc` and are fully implemented.
+Spell IDs 900108-900121 (Warrior Fury) exist in `Spell.dbc` (manually created, pure DBC, no C++). The old IDs 900138-900145 were removed.
+Spell IDs 900168-900175 (Warrior Prot + helpers) exist in the `spell_dbc` table and are implemented.
+Spell IDs 900200-900210 (Paladin Holy + helpers) exist in the `spell_dbc` table and are implemented.
+Spell IDs 900234-900241 (Paladin Prot) exist in the `spell_dbc` table and are implemented.
+Spell IDs 900268-900275 (Paladin Ret + helpers) exist in the `spell_dbc` table and are implemented.
+Spell IDs 900300-900304 (DK Blood) exist in the `spell_dbc` table and are implemented.
+Spell IDs 900333, 900368 (DK Frost + Frost Breath helper) exist in the `spell_dbc` table and are implemented.
+NPC 900333 (Frost Wyrm) exists in `creature_template` with AI script `npc_custom_frost_wyrm`.
+Spell IDs 900366-900367 (DK Unholy + helper) exist in the `spell_dbc` table and are implemented.
 
-Spell IDs 900400-900408 (Shaman Ele + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900400-900408 (Shaman Ele + helpers) exist in the `spell_dbc` table and are implemented.
 
-Spell IDs 900433-900440 (Shaman Enhance + Helper) existieren in `spell_dbc` Tabelle und sind implementiert.
-NPC 900436 (Spirit Wolf) existiert in `creature_template` für Wolf-Summon-Proc.
-Spell IDs 900466-900467 (Shaman Resto) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900433-900440 (Shaman Enhance + helpers) exist in the `spell_dbc` table and are implemented.
+NPC 900436 (Spirit Wolf) exists in `creature_template` for the wolf summon proc.
+Spell IDs 900466-900467 (Shaman Resto) exist in the `spell_dbc` table and are implemented.
 
-Spell IDs 900500-900567 (Hunter Shared + BM + MM + Surv + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900500-900567 (Hunter Shared + BM + MM + Surv + helpers) exist in the `spell_dbc` table and are implemented.
 
-Spell IDs 901000-901073 (Druid Balance + Feral + Resto + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
-NPC 901066 (Healing Treant) existiert in `creature_template` für HoT-Treant-Proc.
+Spell IDs 901000-901073 (Druid Balance + Feral + Resto + helpers) exist in the `spell_dbc` table and are implemented.
+NPC 901066 (Healing Treant) exists in `creature_template` for the HoT treant proc.
 
-Spell IDs 900600-900669 (Rogue Assa + Combat + Sub + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900600-900669 (Rogue Assa + Combat + Sub + helpers) exist in the `spell_dbc` table and are implemented.
 
-Spell IDs 900700-900774 (Mage Arcane + Fire + Frost + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
-Spell IDs 900800-900872 (Warlock Affli + Demo + Destro + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
-Spell IDs 900900-900968 (Priest Disc + Holy + Shadow + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
-Spell IDs 901100-901108 (Global Spells + Helpers) existieren in `spell_dbc` Tabelle und sind implementiert.
+Spell IDs 900700-900774 (Mage Arcane + Fire + Frost + helpers) exist in the `spell_dbc` table and are implemented.
+Spell IDs 900800-900872 (Warlock Affli + Demo + Destro + helpers) exist in the `spell_dbc` table and are implemented.
+Spell IDs 900900-900968 (Priest Disc + Holy + Shadow + helpers) exist in the `spell_dbc` table and are implemented.
+Spell IDs 901100-901108 (Global Spells + helpers) exist in the `spell_dbc` table and are implemented.
 
-Alle Klassen-Blöcke sind belegt. Nächste freie IDs innerhalb der bestehenden Blöcke (siehe CustomSpells.md Aktuelle Belegung).
+All class blocks are populated. The next free IDs within the existing blocks are tracked in CustomSpells.md (current allocation).
 
 ---
 
-### Entscheidungshilfe: DBC vs. C++
+### Decision aid: DBC vs. C++
 
-#### Rein DBC (kein C++ nötig)
+#### Pure DBC (no C++ needed)
 
-| Effekt-Typ | DBC Aura | DBC MiscValue | Beispiel |
+| Effect type | DBC aura | DBC MiscValue | Example |
 |------------|----------|---------------|----------|
 | Damage +X% | `ADD_PCT_MODIFIER` (108) | `SPELLMOD_DAMAGE` (0) | MS +50%, BT +50%, TC +50%, Revenge +50% |
 | Cooldown -Xs | `ADD_FLAT_MODIFIER` (107) | `SPELLMOD_COOLDOWN` (11) | MS cd -2s (BasePoints=-2000) |
-| Cast Time -X% | `ADD_PCT_MODIFIER` (108) | `SPELLMOD_CASTING_TIME` (14) | AB cast -50% |
-| Unlimited targets | Direkte DBC-Änderung | `MaxAffectedTargets=0` | WW, Cleave |
-| Remove stance req | Direkte DBC-Änderung | `Stances=0` | WW stance removal |
+| Cast time -X% | `ADD_PCT_MODIFIER` (108) | `SPELLMOD_CASTING_TIME` (14) | AB cast -50% |
+| Unlimited targets | direct DBC change | `MaxAffectedTargets=0` | WW, Cleave |
+| Remove stance req | direct DBC change | `Stances=0` | WW stance removal |
 
-#### C++ erforderlich
+#### C++ required
 
-| Mechanik | Grund für C++ | Beispiele |
+| Mechanic | Reason for C++ | Examples |
 |----------|---------------|-----------|
-| Conditional Procs | Komplexe Bedingungen (Crit, Target-Count, CD) | 20% Crit → Execute, WW 1-target autocast |
-| Multi-Spell Triggers | Ein Proc löst mehrere Spells aus | TC → Rend + 5× Sunder |
-| Single→AoE Umbau | Custom target selection | Revenge unlimited, Overpower +9 targets |
-| Block/Dodge/Parry Procs | HitMask-Filtering | AoE on block, 10% block → TC |
-| Custom Damage Formeln | Nicht-Standard Berechnung | Paragon Strike (666 + 0.66×AP + PL%) |
-| CD Manipulation | Runtime CD-Änderungen | Melee → Bladestorm CD -0.5s |
+| Conditional procs | Complex conditions (crit, target count, CD) | 20% crit → Execute, WW 1-target autocast |
+| Multi-spell triggers | One proc fires several spells | TC → Rend + 5× Sunder |
+| Single→AoE conversion | Custom target selection | Revenge unlimited, Overpower +9 targets |
+| Block/dodge/parry procs | HitMask filtering | AoE on block, 10% block → TC |
+| Custom damage formulas | non-standard calculation | Paragon Strike (666 + 0.66×AP + PL%) |
+| CD manipulation | runtime CD changes | Melee → Bladestorm CD -0.5s |
 
-#### Häufige Fehlerquellen
+#### Common pitfalls
 
-1. **SpellFamilyFlags falsch**: IMMER aus eigener Spell.dbc verifizieren, nie aus Online-DBs
-2. **MaxAffectedTargets=0 global**: Betrifft ALLE Spieler, nicht nur mit Passive → für bedingte Targets C++ nutzen
-3. **Proc-Loop**: Helper-Spells können erneut procen → ICD in spell_proc setzen
-4. **spell_script_names fehlt**: C++ Klasse wird nicht geladen → Spell hat keinen Effekt
-5. **DurationIndex vergessen**: Passive Aura braucht DurationIndex=21 (permanent)
-6. **Attributes fehlt PASSIVE**: Ohne 0x40 ist der Spell castbar statt permanent aktiv
+1. **SpellFamilyFlags wrong**: ALWAYS verify against your own Spell.dbc, never against online DBs
+2. **MaxAffectedTargets=0 globally**: affects ALL players, not only those with the passive → for conditional targets use C++
+3. **Proc loop**: helper spells can re-proc → set ICD in spell_proc
+4. **spell_script_names missing**: the C++ class is not loaded → spell has no effect
+5. **DurationIndex forgotten**: passive aura needs DurationIndex=21 (permanent)
+6. **Attributes missing PASSIVE**: without 0x40 the spell is castable instead of permanently active
 
 ## Key APIs (SpellScript)
 

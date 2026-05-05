@@ -1,43 +1,43 @@
 # mod-custom-spells
 
-AzerothCore-Modul zum Erstellen von Custom Spell Effekten via C++ Scripts für WoTLK 3.3.5a.
+AzerothCore module for creating custom spell effects via C++ scripts for WoTLK 3.3.5a.
 
 ## Features
 
-- Hook auf `OnPlayerSpellCast` für spezifische Spell IDs
-- Template-basierte Struktur zum einfachen Hinzufügen neuer Custom Spells
-- Aktivierbar/Deaktivierbar über Config
+- Hook on `OnPlayerSpellCast` for specific spell IDs
+- Template-based structure for easily adding new custom spells
+- Enable/disable via config
 
-### Enthaltene Custom Spells
+### Included custom spells
 
-| Spell ID | Name | Beschreibung |
+| Spell ID | Name | Description |
 |----------|------|-------------|
-| 900106 | Rage Burst + Execute | Gibt dem Caster 100 Rage und castet Execute (97471) auf das Spell-Target |
+| 900106 | Rage Burst + Execute | Gives the caster 100 rage and casts Execute (97471) on the spell target |
 
 ## Installation
 
-1. Modul in das AzerothCore Modules-Verzeichnis klonen/kopieren:
+1. Clone/copy the module into the AzerothCore modules directory:
    ```bash
    cd azerothcore-wotlk/modules
    git clone <repo-url> mod-custom-spells
    ```
 
-2. AzerothCore neu bauen:
+2. Rebuild AzerothCore:
    ```bash
    cd build
-   cmake .. -DCMAKE_INSTALL_PREFIX=<install-pfad> -DSCRIPTS=static -DMODULES=static
+   cmake .. -DCMAKE_INSTALL_PREFIX=<install-path> -DSCRIPTS=static -DMODULES=static
    make -j$(nproc)
    make install
    ```
 
-3. Config kopieren und anpassen:
+3. Copy and adjust the config:
    ```bash
    cp mod_custom_spells.conf.dist mod_custom_spells.conf
    ```
 
-## Neuen Custom Spell hinzufügen
+## Adding a new custom spell
 
-1. Spell ID als Konstante im `CustomSpellIds` Enum in `src/custom_spells.cpp` definieren:
+1. Define the spell ID as a constant in the `CustomSpellIds` enum in `src/custom_spells.cpp`:
    ```cpp
    enum CustomSpellIds
    {
@@ -45,11 +45,11 @@ AzerothCore-Modul zum Erstellen von Custom Spell Effekten via C++ Scripts für W
    };
    ```
 
-2. Neuen `case` Block im `switch` in `OnPlayerSpellCast()` hinzufügen:
+2. Add a new `case` block in the `switch` inside `OnPlayerSpellCast()`:
    ```cpp
    case SPELL_CUSTOM_MY_SPELL:
    {
-       // Custom Logik hier
+       // Custom logic here
        Unit* target = spell->m_targets.GetUnitTarget();
        if (target)
            player->CastSpell(target, SPELL_SOMETHING, true);
@@ -57,18 +57,18 @@ AzerothCore-Modul zum Erstellen von Custom Spell Effekten via C++ Scripts für W
    }
    ```
 
-3. Core neu bauen.
+3. Rebuild the core.
 
-## Konfiguration
+## Configuration
 
-| Option | Standard | Beschreibung |
+| Option | Default | Description |
 |--------|----------|-------------|
-| `CustomSpells.Enable` | `1` | Modul aktivieren (1) oder deaktivieren (0) |
+| `CustomSpells.Enable` | `1` | Enable (1) or disable (0) the module |
 
-## Voraussetzungen
+## Requirements
 
 - [AzerothCore](https://github.com/azerothcore/azerothcore-wotlk) WoTLK 3.3.5a
 
-## Lizenz
+## License
 
-GNU AGPL v3 - siehe [LICENSE](LICENSE)
+GNU AGPL v3 - see [LICENSE](LICENSE)
