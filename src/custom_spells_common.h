@@ -37,6 +37,9 @@
 #include "GameTime.h"
 #include "UnitScript.h"
 
+// mod-paragon: true Paragon level (the marker aura 100000 stack caps at 255).
+#include "ParagonUtils.h"
+
 enum CustomSpellIds
 {
     // Custom damage spell: Base 666 + 66% AP + 1% per Paragon level
@@ -352,7 +355,6 @@ constexpr uint32 SPELLFAMILY_HUNTER_ID      = 9;
 // Multi-Shot SpellFamilyFlags[0] = 0x200 (verify!)
 
 // ---- Paragon Strike constants ----
-constexpr uint32 AURA_PARAGON_LEVEL   = 100000;
 constexpr int32  CUSTOM_BASE_DAMAGE   = 666;
 constexpr float  CUSTOM_AP_COEFF      = 0.66f;   // 66% of Attack Power
 constexpr float  CUSTOM_PARAGON_BONUS = 0.01f;    // +1% damage per Paragon level
