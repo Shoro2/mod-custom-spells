@@ -22,7 +22,7 @@
 //  Overrides the School Damage effect with custom calculation:
 //  - Base damage: 666
 //  - Bonus: 66% Attack Power
-//  - +1% total damage per Paragon level (aura 100000 stacks)
+//  - +1% total damage per Paragon level (true level via GetParagonLevel)
 // ============================================================
 class spell_custom_paragon_strike : public SpellScript
 {
@@ -46,8 +46,9 @@ class spell_custom_paragon_strike : public SpellScript
         float ap = player->GetTotalAttackPowerValue(BASE_ATTACK);
         float bonusDmg = ap * CUSTOM_AP_COEFF;
 
-        // Paragon level from aura stacks on ID 100000
-        uint32 paragonLevel = player->GetAuraCount(AURA_PARAGON_LEVEL);
+        // True Paragon level from mod-paragon (the marker aura 100000 stack
+        // caps at 255, so GetAuraCount would be wrong above level 255).
+        uint32 paragonLevel = GetParagonLevel(player);
         float paragonMult = 1.0f + (paragonLevel * CUSTOM_PARAGON_BONUS);
 
         // Final damage = (base + AP bonus) * paragon multiplier
