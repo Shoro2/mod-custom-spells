@@ -55,7 +55,7 @@ class spell_custom_mage_abarr_aoe : public SpellScript
             return;
 
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);
@@ -113,7 +113,7 @@ class spell_custom_mage_ab_aoe : public SpellScript
             return;
 
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);
@@ -439,7 +439,7 @@ class spell_custom_mage_fb_aoe : public SpellScript
             return;
 
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);
@@ -497,7 +497,7 @@ class spell_custom_mage_pyro_aoe : public SpellScript
             return;
 
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);
@@ -591,7 +591,7 @@ class spell_custom_mage_frostbolt_aoe : public SpellScript
             return;
 
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);
@@ -649,7 +649,7 @@ class spell_custom_mage_icelance_aoe : public SpellScript
             return;
 
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);

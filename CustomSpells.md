@@ -74,7 +74,7 @@
 ## Cross-spec notes (kept here because they apply across multiple specs)
 
 - **Warrior Fury (900108-900121)** is intentionally placed inside the Arms numeric range. The IDs were created manually in `Spell.dbc` and are pure DBC — no C++ scripts. The old C++/SQL entries (900138-900145) were removed.
-- **DK Frost** has two split IDs across the spec range: `900333` (Ghoul → Frost Wyrm marker) and `900368` (Frost Breath helper). The Frost Wyrm NPC (entry `900333`) has its own AI script `npc_custom_frost_wyrm` (DisplayID 26752 Sindragosa-style, scale 0.5, 2× Gargoyle HP). Frost Breath: 2s cast, cone 20yd, 5000+1000rnd Frost damage + 50% slow 6s, scaled with owner AP (5000 + 50% AP).
+- **DK Frost** has two split IDs across the spec range: `900333` (Ghoul → Frost Wyrm marker) and `900368` (Frost Breath helper). The Frost Wyrm NPC (entry `900333`) has its own AI script `npc_custom_frost_wyrm` (DisplayID 26752 Sindragosa-style, DisplayScale 1.0, HealthModifier 2× via `creature_template`). Frost Breath: 2s cast, cone 20yd, 5000+1000rnd Frost damage + 50% slow 6s, scaled with owner AP (5000 + 50% AP).
 - **Custom NPCs**: `900333` (Frost Wyrm — DK Frost), `900436` (Spirit Wolf — Shaman Enhance proc summon, DisplayID 27074), `901066` (Healing Treant — Druid Resto HoT proc).
 - **Paladin "Consecration around you" (900205/900234/900268)** is shared across Holy / Prot / Ret. The Consecration DBC must be patched separately (TargetA → `TARGET_DEST_CASTER`).
 - **Paladin "Judgement cd −2sec" (900241/900269)** is shared between Prot and Ret with separate IDs.

@@ -91,6 +91,48 @@ class spell_custom_pri_shield_explode : public AuraScript
 };
 
 // ============================================================
+//  900902: Weakened Soul cooldown reduction
+//  Hooked on Power Word: Shield (all ranks via -17). After cast,
+//  if the player has passive 900902, halve the remaining duration
+//  of the Weakened Soul debuff (6788) so they can re-shield sooner.
+// ============================================================
+class spell_custom_pri_weakened_soul_cd : public SpellScript
+{
+    PrepareSpellScript(spell_custom_pri_weakened_soul_cd);
+
+    void HandleAfterCast()
+    {
+        Unit* caster = GetCaster();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_PRI_DISC_WEAKENED_SOUL_CD))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Power Word: Shield applies Weakened Soul to the caster; shorten it
+        // so the next shield comes off cooldown sooner.
+        if (Aura* ws = player->GetAura(SPELL_WEAKENED_SOUL))
+        {
+            int32 dur = ws->GetDuration();
+            if (dur > 0)
+                ws->SetDuration(dur / 2);
+        }
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_pri_weakened_soul_cd::HandleAfterCast);
+    }
+};
+
+// ============================================================
 //  End Priest Discipline section
 // ============================================================
 
@@ -297,6 +339,7 @@ void AddPriestSpellsScripts()
 {
     // Priest Discipline
     RegisterSpellScript(spell_custom_pri_shield_explode);
+    RegisterSpellScript(spell_custom_pri_weakened_soul_cd);
 
     // Priest Holy
     RegisterSpellScript(spell_custom_pri_heal_fire);

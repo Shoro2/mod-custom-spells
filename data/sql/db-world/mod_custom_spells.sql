@@ -61,6 +61,7 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (18788, 'spell_custom_wlk_sacrifice_all'),
 (-17, 'spell_pri_power_word_shield'),
 (-17, 'spell_custom_pri_shield_explode'),
+(-17, 'spell_custom_pri_weakened_soul_cd'),
 (900933, 'spell_custom_pri_heal_fire'),
 (900966, 'spell_custom_pri_dot_aoe'),
 (900967, 'spell_custom_pri_dot_spread'),

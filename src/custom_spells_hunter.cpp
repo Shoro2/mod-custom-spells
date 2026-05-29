@@ -90,7 +90,7 @@ class spell_custom_hunt_multishot_aoe : public SpellScript
 
         // Find all enemies within 10yd of the main target
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);
@@ -159,6 +159,12 @@ class custom_hunter_pet_speed_playerscript : public PlayerScript
 public:
     custom_hunter_pet_speed_playerscript() : PlayerScript("custom_hunter_pet_speed_playerscript") {}
 
+    void OnPlayerLogout(Player* player) override
+    {
+        if (player)
+            _lastCheck.erase(player->GetGUID());
+    }
+
     void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
     {
         if (!player || !player->IsAlive())
@@ -172,11 +178,10 @@ public:
 
         // Throttle: only every 3 seconds
         uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        static std::unordered_map<ObjectGuid, uint32> s_lastCheck;
         ObjectGuid guid = player->GetGUID();
-        if (s_lastCheck.count(guid) && (now - s_lastCheck[guid]) < 3)
+        if (_lastCheck.count(guid) && (now - _lastCheck[guid]) < 3)
             return;
-        s_lastCheck[guid] = now;
+        _lastCheck[guid] = now;
 
         Pet* pet = player->GetPet();
         if (!pet || !pet->IsAlive())
@@ -191,6 +196,9 @@ public:
         if (baseAttack != desired)
             pet->SetAttackTime(BASE_ATTACK, desired);
     }
+
+private:
+    std::unordered_map<ObjectGuid, uint32> _lastCheck;
 };
 
 // ============================================================
@@ -266,7 +274,7 @@ class spell_custom_hunt_autoshot_bounce : public SpellScript
 
         // Find up to 9 additional enemies within 10yd of target
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);

@@ -46,7 +46,7 @@ class spell_custom_bal_mf_aoe : public SpellScript
 
         // Find up to 9 additional enemies within 10yd of target
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);
@@ -259,6 +259,12 @@ class custom_druid_summon_scale_playerscript : public PlayerScript
 public:
     custom_druid_summon_scale_playerscript() : PlayerScript("custom_druid_summon_scale_playerscript") {}
 
+    void OnPlayerLogout(Player* player) override
+    {
+        if (player)
+            _lastCheck.erase(player->GetGUID());
+    }
+
     void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
     {
         if (!player || !player->IsAlive())
@@ -272,11 +278,10 @@ public:
 
         // Throttle: only every 3 seconds
         uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        static std::unordered_map<ObjectGuid, uint32> s_lastCheck;
         ObjectGuid guid = player->GetGUID();
-        if (s_lastCheck.count(guid) && (now - s_lastCheck[guid]) < 3)
+        if (_lastCheck.count(guid) && (now - _lastCheck[guid]) < 3)
             return;
-        s_lastCheck[guid] = now;
+        _lastCheck[guid] = now;
 
         // Get player's bonus healing (spell power)
         int32 healPower = player->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_ALL);
@@ -303,6 +308,9 @@ public:
             }
         }
     }
+
+private:
+    std::unordered_map<ObjectGuid, uint32> _lastCheck;
 };
 
 // ============================================================
@@ -417,6 +425,12 @@ class custom_druid_mana_regen_playerscript : public PlayerScript
 public:
     custom_druid_mana_regen_playerscript() : PlayerScript("custom_druid_mana_regen_playerscript") {}
 
+    void OnPlayerLogout(Player* player) override
+    {
+        if (player)
+            _lastRegen.erase(player->GetGUID());
+    }
+
     void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
     {
         if (!player || !player->IsAlive())
@@ -430,11 +444,10 @@ public:
 
         // Throttle: only every 5 seconds
         uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        static std::unordered_map<ObjectGuid, uint32> s_lastRegen;
         ObjectGuid guid = player->GetGUID();
-        if (s_lastRegen.count(guid) && (now - s_lastRegen[guid]) < 5)
+        if (_lastRegen.count(guid) && (now - _lastRegen[guid]) < 5)
             return;
-        s_lastRegen[guid] = now;
+        _lastRegen[guid] = now;
 
         uint32 maxMana = player->GetMaxPower(POWER_MANA);
         uint32 curMana = player->GetPower(POWER_MANA);
@@ -447,6 +460,9 @@ public:
             player->EnergizeBySpell(player, SPELL_DRST_MANA_REGEN_PASSIVE,
                 bonus, POWER_MANA);
     }
+
+private:
+    std::unordered_map<ObjectGuid, uint32> _lastRegen;
 };
 
 // ============================================================

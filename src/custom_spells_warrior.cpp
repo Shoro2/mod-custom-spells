@@ -74,7 +74,7 @@ class spell_custom_paragon_strike : public SpellScript
 // ============================================================
 //  SPELL 900107: Bladestorm CD Reduction (AuraScript)
 //  Passive proc aura: on melee damage dealt, reduces the
-//  cooldown of Bladestorm (46927) by 0.5s.
+//  cooldown of Bladestorm (46924) by 0.5s.
 //  DBC: EFFECT_0 = SPELL_EFFECT_APPLY_AURA / SPELL_AURA_DUMMY
 //  Proc filtering via spell_proc table (ProcFlags=0x14).
 // ============================================================
@@ -133,7 +133,6 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
             spell_custom_bladestorm_cd_reduce::HandleProc);
     }
 };
-
 
 // NOTE: Warrior Fury spells (900108-900121) are defined purely in
 // Spell.dbc (manually created). No C++ scripts needed — all effects
@@ -324,7 +323,6 @@ class spell_custom_prot_block_tc : public AuraScript
             EFFECT_0, SPELL_AURA_DUMMY);
     }
 };
-
 
 void AddWarriorSpellsScripts()
 {

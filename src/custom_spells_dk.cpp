@@ -43,9 +43,16 @@ class spell_custom_dkb_3_rune_weapons : public SpellScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        // Summon 2 extra rune weapons by re-casting the summon effect (triggered)
+        // Summon 2 extra rune weapons by re-casting the summon effect (triggered).
+        // Re-entrancy guard: each triggered re-cast of Dancing Rune Weapon would
+        // otherwise re-enter this AfterCast handler and recurse without bound.
+        static thread_local bool reentry = false;
+        if (reentry)
+            return;
+        reentry = true;
         for (int i = 0; i < 2; ++i)
             player->CastSpell(player, SPELL_DANCING_RUNE_WEAPON, true);
+        reentry = false;
 
         LOG_INFO("module",
             "mod-custom-spells: Player {} -> 3 Rune Weapons summoned",
