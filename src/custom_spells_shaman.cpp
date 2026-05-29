@@ -17,6 +17,12 @@
 
 #include "custom_spells_common.h"
 
+// Re-entrancy guard for the Lava Burst hooks (overload / charges / spread-FS).
+// The Lightning-Overload-on-Lava-Burst effect (900403) recasts Lava Burst; this
+// guard stops that triggered copy from re-running the Lava Burst custom scripts,
+// which would otherwise cascade into extra casts and cooldown resets.
+static thread_local bool s_lvbReentry = false;
+
 // ============================================================
 //  SPELL 900400: Chain Lightning +6 targets, no damage reduction
 //  Hooked on Chain Lightning (all ranks via -49271).
@@ -50,7 +56,7 @@ class spell_custom_ele_cl_aoe : public SpellScript
 
         // Find 6 additional enemies and deal full CL damage
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 12.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 12.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(mainTarget, searcher, 12.0f);
@@ -86,6 +92,12 @@ class custom_totem_follow_playerscript : public PlayerScript
 public:
     custom_totem_follow_playerscript() : PlayerScript("custom_totem_follow_playerscript") {}
 
+    void OnPlayerLogout(Player* player) override
+    {
+        if (player)
+            _lastCheck.erase(player->GetGUID());
+    }
+
     void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
     {
         if (!player || !player->IsAlive())
@@ -102,11 +114,10 @@ public:
 
         // Throttle: only check every ~2 seconds using game time
         uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        static std::unordered_map<ObjectGuid, uint32> s_lastCheck;
         ObjectGuid guid = player->GetGUID();
-        if (s_lastCheck.count(guid) && (now - s_lastCheck[guid]) < 2)
+        if (_lastCheck.count(guid) && (now - _lastCheck[guid]) < 2)
             return;
-        s_lastCheck[guid] = now;
+        _lastCheck[guid] = now;
 
         for (uint8 i = 0; i < MAX_TOTEM_SLOT; ++i)
         {
@@ -128,6 +139,9 @@ public:
             }
         }
     }
+
+private:
+    std::unordered_map<ObjectGuid, uint32> _lastCheck;
 };
 
 // ============================================================
@@ -208,6 +222,10 @@ class spell_custom_ele_overload_lvb : public SpellScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
+        // Skip the overload copy itself (it is a triggered Lava Burst re-cast)
+        if (s_lvbReentry)
+            return;
+
         // Check if player has Lightning Overload talent (icon 2018)
         AuraEffect const* loTalent = player->GetDummyAuraEffect(
             SPELLFAMILY_SHAMAN, 2018, EFFECT_0);
@@ -223,8 +241,12 @@ class spell_custom_ele_overload_lvb : public SpellScript
         // Fire Lava Burst overload at half damage
         int32 damage = GetHitDamage() / 2;
         if (damage > 0)
+        {
+            s_lvbReentry = true;
             caster->CastCustomSpell(target, GetSpellInfo()->Id, &damage,
                 nullptr, nullptr, true);
+            s_lvbReentry = false;
+        }
     }
 
     void Register() override
@@ -259,6 +281,10 @@ class spell_custom_ele_lvb_spread_fs : public SpellScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
+        // Skip the overload copy's triggered Lava Burst (avoid cascade)
+        if (s_lvbReentry)
+            return;
+
         // Check if target has Flame Shock from this caster
         AuraEffect* fs = target->GetAuraEffect(SPELL_AURA_PERIODIC_DAMAGE,
             SPELLFAMILY_SHAMAN, 0x10000000, 0, 0, caster->GetGUID());
@@ -269,7 +295,7 @@ class spell_custom_ele_lvb_spread_fs : public SpellScript
 
         // Spread to up to 5 nearby enemies
         std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 10.0f);
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(target, caster, 10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
             searcher(caster, targets, check);
         Cell::VisitObjects(target, searcher, 10.0f);
@@ -372,6 +398,10 @@ class spell_custom_ele_lvb_charges : public SpellScript
             return;
 
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Skip the overload copy's triggered Lava Burst (don't touch charges)
+        if (s_lvbReentry)
             return;
 
         // Check if we have a "charge available" marker
@@ -612,6 +642,12 @@ class custom_mana_regen_playerscript : public PlayerScript
 public:
     custom_mana_regen_playerscript() : PlayerScript("custom_mana_regen_playerscript") {}
 
+    void OnPlayerLogout(Player* player) override
+    {
+        if (player)
+            _lastRegen.erase(player->GetGUID());
+    }
+
     void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
     {
         if (!player || !player->IsAlive())
@@ -625,11 +661,10 @@ public:
 
         // Throttle: only every 5 seconds
         uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        static std::unordered_map<ObjectGuid, uint32> s_lastRegen;
         ObjectGuid guid = player->GetGUID();
-        if (s_lastRegen.count(guid) && (now - s_lastRegen[guid]) < 5)
+        if (_lastRegen.count(guid) && (now - _lastRegen[guid]) < 5)
             return;
-        s_lastRegen[guid] = now;
+        _lastRegen[guid] = now;
 
         uint32 maxMana = player->GetMaxPower(POWER_MANA);
         uint32 curMana = player->GetPower(POWER_MANA);
@@ -645,6 +680,9 @@ public:
             player->EnergizeBySpell(player, SPELL_RST_MANA_REGEN_PASSIVE,
                 bonus, POWER_MANA);
     }
+
+private:
+    std::unordered_map<ObjectGuid, uint32> _lastRegen;
 };
 
 void AddShamanSpellsScripts()

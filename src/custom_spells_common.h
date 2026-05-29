@@ -41,7 +41,7 @@ enum CustomSpellIds
 {
     // Custom damage spell: Base 666 + 66% AP + 1% per Paragon level
     SPELL_CUSTOM_PARAGON_STRIKE         = 900106,
-    // Each cast reduces Bladestorm (46927) cooldown by 0.5s
+    // Each cast reduces Bladestorm (46924) cooldown by 0.5s
     SPELL_CUSTOM_BLADESTORM_CD_REDUCE   = 900107,
 
     // ---- Warrior Prot (900168-900199) ----

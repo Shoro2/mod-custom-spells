@@ -17,6 +17,12 @@
 
 #include "custom_spells_common.h"
 
+// Re-entrancy guard for the "Holy Shock always both" pair (passive 900202).
+// The damage variant triggers a heal and the heal variant triggers damage;
+// both helper spells fall inside the hooked Holy Shock rank chains, so without
+// this guard the two scripts re-trigger each other without bound (stack overflow).
+static thread_local bool s_hsBothReentry = false;
+
 // ============================================================
 //  SPELL 900200: Holy Shock AoE Damage (SpellScript)
 //  Hooked on Holy Shock damage spells (48824 etc.).
@@ -127,6 +133,10 @@ class spell_custom_holy_hs_both_dmg : public SpellScript
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
+        // Skip when this hit came from the paired follow-up cast (avoid recursion)
+        if (s_hsBothReentry)
+            return;
+
         // We're on the damage spell → also heal nearest injured ally
         // Find nearest friendly unit within 40yd that's injured
         Unit* healTarget = nullptr;
@@ -157,7 +167,9 @@ class spell_custom_holy_hs_both_dmg : public SpellScript
 
         if (healTarget)
         {
+            s_hsBothReentry = true;
             caster->CastSpell(healTarget, SPELL_HOLY_SHOCK_HEAL_R7, true);
+            s_hsBothReentry = false;
             LOG_INFO("module",
                 "mod-custom-spells: Player {} -> HS Both: auto-heal {}",
                 player->GetName(), healTarget->GetName());
@@ -189,6 +201,10 @@ class spell_custom_holy_hs_both_heal : public SpellScript
             return;
 
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        // Skip when this hit came from the paired follow-up cast (avoid recursion)
+        if (s_hsBothReentry)
             return;
 
         // We're on the heal spell → also damage nearest enemy
@@ -488,7 +504,6 @@ class spell_custom_ret_exorcism_consume : public SpellScript
         AfterCast += SpellCastFn(spell_custom_ret_exorcism_consume::HandleAfterCast);
     }
 };
-
 
 void AddPaladinSpellsScripts()
 {
