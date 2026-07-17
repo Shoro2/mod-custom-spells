@@ -14,32 +14,39 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 (900173, 0, 0, 0, 0, 0, 0x8, 0, 0, 0, 0, 0, 0, 10, 3000, 0);
 
 -- Warrior Prot: spell_dbc 900168-900176
+-- Area helpers need EffectRadiusIndex (13 = 10yd) - without it the area
+-- search has 0yd radius and hits nothing. TargetA 15 = enemies around the
+-- caster (both bursts are self-centered casts).
 DELETE FROM `spell_dbc` WHERE `ID` IN (900168, 900169, 900170, 900171, 900172, 900173, 900174, 900175, 900176);
-INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `SpellClassSet`, `SpellIconID`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
-(900168, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x400, 4, 132, 'Prot: Revenge Damage', 0x003F3F),
-(900169, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 4, 132, 'Prot: Revenge AoE', 0x003F3F),
-(900170, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 4, 132, 'Prot: TC Rend Sunder', 0x003F3F),
-(900171, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x80, 4, 132, 'Prot: TC Damage', 0x003F3F),
-(900172, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 4, 132, 'Prot: Block AoE', 0x003F3F),
-(900173, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 4, 132, 'Prot: Block TC', 0x003F3F),
-(900174, 0, 0, 0, 0, 1, 0, 1, 2, 100, 500, 22, 0, 0, 0, 0, 4, 132, 'Block Shield Burst', 0x003F3F),
-(900175, 0, 0, 0, 0, 1, 0, 1, 2, 200, 1000, 22, 0, 0, 0, 0, 4, 132, 'Enhanced Thunderclap', 0x003F3F),
-(900176, 0, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 4, 132, 'Revenge Bounce', 0x003F3F);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `SpellClassSet`, `SpellIconID`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+(900168, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 0, 108, 0, 0, 0x400, 4, 132, 'Prot: Revenge Damage', 0x003F3F),
+(900169, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 4, 132, 'Prot: Revenge AoE', 0x003F3F),
+(900170, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 4, 132, 'Prot: TC Rend Sunder', 0x003F3F),
+(900171, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 0, 108, 0, 0, 0x80, 4, 132, 'Prot: TC Damage', 0x003F3F),
+(900172, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 4, 132, 'Prot: Block AoE', 0x003F3F),
+(900173, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 4, 132, 'Prot: Block TC', 0x003F3F),
+(900174, 0, 0, 0, 0, 1, 0, 1, 2, 100, 500, 15, 13, 0, 0, 0, 0, 4, 132, 'Block Shield Burst', 0x003F3F),
+(900175, 0, 0, 0, 0, 1, 0, 1, 2, 200, 1000, 15, 13, 0, 0, 0, 0, 4, 132, 'Enhanced Thunderclap', 0x003F3F),
+(900176, 0, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 4, 132, 'Revenge Bounce', 0x003F3F);
 
 -- Paladin Holy: spell_dbc 900200-900210
+-- 900207 uses SPELLMOD_DURATION (1), not JUMP_TARGETS. The two Holy Shock
+-- bursts are cast AT the shock target -> dest-centered targets (16/31) with
+-- 10yd radius (13); the Consecration heal pulses around the caster (31 with
+-- the cast on self).
 DELETE FROM `spell_dbc` WHERE `ID` IN (900200, 900201, 900202, 900203, 900204, 900205, 900206, 900207, 900208, 900209, 900210);
-INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
-(900200, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 156, 0, 'Holy: HS AoE Damage', 0x003F3F),
-(900201, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 156, 0, 'Holy: HS AoE Heal', 0x003F3F),
-(900202, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 156, 0, 'Holy: HS Both', 0x003F3F),
-(900203, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x200000, 10, 156, 0, 'Holy: HS +50%', 0x003F3F),
-(900204, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 51, 0, 'Holy: Consec Heal', 0x003F3F),
-(900205, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 10, 51, 0, 'Holy: Consec Around', 0x003F3F),
-(900206, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x20, 10, 51, 0, 'Holy: Consec +50%', 0x003F3F),
-(900207, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 5000, 1, 107, 17, 0, 0x20, 10, 51, 0, 'Holy: Consec +5s', 0x003F3F),
-(900208, 0, 0, 0, 0, 1, 0, 1, 2, 100, 800, 15, 0, 0, 0, 0, 10, 156, 2, 'Holy Shock Burst', 0x003F3F),
-(900209, 0, 0, 0, 0, 1, 0, 1, 10, 100, 800, 30, 0, 0, 0, 0, 10, 156, 2, 'Holy Shock Radiance', 0x003F3F),
-(900210, 0, 0, 0, 0, 1, 0, 1, 10, 50, 200, 31, 0, 0, 0, 0, 10, 51, 2, 'Consecration Heal', 0x003F3F);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+(900200, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 10, 156, 0, 'Holy: HS AoE Damage', 0x003F3F),
+(900201, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 10, 156, 0, 'Holy: HS AoE Heal', 0x003F3F),
+(900202, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 10, 156, 0, 'Holy: HS Both', 0x003F3F),
+(900203, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 0, 108, 0, 0, 0x200000, 10, 156, 0, 'Holy: HS +50%', 0x003F3F),
+(900204, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 10, 51, 0, 'Holy: Consec Heal', 0x003F3F),
+(900205, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 10, 51, 0, 'Holy: Consec Around', 0x003F3F),
+(900206, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 0, 108, 0, 0, 0x20, 10, 51, 0, 'Holy: Consec +50%', 0x003F3F),
+(900207, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 5000, 1, 0, 107, 1, 0, 0x20, 10, 51, 0, 'Holy: Consec +5s', 0x003F3F),
+(900208, 0, 0, 0, 0, 1, 0, 1, 2, 100, 800, 16, 13, 0, 0, 0, 0, 10, 156, 2, 'Holy Shock Burst', 0x003F3F),
+(900209, 0, 0, 0, 0, 1, 0, 1, 10, 100, 800, 31, 13, 0, 0, 0, 0, 10, 156, 2, 'Holy Shock Radiance', 0x003F3F),
+(900210, 0, 0, 0, 0, 1, 0, 1, 10, 50, 200, 31, 13, 0, 0, 0, 0, 10, 51, 2, 'Consecration Heal', 0x003F3F);
 
 -- Paladin Prot: spell_dbc 900234-900241
 -- Masks verified against Spell.dbc SpellFamilyFlags: Avenger's Shield flags0=0x4000,

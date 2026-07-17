@@ -92,7 +92,7 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 (901105, 0, 0, 0, 0, 1, 0, 1, 10, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Kill Heal', 0x003F3F),
 (901106, 0, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Cleave Hit', 0x003F3F),
 (901107, 0, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Counter Strike', 0x003F3F),
-(901108, 0, 0, 0, 0, 1, 0, 1, 32, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Extra Attack Hit', 0x003F3F);
+(901108, 0, 0, 0, 0, 1, 0, 1, 19, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Extra Attack Hit', 0x003F3F);
 
 -- Global: spell_proc - corrected ProcFlags (KILL=0x2, TAKEN_MELEE_AUTO=0x8)
 DELETE FROM `spell_proc` WHERE `SpellId` IN (901101, 901102, 901103, 901104);

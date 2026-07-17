@@ -150,6 +150,8 @@ When hooking on existing Blizzard spells via `spell_script_names`, the C++ class
 9. **`EffectMiscValue` on aura 107/108 is the SpellModOp**: 0=DAMAGE, 1=DURATION, 4=CHARGES, 10=CASTING_TIME, 11=COOLDOWN, 14=COST, 17=JUMP_TARGETS, 22=DOT. "Instant"/"-X% cast" is op 10 (not 14), "duration" is op 1 and "double HoTs/DoTs" is op 22 (not 17).
 10. **Extra-target damage must be dealt directly, not cast via helper spells**: `CastCustomSpell(target, HELPER, &damage, ...)` with a server-only helper produced no visible damage in-game. Use the T2-proven pattern instead: build `SpellNonMeleeDamage` with the ORIGINAL spell's `SpellInfo`, then `DealSpellDamage` + `SendSpellNonMeleeDamageLog` (heals: `HealInfo` + `HealBySpell`). The client renders the known spell id; no client DBC entry needed.
 11. **`Attributes` 0x10000000 = SPELL_ATTR0_NOT_IN_COMBAT_ONLY_PEACEFUL** ("cannot be used in combat") — never put it on castable actives or helpers. Triggered casts bypass it, player casts do not.
+12. **Area effects need `EffectRadiusIndex`** (13 = 10 yd): a `TARGET_UNIT_*_AREA_*` effect with radius index 0 searches a 0-yd radius and silently hits nothing (2026-07-18: eleven helpers in files b/c/d shipped without the column). Anchor semantics: 15/30 = around the caster, 16/31 = around the explicit cast target.
+13. **Verify effect ids against `SharedDefines.h`**, never from memory: `SPELL_EFFECT_ADD_EXTRA_ATTACKS` is **19** (901108 shipped with 32 and did nothing).
 
 ## Build
 

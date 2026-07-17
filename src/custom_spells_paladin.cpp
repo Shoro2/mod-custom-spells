@@ -368,6 +368,13 @@ class spell_custom_ret_exorcism_proc : public AuraScript
     bool CheckProc(ProcEventInfo& eventInfo)
     {
         SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+
+        // Live probe (900107 debug pattern): distinguishes "proc pipeline never
+        // reaches this aura" from "reached but filtered" - remove after T2
+        LOG_INFO("module",
+            "mod-custom-spells: 900274 CheckProc -> procSpell={}, flags=0x{:X}",
+            spellInfo ? spellInfo->Id : 0, eventInfo.GetTypeMask());
+
         if (!spellInfo)
             return false;
 

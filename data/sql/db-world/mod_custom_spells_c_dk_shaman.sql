@@ -10,16 +10,16 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 
 -- DK: spell_dbc 900300-900367
 DELETE FROM `spell_dbc` WHERE `ID` IN (900300, 900301, 900302, 900303, 900304, 900305, 900333, 900366, 900367);
-INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
-(900300, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 3735, 0, 0, 'DKB: 3 Rune Weapons', 0x003F3F),
-(900301, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 3735, 0, 0, 'DKB: Double Cast', 0x003F3F),
-(900302, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 108, 0, 0, 0x1000000, 0, 15, 3547, 0, 0, 'DKB: HS +50%', 0x003F3F),
-(900303, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 107, 17, 0, 0x1000000, 0, 15, 3547, 0, 0, 'DKB: HS +9 Targets', 0x003F3F),
-(900304, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 136, 0, 0, 'DKB: DC Proc', 0x003F3F),
-(900305, 0, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 15, 3547, 1, 0, 'HS Bounce', 0x003F3F),
-(900333, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 3223, 0, 0, 'DKF: Frost Wyrm', 0x003F3F),
-(900366, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 15, 2770, 0, 0, 'DKU: DoT AoE Proc', 0x003F3F),
-(900367, 0, 0, 0, 0, 1, 0, 1, 2, 150, 600, 15, 0, 0, 0, 0, 0, 15, 2770, 32, 0, 'Shadow Eruption', 0x003F3F);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+(900300, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 15, 3735, 0, 0, 'DKB: 3 Rune Weapons', 0x003F3F),
+(900301, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 15, 3735, 0, 0, 'DKB: Double Cast', 0x003F3F),
+(900302, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 0, 108, 0, 0, 0x1000000, 0, 15, 3547, 0, 0, 'DKB: HS +50%', 0x003F3F),
+(900303, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 9, 1, 0, 107, 17, 0, 0x1000000, 0, 15, 3547, 0, 0, 'DKB: HS +9 Targets', 0x003F3F),
+(900304, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 15, 136, 0, 0, 'DKB: DC Proc', 0x003F3F),
+(900305, 0, 0, 0, 0, 1, 0, 1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 15, 3547, 1, 0, 'HS Bounce', 0x003F3F),
+(900333, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 15, 3223, 0, 0, 'DKF: Frost Wyrm', 0x003F3F),
+(900366, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 15, 2770, 0, 0, 'DKU: DoT AoE Proc', 0x003F3F),
+(900367, 0, 0, 0, 0, 1, 0, 1, 2, 150, 600, 16, 13, 0, 0, 0, 0, 0, 15, 2770, 32, 0, 'Shadow Eruption', 0x003F3F);
 
 -- 900368: Frost Breath
 DELETE FROM `spell_dbc` WHERE `ID` = 900368;
@@ -63,17 +63,17 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 
 -- Shaman Enhance + Resto: spell_dbc
 DELETE FROM `spell_dbc` WHERE `ID` IN (900433, 900434, 900435, 900436, 900437, 900438, 900439, 900440, 900466, 900467);
-INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
-(900433, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Enh: Totem Follow', 0x003F3F),
-(900434, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Enh: Maelstrom AoE', 0x003F3F),
-(900435, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Enh: Summons +50%', 0x003F3F),
-(900436, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Enh: Wolf Summon', 0x003F3F),
-(900437, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Enh: Wolf Haste', 0x003F3F),
-(900438, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 62, 0, 0, 'Enh: Wolf CL', 0x003F3F),
-(900439, 0, 0, 0, 0, 1, 18, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Maelstrom Fury', 0x003F3F),
-(900440, 0, 0, 0, 0, 1, 0, 1, 2, 200, 800, 22, 0, 0, 0, 0, 0, 11, 3786, 1, 0, 'Spirit Howl', 0x003F3F),
-(900466, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Resto: Totem Follow', 0x003F3F),
-(900467, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Resto: Mana Regen', 0x003F3F);
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+(900433, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Enh: Totem Follow', 0x003F3F),
+(900434, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Enh: Maelstrom AoE', 0x003F3F),
+(900435, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 50, 1, 0, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Enh: Summons +50%', 0x003F3F),
+(900436, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Enh: Wolf Summon', 0x003F3F),
+(900437, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Enh: Wolf Haste', 0x003F3F),
+(900438, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 62, 0, 0, 'Enh: Wolf CL', 0x003F3F),
+(900439, 0, 0, 0, 0, 1, 18, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 3786, 0, 0, 'Maelstrom Fury', 0x003F3F),
+(900440, 0, 0, 0, 0, 1, 0, 1, 2, 200, 800, 15, 13, 0, 0, 0, 0, 0, 11, 3786, 1, 0, 'Spirit Howl', 0x003F3F),
+(900466, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Resto: Totem Follow', 0x003F3F),
+(900467, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Resto: Mana Regen', 0x003F3F);
 
 -- Spirit Wolf NPC 900436
 DELETE FROM `creature_template` WHERE `entry` = 900436;
