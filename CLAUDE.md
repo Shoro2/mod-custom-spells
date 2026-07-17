@@ -50,9 +50,16 @@ mod-custom-spells/
 │   └── custom_spells_druid.cpp       # Druid (Balance / Feral / Resto)
 ├── conf/
 │   └── mod_custom_spells.conf.dist   # Config: CustomSpells.Enable
+├── lua/
+│   ├── CustomSpells_Server.lua       # AIO spell picker (server): per-class whitelist + learn/forget
+│   └── CustomSpells_Client.lua       # AIO spell picker (client): /spells toggle UI
 └── data/sql/db-world/
     └── mod_custom_spells.sql          # spell_script_names, spell_dbc, spell_proc
 ```
+
+The Lua pair deploys to `dcore/lua_scripts/CustomSpells/` (Eluna/ALE + AIO required). The
+server file's `CLASS_SPELLS` whitelist is the delivery source of truth — update it when
+spells are added/retired, and keep helpers/orphaned markers out of it.
 
 ## DBC status (quick overview)
 
