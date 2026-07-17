@@ -18,61 +18,6 @@
 #include "custom_spells_common.h"
 
 // ============================================================
-//  DRUID BALANCE: Moonfire +9 targets (901000)
-//  Hooked on Moonfire (all ranks via -48463). After hitting
-//  the main target, finds up to 9 additional enemies in 10yd
-//  and applies Moonfire to each.
-// ============================================================
-class spell_custom_bal_mf_aoe : public SpellScript
-{
-    PrepareSpellScript(spell_custom_bal_mf_aoe);
-
-    void HandleAfterHit()
-    {
-        Unit* caster = GetCaster();
-        Unit* mainTarget = GetHitUnit();
-        if (!caster || !mainTarget)
-            return;
-
-        Player* player = caster->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_BAL_MF_AOE_PASSIVE))
-            return;
-
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
-            return;
-
-        // Find up to 9 additional enemies within 10yd of target
-        std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
-        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
-            searcher(caster, targets, check);
-        Cell::VisitObjects(mainTarget, searcher, 10.0f);
-        targets.remove(mainTarget);
-
-        uint32 count = 0;
-        for (Unit* target : targets)
-        {
-            if (count >= 9)
-                break;
-            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
-                continue;
-
-            // Cast Moonfire on each additional target (triggered, no cost/GCD)
-            caster->CastSpell(target, SPELL_MOONFIRE_R14, true);
-            ++count;
-        }
-    }
-
-    void Register() override
-    {
-        AfterHit += SpellHitFn(spell_custom_bal_mf_aoe::HandleAfterHit);
-    }
-};
-
-// ============================================================
 //  DRUID BALANCE: Spell damage reduces Starfall CD (901004)
 //  Proc passive: on spell damage dealt, reduce Starfall CD
 //  by 1 second. 100% chance, no ICD (CD reduction per hit).
@@ -472,7 +417,6 @@ private:
 void AddDruidSpellsScripts()
 {
     // Druid Balance
-    RegisterSpellScript(spell_custom_bal_mf_aoe);
     RegisterSpellScript(spell_custom_bal_sf_cd_reduce);
 
     // Druid Feral

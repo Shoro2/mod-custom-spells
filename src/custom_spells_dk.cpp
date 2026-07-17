@@ -138,73 +138,6 @@ class spell_custom_dkb_double_cast : public AuraScript
 };
 
 // ============================================================
-//  SPELL 900303: Heart Strike +9 Targets (SpellScript)
-//  Hooked on Heart Strike (55050). After hitting primary
-//  target, deals same damage to up to 9 additional enemies.
-//  Only active when player has passive 900303.
-// ============================================================
-class spell_custom_dkb_hs_aoe : public SpellScript
-{
-    PrepareSpellScript(spell_custom_dkb_hs_aoe);
-
-    void HandleAfterHit()
-    {
-        Unit* caster = GetCaster();
-        Unit* mainTarget = GetHitUnit();
-        if (!caster || !mainTarget)
-            return;
-
-        Player* player = caster->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_DKB_HS_AOE_PASSIVE))
-            return;
-
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
-            return;
-
-        int32 damage = GetHitDamage();
-        if (damage <= 0)
-            return;
-
-        std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 8.0f);
-        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
-            searcher(caster, targets, check);
-        Cell::VisitObjects(caster, searcher, 8.0f);
-        targets.remove(mainTarget);
-
-        SpellInfo const* spellInfo = GetSpellInfo();
-
-        uint32 count = 0;
-        for (Unit* target : targets)
-        {
-            if (count >= 9)
-                break;
-            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
-                continue;
-
-            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
-            dmgInfo.damage = damage;
-            caster->DealSpellDamage(&dmgInfo, true);
-            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
-            ++count;
-        }
-
-        if (count > 0)
-            LOG_INFO("module",
-                "mod-custom-spells: Player {} -> HS AoE hit {} extra targets",
-                player->GetName(), count);
-    }
-
-    void Register() override
-    {
-        AfterHit += SpellHitFn(spell_custom_dkb_hs_aoe::HandleAfterHit);
-    }
-};
-
-// ============================================================
 //  SPELL 900304: Dealing Damage → Death Coil Proc (AuraScript)
 //  Passive proc aura: when dealing melee/spell damage,
 //  X% chance to auto-cast Death Coil on target.
@@ -512,7 +445,6 @@ void AddDKSpellsScripts()
     // DK Blood
     RegisterSpellScript(spell_custom_dkb_3_rune_weapons);
     RegisterSpellScript(spell_custom_dkb_double_cast);
-    RegisterSpellScript(spell_custom_dkb_hs_aoe);
     RegisterSpellScript(spell_custom_dkb_deathcoil_proc);
 
     // DK Frost

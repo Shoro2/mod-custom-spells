@@ -57,128 +57,6 @@ class spell_custom_rog_poison_nova : public AuraScript
 };
 
 // ============================================================
-//  ROGUE COMBAT: Sinister Strike +9 targets (900634)
-//  Hooked on Sinister Strike (all ranks via -48638). After
-//  hitting the main target, deals same damage to up to 9
-//  additional enemies in 8yd melee range.
-// ============================================================
-class spell_custom_rog_ss_aoe : public SpellScript
-{
-    PrepareSpellScript(spell_custom_rog_ss_aoe);
-
-    void HandleAfterHit()
-    {
-        Unit* caster = GetCaster();
-        Unit* mainTarget = GetHitUnit();
-        if (!caster || !mainTarget)
-            return;
-
-        Player* player = caster->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_ROG_COMBAT_SS_AOE_PASSIVE))
-            return;
-
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
-            return;
-
-        int32 damage = GetHitDamage();
-        if (damage <= 0)
-            return;
-
-        std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 8.0f);
-        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
-            searcher(caster, targets, check);
-        Cell::VisitObjects(caster, searcher, 8.0f);
-        targets.remove(mainTarget);
-
-        uint32 count = 0;
-        for (Unit* target : targets)
-        {
-            if (count >= 9)
-                break;
-            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
-                continue;
-
-            SpellInfo const* spellInfo = GetSpellInfo();
-            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
-            dmgInfo.damage = damage;
-            caster->DealSpellDamage(&dmgInfo, true);
-            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
-            ++count;
-        }
-    }
-
-    void Register() override
-    {
-        AfterHit += SpellHitFn(spell_custom_rog_ss_aoe::HandleAfterHit);
-    }
-};
-
-// ============================================================
-//  ROGUE SUB: Hemorrhage +9 targets (900668)
-//  Hooked on Hemorrhage (all ranks via -48660). After hitting
-//  the main target, deals same damage to up to 9 additional
-//  enemies in 8yd melee range.
-// ============================================================
-class spell_custom_rog_hemo_aoe : public SpellScript
-{
-    PrepareSpellScript(spell_custom_rog_hemo_aoe);
-
-    void HandleAfterHit()
-    {
-        Unit* caster = GetCaster();
-        Unit* mainTarget = GetHitUnit();
-        if (!caster || !mainTarget)
-            return;
-
-        Player* player = caster->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_ROG_SUB_HEMO_AOE_PASSIVE))
-            return;
-
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
-            return;
-
-        int32 damage = GetHitDamage();
-        if (damage <= 0)
-            return;
-
-        std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(caster, caster, 8.0f);
-        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
-            searcher(caster, targets, check);
-        Cell::VisitObjects(caster, searcher, 8.0f);
-        targets.remove(mainTarget);
-
-        uint32 count = 0;
-        for (Unit* target : targets)
-        {
-            if (count >= 9)
-                break;
-            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
-                continue;
-
-            SpellInfo const* spellInfo = GetSpellInfo();
-            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
-            dmgInfo.damage = damage;
-            caster->DealSpellDamage(&dmgInfo, true);
-            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
-            ++count;
-        }
-    }
-
-    void Register() override
-    {
-        AfterHit += SpellHitFn(spell_custom_rog_hemo_aoe::HandleAfterHit);
-    }
-};
-
-// ============================================================
 //  End Rogue section
 // ============================================================
 
@@ -188,8 +66,6 @@ void AddRogueSpellsScripts()
     RegisterSpellScript(spell_custom_rog_poison_nova);
 
     // Rogue Combat
-    RegisterSpellScript(spell_custom_rog_ss_aoe);
 
     // Rogue Sub
-    RegisterSpellScript(spell_custom_rog_hemo_aoe);
 }

@@ -67,8 +67,16 @@ class spell_custom_hunt_multishot_aoe : public SpellScript
 {
     PrepareSpellScript(spell_custom_hunt_multishot_aoe);
 
+    // Multi-Shot natively hits up to 3 targets and AfterHit runs per target;
+    // replicate to the extra enemies only once per cast.
+    bool _done = false;
+
     void HandleAfterHit()
     {
+        if (_done)
+            return;
+        _done = true;
+
         Unit* caster = GetCaster();
         Unit* mainTarget = GetHitUnit();
         if (!caster || !mainTarget)

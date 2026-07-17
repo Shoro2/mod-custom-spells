@@ -24,68 +24,6 @@
 static thread_local bool s_lvbReentry = false;
 
 // ============================================================
-//  SPELL 900400: Chain Lightning +6 targets, no damage reduction
-//  Hooked on Chain Lightning (all ranks via -49271).
-//  After hitting primary target, casts AoE helper (900408) on
-//  up to 6 additional enemies at full damage.
-// ============================================================
-class spell_custom_ele_cl_aoe : public SpellScript
-{
-    PrepareSpellScript(spell_custom_ele_cl_aoe);
-
-    void HandleAfterHit()
-    {
-        Unit* caster = GetCaster();
-        Unit* mainTarget = GetHitUnit();
-        if (!caster || !mainTarget)
-            return;
-
-        Player* player = caster->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_ELE_CL_AOE_PASSIVE))
-            return;
-
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
-            return;
-
-        int32 damage = GetHitDamage();
-        if (damage <= 0)
-            return;
-
-        // Find 6 additional enemies and deal full CL damage
-        std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 12.0f);
-        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
-            searcher(caster, targets, check);
-        Cell::VisitObjects(mainTarget, searcher, 12.0f);
-        targets.remove(mainTarget);
-
-        uint32 count = 0;
-        for (Unit* target : targets)
-        {
-            if (count >= 6)
-                break;
-            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
-                continue;
-
-            SpellInfo const* spellInfo = GetSpellInfo();
-            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
-            dmgInfo.damage = damage;
-            caster->DealSpellDamage(&dmgInfo, true);
-            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
-            ++count;
-        }
-    }
-
-    void Register() override
-    {
-        AfterHit += SpellHitFn(spell_custom_ele_cl_aoe::HandleAfterHit);
-    }
-};
-
-// ============================================================
 //  SPELL 900401: Totems → Following Creatures (PlayerScript)
 //  When player has 900401, totems follow the player instead
 //  of being static. Checked every 2 seconds via OnUpdate.
@@ -691,7 +629,6 @@ private:
 void AddShamanSpellsScripts()
 {
     // Shaman Elemental
-    RegisterSpellScript(spell_custom_ele_cl_aoe);
     new custom_totem_follow_playerscript();
     RegisterSpellScript(spell_custom_ele_ragnaros);
     RegisterSpellScript(spell_custom_ele_overload_lvb);
