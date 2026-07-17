@@ -138,7 +138,11 @@ When hooking on existing Blizzard spells via `spell_script_names`, the C++ class
 4. **`spell_script_names` missing**: the C++ class is not loaded → spell has no effect.
 5. **`DurationIndex` forgotten**: a passive aura needs `DurationIndex=21` (permanent).
 6. **Attributes missing PASSIVE**: without `0x40` the spell is castable instead of permanently active.
-7. **Off-by-one BasePoints**: writing `BasePoints=50` for "+50 %" yields **+51 %** in-game. Store `49`, not `50`. Detail: [`03-procs-and-flags.md#off-by-one-basepoints`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md#off-by-one-basepoints).
+7. **Off-by-one BasePoints**: writing `BasePoints=50` for "+50 %" yields **+51 %** in-game. Store `49`, not `50`. Detail: [`03-procs-and-flags.md#off-by-one-basepoints`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md#off-by-one-basepoints). (Only applies with `EffectDieSides=1`; with `EffectDieSides=0` the value is used as-is.)
+8. **`EffectSpellClassMaskA/B/C` are PER-EFFECT flag96 masks**: `A_1..A_3` = the three flag words of **effect 1**, `B_*` = effect 2, `C_*` = effect 3. A spellmod whose target spell has its family bit in `SpellFamilyFlags[1]` needs the mask in **`EffectSpellClassMaskA_2`** — writing it into `B_1` gives effect 1 an empty mask and the modifier silently affects nothing. Always verify the mask against the server `Spell.dbc` `SpellClassMask_1..3` of the target spell (2026-07-18 repair wave fixed 25+ rows with this bug).
+9. **`EffectMiscValue` on aura 107/108 is the SpellModOp**: 0=DAMAGE, 1=DURATION, 4=CHARGES, 10=CASTING_TIME, 11=COOLDOWN, 14=COST, 17=JUMP_TARGETS, 22=DOT. "Instant"/"-X% cast" is op 10 (not 14), "duration" is op 1 and "double HoTs/DoTs" is op 22 (not 17).
+10. **Extra-target damage must be dealt directly, not cast via helper spells**: `CastCustomSpell(target, HELPER, &damage, ...)` with a server-only helper produced no visible damage in-game. Use the T2-proven pattern instead: build `SpellNonMeleeDamage` with the ORIGINAL spell's `SpellInfo`, then `DealSpellDamage` + `SendSpellNonMeleeDamageLog` (heals: `HealInfo` + `HealBySpell`). The client renders the known spell id; no client DBC entry needed.
+11. **`Attributes` 0x10000000 = SPELL_ATTR0_NOT_IN_COMBAT_ONLY_PEACEFUL** ("cannot be used in combat") — never put it on castable actives or helpers. Triggered casts bypass it, player casts do not.
 
 ## Build
 

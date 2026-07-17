@@ -70,4 +70,16 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (901103, 'spell_custom_global_cleave_proc'),
 (901104, 'spell_custom_global_counter_attack'),
 (-35395, 'spell_custom_ret_cs_aoe'),
-(-55050, 'spell_custom_dkb_hs_aoe');
+(-55050, 'spell_custom_dkb_hs_aoe'),
+(-421, 'spell_custom_ele_cl_aoe'),
+(-1752, 'spell_custom_rog_ss_aoe'),
+(-16511, 'spell_custom_rog_hemo_aoe'),
+(-44425, 'spell_custom_mage_abarr_aoe'),
+(-30451, 'spell_custom_mage_ab_aoe'),
+(-133, 'spell_custom_mage_fb_aoe'),
+(-11366, 'spell_custom_mage_pyro_aoe'),
+(-116, 'spell_custom_mage_frostbolt_aoe'),
+(-30455, 'spell_custom_mage_icelance_aoe'),
+(-686, 'spell_custom_wlk_sb_aoe'),
+(-50796, 'spell_custom_wlk_cb_aoe'),
+(-8921, 'spell_custom_bal_mf_aoe');
