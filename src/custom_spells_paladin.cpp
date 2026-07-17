@@ -355,6 +355,114 @@ class spell_custom_pprot_judge_as : public SpellScript
 };
 
 // ============================================================
+//  SPELL 900205/900234/900268: Consecration Around You
+//  Hooked on Consecration (all ranks via -26573). With one of
+//  the marker passives, the static consecration area is removed
+//  right after the cast and replaced by self-aura 900211, which
+//  carries the cast rank's per-tick damage in its amount.
+// ============================================================
+class spell_custom_consec_around : public SpellScript
+{
+    PrepareSpellScript(spell_custom_consec_around);
+
+    void HandleAfterCast()
+    {
+        Unit* caster = GetCaster();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_HOLY_CONSEC_AROUND_PASSIVE)
+            && !player->HasAura(SPELL_PPROT_CONSEC_AROUND_PASSIVE)
+            && !player->HasAura(SPELL_RET_CONSEC_AROUND_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 tick = GetSpellInfo()->Effects[EFFECT_0].CalcValue(caster);
+        if (tick <= 0)
+            return;
+
+        caster->RemoveDynObject(GetSpellInfo()->Id);
+        caster->CastCustomSpell(caster, SPELL_CONSEC_MOBILE_AURA,
+            &tick, nullptr, nullptr, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> mobile Consecration ({}/tick)",
+            player->GetName(), tick);
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_consec_around::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  SPELL 900211: Mobile Consecration (AuraScript)
+//  Periodic dummy self-aura (1s ticks, 8s). Each tick deals the
+//  carried amount as holy damage to enemies within 8yd of the
+//  paladin, logged as Consecration so the client renders it.
+// ============================================================
+class spell_custom_mobile_consec : public AuraScript
+{
+    PrepareAuraScript(spell_custom_mobile_consec);
+
+    void HandlePeriodic(AuraEffect const* aurEff)
+    {
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player || !player->IsAlive())
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 amount = aurEff->GetAmount();
+        if (amount <= 0)
+            return;
+
+        SpellInfo const* consecInfo = sSpellMgr->GetSpellInfo(SPELL_CONSECRATION_R8);
+        if (!consecInfo)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player, 8.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(player, targets, check);
+        Cell::VisitObjects(player, searcher, 8.0f);
+
+        for (Unit* enemy : targets)
+        {
+            if (!enemy->IsAlive() || !player->IsValidAttackTarget(enemy))
+                continue;
+
+            uint32 damage = player->SpellDamageBonusDone(enemy, consecInfo,
+                uint32(amount), DOT, EFFECT_0);
+            SpellNonMeleeDamage dmgInfo(player, enemy, consecInfo,
+                consecInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            player->DealSpellDamage(&dmgInfo, true);
+            player->SendSpellNonMeleeDamageLog(&dmgInfo);
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_mobile_consec::HandlePeriodic,
+            EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
+    }
+};
+
+// ============================================================
 //  SPELL 900274: Exorcism Buff System (AuraScript)
 //  Passive proc aura: when CS, Judgement, or Divine Storm
 //  hits an enemy, adds 1 stack of Exorcism buff (900275).
@@ -460,6 +568,10 @@ void AddPaladinSpellsScripts()
     // Paladin Prot
     RegisterSpellScript(spell_custom_pprot_as_consec);
     RegisterSpellScript(spell_custom_pprot_judge_as);
+
+    // Shared: Consecration follows the caster (Holy/Prot/Ret markers)
+    RegisterSpellScript(spell_custom_consec_around);
+    RegisterSpellScript(spell_custom_mobile_consec);
 
     // Paladin Ret
     RegisterSpellScript(spell_custom_ret_exorcism_proc);

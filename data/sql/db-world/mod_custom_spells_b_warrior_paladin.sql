@@ -48,6 +48,13 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 (900209, 0, 0, 0, 0, 1, 0, 1, 10, 100, 800, 31, 13, 0, 0, 0, 0, 10, 156, 2, 'Holy Shock Radiance', 0x003F3F),
 (900210, 0, 0, 0, 0, 1, 0, 1, 10, 50, 200, 31, 13, 0, 0, 0, 0, 10, 51, 2, 'Consecration Heal', 0x003F3F);
 
+-- 900211: Mobile Consecration (shared by 900205/900234/900268) - periodic
+-- dummy self-aura, 1s ticks over Consecration's 8s (DurationIndex 31); the
+-- C++ AuraScript deals the carried per-tick amount around the paladin.
+DELETE FROM `spell_dbc` WHERE `ID` = 900211;
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+(900211, 0, 0, 0, 0, 1, 31, 1, 6, 0, 0, 1, 226, 1000, 10, 51, 2, 'Mobile Consecration', 0x003F3F);
+
 -- Paladin Prot: spell_dbc 900234-900241
 -- Masks verified against Spell.dbc SpellFamilyFlags: Avenger's Shield flags0=0x4000,
 -- Holy Shield flags1=0x40 (goes in A_2), Judgement flags0=0x800000 + JoJustice flags2=0x8.
