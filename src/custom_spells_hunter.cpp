@@ -103,7 +103,7 @@ class spell_custom_hunt_multishot_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo->Id, spellInfo->GetSchoolMask());
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
             dmgInfo.damage = damage;
             caster->DealSpellDamage(&dmgInfo, true);
             caster->SendSpellNonMeleeDamageLog(&dmgInfo);
@@ -292,8 +292,11 @@ class spell_custom_hunt_autoshot_bounce : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_HUNT_MM_BOUNCE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }

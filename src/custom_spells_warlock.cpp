@@ -367,8 +367,11 @@ class spell_custom_wlk_imp_fb_aoe : public SpellScript
             if (!extra->IsAlive() || !caster->IsValidAttackTarget(extra))
                 continue;
 
-            caster->CastCustomSpell(SPELL_WLK_DEMO_IMP_FB_HELPER, SPELLVALUE_BASE_POINT0,
-                damage, extra, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, extra, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }
@@ -547,8 +550,11 @@ class spell_custom_wlk_sb_aoe : public SpellScript
             if (!extra->IsAlive() || !player->IsValidAttackTarget(extra))
                 continue;
 
-            player->CastCustomSpell(SPELL_WLK_DEST_SB_HELPER, SPELLVALUE_BASE_POINT0,
-                damage, extra, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(player, extra, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            player->DealSpellDamage(&dmgInfo, true);
+            player->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }
@@ -607,8 +613,11 @@ class spell_custom_wlk_cb_aoe : public SpellScript
             if (!extra->IsAlive() || !player->IsValidAttackTarget(extra))
                 continue;
 
-            player->CastCustomSpell(SPELL_WLK_DEST_CB_HELPER, SPELLVALUE_BASE_POINT0,
-                damage, extra, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(player, extra, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            player->DealSpellDamage(&dmgInfo, true);
+            player->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }

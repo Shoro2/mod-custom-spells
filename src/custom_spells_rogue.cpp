@@ -102,8 +102,11 @@ class spell_custom_rog_ss_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_ROG_COMBAT_SS_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }
@@ -160,8 +163,11 @@ class spell_custom_rog_hemo_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_ROG_SUB_HEMO_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }

@@ -77,9 +77,23 @@ class spell_custom_pri_shield_explode : public AuraScript
         if (explosionDamage <= 0)
             return;
 
-        // Cast AoE helper with custom damage centered on shield target
-        player->CastCustomSpell(SPELL_PRI_DISC_EXPLODE_HELPER, SPELLVALUE_BASE_POINT0,
-            explosionDamage, target, true);
+        std::list<Unit*> enemies;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(target, player, 10.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(target, enemies, check);
+        Cell::VisitObjects(target, searcher, 10.0f);
+
+        SpellInfo const* spellInfo = GetSpellInfo();
+        for (Unit* enemy : enemies)
+        {
+            if (!enemy->IsAlive() || !player->IsValidAttackTarget(enemy))
+                continue;
+
+            SpellNonMeleeDamage dmgInfo(player, enemy, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = uint32(explosionDamage);
+            player->DealSpellDamage(&dmgInfo, true);
+            player->SendSpellNonMeleeDamageLog(&dmgInfo);
+        }
     }
 
     void Register() override

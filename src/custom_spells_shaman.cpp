@@ -70,8 +70,11 @@ class spell_custom_ele_cl_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_ELE_CL_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }

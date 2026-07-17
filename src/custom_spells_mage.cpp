@@ -69,8 +69,11 @@ class spell_custom_mage_abarr_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_MAGE_ARC_ABARR_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }
@@ -127,8 +130,11 @@ class spell_custom_mage_ab_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_MAGE_ARC_AB_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }
@@ -453,8 +459,11 @@ class spell_custom_mage_fb_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_MAGE_FIRE_FB_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }
@@ -511,8 +520,11 @@ class spell_custom_mage_pyro_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_MAGE_FIRE_PYRO_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }
@@ -605,8 +617,11 @@ class spell_custom_mage_frostbolt_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_MAGE_FROST_FB_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }
@@ -663,8 +678,11 @@ class spell_custom_mage_icelance_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            caster->CastCustomSpell(target, SPELL_MAGE_FROST_IL_AOE_HELPER,
-                &damage, nullptr, nullptr, true);
+            SpellInfo const* spellInfo = GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            caster->DealSpellDamage(&dmgInfo, true);
+            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
             ++count;
         }
     }

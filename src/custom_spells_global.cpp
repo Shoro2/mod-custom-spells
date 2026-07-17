@@ -61,8 +61,9 @@ class spell_custom_global_kill_heal : public AuraScript
         if (healAmount <= 0)
             return;
 
-        player->CastCustomSpell(SPELL_GLOBAL_KILL_HEAL_HELPER,
-            SPELLVALUE_BASE_POINT0, healAmount, player, true);
+        HealInfo healInfo(player, player, uint32(healAmount), GetSpellInfo(),
+            SPELL_SCHOOL_MASK_HOLY);
+        player->HealBySpell(healInfo);
     }
 
     void Register() override
@@ -171,8 +172,12 @@ class spell_custom_global_cleave_proc : public AuraScript
             if (!extra->IsAlive() || !player->IsValidAttackTarget(extra))
                 continue;
 
-            player->CastCustomSpell(SPELL_GLOBAL_CLEAVE_HELPER,
-                SPELLVALUE_BASE_POINT0, damage, extra, true);
+            SpellInfo const* logSpell = damageInfo->GetSpellInfo()
+                ? damageInfo->GetSpellInfo() : GetSpellInfo();
+            SpellNonMeleeDamage dmgInfo(player, extra, logSpell, damageInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            player->DealSpellDamage(&dmgInfo, true);
+            player->SendSpellNonMeleeDamageLog(&dmgInfo);
         }
     }
 
@@ -223,8 +228,11 @@ class spell_custom_global_counter_attack : public AuraScript
         if (counterDamage <= 0)
             counterDamage = 100; // minimum floor
 
-        player->CastCustomSpell(SPELL_GLOBAL_COUNTER_HELPER,
-            SPELLVALUE_BASE_POINT0, counterDamage, attacker, true);
+        SpellInfo const* spellInfo = GetSpellInfo();
+        SpellNonMeleeDamage dmgInfo(player, attacker, spellInfo, SPELL_SCHOOL_MASK_NORMAL);
+        dmgInfo.damage = counterDamage;
+        player->DealSpellDamage(&dmgInfo, true);
+        player->SendSpellNonMeleeDamageLog(&dmgInfo);
     }
 
     void Register() override

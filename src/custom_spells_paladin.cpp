@@ -403,7 +403,7 @@ class spell_custom_ret_cs_aoe : public SpellScript
             if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
                 continue;
 
-            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo->Id, spellInfo->GetSchoolMask());
+            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
             dmgInfo.damage = damage;
             caster->DealSpellDamage(&dmgInfo, true);
             caster->SendSpellNonMeleeDamageLog(&dmgInfo);
