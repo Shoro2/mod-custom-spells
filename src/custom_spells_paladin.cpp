@@ -16,6 +16,7 @@
  */
 
 #include "custom_spells_common.h"
+#include "DynamicObject.h"
 
 // Re-entrancy guard for the "Holy Shock always both" pair (passive 900202).
 // The damage variant triggers a heal and the heal variant triggers damage;
@@ -432,6 +433,16 @@ class spell_custom_mobile_consec : public AuraScript
         SpellInfo const* consecInfo = sSpellMgr->GetSpellInfo(SPELL_CONSECRATION_R8);
         if (!consecInfo)
             return;
+
+        // Ground visual: a short-lived dynobj tagged with the real Consecration
+        // id makes the client draw the circle at the current position each tick
+        DynamicObject* visual = new DynamicObject();
+        if (!visual->CreateDynamicObject(
+            player->GetMap()->GenerateLowGuid<HighGuid::DynamicObject>(),
+            player, consecInfo->Id, *player, 8.0f, DYNAMIC_OBJECT_AREA_SPELL))
+            delete visual;
+        else
+            visual->SetDuration(1100);
 
         std::list<Unit*> targets;
         Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player, 8.0f);
