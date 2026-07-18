@@ -201,6 +201,46 @@ class spell_custom_mage_emergency_shield : public AuraScript
 //  Active spell with ground targeting. Teleports the caster
 //  to the selected destination (max 40yd range).
 // ============================================================
+// ============================================================
+//  SPELL 900709: Blink to Target (SpellScript)
+//  Hooked on Blink (1953). With the marker passive, Blink
+//  teleports to the currently selected unit (up to 30yd, in
+//  line of sight) instead of the fixed forward jump.
+// ============================================================
+class spell_custom_mage_blink_to_target : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_blink_to_target);
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_MAGE_ARC_BLINK_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        Unit* target = ObjectAccessor::GetUnit(*player, player->GetTarget());
+        if (!target || target == player)
+            return;
+
+        if (!player->IsWithinDistInMap(target, 30.0f)
+            || !player->IsWithinLOSInMap(target))
+            return;
+
+        player->NearTeleportTo(target->GetPositionX(), target->GetPositionY(),
+            target->GetPositionZ(), player->GetOrientation());
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_mage_blink_to_target::HandleAfterCast);
+    }
+};
+
 class spell_custom_mage_targeted_blink : public SpellScript
 {
     PrepareSpellScript(spell_custom_mage_targeted_blink);
@@ -431,6 +471,7 @@ void AddMageSpellsScripts()
     RegisterSpellScript(spell_custom_mage_ae_charges);
     RegisterSpellScript(spell_custom_mage_evocation_power);
     RegisterSpellScript(spell_custom_mage_emergency_shield);
+    RegisterSpellScript(spell_custom_mage_blink_to_target);
     RegisterSpellScript(spell_custom_mage_targeted_blink);
     new custom_mage_mana_regen_playerscript();
 

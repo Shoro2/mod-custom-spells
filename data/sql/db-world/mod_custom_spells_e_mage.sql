@@ -31,7 +31,7 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 (900734, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 9, 1, 107, 17, 0, 0x1, 0, 0, 3, 185, 0, 0, 'Fire: Fireball +9', 0x003F3F),
 (900735, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 9, 1, 107, 17, 0, 0x400000, 0, 0, 3, 1726, 0, 0, 'Fire: Pyro +9', 0x003F3F),
 (900736, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 108, 0, 0, 0x400000, 0, 0, 3, 1726, 4, 0, 'Fire: Pyro +50%', 0x003F3F),
-(900737, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 12, 0, 0, 'Fire: Blast Off GCD', 0x003F3F),
+(900737, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, -1500, 1, 107, 21, 0, 0x2, 0, 0, 3, 12, 0, 0, 'Fire: Blast Off GCD', 0x003F3F),
 (900738, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 3, 1726, 0, 0, 'Fire: Pyro Hot Streak', 0x003F3F),
 (900739, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 185, 4, 0, 'Fireball Bounce', 0x003F3F),
 (900740, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 1726, 4, 0, 'Pyroblast Bounce', 0x003F3F);
@@ -48,3 +48,7 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 (900772, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frostbolt Bounce', 0x003F3F),
 (900773, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 3, 2723, 16, 0, 'Ice Lance Bounce', 0x003F3F),
 (900774, 0, 0, 0, 0, 1, 0, 1, -1, 2, 500, 3000, 6, 0, 0, 0, 0, 0, 0, 3, 188, 16, 0, 'Frost Comet', 0x003F3F);
+
+-- Dest-targeted dummy actives need a radius for implicit target selection
+-- (runs last in this file so both INSERT blocks above are already applied).
+UPDATE `spell_dbc` SET `EffectRadiusIndex_1` = 13 WHERE `ID` IN (900713, 900771);

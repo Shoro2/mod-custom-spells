@@ -474,6 +474,76 @@ class spell_custom_mobile_consec : public AuraScript
 };
 
 // ============================================================
+//  SPELL 900270: Divine Storm +6 Targets (SpellScript)
+//  Hooked on Divine Storm damage (53386, area-capped at 5 by the
+//  core). SPELLMOD_JUMP_TARGETS only extends chains, so the cap
+//  is bypassed like Multi-Shot: once per cast, deal the same
+//  damage to up to 6 further enemies within 8yd of the paladin.
+// ============================================================
+class spell_custom_ret_ds_aoe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_ret_ds_aoe);
+
+    // 53386 hits up to 5 targets and AfterHit runs per target
+    bool _done = false;
+
+    void HandleAfterHit()
+    {
+        if (_done)
+            return;
+        _done = true;
+
+        Unit* caster = GetCaster();
+        Unit* mainTarget = GetHitUnit();
+        if (!caster || !mainTarget)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_RET_DS_TARGETS_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 damage = GetHitDamage();
+        if (damage <= 0)
+            return;
+
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player, 8.0f);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(player, targets, check);
+        Cell::VisitObjects(player, searcher, 8.0f);
+        targets.remove(mainTarget);
+
+        SpellInfo const* spellInfo = GetSpellInfo();
+
+        uint32 count = 0;
+        for (Unit* target : targets)
+        {
+            if (count >= 6)
+                break;
+            if (!target->IsAlive() || !player->IsValidAttackTarget(target))
+                continue;
+
+            SpellNonMeleeDamage dmgInfo(player, target, spellInfo, spellInfo->GetSchoolMask());
+            dmgInfo.damage = damage;
+            player->DealSpellDamage(&dmgInfo, true);
+            player->SendSpellNonMeleeDamageLog(&dmgInfo);
+            ++count;
+        }
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_ret_ds_aoe::HandleAfterHit);
+    }
+};
+
+// ============================================================
 //  SPELL 900274: Exorcism Buff System (AuraScript)
 //  Passive proc aura: when CS, Judgement, or Divine Storm
 //  hits an enemy, adds 1 stack of Exorcism buff (900275).
@@ -487,13 +557,6 @@ class spell_custom_ret_exorcism_proc : public AuraScript
     bool CheckProc(ProcEventInfo& eventInfo)
     {
         SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
-
-        // Live probe (900107 debug pattern): distinguishes "proc pipeline never
-        // reaches this aura" from "reached but filtered" - remove after T2
-        LOG_INFO("module",
-            "mod-custom-spells: 900274 CheckProc -> procSpell={}, flags=0x{:X}",
-            spellInfo ? spellInfo->Id : 0, eventInfo.GetTypeMask());
-
         if (!spellInfo)
             return false;
 
@@ -585,6 +648,7 @@ void AddPaladinSpellsScripts()
     RegisterSpellScript(spell_custom_mobile_consec);
 
     // Paladin Ret
+    RegisterSpellScript(spell_custom_ret_ds_aoe);
     RegisterSpellScript(spell_custom_ret_exorcism_proc);
     RegisterSpellScript(spell_custom_ret_exorcism_consume);
 }

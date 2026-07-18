@@ -626,6 +626,43 @@ private:
     std::unordered_map<ObjectGuid, uint32> _lastRegen;
 };
 
+// ============================================================
+//  SPELL 900435: Summons +50% (UnitScript)
+//  Any summon the shaman controls (spirit wolves, elementals,
+//  totems) deals +50% damage while the owner has the passive.
+//  DBC-only ADD_PCT_MODIFIER cannot target summon spells
+//  (different SpellFamilyName), so C++ is required.
+// ============================================================
+class custom_enh_summon_dmg_unitscript : public UnitScript
+{
+public:
+    custom_enh_summon_dmg_unitscript()
+        : UnitScript("custom_enh_summon_dmg_unitscript") {}
+
+    void OnDamage(Unit* attacker, Unit* /*victim*/, uint32& damage) override
+    {
+        if (!attacker)
+            return;
+
+        Creature* creature = attacker->ToCreature();
+        if (!creature || (!creature->IsSummon() && !creature->IsTotem()))
+            return;
+
+        Unit* ownerUnit = creature->GetOwner();
+        if (!ownerUnit)
+            return;
+
+        Player* owner = ownerUnit->ToPlayer();
+        if (!owner || !owner->HasAura(SPELL_ENH_SUMMON_DMG_PASSIVE))
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        damage = static_cast<uint32>(damage * 1.5f);
+    }
+};
+
 void AddShamanSpellsScripts()
 {
     // Shaman Elemental
@@ -641,6 +678,7 @@ void AddShamanSpellsScripts()
     RegisterSpellScript(spell_custom_enh_wolf_summon);
     RegisterSpellScript(spell_custom_enh_wolf_haste);
     new custom_wolf_cl_unitscript();
+    new custom_enh_summon_dmg_unitscript();
 
     // Shaman Resto
     new custom_mana_regen_playerscript();
