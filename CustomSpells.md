@@ -39,7 +39,7 @@
 | Warrior | Arms | 900100-900107 (8) | 900108-900132 (25) | tested | [warrior-arms](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-arms.md) |
 | Warrior | Fury | 900108-900121 (14) | 900122-900165 (44) | tested | [warrior-fury](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-fury.md) |
 | Warrior | Prot | 900168-900175 (8) | 900176-900199 (24) | implemented | [warrior-protection](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-protection.md) |
-| Paladin | Holy | 900200-900211 (12) | 900212-900232 (21) | implemented | [paladin-holy](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-holy.md) |
+| Paladin | Holy | 900200-900212 (13) | 900213-900232 (20) | implemented | [paladin-holy](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-holy.md) |
 | Paladin | Prot | 900234-900241 (8) | 900242-900265 (24) | implemented | [paladin-protection](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-protection.md) |
 | Paladin | Ret | 900268-900275 (8) | 900276-900299 (24) | implemented | [paladin-retribution](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-retribution.md) |
 | DK | Blood | 900300-900304 (5) | 900305-900332 (28) | implemented | [death-knight-blood](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/death-knight-blood.md) |
