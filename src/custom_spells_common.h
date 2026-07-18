@@ -71,6 +71,7 @@ enum CustomSpellIds
     SPELL_HOLY_HS_AOE_HEAL_HELPER       = 900209,
     SPELL_HOLY_CONSEC_HEAL_HELPER       = 900210,
     SPELL_CONSEC_MOBILE_AURA            = 900211, // shared by 900205/900234/900268
+    SPELL_CONSEC_MOBILE_HEAL_AURA       = 900212, // heal ticker for 900204
 
     // ---- Paladin Prot (900234-900267) ----
     SPELL_PPROT_CONSEC_AROUND_PASSIVE   = 900234,

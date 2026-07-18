@@ -231,48 +231,6 @@ class spell_custom_holy_hs_both_heal : public SpellScript
     }
 };
 
-// ============================================================
-//  SPELL 900204: Consecration Also Heals (SpellScript)
-//  Hooked on Consecration (48819). On each periodic tick,
-//  also casts a heal helper on friendly units in the area.
-//  Only active when player has passive 900204.
-//
-//  Approach: AuraScript on Consecration's periodic aura.
-//  OnEffectPeriodic → cast heal helper on caster's location.
-// ============================================================
-class spell_custom_holy_consec_heal : public AuraScript
-{
-    PrepareAuraScript(spell_custom_holy_consec_heal);
-
-    void HandlePeriodic(AuraEffect const* aurEff)
-    {
-        Unit* caster = GetCaster();
-        if (!caster)
-            return;
-
-        Player* player = caster->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_HOLY_CONSEC_HEAL_PASSIVE))
-            return;
-
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
-            return;
-
-        // Cast AoE heal centered on the Consecration area (caster position
-        // at time of cast, but since Consecration is stationary we use
-        // the aura owner which is the dynamic object → fallback to caster)
-        caster->CastSpell(caster, SPELL_HOLY_CONSEC_HEAL_HELPER, true);
-    }
-
-    void Register() override
-    {
-        OnEffectPeriodic += AuraEffectPeriodicFn(
-            spell_custom_holy_consec_heal::HandlePeriodic,
-            EFFECT_0, SPELL_AURA_PERIODIC_DAMAGE);
-    }
-};
 
 // ============================================================
 //  SPELL 900239: Avenger's Shield Leaves Consecration
@@ -376,9 +334,11 @@ class spell_custom_consec_around : public SpellScript
         if (!player)
             return;
 
-        if (!player->HasAura(SPELL_HOLY_CONSEC_AROUND_PASSIVE)
-            && !player->HasAura(SPELL_PPROT_CONSEC_AROUND_PASSIVE)
-            && !player->HasAura(SPELL_RET_CONSEC_AROUND_PASSIVE))
+        bool around = player->HasAura(SPELL_HOLY_CONSEC_AROUND_PASSIVE)
+            || player->HasAura(SPELL_PPROT_CONSEC_AROUND_PASSIVE)
+            || player->HasAura(SPELL_RET_CONSEC_AROUND_PASSIVE);
+        bool heal = player->HasAura(SPELL_HOLY_CONSEC_HEAL_PASSIVE);
+        if (!around && !heal)
             return;
 
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
@@ -388,13 +348,36 @@ class spell_custom_consec_around : public SpellScript
         if (tick <= 0)
             return;
 
-        caster->RemoveDynObject(GetSpellInfo()->Id);
-        caster->CastCustomSpell(caster, SPELL_CONSEC_MOBILE_AURA,
-            &tick, nullptr, nullptr, true);
+        // tickers must match the consecration duration the player actually
+        // has (900207 extends it via SPELLMOD_DURATION)
+        int32 duration = GetSpellInfo()->GetMaxDuration();
+        player->ApplySpellMod(GetSpellInfo()->Id, SPELLMOD_DURATION, duration);
+
+        auto applyTicker = [&](uint32 spellId)
+        {
+            caster->CastCustomSpell(caster, spellId, &tick, nullptr, nullptr, true);
+            if (Aura* aura = player->GetAura(spellId))
+            {
+                if (duration > 0)
+                {
+                    aura->SetMaxDuration(duration);
+                    aura->SetDuration(duration);
+                }
+            }
+        };
+
+        if (around)
+        {
+            caster->RemoveDynObject(GetSpellInfo()->Id);
+            applyTicker(SPELL_CONSEC_MOBILE_AURA);
+        }
+        if (heal)
+            applyTicker(SPELL_CONSEC_MOBILE_HEAL_AURA);
 
         LOG_INFO("module",
-            "mod-custom-spells: Player {} -> mobile Consecration ({}/tick)",
-            player->GetName(), tick);
+            "mod-custom-spells: Player {} -> Consecration tickers ({}/tick, "
+            "around={}, heal={})",
+            player->GetName(), tick, around, heal);
     }
 
     void Register() override
@@ -469,6 +452,64 @@ class spell_custom_mobile_consec : public AuraScript
     {
         OnEffectPeriodic += AuraEffectPeriodicFn(
             spell_custom_mobile_consec::HandlePeriodic,
+            EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
+    }
+};
+
+// ============================================================
+//  SPELL 900212: Mobile Consecration Heal (AuraScript)
+//  Heal ticker for marker 900204: while Consecration runs, each
+//  tick heals allies within 8yd of the paladin for the same
+//  per-tick value the damage side uses, logged as Consecration.
+// ============================================================
+class spell_custom_mobile_consec_heal : public AuraScript
+{
+    PrepareAuraScript(spell_custom_mobile_consec_heal);
+
+    void HandlePeriodic(AuraEffect const* aurEff)
+    {
+        Unit* caster = GetTarget();
+        if (!caster)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player || !player->IsAlive())
+            return;
+
+        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+            return;
+
+        int32 amount = aurEff->GetAmount();
+        if (amount <= 0)
+            return;
+
+        SpellInfo const* consecInfo = sSpellMgr->GetSpellInfo(SPELL_CONSECRATION_R8);
+        if (!consecInfo)
+            return;
+
+        std::list<Unit*> allies;
+        Acore::AnyFriendlyUnitInObjectRangeCheck check(player, player, 8.0f);
+        Acore::UnitListSearcher<Acore::AnyFriendlyUnitInObjectRangeCheck>
+            searcher(player, allies, check);
+        Cell::VisitObjects(player, searcher, 8.0f);
+
+        for (Unit* ally : allies)
+        {
+            if (!ally->IsAlive())
+                continue;
+
+            uint32 heal = player->SpellHealingBonusDone(ally, consecInfo,
+                uint32(amount), DOT, EFFECT_0);
+            HealInfo healInfo(player, ally, heal, consecInfo,
+                consecInfo->GetSchoolMask());
+            player->HealBySpell(healInfo);
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_mobile_consec_heal::HandlePeriodic,
             EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
     }
 };
@@ -645,7 +686,6 @@ void AddPaladinSpellsScripts()
     RegisterSpellScript(spell_custom_holy_hs_aoe_heal);
     RegisterSpellScript(spell_custom_holy_hs_both_dmg);
     RegisterSpellScript(spell_custom_holy_hs_both_heal);
-    RegisterSpellScript(spell_custom_holy_consec_heal);
 
     // Paladin Prot
     RegisterSpellScript(spell_custom_pprot_as_consec);
@@ -654,6 +694,7 @@ void AddPaladinSpellsScripts()
     // Shared: Consecration follows the caster (Holy/Prot/Ret markers)
     RegisterSpellScript(spell_custom_consec_around);
     RegisterSpellScript(spell_custom_mobile_consec);
+    RegisterSpellScript(spell_custom_mobile_consec_heal);
 
     // Paladin Ret
     RegisterSpellScript(spell_custom_ret_ds_aoe);

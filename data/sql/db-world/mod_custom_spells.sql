@@ -5,6 +5,8 @@ DELETE FROM `spell_script_names` WHERE `spell_id` IN (-26573, 900211, 1953);
 -- name-scoped: 53385 also carries the core's spell_pal_divine_storm binding
 DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_custom_ret_ds_aoe';
 DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_custom_exclude_anchor_target';
+-- retired: the per-enemy consec-heal AuraScript died with the mobile rework
+DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_custom_holy_consec_heal';
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -16,7 +18,7 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (-25912, 'spell_custom_holy_hs_both_dmg'),
 (-25914, 'spell_custom_holy_hs_aoe_heal'),
 (-25914, 'spell_custom_holy_hs_both_heal'),
-(48819, 'spell_custom_holy_consec_heal'),
+(900212, 'spell_custom_mobile_consec_heal'),
 (-31935, 'spell_custom_pprot_as_consec'),
 (54158, 'spell_custom_pprot_judge_as'),
 (900274, 'spell_custom_ret_exorcism_proc'),
