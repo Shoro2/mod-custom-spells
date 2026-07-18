@@ -1,7 +1,9 @@
 -- Link custom spell IDs to their SpellScript names
 DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -31935, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -421, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -2643, 75, 900534, 900566, -8921, 901004, -779, 62078, 901066, 900603, -1752, -16511, -44425, -30451, -1449, 12051, 900708, 900713, -133, -11366, -116, -30455, 31687, 900771, 900800, 900802, 900834, -3110, 47994, 18788, -686, -50796, -17, 900933, 900966, 900967, 901101, 901102, 901103, 901104);
 DELETE FROM `spell_script_names` WHERE `spell_id` IN (-59172, -49271, -49048, -48827, -48660, -48638, -48562, -48463, -48066, -47964, -47809, -44781, -42921, -42914, -42897, -42891, -42842, -42833);
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (-26573, 900211, 53386, 1953);
+DELETE FROM `spell_script_names` WHERE `spell_id` IN (-26573, 900211, 1953);
+-- name-scoped: 53385 also carries the core's spell_pal_divine_storm binding
+DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_custom_ret_ds_aoe';
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -72,7 +74,7 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (901104, 'spell_custom_global_counter_attack'),
 (-26573, 'spell_custom_consec_around'),
 (900211, 'spell_custom_mobile_consec'),
-(53386, 'spell_custom_ret_ds_aoe'),
+(53385, 'spell_custom_ret_ds_aoe'),
 (1953, 'spell_custom_mage_blink_to_target');
 -- The former "+N targets" C++ AoE hooks (ret_cs_aoe, dkb_hs_aoe, ele_cl_aoe,
 -- rog_ss/hemo_aoe, the six mage nuke hooks, wlk_sb/cb_aoe, bal_mf_aoe) are

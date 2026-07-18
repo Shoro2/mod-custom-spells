@@ -383,7 +383,6 @@ constexpr uint32 SPELL_AVENGERS_SHIELD_R3   = 48827;
 constexpr uint32 SPELL_JUDGEMENT_DAMAGE     = 54158;
 // Divine Storm
 constexpr uint32 SPELL_DIVINE_STORM        = 53385;
-constexpr uint32 SPELL_DIVINE_STORM_DMG    = 53386;
 constexpr uint32 SPELL_MAGE_BLINK          = 1953;
 // Crusader Strike (highest rank)
 constexpr uint32 SPELL_CRUSADER_STRIKE_R6   = 35395;

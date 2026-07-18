@@ -475,16 +475,18 @@ class spell_custom_mobile_consec : public AuraScript
 
 // ============================================================
 //  SPELL 900270: Divine Storm +6 Targets (SpellScript)
-//  Hooked on Divine Storm damage (53386, area-capped at 5 by the
-//  core). SPELLMOD_JUMP_TARGETS only extends chains, so the cap
-//  is bypassed like Multi-Shot: once per cast, deal the same
-//  damage to up to 6 further enemies within 8yd of the paladin.
+//  Hooked on Divine Storm itself (53385 - in this core the
+//  weapon damage IS 53385; the heal runs via 54171/54172 in the
+//  core's own script, which coexists on the same binding).
+//  SPELLMOD_JUMP_TARGETS only extends chains, so the area cap is
+//  bypassed like Multi-Shot: once per cast, deal the same damage
+//  to up to 6 further enemies within 8yd of the paladin.
 // ============================================================
 class spell_custom_ret_ds_aoe : public SpellScript
 {
     PrepareSpellScript(spell_custom_ret_ds_aoe);
 
-    // 53386 hits up to 5 targets and AfterHit runs per target
+    // 53385 hits several targets and AfterHit runs per target
     bool _done = false;
 
     void HandleAfterHit()
