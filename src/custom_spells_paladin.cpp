@@ -486,14 +486,15 @@ class spell_custom_ret_ds_aoe : public SpellScript
 {
     PrepareSpellScript(spell_custom_ret_ds_aoe);
 
-    // 53385 hits several targets and AfterHit runs per target
+    // 53385 hits several targets and AfterHit runs per target - including
+    // the caster himself (effects 1+2 are self-targeted value dummies), so
+    // the guard may only be consumed by a real enemy hit
     bool _done = false;
 
     void HandleAfterHit()
     {
         if (_done)
             return;
-        _done = true;
 
         Unit* caster = GetCaster();
         Unit* mainTarget = GetHitUnit();
@@ -502,6 +503,9 @@ class spell_custom_ret_ds_aoe : public SpellScript
 
         Player* player = caster->ToPlayer();
         if (!player)
+            return;
+
+        if (mainTarget == caster || !player->IsValidAttackTarget(mainTarget))
             return;
 
         if (!player->HasAura(SPELL_RET_DS_TARGETS_PASSIVE))
@@ -513,6 +517,8 @@ class spell_custom_ret_ds_aoe : public SpellScript
         int32 damage = GetHitDamage();
         if (damage <= 0)
             return;
+
+        _done = true;
 
         std::list<Unit*> targets;
         Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player, 8.0f);
