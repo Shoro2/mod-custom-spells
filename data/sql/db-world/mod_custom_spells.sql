@@ -4,6 +4,7 @@ DELETE FROM `spell_script_names` WHERE `spell_id` IN (-59172, -49271, -49048, -4
 DELETE FROM `spell_script_names` WHERE `spell_id` IN (-26573, 900211, 1953);
 -- name-scoped: 53385 also carries the core's spell_pal_divine_storm binding
 DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_custom_ret_ds_aoe';
+DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_custom_exclude_anchor_target';
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
@@ -75,7 +76,12 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (-26573, 'spell_custom_consec_around'),
 (900211, 'spell_custom_mobile_consec'),
 (53385, 'spell_custom_ret_ds_aoe'),
-(1953, 'spell_custom_mage_blink_to_target');
+(1953, 'spell_custom_mage_blink_to_target'),
+(900208, 'spell_custom_exclude_anchor_target'),
+(900367, 'spell_custom_exclude_anchor_target'),
+(900505, 'spell_custom_exclude_anchor_target'),
+(900567, 'spell_custom_exclude_anchor_target'),
+(900604, 'spell_custom_exclude_anchor_target');
 -- The former "+N targets" C++ AoE hooks (ret_cs_aoe, dkb_hs_aoe, ele_cl_aoe,
 -- rog_ss/hemo_aoe, the six mage nuke hooks, wlk_sb/cb_aoe, bal_mf_aoe) are
 -- gone: with corrected masks the marker passives chain natively via

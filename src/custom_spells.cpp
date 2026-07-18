@@ -39,8 +39,34 @@
  *  Shared constants and spell IDs are in custom_spells_common.h
  */
 
+// ============================================================
+//  Shared helper: area bursts cast AT a hit target (Holy Shock
+//  Burst 900208, DK Shadow Eruption 900367, Beast Cleave 900505,
+//  Explosive Burst 900567, Poison Nova 900604) must not hit the
+//  anchor target again - it already took the triggering spell.
+// ============================================================
+class spell_custom_exclude_anchor_target : public SpellScript
+{
+    PrepareSpellScript(spell_custom_exclude_anchor_target);
+
+    void FilterTargets(std::list<WorldObject*>& targets)
+    {
+        if (Unit* anchor = GetExplTargetUnit())
+            targets.remove(anchor);
+    }
+
+    void Register() override
+    {
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(
+            spell_custom_exclude_anchor_target::FilterTargets,
+            EFFECT_0, TARGET_UNIT_DEST_AREA_ENEMY);
+    }
+};
+
 void AddCustomSpellsScripts()
 {
+    RegisterSpellScript(spell_custom_exclude_anchor_target);
+
     AddWarriorSpellsScripts();
     AddPaladinSpellsScripts();
     AddDKSpellsScripts();
