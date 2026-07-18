@@ -152,6 +152,7 @@ When hooking on existing Blizzard spells via `spell_script_names`, the C++ class
 11. **`Attributes` 0x10000000 = SPELL_ATTR0_NOT_IN_COMBAT_ONLY_PEACEFUL** ("cannot be used in combat") — never put it on castable actives or helpers. Triggered casts bypass it, player casts do not.
 12. **Area effects need `EffectRadiusIndex`** (13 = 10 yd): a `TARGET_UNIT_*_AREA_*` effect with radius index 0 searches a 0-yd radius and silently hits nothing (2026-07-18: eleven helpers in files b/c/d shipped without the column). Anchor semantics: 15/30 = around the caster, 16/31 = around the explicit cast target.
 13. **Verify effect ids against `SharedDefines.h`**, never from memory: `SPELL_EFFECT_ADD_EXTRA_ATTACKS` is **19** (901108 shipped with 32 and did nothing).
+14. **`EquippedItemClass` must be -1** ("no requirement") — the `spell_dbc` TABLE DEFAULT is 0 (= consumable), and the core's equipped-item gate (right after the proc `CheckProc` hook, plus `Spell::CheckItems`) then drops every proc and cast with "HasItemFitToSpellRequirements: Not handled spell requirement for item class 0". This silently killed ALL proc-driven customs until 2026-07-18; `mod_custom_spells_z_fixups.sql` forces -1 across the block. More generally: the table defaults are NOT DBC-neutral — always audit new columns' defaults against a real Spell.dbc row.
 
 ## Build
 
