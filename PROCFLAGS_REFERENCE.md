@@ -50,6 +50,21 @@ PROC_FLAG_TAKEN_DAMAGE            = 0x4000   ❌  (was actually DONE_SPELL_MAGIC
 | `0x140` | Own ranged auto + ranged spell | Hunter Trap proc |
 | `0x10014` | Melee auto + melee spell + magic neg | Cleave proc |
 
+## HitMask: on-block procs need an explicit mask (found 2026-07-19)
+
+`spell_proc.HitMask = 0` does **not** mean "any hit". `SpellMgr::CanSpellTriggerProcOnEvent`
+substitutes a default for TAKEN procs: `PROC_HIT_NORMAL | PROC_HIT_CRITICAL`.
+A **full block** nullifies the damage, so the event's hit mask only carries
+`PROC_HIT_BLOCK (0x40) | PROC_HIT_FULL_BLOCK (0x2000)` — the default never
+matches and the proc silently never fires. (Partial blocks sneak through
+because they still carry `PROC_HIT_NORMAL`; with high block value vs. normal
+mobs nearly every block is a full block, so "on block" procs looked dead.)
+
+**Rule:** every on-block `spell_proc` entry needs `HitMask = 0x2040`
+(`PROC_HIT_BLOCK | PROC_HIT_FULL_BLOCK`). Applied to 900173 (Block→Enhanced TC).
+900172 (Block→AoE) was retired the same day — reworked into the Devastate
+Lightning cast hook, which is not a proc aura.
+
 ## Bugs that this fix corrected
 
 The following `spell_proc` entries had wrong ProcFlags (ProcFlags = 0x2 misread as KILL; 0x400000 misread as DONE_PERIODIC). Corrected in `mod_custom_spells_*.sql`:
