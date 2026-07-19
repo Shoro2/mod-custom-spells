@@ -246,44 +246,85 @@ class spell_custom_prot_tc_rend_sunder : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900172: AoE Damage on Block (AuraScript)
-//  Passive proc aura: when the warrior blocks an attack,
-//  deals AoE physical damage (900174) to nearby enemies.
+//  SPELL 900172: Devastate Lightning (SpellScript)
+//  Hooked on Devastate (all ranks via -20243). When the struck
+//  target carries 5 stacks of Sunder Armor (58567), calls down
+//  a lightning strike (900174): 666 + 5/Paragon level nature
+//  damage to the target and all enemies within 10yd.
+//  Per-target 5s cooldown, tracked on the player.
+//  Only active when player has passive aura 900172.
 // ============================================================
-class spell_custom_prot_block_aoe : public AuraScript
+class DevastateLightningCd : public DataMap::Base
 {
-    PrepareAuraScript(spell_custom_prot_block_aoe);
+public:
+    std::unordered_map<ObjectGuid, uint64> NextAllowedMs;
+};
 
-    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+class spell_custom_prot_devastate_lightning : public SpellScript
+{
+    PrepareSpellScript(spell_custom_prot_devastate_lightning);
+
+    void HandleAfterHit()
     {
-        PreventDefaultAction();
-
-        Unit* target = GetTarget();
-        if (!target)
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target)
             return;
 
-        Player* player = target->ToPlayer();
+        Player* player = caster->ToPlayer();
         if (!player)
+            return;
+
+        if (!player->HasAura(SPELL_PROT_DEVASTATE_LIGHT_PASSIVE))
             return;
 
         if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
             return;
 
-        if (!(eventInfo.GetHitMask() & PROC_HIT_BLOCK))
+        // Missed/dodged/parried Devastates deal no damage - no trigger
+        if (GetHitDamage() <= 0)
             return;
 
-        player->CastSpell(player, SPELL_PROT_BLOCK_AOE_DAMAGE, true);
+        Aura const* sunder = target->GetAura(SPELL_SUNDER_ARMOR);
+        if (!sunder || sunder->GetStackAmount() < DEVASTATE_LIGHTNING_STACKS)
+            return;
+
+        uint64 now = static_cast<uint64>(GameTime::GetGameTimeMS().count());
+        DevastateLightningCd* cd =
+            player->CustomData.GetDefault<DevastateLightningCd>(
+                "mod_custom_spells_devastate_lightning");
+
+        auto it = cd->NextAllowedMs.find(target->GetGUID());
+        if (it != cd->NextAllowedMs.end() && now < it->second)
+            return;
+
+        // Drop expired per-target cooldowns before adding the new one
+        for (auto iter = cd->NextAllowedMs.begin();
+            iter != cd->NextAllowedMs.end();)
+        {
+            if (iter->second <= now)
+                iter = cd->NextAllowedMs.erase(iter);
+            else
+                ++iter;
+        }
+        cd->NextAllowedMs[target->GetGUID()] = now + DEVASTATE_LIGHTNING_CD_MS;
+
+        int32 damage = DEVASTATE_LIGHTNING_BASE
+            + static_cast<int32>(GetParagonLevel(player))
+            * DEVASTATE_LIGHTNING_PER_LEVEL;
+
+        caster->CastCustomSpell(target, SPELL_PROT_LIGHTNING_STRIKE_DMG,
+            &damage, nullptr, nullptr, true);
 
         LOG_INFO("module",
-            "mod-custom-spells: Player {} -> Block -> AoE damage triggered",
-            player->GetName());
+            "mod-custom-spells: Player {} -> Devastate Lightning {} dmg at {}",
+            player->GetName(), damage, target->GetName());
     }
 
     void Register() override
     {
-        OnEffectProc += AuraEffectProcFn(
-            spell_custom_prot_block_aoe::HandleProc,
-            EFFECT_0, SPELL_AURA_DUMMY);
+        AfterHit += SpellHitFn(
+            spell_custom_prot_devastate_lightning::HandleAfterHit);
     }
 };
 
@@ -337,6 +378,6 @@ void AddWarriorSpellsScripts()
     // Warrior Prot
     RegisterSpellScript(spell_custom_prot_revenge_aoe);
     RegisterSpellScript(spell_custom_prot_tc_rend_sunder);
-    RegisterSpellScript(spell_custom_prot_block_aoe);
+    RegisterSpellScript(spell_custom_prot_devastate_lightning);
     RegisterSpellScript(spell_custom_prot_block_tc);
 }

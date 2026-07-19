@@ -46,7 +46,7 @@ local CLASS_SPELLS = {
 		{ 900169, "Revenge AoE", "Protection" },
 		{ 900170, "TC Rend + Sunder", "Protection" },
 		{ 900171, "TC Damage", "Protection" },
-		{ 900172, "Block AoE", "Protection" },
+		{ 900172, "Devastate Lightning", "Protection" },
 		{ 900173, "Block TC", "Protection" },
 	},
 	[2] = { -- Paladin

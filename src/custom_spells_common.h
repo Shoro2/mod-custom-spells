@@ -52,9 +52,9 @@ enum CustomSpellIds
     SPELL_PROT_REVENGE_AOE_PASSIVE      = 900169,
     SPELL_PROT_TC_REND_SUNDER_PASSIVE   = 900170,
     SPELL_PROT_TC_DMG_PASSIVE           = 900171,
-    SPELL_PROT_BLOCK_AOE_PASSIVE        = 900172,
+    SPELL_PROT_DEVASTATE_LIGHT_PASSIVE  = 900172,
     SPELL_PROT_BLOCK_TC_PASSIVE         = 900173,
-    SPELL_PROT_BLOCK_AOE_DAMAGE         = 900174,
+    SPELL_PROT_LIGHTNING_STRIKE_DMG     = 900174,
     SPELL_PROT_ENHANCED_THUNDERCLAP     = 900175,
     SPELL_PROT_REVENGE_AOE_HELPER       = 900176,
 
@@ -368,6 +368,11 @@ constexpr int32  BLADESTORM_CD_REDUCE_MS = -500;  // -0.5 seconds (in ms)
 // ---- Warrior Prot constants ----
 constexpr uint32 SPELL_REND_R10       = 47465;
 constexpr uint32 SPELL_SUNDER_ARMOR   = 58567;
+// Devastate Lightning: 666 + 5/Paragon level nature damage, 5s per-target CD
+constexpr int32  DEVASTATE_LIGHTNING_BASE      = 666;
+constexpr int32  DEVASTATE_LIGHTNING_PER_LEVEL = 5;
+constexpr uint32 DEVASTATE_LIGHTNING_CD_MS     = 5000;
+constexpr uint8  DEVASTATE_LIGHTNING_STACKS    = 5;
 
 // ---- Paladin Holy constants ----
 // Holy Shock base spell (dummy → routes to dmg/heal)

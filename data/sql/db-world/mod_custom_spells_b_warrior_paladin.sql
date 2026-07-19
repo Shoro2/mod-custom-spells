@@ -3,31 +3,41 @@ DELETE FROM `spell_proc` WHERE `SpellId` = 900107;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
 (900107, 0, 0, 0, 0, 0, 0x14, 1, 2, 0, 0, 0, 0, 100, 0, 0);
 
--- Block -> AoE damage (900172): TAKEN_MELEE_AUTO_ATTACK (0x8). 100% chance, 1s ICD.
+-- 900172 is no longer a proc aura (reworked into the Devastate Lightning
+-- cast hook); the bare DELETE clears the legacy Block->AoE row from live DBs.
 DELETE FROM `spell_proc` WHERE `SpellId` = 900172;
-INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900172, 0, 0, 0, 0, 0, 0x8, 0, 0, 0, 0, 0, 0, 100, 1000, 0);
 
 -- Block -> Enhanced TC (900173): TAKEN_MELEE_AUTO_ATTACK (0x8). 10% chance, 3s ICD.
+-- HitMask 0x2040 = PROC_HIT_BLOCK | PROC_HIT_FULL_BLOCK. With HitMask 0 the
+-- TAKEN default (NORMAL|CRIT) applies, and a full block nullifies the damage,
+-- so the event only carries BLOCK|FULL_BLOCK and the proc never fired.
 DELETE FROM `spell_proc` WHERE `SpellId` = 900173;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900173, 0, 0, 0, 0, 0, 0x8, 0, 0, 0, 0, 0, 0, 10, 3000, 0);
+(900173, 0, 0, 0, 0, 0, 0x8, 0, 0, 0x2040, 0, 0, 0, 10, 3000, 0);
 
 -- Warrior Prot: spell_dbc 900168-900176
 -- Area helpers need EffectRadiusIndex (13 = 10yd) - without it the area
 -- search has 0yd radius and hits nothing. TargetA 15 = enemies around the
--- caster (both bursts are self-centered casts).
-DELETE FROM `spell_dbc` WHERE `ID` IN (900168, 900169, 900170, 900171, 900172, 900173, 900174, 900175, 900176);
+-- caster (Enhanced TC is a self-centered burst).
+DELETE FROM `spell_dbc` WHERE `ID` IN (900168, 900169, 900170, 900171, 900172, 900173, 900175, 900176);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `SpellClassSet`, `SpellIconID`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 (900168, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 0, 108, 0, 0, 0x400, 4, 132, 'Prot: Revenge Damage', 0x003F3F),
 (900169, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 4, 132, 'Prot: Revenge AoE', 0x003F3F),
 (900170, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 4, 132, 'Prot: TC Rend Sunder', 0x003F3F),
 (900171, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 0, 108, 0, 0, 0x80, 4, 132, 'Prot: TC Damage', 0x003F3F),
-(900172, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 4, 132, 'Prot: Block AoE', 0x003F3F),
+(900172, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 4, 132, 'Prot: Devastate Lightning', 0x003F3F),
 (900173, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 4, 132, 'Prot: Block TC', 0x003F3F),
-(900174, 0, 0, 0, 0, 1, 0, 1, -1, 2, 100, 500, 15, 13, 0, 0, 0, 0, 4, 132, 'Block Shield Burst', 0x003F3F),
 (900175, 0, 0, 0, 0, 1, 0, 1, -1, 2, 200, 1000, 15, 13, 0, 0, 0, 0, 4, 132, 'Enhanced Thunderclap', 0x003F3F),
 (900176, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 4, 132, 'Revenge Bounce', 0x003F3F);
+
+-- 900174 Lightning Strike (Devastate Lightning damage helper): nature school
+-- damage, cast AT the Devastate target -> dest-centered TargetA 16 with 10yd
+-- radius (13). DieSides 0: the C++ hook always overrides BasePoints with
+-- 666 + 5/Paragon level, so the value must pass through exactly.
+-- SpellVisualID 11666 = wotlk 'Lightning Strike' sky bolt (52944).
+DELETE FROM `spell_dbc` WHERE `ID` = 900174;
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `SpellVisualID_1`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+(900174, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 666, 16, 13, 0, 0, 0, 0, 4, 62, 8, 11666, 'Lightning Strike', 0x003F3F);
 
 -- Paladin Holy: spell_dbc 900200-900210
 -- 900207 uses SPELLMOD_DURATION (1), not JUMP_TARGETS. The two Holy Shock
