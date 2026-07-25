@@ -40,6 +40,18 @@
 // mod-paragon: true Paragon level (the marker aura 100000 stack caps at 255).
 #include "ParagonUtils.h"
 
+// Module master switch ("CustomSpells.Enable"), cached at config load and refreshed
+// on `.reload config` via OnAfterConfigLoad (custom_spells.cpp).
+//
+// Do NOT read this through sConfigMgr in a handler. GetOption is not a cheap lookup:
+// it builds "AC_" + a transformed key (string allocations) and then calls
+// std::getenv() on EVERY call, because a negative env-var result is never cached
+// (src/common/Configuration/Config.cpp:489-508). These scripts checked it in every
+// spell handler and in six per-tick OnPlayerUpdate handlers, which came to roughly
+// 600 getenv() calls per second per player before caching -- pure waste that grows
+// linearly with player count.
+extern bool g_CustomSpellsEnabled;
+
 enum CustomSpellIds
 {
     // Custom damage spell: Base 666 + 66% AP + 1% per Paragon level

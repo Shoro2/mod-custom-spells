@@ -39,7 +39,7 @@ class spell_custom_wlk_dot_aoe : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();
@@ -79,7 +79,7 @@ class spell_custom_wlk_dot_spread : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();
@@ -157,7 +157,7 @@ public:
         if (!player->HasAura(SPELL_WLK_DEMO_META_KILL_EXT))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Aura* meta = player->GetAura(SPELL_METAMORPHOSIS);
@@ -200,7 +200,7 @@ class spell_custom_wlk_meta_aoe_heal : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Only active while in Metamorphosis
@@ -254,7 +254,7 @@ public:
         if (!owner->HasAura(SPELL_WLK_DEMO_LESSER_SPAWN))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // 30s ICD per player
@@ -332,7 +332,7 @@ class spell_custom_wlk_imp_fb_aoe : public SpellScript
         if (!caster || !target)
             return;
 
-        // Caster is the Imp — check owner
+        // Caster is the Imp â€” check owner
         Unit* ownerUnit = caster->GetOwner();
         if (!ownerUnit)
             return;
@@ -344,7 +344,7 @@ class spell_custom_wlk_imp_fb_aoe : public SpellScript
         if (!owner->HasAura(SPELL_WLK_DEMO_IMP_FB_AOE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         int32 damage = GetHitDamage();
@@ -415,7 +415,7 @@ class spell_custom_wlk_fg_unlim : public SpellScript
         if (!owner || !owner->HasAura(SPELL_WLK_DEMO_FG_UNLIM_TARGETS))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Find all enemies in 8yd not already hit by the original Cleave
@@ -472,7 +472,7 @@ class spell_custom_wlk_sacrifice_all : public SpellScript
         if (!player->HasAura(SPELL_WLK_DEMO_SACRIFICE_ALL))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Apply all sacrifice buffs
@@ -539,7 +539,7 @@ public:
         if (!owner)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         uint32 entry = creature->GetEntry();

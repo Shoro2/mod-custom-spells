@@ -50,7 +50,7 @@ class spell_custom_pri_shield_explode : public AuraScript
         if (!player->HasAura(SPELL_PRI_DISC_SHIELD_EXPLODE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         AuraRemoveMode removeMode = GetTargetApplication()->GetRemoveMode();
@@ -70,9 +70,9 @@ class spell_custom_pri_shield_explode : public AuraScript
         // or the original amount if it expired with absorb remaining
         int32 explosionDamage;
         if (removeMode == AURA_REMOVE_BY_ENEMY_SPELL)
-            explosionDamage = originalAbsorb; // fully consumed → full damage
+            explosionDamage = originalAbsorb; // fully consumed â†’ full damage
         else
-            explosionDamage = std::max(originalAbsorb / 2, remainingAbsorb); // expired → at least 50%
+            explosionDamage = std::max(originalAbsorb / 2, remainingAbsorb); // expired â†’ at least 50%
 
         if (explosionDamage <= 0)
             return;
@@ -127,7 +127,7 @@ class spell_custom_pri_weakened_soul_cd : public SpellScript
         if (!player->HasAura(SPELL_PRI_DISC_WEAKENED_SOUL_CD))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Power Word: Shield applies Weakened Soul to the caster; shorten it
@@ -177,7 +177,7 @@ class spell_custom_pri_heal_fire : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Must be a Priest spell (SpellFamilyName = 6)
@@ -257,7 +257,7 @@ class spell_custom_pri_dot_aoe : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();
@@ -297,7 +297,7 @@ class spell_custom_pri_dot_spread : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();

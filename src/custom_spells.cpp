@@ -40,6 +40,27 @@
  */
 
 // ============================================================
+//  Module master switch, cached instead of read per handler.
+//  Declared in custom_spells_common.h; the note there explains why
+//  sConfigMgr->GetOption must not be called from a spell handler.
+// ============================================================
+bool g_CustomSpellsEnabled = true;
+
+class CustomSpells_World : public WorldScript
+{
+public:
+    CustomSpells_World() : WorldScript("CustomSpells_World") { }
+
+    // Also fires on `.reload config` (cs_reload.cpp -> World::LoadConfigSettings(true)
+    // -> ScriptMgr::OnAfterConfigLoad), so the switch stays live-togglable exactly as
+    // it was when every handler read sConfigMgr directly.
+    void OnAfterConfigLoad(bool /*reload*/) override
+    {
+        g_CustomSpellsEnabled = sConfigMgr->GetOption<bool>("CustomSpells.Enable", true);
+    }
+};
+
+// ============================================================
 //  Shared helper: area bursts cast AT a hit target (Holy Shock
 //  Burst 900208, DK Shadow Eruption 900367, Beast Cleave 900505,
 //  Explosive Burst 900567, Poison Nova 900604) must not hit the
@@ -65,6 +86,8 @@ class spell_custom_exclude_anchor_target : public SpellScript
 
 void AddCustomSpellsScripts()
 {
+    new CustomSpells_World();
+
     RegisterSpellScript(spell_custom_exclude_anchor_target);
 
     AddWarriorSpellsScripts();

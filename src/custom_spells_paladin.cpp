@@ -49,7 +49,7 @@ class spell_custom_holy_hs_aoe_dmg : public SpellScript
         if (!player->HasAura(SPELL_HOLY_HS_AOE_DMG_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         caster->CastSpell(target, SPELL_HOLY_HS_AOE_DMG_HELPER, true);
@@ -90,7 +90,7 @@ class spell_custom_holy_hs_aoe_heal : public SpellScript
         if (!player->HasAura(SPELL_HOLY_HS_AOE_HEAL_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         caster->CastSpell(target, SPELL_HOLY_HS_AOE_HEAL_HELPER, true);
@@ -109,8 +109,8 @@ class spell_custom_holy_hs_aoe_heal : public SpellScript
 // ============================================================
 //  SPELL 900202: Holy Shock Always Both (SpellScript)
 //  Hooked on Holy Shock damage (48824) and heal (48825).
-//  After hitting a hostile target → also heal nearest ally.
-//  After healing a friendly target → also damage nearest enemy.
+//  After hitting a hostile target â†’ also heal nearest ally.
+//  After healing a friendly target â†’ also damage nearest enemy.
 //  Only active when player has passive 900202.
 // ============================================================
 class spell_custom_holy_hs_both_dmg : public SpellScript
@@ -131,14 +131,14 @@ class spell_custom_holy_hs_both_dmg : public SpellScript
         if (!player->HasAura(SPELL_HOLY_HS_BOTH_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Skip when this hit came from the paired follow-up cast (avoid recursion)
         if (s_hsBothReentry)
             return;
 
-        // We're on the damage spell → also heal nearest injured ally
+        // We're on the damage spell â†’ also heal nearest injured ally
         // Find nearest friendly unit within 40yd that's injured
         Unit* healTarget = nullptr;
         float minDist = 40.0f;
@@ -201,14 +201,14 @@ class spell_custom_holy_hs_both_heal : public SpellScript
         if (!player->HasAura(SPELL_HOLY_HS_BOTH_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Skip when this hit came from the paired follow-up cast (avoid recursion)
         if (s_hsBothReentry)
             return;
 
-        // We're on the heal spell → also damage nearest enemy
+        // We're on the heal spell â†’ also damage nearest enemy
         Unit* dmgTarget = player->GetVictim();
         if (!dmgTarget || !dmgTarget->IsAlive())
         {
@@ -256,7 +256,7 @@ class spell_custom_pprot_as_consec : public SpellScript
         if (!player->HasAura(SPELL_PPROT_AS_CONSEC_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Cast Consecration (triggered) at target's location
@@ -274,7 +274,7 @@ class spell_custom_pprot_as_consec : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900240: Judgement → Free Avenger's Shield
+//  SPELL 900240: Judgement â†’ Free Avenger's Shield
 //  Hooked on Judgement Damage (54158). After Judgement hits,
 //  auto-casts Avenger's Shield at the same target.
 //  Only active when player has passive 900240.
@@ -297,7 +297,7 @@ class spell_custom_pprot_judge_as : public SpellScript
         if (!player->HasAura(SPELL_PPROT_JUDGE_AS_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         caster->CastSpell(target, SPELL_AVENGERS_SHIELD_R3, true);
@@ -341,7 +341,7 @@ class spell_custom_consec_around : public SpellScript
         if (!around && !heal)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         int32 tick = GetSpellInfo()->Effects[EFFECT_0].CalcValue(caster);
@@ -406,7 +406,7 @@ class spell_custom_mobile_consec : public AuraScript
         if (!player || !player->IsAlive())
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         int32 amount = aurEff->GetAmount();
@@ -476,7 +476,7 @@ class spell_custom_mobile_consec_heal : public AuraScript
         if (!player || !player->IsAlive())
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         int32 amount = aurEff->GetAmount();
@@ -552,7 +552,7 @@ class spell_custom_ret_ds_aoe : public SpellScript
         if (!player->HasAura(SPELL_RET_DS_TARGETS_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         int32 damage = GetHitDamage();
@@ -628,7 +628,7 @@ class spell_custom_ret_exorcism_proc : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Add one stack of the Exorcism buff (max 10)

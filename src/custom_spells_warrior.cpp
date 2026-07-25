@@ -39,7 +39,7 @@ class spell_custom_paragon_strike : public SpellScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // 66% of melee attack power
@@ -116,7 +116,7 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         LOG_INFO("module", "mod-custom-spells: 900107 HandleProc -> "
@@ -136,7 +136,7 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
 };
 
 // NOTE: Warrior Fury spells (900108-900121) are defined purely in
-// Spell.dbc (manually created). No C++ scripts needed — all effects
+// Spell.dbc (manually created). No C++ scripts needed â€” all effects
 // are handled via DBC passive auras, proc triggers, and spell_proc.
 // The old 900138-900145 C++ implementations have been removed.
 
@@ -164,7 +164,7 @@ class spell_custom_prot_revenge_aoe : public SpellScript
         if (!player->HasAura(SPELL_PROT_REVENGE_AOE_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         int32 damage = GetHitDamage();
@@ -203,7 +203,7 @@ class spell_custom_prot_revenge_aoe : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900170: Thunderclap → Rend + 5× Sunder Armor
+//  SPELL 900170: Thunderclap â†’ Rend + 5Ã— Sunder Armor
 //  Hooked on Thunderclap (47502). After hitting each target,
 //  applies Rend and 5 stacks of Sunder Armor.
 //  Only active when player has passive aura 900170.
@@ -226,7 +226,7 @@ class spell_custom_prot_tc_rend_sunder : public SpellScript
         if (!player->HasAura(SPELL_PROT_TC_REND_SUNDER_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         caster->CastSpell(target, SPELL_REND_R10, true);
@@ -278,7 +278,7 @@ class spell_custom_prot_devastate_lightning : public SpellScript
         if (!player->HasAura(SPELL_PROT_DEVASTATE_LIGHT_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Missed/dodged/parried Devastates deal no damage - no trigger
@@ -329,7 +329,7 @@ class spell_custom_prot_devastate_lightning : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900173: 10% Block → Enhanced Thunderclap (AuraScript)
+//  SPELL 900173: 10% Block â†’ Enhanced Thunderclap (AuraScript)
 //  Passive proc aura: when the warrior blocks an attack,
 //  10% chance to cast Enhanced Thunderclap (900175).
 // ============================================================
@@ -349,7 +349,7 @@ class spell_custom_prot_block_tc : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         if (!(eventInfo.GetHitMask() & PROC_HIT_BLOCK))

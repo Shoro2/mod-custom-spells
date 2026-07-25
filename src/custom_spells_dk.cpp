@@ -40,7 +40,7 @@ class spell_custom_dkb_3_rune_weapons : public SpellScript
         if (!player->HasAura(SPELL_DKB_3_RUNE_WEAPONS_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Summon 2 extra rune weapons by re-casting the summon effect (triggered).
@@ -77,7 +77,7 @@ class spell_custom_dkb_double_cast : public AuraScript
 
     void HandleProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
     {
-        // Don't prevent default — let the original DRW proc fire.
+        // Don't prevent default â€” let the original DRW proc fire.
         // We just add ONE extra cast (so total = 2).
 
         Unit* player = eventInfo.GetActor();
@@ -92,7 +92,7 @@ class spell_custom_dkb_double_cast : public AuraScript
         if (!pl->HasAura(SPELL_DKB_DOUBLE_CAST_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Find the rune weapon
@@ -138,7 +138,7 @@ class spell_custom_dkb_double_cast : public AuraScript
 };
 
 // ============================================================
-//  SPELL 900304: Dealing Damage → Death Coil Proc (AuraScript)
+//  SPELL 900304: Dealing Damage â†’ Death Coil Proc (AuraScript)
 //  Passive proc aura: when dealing melee/spell damage,
 //  X% chance to auto-cast Death Coil on target.
 //  Only active when player has passive 900304.
@@ -159,7 +159,7 @@ class spell_custom_dkb_deathcoil_proc : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();
@@ -184,7 +184,7 @@ class spell_custom_dkb_deathcoil_proc : public AuraScript
 //  SPELL 900333: Replace Ghoul with Frost Wyrm (SpellScript)
 //  Hooked on Raise Dead (46584). After cast, despawns the
 //  ghoul and summons a custom Frost Wyrm (NPC 900333) instead.
-//  The Frost Wyrm has 2× Gargoyle HP and casts Frost Breath.
+//  The Frost Wyrm has 2Ã— Gargoyle HP and casts Frost Breath.
 // ============================================================
 class spell_custom_dkf_frost_wyrm : public SpellScript
 {
@@ -203,7 +203,7 @@ class spell_custom_dkf_frost_wyrm : public SpellScript
         if (!player->HasAura(SPELL_DKF_FROST_WYRM_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Find and despawn the ghoul
@@ -397,7 +397,7 @@ class spell_custom_frost_breath : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900366: DoTs → Shadow AoE Proc (AuraScript)
+//  SPELL 900366: DoTs â†’ Shadow AoE Proc (AuraScript)
 //  Passive proc aura: when periodic damage ticks,
 //  X% chance to cast Shadow AoE (900367) on target.
 // ============================================================
@@ -417,7 +417,7 @@ class spell_custom_dku_dot_aoe : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();

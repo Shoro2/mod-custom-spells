@@ -49,7 +49,7 @@ class spell_custom_bal_sf_cd_reduce : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Reduce Starfall cooldown by 1 second
@@ -87,7 +87,7 @@ class spell_custom_feral_bear_swipe_bleed : public SpellScript
         if (!player->HasAura(SPELL_FERAL_BEAR_SWIPE_BLEED))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Apply bleed DoT to target
@@ -123,7 +123,7 @@ class spell_custom_feral_cat_swipe_bleed : public SpellScript
         if (!player->HasAura(SPELL_FERAL_CAT_SWIPE_BLEED))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Apply bleed DoT to target
@@ -157,7 +157,7 @@ class spell_custom_drst_hot_treant : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();
@@ -218,7 +218,7 @@ public:
         if (!player->HasAura(SPELL_DRST_SUMMON_SCALE_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Throttle: only every 3 seconds
@@ -288,7 +288,7 @@ public:
         if (!player->HasAura(SPELL_DRST_SUMMON_HEAL_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Cast heal helper on self (AoE heal around summon's position)
@@ -337,7 +337,7 @@ public:
                 return;
         }
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // 20% chance
@@ -356,9 +356,9 @@ public:
 //  needs two separate DBC auras. We use marker + DBC auras:
 //  - One aura halves tick interval (ADD_PCT_MODIFIER on SPELL_AURA_PERIODIC)
 //  - One aura doubles duration (ADD_PCT_MODIFIER on duration)
-//  Both handled via DBC — no C++ needed for this spell.
+//  Both handled via DBC â€” no C++ needed for this spell.
 // ============================================================
-// (No C++ class needed — pure DBC passive)
+// (No C++ class needed â€” pure DBC passive)
 
 // ============================================================
 //  DRUID RESTO: Mana regen per missing mana% (901072)
@@ -384,7 +384,7 @@ public:
         if (!player->HasAura(SPELL_DRST_MANA_REGEN_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Throttle: only every 5 seconds

@@ -26,15 +26,15 @@
 // ============================================================
 //  901100: Cast while moving
 //  DBC passive aura using SPELL_AURA_CAST_WHILE_WALKING (330).
-//  This is a pure DBC spell — no C++ needed. The aura type
+//  This is a pure DBC spell â€” no C++ needed. The aura type
 //  allows casting all spells (including channels) while moving.
 //  Registered here only for completeness; the DBC entry does
 //  all the work.
 // ============================================================
-// (No C++ class needed — DBC aura 330 handles it natively)
+// (No C++ class needed â€” DBC aura 330 handles it natively)
 
 // ============================================================
-//  901101: Kill enemy → heal 5% total HP
+//  901101: Kill enemy â†’ heal 5% total HP
 //  Proc aura: on PROC_FLAG_KILL, heals the player for 5% of
 //  their maximum health via helper spell 901105.
 // ============================================================
@@ -54,7 +54,7 @@ class spell_custom_global_kill_heal : public AuraScript
         if (!player || !player->IsAlive())
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         int32 healAmount = static_cast<int32>(player->GetMaxHealth() * 0.05f);
@@ -96,7 +96,7 @@ class spell_custom_global_extra_attack : public AuraScript
         if (!player || !player->IsAlive())
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Prevent recursive procs: if the triggering event came from a
@@ -143,7 +143,7 @@ class spell_custom_global_cleave_proc : public AuraScript
         if (!player || !player->IsAlive())
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();
@@ -189,7 +189,7 @@ class spell_custom_global_cleave_proc : public AuraScript
 };
 
 // ============================================================
-//  901104: Avoid attack → counter attack
+//  901104: Avoid attack â†’ counter attack
 //  Proc aura: on dodge/parry/block of a melee attack, deal
 //  instant physical damage back to the attacker via helper
 //  spell 901107. Damage = 50% of player's AP.
@@ -210,7 +210,7 @@ class spell_custom_global_counter_attack : public AuraScript
         if (!player || !player->IsAlive())
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Must be a dodge, parry, or block
@@ -248,7 +248,7 @@ class spell_custom_global_counter_attack : public AuraScript
 
 void AddGlobalSpellsScripts()
 {
-    // 901100: Cast while moving — DBC only, no C++ needed
+    // 901100: Cast while moving â€” DBC only, no C++ needed
     RegisterSpellScript(spell_custom_global_kill_heal);
     RegisterSpellScript(spell_custom_global_extra_attack);
     RegisterSpellScript(spell_custom_global_cleave_proc);

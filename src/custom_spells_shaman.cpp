@@ -24,7 +24,7 @@
 static thread_local bool s_lvbReentry = false;
 
 // ============================================================
-//  SPELL 900401: Totems → Following Creatures (PlayerScript)
+//  SPELL 900401: Totems â†’ Following Creatures (PlayerScript)
 //  When player has 900401, totems follow the player instead
 //  of being static. Checked every 2 seconds via OnUpdate.
 // ============================================================
@@ -50,7 +50,7 @@ public:
             !player->HasAura(SPELL_RST_TOTEM_FOLLOW_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Throttle: only check every ~2 seconds using game time
@@ -86,7 +86,7 @@ private:
 };
 
 // ============================================================
-//  SPELL 900402: Fire Elemental → Ragnaros
+//  SPELL 900402: Fire Elemental â†’ Ragnaros
 //  Hooked on Fire Elemental Totem (2894). After cast,
 //  replaces the Fire Elemental with a Ragnaros model.
 // ============================================================
@@ -107,7 +107,7 @@ class spell_custom_ele_ragnaros : public SpellScript
         if (!player->HasAura(SPELL_ELE_RAGNAROS_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Find the fire elemental and change its display to Ragnaros
@@ -124,7 +124,7 @@ class spell_custom_ele_ragnaros : public SpellScript
                 (*itr)->SetMaxHealth((*itr)->GetMaxHealth() * 2);
                 (*itr)->SetHealth((*itr)->GetMaxHealth());
                 LOG_INFO("module",
-                    "mod-custom-spells: Player {} -> Fire Elemental → Ragnaros",
+                    "mod-custom-spells: Player {} -> Fire Elemental â†’ Ragnaros",
                     player->GetName());
                 break;
             }
@@ -160,7 +160,7 @@ class spell_custom_ele_overload_lvb : public SpellScript
         if (!player->HasAura(SPELL_ELE_OVERLOAD_LVB_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Skip the overload copy itself (it is a triggered Lava Burst re-cast)
@@ -219,7 +219,7 @@ class spell_custom_ele_lvb_spread_fs : public SpellScript
         if (!player->HasAura(SPELL_ELE_LVB_SPREAD_FS_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Skip the overload copy's triggered Lava Burst (avoid cascade)
@@ -271,7 +271,7 @@ class spell_custom_ele_lvb_spread_fs : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900405: Flame Shock ticks → reset Lava Burst CD
+//  SPELL 900405: Flame Shock ticks â†’ reset Lava Burst CD
 //  Proc aura: on periodic damage, chance to reset LvB cooldown.
 // ============================================================
 class spell_custom_ele_fs_reset_lvb : public AuraScript
@@ -290,7 +290,7 @@ class spell_custom_ele_fs_reset_lvb : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Only proc on Flame Shock ticks (SpellFamilyFlags[0] = 0x10000000)
@@ -338,7 +338,7 @@ class spell_custom_ele_lvb_charges : public SpellScript
         if (!player->HasAura(SPELL_ELE_LVB_TWO_CHARGES_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Skip the overload copy's triggered Lava Burst (don't touch charges)
@@ -356,7 +356,7 @@ class spell_custom_ele_lvb_charges : public SpellScript
         {
             // Second charge used, set stacks to 1
             chargeAura->SetStackAmount(1);
-            // Don't reset CD — it's now on real cooldown
+            // Don't reset CD â€” it's now on real cooldown
         }
         else
         {
@@ -373,15 +373,15 @@ class spell_custom_ele_lvb_charges : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900407: Clearcasting → Lava Burst instant
+//  SPELL 900407: Clearcasting â†’ Lava Burst instant
 //  Implemented purely via DBC: ADD_PCT_MODIFIER with
 //  SPELLMOD_CASTING_TIME = -100% on Lava Burst.
 //  This makes LvB always instant when the passive is active.
-//  (No separate C++ class needed — DBC handles it.)
+//  (No separate C++ class needed â€” DBC handles it.)
 // ============================================================
 
 // ============================================================
-//  SPELL 900434: 5 Maelstrom stacks → summons empowered AoE 5s
+//  SPELL 900434: 5 Maelstrom stacks â†’ summons empowered AoE 5s
 //  Hooked on Maelstrom Weapon (53817). When stacks reach 5,
 //  apply a 5s buff (900439) that makes summons deal AoE.
 // ============================================================
@@ -405,7 +405,7 @@ class spell_custom_enh_maelstrom_aoe : public AuraScript
         if (!player->HasAura(SPELL_ENH_MAELSTROM_AOE_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Apply empowerment buff on player (5s duration)
@@ -420,7 +420,7 @@ class spell_custom_enh_maelstrom_aoe : public AuraScript
         }
 
         LOG_INFO("module",
-            "mod-custom-spells: Player {} -> Maelstrom 5 stacks → summons empowered",
+            "mod-custom-spells: Player {} -> Maelstrom 5 stacks â†’ summons empowered",
             player->GetName());
     }
 
@@ -432,7 +432,7 @@ class spell_custom_enh_maelstrom_aoe : public AuraScript
 };
 
 // ============================================================
-//  SPELL 900436: Auto attacks → chance to summon wolf
+//  SPELL 900436: Auto attacks â†’ chance to summon wolf
 //  Proc aura: on melee auto attack, chance to summon a
 //  temporary wolf that fights for 15 seconds.
 // ============================================================
@@ -452,7 +452,7 @@ class spell_custom_enh_wolf_summon : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();
@@ -501,7 +501,7 @@ class spell_custom_enh_wolf_haste : public SpellScript
         if (!player->HasAura(SPELL_ENH_WOLF_HASTE_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Get owner's haste percentage
@@ -519,7 +519,7 @@ class spell_custom_enh_wolf_haste : public SpellScript
                 wolf->SetAttackTime(BASE_ATTACK, newAttack);
 
                 LOG_INFO("module",
-                    "mod-custom-spells: Player {} -> Spirit Wolf haste applied ({}ms → {}ms)",
+                    "mod-custom-spells: Player {} -> Spirit Wolf haste applied ({}ms â†’ {}ms)",
                     player->GetName(), baseAttack, newAttack);
             }
         }
@@ -561,7 +561,7 @@ public:
         if (!player->HasAura(SPELL_ENH_WOLF_CL_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // 5% chance
@@ -597,7 +597,7 @@ public:
         if (!player->HasAura(SPELL_RST_MANA_REGEN_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Throttle: only every 5 seconds
@@ -656,7 +656,7 @@ public:
         if (!owner || !owner->HasAura(SPELL_ENH_SUMMON_DMG_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         damage = static_cast<uint32>(damage * 1.5f);

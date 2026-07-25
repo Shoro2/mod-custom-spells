@@ -36,7 +36,7 @@ public:
         if (!player->HasAura(SPELL_HUNT_ARROWS_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         SpellInfo const* spellInfo = spell->GetSpellInfo();
@@ -89,7 +89,7 @@ class spell_custom_hunt_multishot_aoe : public SpellScript
         if (!player->HasAura(SPELL_HUNT_MULTISHOT_AOE_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         int32 damage = GetHitDamage();
@@ -152,7 +152,7 @@ public:
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Pet damage +50%
@@ -185,7 +185,7 @@ public:
         if (!player->HasAura(SPELL_HUNT_BM_PET_SPEED_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Throttle: only every 3 seconds
@@ -242,7 +242,7 @@ public:
         if (!player->HasAura(SPELL_HUNT_BM_PET_AOE_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // 15% chance
@@ -277,7 +277,7 @@ class spell_custom_hunt_autoshot_bounce : public SpellScript
         if (!player->HasAura(SPELL_HUNT_MM_AUTOSHOT_BOUNCE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         int32 damage = GetHitDamage();
@@ -355,7 +355,7 @@ class spell_custom_hunt_barrage : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Get current target
@@ -399,7 +399,7 @@ class spell_custom_hunt_surv_trap_proc : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = eventInfo.GetActionTarget();

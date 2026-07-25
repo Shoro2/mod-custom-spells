@@ -48,7 +48,7 @@ class spell_custom_mage_ab_charges : public SpellScript
         if (!player->HasAura(SPELL_MAGE_ARC_CHARGES_8_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Aura* debuff = player->GetAura(SPELL_ARCANE_BLAST_DEBUFF);
@@ -89,7 +89,7 @@ class spell_custom_mage_ae_charges : public SpellScript
         if (!player->HasAura(SPELL_MAGE_ARC_AE_CHARGES_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Record current stacks before applying
@@ -141,7 +141,7 @@ class spell_custom_mage_evocation_power : public AuraScript
         if (!player->HasAura(SPELL_MAGE_ARC_EVOC_POWER_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Each Evocation tick adds one stack of spell damage buff
@@ -174,7 +174,7 @@ class spell_custom_mage_emergency_shield : public AuraScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Only trigger when below 30% health
@@ -220,7 +220,7 @@ class spell_custom_mage_blink_to_target : public SpellScript
         if (!player->HasAura(SPELL_MAGE_ARC_BLINK_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         Unit* target = ObjectAccessor::GetUnit(*player, player->GetTarget());
@@ -251,7 +251,7 @@ class spell_custom_mage_targeted_blink : public SpellScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         WorldLocation const* dest = GetExplTargetDest();
@@ -293,7 +293,7 @@ public:
         if (!player->HasAura(SPELL_MAGE_ARC_MANA_REGEN))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Throttle: only every 5 seconds
@@ -344,7 +344,7 @@ class spell_custom_mage_pyro_hotstreak : public SpellScript
         if (!player->HasAura(SPELL_MAGE_FIRE_PYRO_HS_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Apply Hot Streak buff (instant Pyroblast)
@@ -380,7 +380,7 @@ class spell_custom_mage_permanent_water_ele : public SpellScript
         if (!player->HasAura(SPELL_MAGE_FROST_PERM_ELE_PASSIVE))
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         // Find the Water Elemental among controlled units and make permanent
@@ -418,7 +418,7 @@ class spell_custom_mage_comet_shower : public SpellScript
         if (!player)
             return;
 
-        if (!sConfigMgr->GetOption<bool>("CustomSpells.Enable", true))
+        if (!g_CustomSpellsEnabled)
             return;
 
         WorldLocation const* dest = GetExplTargetDest();
