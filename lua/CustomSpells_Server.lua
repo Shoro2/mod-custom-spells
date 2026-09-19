@@ -205,9 +205,21 @@ local GLOBAL_SPELLS = {
 	{ 901104, "Counter Attack", "Global" },
 }
 
+-- The 21 Chapters-of-Azeroth classes (ids 12-32) have no CLASS_SPELLS list:
+-- every entry above is a modifier for a named stock ability (Moonfire, Shadow
+-- Bolt, Pyroblast), and a CoA class casts none of them. They still get the
+-- GLOBAL_SPELLS, which key off events rather than off a spell - and they used
+-- to get nothing at all, because CLASS_SPELLS[class] was nil and SendState
+-- returned before it reached the global rows. The legacy class's list is
+-- deliberately NOT inherited: it would offer a Starcaller a "Moonfire +9
+-- Targets" toggle for a spell the class cannot cast.
+local CUSTOM_CLASS_FIRST = 12
+local CUSTOM_CLASS_LAST = 32
+local NO_CLASS_SPELLS = {}
+
 -- classId -> { [spellId] = true } for O(1) Toggle validation
 local ALLOWED = {}
-for classId, list in pairs(CLASS_SPELLS) do
+local function BuildAllowed(classId, list)
 	local set = {}
 	for _, entry in ipairs(list) do
 		set[entry[1]] = true
@@ -218,8 +230,19 @@ for classId, list in pairs(CLASS_SPELLS) do
 	ALLOWED[classId] = set
 end
 
+for classId, list in pairs(CLASS_SPELLS) do
+	BuildAllowed(classId, list)
+end
+for classId = CUSTOM_CLASS_FIRST, CUSTOM_CLASS_LAST do
+	BuildAllowed(classId, NO_CLASS_SPELLS)
+end
+
 local function GetSpellList(player)
-	return CLASS_SPELLS[player:GetClass()]
+	local classId = player:GetClass()
+	if classId >= CUSTOM_CLASS_FIRST and classId <= CUSTOM_CLASS_LAST then
+		return NO_CLASS_SPELLS
+	end
+	return CLASS_SPELLS[classId]
 end
 
 -- ============================================================
