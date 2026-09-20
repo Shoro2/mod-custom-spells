@@ -213,6 +213,12 @@ local GLOBAL_SPELLS = {
 -- returned before it reached the global rows. The legacy class's list is
 -- deliberately NOT inherited: it would offer a Starcaller a "Moonfire +9
 -- Targets" toggle for a spell the class cannot cast.
+--
+-- The pair below MIRRORS the core: SharedDefines.h IsAscensionClass()
+-- (CLASS_BARBARIAN 12 .. CLASS_SPIRIT_MAGE 32). Eluna Lua cannot read a C++
+-- header, so this is one of the two mirrors the core header names; the other
+-- is mod-procedural-dungeon's PD_CLASS_CUSTOM_FIRST / _LAST. If the range ever
+-- moves, all three move together.
 local CUSTOM_CLASS_FIRST = 12
 local CUSTOM_CLASS_LAST = 32
 local NO_CLASS_SPELLS = {}
