@@ -3,7 +3,8 @@
 --
 -- Spell picker: lists the player's custom class spells grouped
 -- by spec; each row is a checkbox that learns/forgets the spell
--- (validated server-side). Open with /spells or /cs.
+-- (validated server-side). Open with /spells or /cs. A GM also
+-- gets "Learn all Talents" for the Forgotten Talents tree.
 -- =============================================================
 
 local AIO = AIO or require("AIO")
@@ -25,6 +26,10 @@ end
 
 local ROW_HEIGHT = 22
 local HEADER_HEIGHT = 24
+-- Bottom edge of the list, above the Learn All / Forget All row. The GM
+-- row lifts it by GM_ROW_HEIGHT while that row is shown.
+local LIST_BOTTOM = 48
+local GM_ROW_HEIGHT = 28
 
 local mainFrame = CreateFrame("Frame", "CustomSpellsFrame", UIParent)
 mainFrame:SetSize(380, 480)
@@ -59,7 +64,7 @@ closeBtn:SetPoint("TOPRIGHT", -6, -6)
 local scrollFrame = CreateFrame("ScrollFrame", "CustomSpellsScroll", mainFrame,
 	"UIPanelScrollFrameTemplate")
 scrollFrame:SetPoint("TOPLEFT", 16, -40)
-scrollFrame:SetPoint("BOTTOMRIGHT", -36, 48)
+scrollFrame:SetPoint("BOTTOMRIGHT", -36, LIST_BOTTOM)
 
 local content = CreateFrame("Frame", nil, scrollFrame)
 content:SetSize(310, 10)
@@ -154,14 +159,51 @@ forgetAllBtn:SetScript("OnClick", function()
 	AIO.Handle("CustomSpells", "SetAll", 0)
 end)
 
+-- GM only: every Forgotten Talents node at its maximum rank, free of
+-- charge (mod-forgotten-talents' .forgotten learnall). It has a row of its
+-- own above Learn All / Forget All and is shown only while the server's
+-- State says GM; the server checks the rank again on every click.
+local learnTalentsBtn = CreateFrame("Button", nil, mainFrame,
+	"UIPanelButtonTemplate")
+learnTalentsBtn:SetSize(160, 24)
+learnTalentsBtn:SetPoint("BOTTOM", 0, 16 + GM_ROW_HEIGHT)
+learnTalentsBtn:SetText("Learn all Talents")
+learnTalentsBtn:SetScript("OnClick", function()
+	AIO.Handle("CustomSpells", "LearnAllTalents")
+end)
+learnTalentsBtn:SetScript("OnEnter", function(self)
+	GameTooltip:SetOwner(self, "ANCHOR_TOP")
+	GameTooltip:SetText("Learn all Talents", 1, 0.82, 0)
+	GameTooltip:AddLine("GM only: every Forgotten Talents node at its "
+		.. "maximum rank, free of charge.", 1, 1, 1, true)
+	GameTooltip:Show()
+end)
+learnTalentsBtn:SetScript("OnLeave", function()
+	GameTooltip:Hide()
+end)
+learnTalentsBtn:Hide()
+
+local function ShowGameMasterRow(shown)
+	if shown then
+		scrollFrame:SetPoint("BOTTOMRIGHT", -36, LIST_BOTTOM + GM_ROW_HEIGHT)
+		learnTalentsBtn:Show()
+	else
+		scrollFrame:SetPoint("BOTTOMRIGHT", -36, LIST_BOTTOM)
+		learnTalentsBtn:Hide()
+	end
+end
+
 -- ============================================================
 -- Server -> client
 -- ============================================================
 
-function CustomSpellsHandlers.State(player, rows)
+-- gm is 1 for a GM account and 0 otherwise; it only decides whether the
+-- Learn all Talents row is shown.
+function CustomSpellsHandlers.State(player, rows, gm)
 	if type(rows) ~= "table" then
 		return
 	end
+	ShowGameMasterRow(gm == 1)
 	Repaint(rows)
 	mainFrame:Show()
 end

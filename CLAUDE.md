@@ -51,8 +51,8 @@ mod-custom-spells/
 ├── conf/
 │   └── mod_custom_spells.conf.dist   # Config: CustomSpells.Enable
 ├── lua/
-│   ├── CustomSpells_Server.lua       # AIO spell picker (server): per-class whitelist + learn/forget
-│   └── CustomSpells_Client.lua       # AIO spell picker (client): /spells toggle UI
+│   ├── CustomSpells_Server.lua       # AIO spell picker (server): per-class whitelist + learn/forget, GM learn-all bridge
+│   └── CustomSpells_Client.lua       # AIO spell picker (client): /spells toggle UI + GM-only Learn all Talents
 └── data/sql/db-world/
     └── mod_custom_spells.sql          # spell_script_names, spell_dbc, spell_proc
 ```
@@ -60,6 +60,22 @@ mod-custom-spells/
 The Lua pair deploys to `dcore/lua_scripts/CustomSpells/` (Eluna/ALE + AIO required). The
 server file's `CLASS_SPELLS` whitelist is the delivery source of truth — update it when
 spells are added/retired, and keep helpers/orphaned markers out of it.
+
+**GM-only "Learn all Talents" (2026-09-28).** The panel also carries a button for
+mod-forgotten-talents: every Forgotten Talents node at its maximum rank, free of charge.
+The server's `State` payload has a third argument, `1` when `player:GetGMRank()` is at least
+`SEC_GAMEMASTER` (2) and `0` otherwise; the client shows the button in its own row above
+Learn All / Forget All only for `1`. A click sends `LearnAllTalents`; the handler checks the
+rank again (a forged request from a player is dropped like an unknown `Toggle`) and runs
+`player:RunCommand("forgotten learnall <own guid>")`. That bridge was chosen over the
+global `RunCommand` (console context: no player target, output only in the server log,
+runs a tick later, and `.forgotten learnall` is `Console::No`) and over the client typing
+the chat command (no server-side re-check): `player:RunCommand` runs the command in the
+GM's own session, so the core enforces its `RBAC_PERM_COMMAND_MODIFY` permission and GM
+command log as if typed, and the answer lands in the GM's chat frame. The explicit GUID
+keeps a selected player from receiving the learn-all instead of the clicking GM. The
+button needs mod-forgotten-talents built into the worldserver; without it the click
+answers "Command '...' does not exist". Relog or `/aio reset` after deploying the pair.
 
 ## DBC status (quick overview)
 

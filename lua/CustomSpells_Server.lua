@@ -10,6 +10,9 @@
 -- Regeneration: the table mirrors acore_world.spell_dbc passives
 -- (plus the player-castable actives and the warrior real-DBC
 -- block 900100-900121); see share-public claude_log 2026-07-18.
+--
+-- GMs also get "Learn all Talents": mod-forgotten-talents'
+-- .forgotten learnall, run for the clicking GM (LearnAllTalents).
 -- =============================================================
 
 local AIO = AIO or require("AIO")
@@ -251,9 +254,21 @@ local function GetSpellList(player)
 	return CLASS_SPELLS[classId]
 end
 
+-- AccountTypes SEC_GAMEMASTER. The command behind the GM button is gated
+-- on RBAC_PERM_COMMAND_MODIFY, which the default RBAC linkage grants from
+-- this security level up. This check decides who sees the button and drops
+-- a forged request early; the core still checks the permission itself when
+-- the command runs.
+local SEC_GAMEMASTER = 2
+
+local function IsGameMaster(player)
+	return player:GetGMRank() >= SEC_GAMEMASTER
+end
+
 -- ============================================================
 -- State push: full row list incl. learned flags as ONE table
--- arg (avoids the 15-arg limit per msg:Add)
+-- arg (avoids the 15-arg limit per msg:Add), plus the GM flag
+-- (1/0) that shows the Learn all Talents button
 -- ============================================================
 
 local function SendState(player)
@@ -280,7 +295,8 @@ local function SendState(player)
 		}
 	end
 
-	AIO.Msg():Add("CustomSpells", "State", rows):Send(player)
+	AIO.Msg():Add("CustomSpells", "State", rows,
+		IsGameMaster(player) and 1 or 0):Send(player)
 end
 
 local function DenyInCombat(player)
@@ -355,6 +371,25 @@ function CustomSpells_ServerHandlers.SetAll(player, learn)
 		end
 	end
 
+	SendState(player)
+end
+
+-- GM only: every Forgotten Talents node at its maximum rank, free of charge.
+-- The rank is checked again here, whatever the client showed, and a forged
+-- request is dropped like an unknown Toggle. The learn-all itself is the C++
+-- command, run as the player's own chat command: the core applies its RBAC
+-- permission and GM log exactly as if typed. The command targets the
+-- selected player when it gets no name, so the player's own GUID goes with
+-- it - as %.0f, because Lua 5.2's %d goes through a C long, which is 32 bits
+-- on Windows. Its result and any refusal (module disabled) reach the chat
+-- frame.
+function CustomSpells_ServerHandlers.LearnAllTalents(player)
+	if not IsGameMaster(player) then
+		return
+	end
+
+	player:RunCommand(string.format("forgotten learnall %.0f",
+		player:GetGUIDLow()))
 	SendState(player)
 end
 
