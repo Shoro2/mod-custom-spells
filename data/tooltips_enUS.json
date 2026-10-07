@@ -1,0 +1,1113 @@
+{
+  "schema_version": 1,
+  "locale": "enUS",
+  "module_base": "8254cd4f9d5151f40e1ab14a353742ccf39799d9",
+  "review_state": "Offline draft; shared integration and native verification pending",
+  "design_source": "https://docs.google.com/document/d/1zsn3ZlaErY_IruJQyfC0mHKPUypX3myOe2HLjyMceLU/edit",
+  "entries": [
+    {
+      "id": 900106,
+      "label": "Critical Execution (Strike)",
+      "spec": "Arms",
+      "description": "Strikes the target for 666 Physical damage plus 66% of your attack power. This total is increased by 1% per Paragon level.",
+      "database_row": false,
+      "review_note": "DBC-only helper remains exposed in the legacy picker. Replace the literal Unknown String with the C++ formula; do not add a sparse DB override."
+    },
+    {
+      "id": 900168,
+      "label": "Revenge Damage",
+      "spec": "Protection",
+      "description": "Increases Revenge damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900169,
+      "label": "Revenge AoE",
+      "spec": "Protection",
+      "description": "Revenge also deals its damage to all other enemies within 8 yards of you.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900170,
+      "label": "TC Rend + Sunder",
+      "spec": "Protection",
+      "description": "Thunder Clap applies Rend and 5 stacks of Sunder Armor to each enemy it hits.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900171,
+      "label": "TC Damage",
+      "spec": "Protection",
+      "description": "Increases Thunder Clap damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900172,
+      "label": "Devastate Lightning",
+      "spec": "Protection",
+      "description": "Casting Devastate on a target that carries 5 stacks of Sunder Armor calls down a lightning strike, dealing 666 Nature damage (+5 per Paragon level) to the target and all enemies within 10 yards. This effect cannot occur more than once every 5 sec per target.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900173,
+      "label": "Block TC",
+      "spec": "Protection",
+      "description": "Blocking an attack has a 10% chance to unleash an Enhanced Thunderclap, dealing 1001 to 1200 damage to all enemies within 10 yards. This effect cannot occur more than once every 3 sec.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900200,
+      "label": "HS AoE Damage",
+      "spec": "Holy",
+      "description": "Damaging an enemy with Holy Shock also causes a burst of Holy damage to nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900201,
+      "label": "HS AoE Heal",
+      "spec": "Holy",
+      "description": "Healing an ally with Holy Shock also causes a burst of healing around that ally.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900202,
+      "label": "HS Both",
+      "spec": "Holy",
+      "description": "Damaging an enemy with Holy Shock also heals an injured group member or yourself. Healing an ally also casts a damaging Holy Shock at an available enemy.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900203,
+      "label": "HS +50%",
+      "spec": "Holy",
+      "description": "Increases Holy Shock damage and healing by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900204,
+      "label": "Consec Heal",
+      "spec": "Holy",
+      "description": "Consecration also heals nearby allies on each tick.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900205,
+      "label": "Consec Around You",
+      "spec": "Holy",
+      "description": "Consecration follows you, damaging enemies around your current position.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900206,
+      "label": "Consec +50%",
+      "spec": "Holy",
+      "description": "Increases Consecration damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900207,
+      "label": "Consec +5s",
+      "spec": "Holy",
+      "description": "Increases Consecration duration by 5 sec.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900234,
+      "label": "Consec Around You",
+      "spec": "Protection",
+      "description": "Consecration follows you, damaging enemies around your current position.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900235,
+      "label": "AS +9 Targets",
+      "spec": "Protection",
+      "description": "Avenger's Shield can strike 9 additional targets.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900236,
+      "label": "AS +50%",
+      "spec": "Protection",
+      "description": "Increases Avenger's Shield damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900237,
+      "label": "HS +99 Charges",
+      "spec": "Protection",
+      "description": "Grants Holy Shield 99 additional charges.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900238,
+      "label": "HS +50%",
+      "spec": "Protection",
+      "description": "Increases Holy Shield damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900239,
+      "label": "AS Consec",
+      "spec": "Protection",
+      "description": "Avenger's Shield triggers a free Consecration when it hits an enemy.",
+      "database_row": true,
+      "review_note": "Caster/target anchor needs native verification; describe the free cast without promising a target-position anchor."
+    },
+    {
+      "id": 900240,
+      "label": "Judge AS",
+      "spec": "Protection",
+      "description": "Your Judgement damage triggers a free Avenger's Shield at the same target.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900241,
+      "label": "Judge -2s CD",
+      "spec": "Protection",
+      "description": "Reduces the cooldown of your Judgements by 2 sec.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900268,
+      "label": "Consec Around You",
+      "spec": "Retribution",
+      "description": "Consecration follows you, damaging enemies around your current position.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900269,
+      "label": "Judge -2s CD",
+      "spec": "Retribution",
+      "description": "Reduces the cooldown of your Judgements by 2 sec.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900270,
+      "label": "DS +6 Targets",
+      "spec": "Retribution",
+      "description": "Divine Storm can strike up to 10 enemies instead of 4.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900271,
+      "label": "DS +50%",
+      "spec": "Retribution",
+      "description": "Increases Divine Storm damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900272,
+      "label": "CS +50%",
+      "spec": "Retribution",
+      "description": "Increases Crusader Strike damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900273,
+      "label": "CS +9 Targets",
+      "spec": "Retribution",
+      "description": "Crusader Strike can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900274,
+      "label": "Exorcism Proc",
+      "spec": "Retribution",
+      "description": "Crusader Strike, Judgement and Divine Storm grant 50% increased damage for your next Exorcism. Stacks up to 10 times and is consumed by Exorcism.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900300,
+      "label": "3 Rune Weapons",
+      "spec": "Blood",
+      "description": "Dancing Rune Weapon summons two additional rune weapons.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900301,
+      "label": "Double Cast",
+      "spec": "Blood",
+      "description": "While Dancing Rune Weapon is active, a rune weapon makes an additional copy of your attacks and spells.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900302,
+      "label": "HS +50%",
+      "spec": "Blood",
+      "description": "Increases Heart Strike damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900303,
+      "label": "HS +9 Targets",
+      "spec": "Blood",
+      "description": "Heart Strike can strike 9 additional targets.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900304,
+      "label": "DC Proc",
+      "spec": "Blood",
+      "description": "Your melee attacks and melee abilities have a 15% chance to cast a free Death Coil at the target. This effect has a 3 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900333,
+      "label": "Frost Wyrm",
+      "spec": "Frost",
+      "description": "Raise Dead replaces your ghoul with a Frost Wyrm that follows you and attacks with Frost Breath.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900366,
+      "label": "DoT AoE Proc",
+      "spec": "Unholy",
+      "description": "Your damage over time has a 20% chance to cause a Shadow eruption around the target. This effect has a 2 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900400,
+      "label": "CL +6 Targets",
+      "spec": "Elemental",
+      "description": "Chain Lightning can strike 6 additional targets.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900401,
+      "label": "Totem Follow",
+      "spec": "Elemental",
+      "description": "Your totems follow you instead of remaining at their original position.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900402,
+      "label": "Ragnaros",
+      "spec": "Elemental",
+      "description": "Your Fire Elemental takes on the appearance of Ragnaros.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900403,
+      "label": "LO + LvB",
+      "spec": "Elemental",
+      "description": "Lava Burst can trigger Lightning Overload at twice your talent's proc chance, dealing an additional hit for 50% of its damage.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900404,
+      "label": "LvB Spread FS",
+      "spec": "Elemental",
+      "description": "Lava Burst spreads your Flame Shock from its target to up to 5 nearby enemies within 10 yards that do not already have your Flame Shock.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900405,
+      "label": "FS Reset LvB",
+      "spec": "Elemental",
+      "description": "Flame Shock damage over time has a 15% chance to reset Lava Burst's cooldown. This effect has a 2 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900406,
+      "label": "LvB Charges",
+      "spec": "Elemental",
+      "description": "Every other Lava Burst cast immediately resets its cooldown, allowing two casts before the normal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900407,
+      "label": "Instant LvB",
+      "spec": "Elemental",
+      "description": "Makes Lava Burst instant.",
+      "database_row": true,
+      "review_note": "Current modifier is unconditional -100% cast time; concept conditions it on Clearcasting. Do not rebalance in the tooltip pass."
+    },
+    {
+      "id": 900433,
+      "label": "Totem Follow",
+      "spec": "Enhancement",
+      "description": "Your totems follow you instead of remaining at their original position.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900434,
+      "label": "Maelstrom AoE",
+      "spec": "Enhancement",
+      "description": "Reaching 5 Maelstrom Weapon stacks empowers your summons and triggers an area burst from your controlled creatures.",
+      "database_row": true,
+      "review_note": "Current handler casts one area helper immediately and a 5s marker; no sustained pet attack AoE consumer found. Intent needs a separate functional review."
+    },
+    {
+      "id": 900435,
+      "label": "Summons +50%",
+      "spec": "Enhancement",
+      "description": "Increases the damage dealt by your summons by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900436,
+      "label": "Wolf Summon",
+      "spec": "Enhancement",
+      "description": "Your melee auto attacks have a 10% chance to summon a wolf to fight your target. The wolf despawns after 15 sec out of combat. This effect has a 5 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900437,
+      "label": "Wolf Haste",
+      "spec": "Enhancement",
+      "description": "Your Spirit Wolves inherit your casting haste when summoned.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900438,
+      "label": "Wolf CL",
+      "spec": "Enhancement",
+      "description": "Damage dealt by your Spirit Wolves has a 5% chance to cast Chain Lightning at their target.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900466,
+      "label": "Totem Follow",
+      "spec": "Restoration",
+      "description": "Your totems follow you instead of remaining at their original position.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900467,
+      "label": "Mana Regen",
+      "spec": "Restoration",
+      "description": "Restores 2% of your missing mana every 5 sec while you are alive.",
+      "database_row": true,
+      "review_note": "Current formula returns 2% missing mana per 5s. Concept specifies a mana-regeneration multiplier, which is different."
+    },
+    {
+      "id": 900500,
+      "label": "Get Back Arrows",
+      "spec": "Shared",
+      "description": "Returns one equipped ammunition item after each ranged attack or ability that uses ammunition.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900501,
+      "label": "Multishot AoE",
+      "spec": "Shared",
+      "description": "Multi-Shot also deals its damage to enemies within 10 yards of its first target.",
+      "database_row": true,
+      "review_note": "First target is excluded from the helper; other native Multi-Shot targets may be hit twice. Needs native target-count trace."
+    },
+    {
+      "id": 900502,
+      "label": "Pet Damage +50%",
+      "spec": "Beast Mastery",
+      "description": "Increases your pet's damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900503,
+      "label": "Pet Speed +50%",
+      "spec": "Beast Mastery",
+      "description": "Reduces your pet's base melee attack interval by 50%.",
+      "database_row": true,
+      "review_note": "Half base attack interval is +100% attack frequency, not concept +50% speed; no restoration on marker removal/module disable. Preserve behavior pending design decision."
+    },
+    {
+      "id": 900504,
+      "label": "Pet AoE Proc",
+      "spec": "Beast Mastery",
+      "description": "Your pet's damage has a 15% chance to trigger Beast Cleave around its target.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900533,
+      "label": "Autoshot Bounce",
+      "spec": "Marksmanship",
+      "description": "Auto Shot also deals its damage to up to 9 other enemies within 10 yards of the target.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900534,
+      "label": "Barrage",
+      "spec": "Marksmanship",
+      "description": "Automatically fires a free Multi-Shot at your selected enemy every 0.1 sec for 120 sec. Movement speed is reduced by 50% for the duration.",
+      "database_row": true,
+      "review_note": "Verified server SpellDuration.dbc row 4 is 120000ms; source comments/concept say 2s. This text describes the current server carrier, not intended balance. Native duration/cancellation test and design correction are required before release."
+    },
+    {
+      "id": 900566,
+      "label": "Trap Proc",
+      "spec": "Survival",
+      "description": "Your ranged attacks and abilities have a 15% chance to trigger an Explosive Burst around the target. This effect has a 2 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900600,
+      "label": "Energy +50%",
+      "spec": "Assassination",
+      "description": "Increases Energy regeneration by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900601,
+      "label": "Mutilate +50%",
+      "spec": "Assassination",
+      "description": "Increases Mutilate damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900602,
+      "label": "Poison +50%",
+      "spec": "Assassination",
+      "description": "Increases poison damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900603,
+      "label": "Poison Nova",
+      "spec": "Assassination",
+      "description": "Your direct Nature spell damage has a 15% chance to trigger a Poison Nova around the target. This effect has a 3 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900633,
+      "label": "SS +50%",
+      "spec": "Combat",
+      "description": "Increases Sinister Strike damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900634,
+      "label": "SS +9 Targets",
+      "spec": "Combat",
+      "description": "Sinister Strike can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900635,
+      "label": "BF 2min",
+      "spec": "Combat",
+      "description": "Increases Blade Flurry duration by 105 sec.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900636,
+      "label": "BF +9 Targets",
+      "spec": "Combat",
+      "description": "Increases Blade Flurry's chain target limit by 9.",
+      "database_row": true,
+      "review_note": "SPELLMOD_JUMP_TARGETS is a chain-target modifier. Native Blade Flurry extra-target behavior requires a separate test; no promise of 10 total targets."
+    },
+    {
+      "id": 900637,
+      "label": "Energy +50%",
+      "spec": "Combat",
+      "description": "Increases Energy regeneration by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900666,
+      "label": "Energy +50%",
+      "spec": "Subtlety",
+      "description": "Increases Energy regeneration by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900667,
+      "label": "Hemo +50%",
+      "spec": "Subtlety",
+      "description": "Increases Hemorrhage damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900668,
+      "label": "Hemo +9 Targets",
+      "spec": "Subtlety",
+      "description": "Hemorrhage can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900700,
+      "label": "Mana Regen",
+      "spec": "Arcane",
+      "description": "Restores 2% of your missing mana every 5 sec while you are alive.",
+      "database_row": true,
+      "review_note": "Same regeneration-formula mismatch as 900467."
+    },
+    {
+      "id": 900701,
+      "label": "Barrage +50%",
+      "spec": "Arcane",
+      "description": "Increases Arcane Barrage damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900702,
+      "label": "Barrage +9",
+      "spec": "Arcane",
+      "description": "Arcane Barrage can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900703,
+      "label": "Blast -50% Cast",
+      "spec": "Arcane",
+      "description": "Reduces Arcane Blast's cast time by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900704,
+      "label": "Blast +9",
+      "spec": "Arcane",
+      "description": "Arcane Blast can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900705,
+      "label": "Charges x8",
+      "spec": "Arcane",
+      "description": "Allows Arcane Blast's debuff to stack up to 8 times.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900706,
+      "label": "AE Charges",
+      "spec": "Arcane",
+      "description": "Arcane Explosion adds one stack of the Arcane Blast debuff without consuming existing stacks. The higher stack limit requires Charges x8.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900707,
+      "label": "Evoc Power",
+      "spec": "Arcane",
+      "description": "Each Evocation tick grants a stack of Evocation Power, increasing spell damage by 20%. Stacks up to 4 times.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900708,
+      "label": "Emergency Shield",
+      "spec": "Arcane",
+      "description": "Taking damage while at or below 30% health automatically activates Mana Shield and restores all your mana. This effect has a 60 sec internal cooldown.",
+      "database_row": true,
+      "review_note": "Concept says below 30%; current gate is <=30%. Retain current threshold while moving eligibility before ICD allocation."
+    },
+    {
+      "id": 900709,
+      "label": "Blink to Target",
+      "spec": "Arcane",
+      "description": "After Blink, teleports you to your selected unit if it is within 30 yards and in line of sight.",
+      "database_row": true,
+      "review_note": "Range and LOS are evaluated after normal Blink movement. Current text says after Blink; intended replacement/location selection differs."
+    },
+    {
+      "id": 900713,
+      "label": "Targeted Blink",
+      "spec": "Arcane",
+      "description": "Teleports you to the selected ground location.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900733,
+      "label": "Fireball +50%",
+      "spec": "Fire",
+      "description": "Increases Fireball damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900734,
+      "label": "Fireball +9",
+      "spec": "Fire",
+      "description": "Fireball can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900735,
+      "label": "Pyro +9",
+      "spec": "Fire",
+      "description": "Pyroblast can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900736,
+      "label": "Pyro +50%",
+      "spec": "Fire",
+      "description": "Increases Pyroblast damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900737,
+      "label": "Fire Blast off GCD",
+      "spec": "Fire",
+      "description": "Reduces Fire Blast's global cooldown by 1.5 sec.",
+      "database_row": true,
+      "review_note": "Only -1500ms global cooldown modifier found; concept also requires usable while casting and guaranteed critical hits. Those are not advertised as working."
+    },
+    {
+      "id": 900738,
+      "label": "Pyro Hot Streak",
+      "spec": "Fire",
+      "description": "Casting Pyroblast grants Hot Streak for an instant follow-up Pyroblast.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900766,
+      "label": "Frostbolt +50%",
+      "spec": "Frost",
+      "description": "Increases Frostbolt damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900767,
+      "label": "Frostbolt +9",
+      "spec": "Frost",
+      "description": "Frostbolt can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900768,
+      "label": "Ice Lance +50%",
+      "spec": "Frost",
+      "description": "Increases Ice Lance damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900769,
+      "label": "Ice Lance +9",
+      "spec": "Frost",
+      "description": "Ice Lance can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900770,
+      "label": "Perm Elemental",
+      "spec": "Frost",
+      "description": "Your Water Elemental no longer expires after its normal summon duration.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900771,
+      "label": "Comet Shower",
+      "spec": "Frost",
+      "description": "Strikes enemies within 15 yards of the selected ground location with Frost Comets.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900800,
+      "label": "DoT AoE",
+      "spec": "Affliction",
+      "description": "Your damage over time has a 20% chance to cause a Shadow eruption around the target. This effect has a 2 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900801,
+      "label": "Corruption +50%",
+      "spec": "Affliction",
+      "description": "Increases Corruption damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900802,
+      "label": "DoT Spread",
+      "spec": "Affliction",
+      "description": "Your damage over time has a 15% chance to spread the triggering damage over time spell to up to 2 other enemies within 10 yards. This effect has a 3 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900833,
+      "label": "Meta Kill Extend",
+      "spec": "Demonology",
+      "description": "Killing a creature during Metamorphosis extends its remaining duration by 5 sec, up to 120 sec.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900834,
+      "label": "Meta AoE+Heal",
+      "spec": "Demonology",
+      "description": "During Metamorphosis, deals Shadow damage around you and heals you every 3 sec.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900835,
+      "label": "Lesser Spawn",
+      "spec": "Demonology",
+      "description": "Your demon's damage has a 10% chance to summon a lesser demon. The lesser demon despawns after 30 sec out of combat. This effect has a 30 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900836,
+      "label": "Imp FB +50%",
+      "spec": "Demonology",
+      "description": "Increases your Imp's damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900837,
+      "label": "Imp FB AoE",
+      "spec": "Demonology",
+      "description": "Your Imp's Firebolt also deals its damage to up to 9 other enemies within 10 yards of the target.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900838,
+      "label": "FG Unlim",
+      "spec": "Demonology",
+      "description": "Your Felguard's Cleave also strikes additional nearby enemies beyond its normal target limit.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900839,
+      "label": "FG +50%",
+      "spec": "Demonology",
+      "description": "Increases your Felguard's damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900840,
+      "label": "Sacrifice All",
+      "spec": "Demonology",
+      "description": "Demonic Sacrifice grants the bonuses of all supported demon types regardless of which pet was sacrificed.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900866,
+      "label": "SB +9",
+      "spec": "Destruction",
+      "description": "Shadow Bolt can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900867,
+      "label": "SB +50%",
+      "spec": "Destruction",
+      "description": "Increases Shadow Bolt damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900868,
+      "label": "CB +50%",
+      "spec": "Destruction",
+      "description": "Increases Chaos Bolt damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900869,
+      "label": "CB CD -2s",
+      "spec": "Destruction",
+      "description": "Reduces Chaos Bolt's cooldown by 2 sec.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900870,
+      "label": "CB +9",
+      "spec": "Destruction",
+      "description": "Chaos Bolt can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900900,
+      "label": "Shield Explode",
+      "spec": "Discipline",
+      "description": "Power Word: Shield explodes when it expires or breaks, damaging enemies within 10 yards of the shielded target. Damage depends on the shield's absorb amount.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900901,
+      "label": "Shield +50%",
+      "spec": "Discipline",
+      "description": "Increases Power Word: Shield's absorption by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900902,
+      "label": "Weakened Soul CD",
+      "spec": "Discipline",
+      "description": "After casting Power Word: Shield, halves the remaining duration of Weakened Soul on yourself.",
+      "database_row": true,
+      "review_note": "Current handler checks Weakened Soul on caster, so another shield recipient is not shortened. Concept says 5s; current self duration is halved."
+    },
+    {
+      "id": 900933,
+      "label": "Heal Fire",
+      "spec": "Holy",
+      "description": "Your direct healing spells have a 20% chance to cast Holy Fire at enemies within 10 yards of the healed target. This effect has a 3 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900966,
+      "label": "DoT AoE",
+      "spec": "Shadow",
+      "description": "Your damage over time has a 20% chance to cause a Shadow eruption around the target. This effect has a 2 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 900967,
+      "label": "DoT Spread",
+      "spec": "Shadow",
+      "description": "Your damage over time has a 15% chance to spread the triggering damage over time spell to up to 2 other enemies within 10 yards. This effect has a 3 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901000,
+      "label": "MF +9 Targets",
+      "spec": "Balance",
+      "description": "Moonfire can chain to additional nearby enemies.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901001,
+      "label": "MF +50%",
+      "spec": "Balance",
+      "description": "Increases Moonfire damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901002,
+      "label": "SF +9 Targets",
+      "spec": "Balance",
+      "description": "Increases Starfall's chain target limit by 9.",
+      "database_row": true,
+      "review_note": "Chain-target modifier needs Starfall effect/child-spell mask verification before promising exact additional stars or targets."
+    },
+    {
+      "id": 901003,
+      "label": "SF +50%",
+      "spec": "Balance",
+      "description": "Increases Starfall damage by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901004,
+      "label": "SF CD Reduce",
+      "spec": "Balance",
+      "description": "Dealing direct spell damage reduces Starfall's cooldown by 1 sec. This effect has a 1 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901005,
+      "label": "SF Stacks 10",
+      "spec": "Balance",
+      "description": "Grants Starfall 9 additional charges.",
+      "database_row": true,
+      "review_note": "Current operation is SPELLMOD_CHARGES, not aura stacks; concept says Starfall stacks to 10. Native behavior must be resolved separately."
+    },
+    {
+      "id": 901033,
+      "label": "Bear Bleed",
+      "spec": "Feral",
+      "description": "Swipe in Bear Form applies an additional bleed to each enemy it hits.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901049,
+      "label": "Cat Bleed",
+      "spec": "Feral",
+      "description": "Swipe in Cat Form applies an additional bleed to each enemy it hits.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901051,
+      "label": "Energy +50%",
+      "spec": "Feral",
+      "description": "Increases Energy regeneration by 50%.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901066,
+      "label": "HoT Treant",
+      "spec": "Restoration",
+      "description": "Your healing over time has a 5% chance to summon a treant at the healed target for 30 sec. This effect has a 5 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901067,
+      "label": "Summon Scale",
+      "spec": "Restoration",
+      "description": "Your controlled creatures gain bonus maximum health based on your spell power.",
+      "database_row": true,
+      "review_note": "Current source scales maximum health from damage spell power; does not implement bonus summon damage as its old comment claims."
+    },
+    {
+      "id": 901068,
+      "label": "Summon Heal",
+      "spec": "Restoration",
+      "description": "When one of your summons dies, it triggers a burst of healing around its position.",
+      "database_row": true,
+      "review_note": "Only OnUnitDeath hook exists. Concept also promises heal on timed despawn; do not advertise that unsupported path."
+    },
+    {
+      "id": 901069,
+      "label": "Thorns Rejuv",
+      "spec": "Restoration",
+      "description": "Taking damage while Thorns is active has a 20% chance to cast Rejuvenation on yourself.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901070,
+      "label": "HoTs +50%",
+      "spec": "Restoration",
+      "description": "Increases the healing of your affected healing over time spells by 50%.",
+      "database_row": true,
+      "review_note": "Current operation is SPELLMOD_DAMAGE; Unit::SpellHealingBonusDone selects SPELLMOD_DOT for periodic healing. Do not claim native periodic-heal gain until the mask/operation test passes."
+    },
+    {
+      "id": 901071,
+      "label": "HoTs 2x",
+      "spec": "Restoration",
+      "description": "Increases the amount of periodic healing from your affected spells by 100%.",
+      "database_row": true,
+      "review_note": "Current operation is SPELLMOD_DOT +100%, not doubled tick rate and duration as concept/source comments claim."
+    },
+    {
+      "id": 901072,
+      "label": "Mana Regen",
+      "spec": "Restoration",
+      "description": "Restores 2% of your missing mana every 5 sec while you are alive.",
+      "database_row": true,
+      "review_note": "Same regeneration-formula mismatch as 900467."
+    },
+    {
+      "id": 901101,
+      "label": "Kill Heal 5%",
+      "spec": "Global",
+      "description": "Killing an enemy heals you for 5% of your maximum health.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901102,
+      "label": "Extra Attack 25%",
+      "spec": "Global",
+      "description": "Your melee auto attacks and melee abilities have a 25% chance to grant an extra melee attack. This effect has a 1 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901103,
+      "label": "Cleave Proc 10%",
+      "spec": "Global",
+      "description": "Your attacks and direct damaging spells have a 10% chance to deal the same damage to other enemies within 10 yards of the target. This effect has a 1 sec internal cooldown.",
+      "database_row": true,
+      "review_note": ""
+    },
+    {
+      "id": 901104,
+      "label": "Counter Attack",
+      "spec": "Global",
+      "description": "Dodging, parrying or blocking a melee attack can strike the attacker for Physical damage based on 50% of your attack power. This effect has a 2 sec internal cooldown.",
+      "database_row": true,
+      "review_note": "Proc entry HitMask=0; core defaults can reject dodge/parry/full block before HandleProc. Text describes intended counter path, native eligibility still unverified."
+    }
+  ]
+}

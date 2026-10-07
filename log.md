@@ -12,6 +12,20 @@ are not spellbook or description-body acceptance. The operator stopped testing
 and requested publication of the existing work before continuing another day.
 No new test or host deployment accompanies this source snapshot.
 
+## 2026-10-04 — Offline tooltip data draft
+
+- `data/tooltips_enUS.json`:138 descriptions covering135 empty picker texts,
+  preserving2 Wave3 descriptions and replacing900106's literal Unknown String.
+  Concept/source conflicts remain explicit review notes; this is not released.
+- `tools/patch_tooltips.py`: writes separate complete DBC candidates, preserving
+  gameplay dwords, IDs/order, other string slots and the existing string block;
+  validates exact missing-row allowances and reuses strings for idempotence.
+- T0 on Windows: actual server/hot/overlay candidates verified byte-idempotent
+  with no empty present picker descriptions; gameplay preserved. Separate137-row
+  SQL candidates preserve every existing value and non-INSERT statement.
+  No source SQL, live DB, shared carrier or MPQ was changed. Native text/locale
+  verification and concept decisions remain pending with the coordinator.
+
 ## 2026-10-04 — Spell-row hovers and emergency shield eligibility
 
 - Native spell-link hovers cover the existing checkbox and its label; owned
