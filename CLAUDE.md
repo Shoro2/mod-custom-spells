@@ -61,6 +61,13 @@ The Lua pair deploys to `dcore/lua_scripts/CustomSpells/` (Eluna/ALE + AIO requi
 server file's `CLASS_SPELLS` whitelist is the delivery source of truth — update it when
 spells are added/retired, and keep helpers/orphaned markers out of it.
 
+**Spell-row hover candidate (2026-10-04).** Hovering a checkbox or its label opens
+the native `spell:<id>` tooltip, including unlearned entries. Leaving/hiding the
+row clears its owned tooltip, including pooled-row repaint. Native descriptions
+come from client Spell.dbc: a hover handler cannot fill missing DBC strings.
+See the vault's `custom-spells/06-tooltip-and-bug-review-20261004.md` for the
+isolated text candidates, concept mismatches and pending integration tests.
+
 **GM-only "Learn all Talents" (2026-09-28).** The panel also carries a button for
 mod-forgotten-talents: every Forgotten Talents node at its maximum rank, free of charge.
 The server's `State` payload has a third argument, `1` when `player:GetGMRank()` is at least
@@ -81,7 +88,11 @@ answers "Command '...' does not exist". Relog or `/aio reset` after deploying th
 
 > **Curated per-spec view** with status, source links, implementation notes for every spell ID: [`share-public/docs/custom-spells/specs/`](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells/specs).
 
-All class blocks are populated. Spell IDs `900100-901108` exist in `Spell.dbc` (manual entries for Warrior Fury) or in the `spell_dbc` override table; all are implemented.
+Class blocks contain spells in `Spell.dbc` (including manual Warrior entries)
+or the `spell_dbc` override table. Existence and catalog "implemented" labels do
+not establish functional acceptance. The dated tooltip review records gaps
+between the original concept, actual effects and picker delivery. Custom IDs
+remain `900xxx/901xxx`; the CoA FL800xxx remap does not apply to this module.
 
 Custom NPCs:
 - `900333` — Frost Wyrm (DK Frost), AI script `npc_custom_frost_wyrm`, DisplayID 26752, 2× Gargoyle HP, casts Frost Breath

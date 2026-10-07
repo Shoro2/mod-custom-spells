@@ -25,6 +25,7 @@ end
 -- ============================================================
 
 local ROW_HEIGHT = 22
+local ROW_HIT_WIDTH = 296
 local HEADER_HEIGHT = 24
 -- Bottom edge of the list, above the Learn All / Forget All row. The GM
 -- row lifts it by GM_ROW_HEIGHT while that row is shown.
@@ -88,12 +89,26 @@ local function GetRow(index)
 	if not row then
 		row = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
 		row:SetSize(24, 24)
+		-- Include the label in the existing checkbox's click and hover area.
+		row:SetHitRectInsets(0, 24 - ROW_HIT_WIDTH, 0, 0)
 		row.label = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 		row.label:SetPoint("LEFT", row, "RIGHT", 4, 0)
 		row:SetScript("OnClick", function(self)
 			-- Server decides the real state; the reply repaints the list
 			AIO.Handle("CustomSpells", "Toggle", self.spellId)
 		end)
+		row:SetScript("OnEnter", function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetHyperlink("spell:" .. self.spellId)
+			GameTooltip:Show()
+		end)
+		local function HideTooltip(self)
+			if GameTooltip:IsOwned(self) then
+				GameTooltip:Hide()
+			end
+		end
+		row:SetScript("OnLeave", HideTooltip)
+		row:SetScript("OnHide", HideTooltip)
 		rowPool[index] = row
 	end
 	row:Show()

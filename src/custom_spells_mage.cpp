@@ -158,13 +158,22 @@ class spell_custom_mage_evocation_power : public AuraScript
 
 // ============================================================
 //  MAGE ARCANE: Emergency Mana Shield (900708)
-//  Proc aura: when taking damage and health drops below 30%,
+//  Proc aura: when taking damage at or below 30% health,
 //  auto-cast Mana Shield (highest rank) and restore all mana.
 //  60s internal cooldown.
 // ============================================================
 class spell_custom_mage_emergency_shield : public AuraScript
 {
     PrepareAuraScript(spell_custom_mage_emergency_shield);
+
+    bool CheckProc(ProcEventInfo& /*eventInfo*/)
+    {
+        Player* player = GetTarget() ? GetTarget()->ToPlayer() : nullptr;
+        // The core starts the internal cooldown before HandleProc. Reject
+        // ineligible hits here so ordinary damage cannot spend the cooldown.
+        return g_CustomSpellsEnabled && player && player->IsAlive()
+            && player->GetHealthPct() <= 30.0f;
+    }
 
     void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
     {
@@ -177,7 +186,7 @@ class spell_custom_mage_emergency_shield : public AuraScript
         if (!g_CustomSpellsEnabled)
             return;
 
-        // Only trigger when below 30% health
+        // Preserve the existing inclusive 30% health threshold.
         if (player->GetHealthPct() > 30.0f)
             return;
 
@@ -190,6 +199,8 @@ class spell_custom_mage_emergency_shield : public AuraScript
 
     void Register() override
     {
+        DoCheckProc += AuraCheckProcFn(
+            spell_custom_mage_emergency_shield::CheckProc);
         OnEffectProc += AuraEffectProcFn(
             spell_custom_mage_emergency_shield::HandleProc,
             EFFECT_0, SPELL_AURA_DUMMY);
