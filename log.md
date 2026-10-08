@@ -3,6 +3,13 @@
 Newest entry first. Changes before 2026-09-28 are recorded only in
 [`share-public/claude_log.md`](https://github.com/Shoro2/share-public/blob/main/claude_log.md).
 
+## 2026-10-08 — 900715 Mirror Shield: no SpellPhaseMask on a taken proc
+
+The HOST9 boot (bug-report thread) showed "`spell_proc` table entry for SpellId 900715 has `SpellPhaseMask`
+value defined, but it won't be used for defined `ProcFlags` value" - the workbench had it since the rework.
+Its proc reacts to hits taken (0x222A8), where the core ignores the phase mask: 2 -> 0 in
+`mod_custom_spells_e_mage.sql`, no change in behaviour; functions.md pitfall 24.
+
 ## 2026-10-08 — Second pet: the pet's size and happiness
 
 Operator (thread "Paragon-Klassenzauber"): "ja mitspiegeln" (the second hunter pet mirrors the pet's

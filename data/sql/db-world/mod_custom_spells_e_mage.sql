@@ -75,6 +75,8 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `CastingTimeIndex`, `DurationIndex`
 (900743, 0, 1, 32, 13, -1, 0, 6, 1, 199, 6, 0, 3, 2000, 0.0, 3, 184, 4, 0, 0, 'Meteor Burn', 0x003F3F);
 UPDATE `spell_dbc` SET `Targets` = 0x40 WHERE `ID` IN (900713, 900771);
 
+-- Hits TAKEN only (0x222A8): SpellPhaseMask stays 0 - the core applies a phase mask
+-- to DONE procs only and logs one it would ignore at every start (HOST9 boot, 2026-10-08).
 DELETE FROM `spell_proc` WHERE `SpellId` = 900715;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900715, 0, 0, 0, 0, 0, 0x222A8, 1, 2, 0x403, 0, 0, 0, 10, 6000, 0);
+(900715, 0, 0, 0, 0, 0, 0x222A8, 1, 0, 0x403, 0, 0, 0, 10, 6000, 0);

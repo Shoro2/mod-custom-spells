@@ -199,6 +199,9 @@ When hooking on existing Blizzard spells via `spell_script_names`, the C++ class
     look and same scale field can so draw differently: the Diseased Young Wolf (look 0.4) as a hunter pet
     at the wolf family's 1.0, its copy (creature 900525, no family) at 0.4. `ClientModelScale` in
     `custom_spells_second_pet.cpp` mirrors the rule; the copy's scale makes up the difference.
+24. **`spell_proc.SpellPhaseMask` belongs to DONE procs only**: for a proc on hits taken (`PROC_FLAG_TAKEN_*`)
+    the core ignores it and logs "has `SpellPhaseMask` value defined, but it won't be used" at every start;
+    a DONE spell proc without one never fires (`SpellMgr::LoadSpellProcs`, `CanSpellTriggerProcOnEvent`).
 
 ## Code style
 
