@@ -33,7 +33,7 @@ Then build the client patch: scripts\\30_build_hot_dbc_patch.py, then --deploy
 with the client closed (share-public forgotten-land MIG entry for the host).
 The server rows come from the workbench DB (credentials from worldserver.conf,
 passed in MYSQL_PWD, never on the command line); --server-tsv reads a saved
-`mysql -N --raw` dump instead.
+`mysql -N -B` dump instead (not --raw: a newline in a text column would split its row).
 """
 import argparse
 import hashlib
@@ -121,7 +121,10 @@ def server_rows(tsv=None):
         host, port, user, pw, db = line.split('"')[1].split(";")
         query = ("SELECT * FROM `%s`.`spell_dbc` WHERE `ID` BETWEEN %d AND %d ORDER BY `ID`;"
                  % (db, ID_LO, ID_HI))
-        proc = subprocess.run([MYSQL, "-h" + host, "-P" + port, "-u" + user, "-N", "--raw", "-e", query],
+        # batch output WITHOUT --raw: a tab or newline inside a text column comes back escaped,
+        # so every row stays one line of FIELDS columns (900105's description has a newline;
+        # with --raw the row was split and silently skipped). Only non-string fields are read.
+        proc = subprocess.run([MYSQL, "-h" + host, "-P" + port, "-u" + user, "-N", "-B", "-e", query],
                               capture_output=True, text=True, encoding="utf-8",
                               env=dict(os.environ, MYSQL_PWD=pw))
         if proc.returncode != 0:
