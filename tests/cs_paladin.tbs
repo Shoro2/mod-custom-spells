@@ -208,12 +208,13 @@ as gm .unlearn 900269
 
 log Retribution - Divine Storm hits 4 natively; 900270 +6 targets (from the middle: all 8 dummies, none twice)
 # maxtargets counts what one cast selected (the paladin's own self-targeted effects + the
-# dummies, misses included): a dummy can evade for a moment when it drops out of combat
+# dummies, misses included): an ungeared bot's strike can miss, or a dummy dodge or parry it
 do pa goto -270 150 -423.2
 do pa reset
-# no miss, no dodge
+# no miss, no dodge - .aura lands at the bot's next update, so wait for it
 as gm .aura 59756
 as gm .aura 62627
+waitfor pa aura 62627 timeout 2s
 spelllog start
 do pa cast 53385 triggered
 wait 1500ms
