@@ -24,7 +24,7 @@
 static thread_local bool s_lvbReentry = false;
 
 // ============================================================
-//  SPELL 900401: Totems â†’ Following Creatures (PlayerScript)
+//  SPELL 900401: Totems -> Following Creatures (PlayerScript)
 //  When player has 900401, totems follow the player instead
 //  of being static. Checked every 2 seconds via OnUpdate.
 // ============================================================
@@ -86,9 +86,13 @@ private:
 };
 
 // ============================================================
-//  SPELL 900402: Fire Elemental â†’ Ragnaros
-//  Hooked on Fire Elemental Totem (2894). After cast,
-//  replaces the Fire Elemental with a Ragnaros model.
+//  SPELL 900402: Fire Elemental -> Ragnaros
+//  Hooked on the Fire Elemental Totem's own spell (32982), which
+//  the totem casts once it stands and which summons the Fire
+//  Elemental (NPC 15438). The shaman's Fire Elemental Totem cast
+//  (2894) ends before that, so the elemental cannot be found there
+//  (the old hook on 2894 never saw one). The elemental takes on
+//  Ragnaros' model and has twice the health.
 // ============================================================
 class spell_custom_ele_ragnaros : public SpellScript
 {
@@ -96,38 +100,39 @@ class spell_custom_ele_ragnaros : public SpellScript
 
     void HandleAfterCast()
     {
-        Unit* caster = GetCaster();
-        if (!caster)
+        Unit* totem = GetCaster();
+        if (!totem || !g_CustomSpellsEnabled)
             return;
 
-        Player* player = caster->ToPlayer();
-        if (!player)
+        Player* player = totem->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!player || !player->HasAura(SPELL_ELE_RAGNAROS_PASSIVE))
             return;
 
-        if (!player->HasAura(SPELL_ELE_RAGNAROS_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // Find the fire elemental and change its display to Ragnaros
         constexpr uint32 RAGNAROS_DISPLAY_ID = 11121;
         constexpr float  RAGNAROS_SCALE      = 0.35f;
 
-        for (auto itr = player->m_Controlled.begin(); itr != player->m_Controlled.end(); ++itr)
+        std::list<Creature*> elementals;
+        totem->GetCreatureListWithEntryInGrid(elementals, NPC_FIRE_ELEMENTAL,
+            20.0f);
+        for (Creature* elemental : elementals)
         {
-            if ((*itr)->GetEntry() == NPC_FIRE_ELEMENTAL && (*itr)->ToCreature())
-            {
-                (*itr)->SetDisplayId(RAGNAROS_DISPLAY_ID);
-                (*itr)->SetObjectScale(RAGNAROS_SCALE);
-                // Double the health
-                (*itr)->SetMaxHealth((*itr)->GetMaxHealth() * 2);
-                (*itr)->SetHealth((*itr)->GetMaxHealth());
-                LOG_INFO("module",
-                    "mod-custom-spells: Player {} -> Fire Elemental â†’ Ragnaros",
-                    player->GetName());
-                break;
-            }
+            if (!elemental->IsAlive()
+                || elemental->GetDisplayId() == RAGNAROS_DISPLAY_ID)
+                continue;
+
+            ObjectGuid const owner = elemental->GetCharmerOrOwnerGUID();
+            ObjectGuid const creator = elemental->GetCreatorGUID();
+            if (owner != player->GetGUID() && owner != totem->GetGUID()
+                && creator != player->GetGUID()
+                && creator != totem->GetGUID())
+                continue;
+
+            elemental->SetDisplayId(RAGNAROS_DISPLAY_ID);
+            elemental->SetNativeDisplayId(RAGNAROS_DISPLAY_ID);
+            elemental->SetObjectScale(RAGNAROS_SCALE);
+            elemental->SetMaxHealth(elemental->GetMaxHealth() * 2);
+            elemental->SetHealth(elemental->GetMaxHealth());
+            break;
         }
     }
 
@@ -163,8 +168,13 @@ class spell_custom_ele_overload_lvb : public SpellScript
         if (!g_CustomSpellsEnabled)
             return;
 
-        // Skip the overload copy itself (it is a triggered Lava Burst re-cast)
-        if (s_lvbReentry)
+        // Skip the overload copy itself: it travels, so its hit lands after
+        // the re-entry guard below has long been reset (copies overloaded
+        // again: 13-23 hits from 10 casts, bot run 435). A copy carries the
+        // passive as its triggering aura.
+        if (s_lvbReentry || (GetSpell()->GetTriggeredByAuraSpellInfo()
+            && GetSpell()->GetTriggeredByAuraSpellInfo()->Id
+                == SPELL_ELE_OVERLOAD_LVB_PASSIVE))
             return;
 
         // Check if player has Lightning Overload talent (icon 2018)
@@ -185,7 +195,8 @@ class spell_custom_ele_overload_lvb : public SpellScript
         {
             s_lvbReentry = true;
             caster->CastCustomSpell(target, GetSpellInfo()->Id, &damage,
-                nullptr, nullptr, true);
+                nullptr, nullptr, true, nullptr,
+                player->GetAuraEffect(SPELL_ELE_OVERLOAD_LVB_PASSIVE, EFFECT_0));
             s_lvbReentry = false;
         }
     }
@@ -271,7 +282,7 @@ class spell_custom_ele_lvb_spread_fs : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900405: Flame Shock ticks â†’ reset Lava Burst CD
+//  SPELL 900405: Flame Shock ticks -> reset Lava Burst CD
 //  Proc aura: on periodic damage, chance to reset LvB cooldown.
 // ============================================================
 class spell_custom_ele_fs_reset_lvb : public AuraScript
@@ -300,8 +311,13 @@ class spell_custom_ele_fs_reset_lvb : public AuraScript
         if (!(procSpell->SpellFamilyFlags[0] & 0x10000000))
             return;
 
-        // Reset Lava Burst cooldown (all ranks)
-        player->RemoveSpellCooldown(SPELL_LAVA_BURST_R2, true);
+        // Reset the Lava Burst cooldown of every rank the shaman knows (a
+        // level-80 shaman casts rank 2, 60043; resetting rank 1 alone - the
+        // old code - left the real cooldown running)
+        for (uint32 rankId = sSpellMgr->GetFirstSpellInChain(SPELL_LAVA_BURST_R1);
+            rankId; rankId = sSpellMgr->GetNextSpellInChain(rankId))
+            if (player->HasSpell(rankId))
+                player->RemoveSpellCooldown(rankId, true);
 
         LOG_INFO("module",
             "mod-custom-spells: Player {} -> FS tick reset LvB CD",
@@ -356,7 +372,7 @@ class spell_custom_ele_lvb_charges : public SpellScript
         {
             // Second charge used, set stacks to 1
             chargeAura->SetStackAmount(1);
-            // Don't reset CD â€” it's now on real cooldown
+            // Don't reset CD - it's now on real cooldown
         }
         else
         {
@@ -373,66 +389,82 @@ class spell_custom_ele_lvb_charges : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900407: Clearcasting â†’ Lava Burst instant
-//  Implemented purely via DBC: ADD_PCT_MODIFIER with
-//  SPELLMOD_CASTING_TIME = -100% on Lava Burst.
-//  This makes LvB always instant when the passive is active.
-//  (No separate C++ class needed â€” DBC handles it.)
+//  SPELL 900407: Clearcasting -> Lava Burst instant
+//  Concept: "while clearcasting your lava burst is instant". The
+//  shaman's Clearcasting (16246, from Elemental Focus) carries a
+//  hidden helper aura (900409: Lava Burst cast time -100 %) while
+//  the passive is learned; both leave together. The old row made
+//  every Lava Burst instant, Clearcasting or not.
 // ============================================================
+class spell_custom_ele_cc_instant_lvb : public AuraScript
+{
+    PrepareAuraScript(spell_custom_ele_cc_instant_lvb);
+
+    void HandleApply(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        Unit* target = GetTarget();
+        if (target && g_CustomSpellsEnabled
+            && target->HasAura(SPELL_ELE_CC_INSTANT_LVB_PASSIVE))
+            target->CastSpell(target, SPELL_ELE_CC_INSTANT_LVB_AURA, true);
+    }
+
+    void HandleRemove(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        if (Unit* target = GetTarget())
+            target->RemoveAurasDueToSpell(SPELL_ELE_CC_INSTANT_LVB_AURA);
+    }
+
+    void Register() override
+    {
+        AfterEffectApply += AuraEffectApplyFn(
+            spell_custom_ele_cc_instant_lvb::HandleApply, EFFECT_0,
+            SPELL_AURA_ADD_PCT_MODIFIER, AURA_EFFECT_HANDLE_REAL);
+        AfterEffectRemove += AuraEffectRemoveFn(
+            spell_custom_ele_cc_instant_lvb::HandleRemove, EFFECT_0,
+            SPELL_AURA_ADD_PCT_MODIFIER, AURA_EFFECT_HANDLE_REAL);
+    }
+};
 
 // ============================================================
-//  SPELL 900434: 5 Maelstrom stacks â†’ summons empowered AoE 5s
-//  Hooked on Maelstrom Weapon (53817). When stacks reach 5,
-//  apply a 5s buff (900439) that makes summons deal AoE.
+//  SPELL 900434: 5 Maelstrom stacks -> empowered summons, 5 sec
+//  Hooked on Maelstrom Weapon (53817). When the stacks reach 5,
+//  the shaman gets Maelstrom Fury (900439, 5 sec); while it lasts,
+//  every melee hit of one of the shaman's summons sets off Spirit
+//  Howl (900440) around that summon - see
+//  custom_enh_summon_melee_unitscript below. (The old code fired a
+//  single burst per summon at the moment of the 5th stack.)
 // ============================================================
 class spell_custom_enh_maelstrom_aoe : public AuraScript
 {
     PrepareAuraScript(spell_custom_enh_maelstrom_aoe);
 
-    void HandleStackChange(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    void HandleStackChange(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
     {
         if (GetStackAmount() < 5)
             return;
 
-        Unit* owner = GetUnitOwner();
-        if (!owner)
+        Player* player = GetUnitOwner() ? GetUnitOwner()->ToPlayer()
+            : nullptr;
+        if (!player || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_ENH_MAELSTROM_AOE_PASSIVE))
             return;
 
-        Player* player = owner->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_ENH_MAELSTROM_AOE_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // Apply empowerment buff on player (5s duration)
         player->CastSpell(player, SPELL_ENH_MAELSTROM_AOE_BUFF, true);
-
-        // Make all controlled units deal AoE around their targets
-        for (auto itr = player->m_Controlled.begin(); itr != player->m_Controlled.end(); ++itr)
-        {
-            Unit* pet = *itr;
-            if (pet && pet->IsAlive() && pet->ToCreature())
-                pet->CastSpell(pet, SPELL_ENH_WOLF_AOE_HELPER, true);
-        }
-
-        LOG_INFO("module",
-            "mod-custom-spells: Player {} -> Maelstrom 5 stacks â†’ summons empowered",
-            player->GetName());
     }
 
     void Register() override
     {
-        OnEffectApply += AuraEffectApplyFn(spell_custom_enh_maelstrom_aoe::HandleStackChange,
-            EFFECT_0, SPELL_AURA_ADD_PCT_MODIFIER, AURA_EFFECT_HANDLE_CHANGE_AMOUNT);
+        OnEffectApply += AuraEffectApplyFn(
+            spell_custom_enh_maelstrom_aoe::HandleStackChange, EFFECT_0,
+            SPELL_AURA_ADD_PCT_MODIFIER, AURA_EFFECT_HANDLE_CHANGE_AMOUNT);
     }
 };
 
 // ============================================================
-//  SPELL 900436: Auto attacks â†’ chance to summon wolf
+//  SPELL 900436: Auto attacks -> chance to summon wolf
 //  Proc aura: on melee auto attack, chance to summon a
 //  temporary wolf that fights for 15 seconds.
 // ============================================================
@@ -519,7 +551,7 @@ class spell_custom_enh_wolf_haste : public SpellScript
                 wolf->SetAttackTime(BASE_ATTACK, newAttack);
 
                 LOG_INFO("module",
-                    "mod-custom-spells: Player {} -> Spirit Wolf haste applied ({}ms â†’ {}ms)",
+                    "mod-custom-spells: Player {} -> Spirit Wolf haste applied ({}ms -> {}ms)",
                     player->GetName(), baseAttack, newAttack);
             }
         }
@@ -532,134 +564,140 @@ class spell_custom_enh_wolf_haste : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900438: Spirit Wolves 5% Chain Lightning on melee hit
-//  UnitScript: On any damage dealt, if attacker is a Spirit
-//  Wolf and owner has passive, 5% CL proc.
+//  SPELLS 900438 / 900434: melee hits of the shaman's summons
+//  - 900438: a Spirit Wolf's melee hit has a 5 % chance to cast
+//    Chain Lightning at its target.
+//  - 900434: while the shaman has Maelstrom Fury (900439), each
+//    melee hit of one of its summons sets off Spirit Howl (900440)
+//    around that summon, at most once a second per summon.
+//  Only white melee hits count (DealDamage with DIRECT_DAMAGE): the
+//  old OnDamage hook also fired on the summons' own spell damage,
+//  so a Chain Lightning could set off the next one.
 // ============================================================
-class custom_wolf_cl_unitscript : public UnitScript
+class SummonHowlCd : public DataMap::Base
 {
 public:
-    custom_wolf_cl_unitscript() : UnitScript("custom_wolf_cl_unitscript") {}
+    uint32 NextAllowedMs = 0;
+};
 
-    void OnDamage(Unit* attacker, Unit* victim, uint32& /*damage*/) override
+class custom_enh_summon_melee_unitscript : public UnitScript
+{
+public:
+    custom_enh_summon_melee_unitscript()
+        : UnitScript("custom_enh_summon_melee_unitscript") { }
+
+    uint32 DealDamage(Unit* attacker, Unit* victim, uint32 damage,
+        DamageEffectType damagetype) override
     {
-        if (!attacker || !victim || !victim->IsAlive())
-            return;
+        if (damagetype != DIRECT_DAMAGE || !attacker || !victim
+            || !victim->IsAlive() || !g_CustomSpellsEnabled)
+            return damage;
 
-        Creature* wolf = attacker->ToCreature();
-        if (!wolf || wolf->GetEntry() != NPC_SPIRIT_WOLF)
-            return;
+        Creature* summon = attacker->ToCreature();
+        if (!summon)
+            return damage;
 
-        Unit* owner = wolf->GetOwner();
-        if (!owner)
-            return;
+        Player* owner = summon->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!owner || owner->getClass() != CLASS_SHAMAN)
+            return damage;
 
-        Player* player = owner->ToPlayer();
-        if (!player)
-            return;
+        if (summon->GetEntry() == NPC_SPIRIT_WOLF
+            && owner->HasAura(SPELL_ENH_WOLF_CL_PASSIVE) && roll_chance_i(5))
+            summon->CastSpell(victim, SPELL_CL_R6, true);
 
-        if (!player->HasAura(SPELL_ENH_WOLF_CL_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // 5% chance
-        if (!roll_chance_i(5))
-            return;
-
-        // Cast Chain Lightning from the wolf
-        wolf->CastSpell(victim, SPELL_CL_R6, true);
+        if (owner->HasAura(SPELL_ENH_MAELSTROM_AOE_BUFF))
+        {
+            uint32 const now = GameTime::GetGameTimeMS().count();
+            SummonHowlCd* cd = summon->CustomData.GetDefault<SummonHowlCd>(
+                "mod_custom_spells_howl_cd");
+            if (now >= cd->NextAllowedMs)
+            {
+                cd->NextAllowedMs = now + 1000;
+                summon->CastSpell(summon, SPELL_ENH_WOLF_AOE_HELPER, true);
+            }
+        }
+        return damage;
     }
 };
 
 // ============================================================
-//  SPELL 900467: Mana regen +2% per missing mana %
-//  PlayerScript: periodically adjust mana regen based on
-//  how much mana is missing.
+//  SHAMAN ELE: 900415 Elemental Resonance
+//  Concept: dealing Lightning damage increases your Fire damage,
+//  dealing Fire damage increases your Lightning damage, 2 % per
+//  stack, 5 stacks each. Proc (spell_proc: harmful spells and
+//  periodic damage done): Nature damage -> 900416 (+2 % Fire, 10 s),
+//  Fire damage -> 900417 (+2 % Nature, 10 s).
 // ============================================================
-class custom_mana_regen_playerscript : public PlayerScript
+class spell_custom_ele_resonance : public AuraScript
 {
-public:
-    custom_mana_regen_playerscript() : PlayerScript("custom_mana_regen_playerscript") {}
+    PrepareAuraScript(spell_custom_ele_resonance);
 
-    void OnPlayerLogout(Player* player) override
+    bool CheckProc(ProcEventInfo& eventInfo)
     {
-        if (player)
-            _lastRegen.erase(player->GetGUID());
+        DamageInfo* damageInfo = eventInfo.GetDamageInfo();
+        return damageInfo && damageInfo->GetDamage() && eventInfo.GetSpellInfo()
+            && g_CustomSpellsEnabled;
     }
 
-    void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
+    void HandleProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
     {
-        if (!player || !player->IsAlive())
-            return;
+        PreventDefaultAction();
 
-        if (!player->HasAura(SPELL_RST_MANA_REGEN_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // Throttle: only every 5 seconds
-        uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        ObjectGuid guid = player->GetGUID();
-        if (_lastRegen.count(guid) && (now - _lastRegen[guid]) < 5)
-            return;
-        _lastRegen[guid] = now;
-
-        uint32 maxMana = player->GetMaxPower(POWER_MANA);
-        uint32 curMana = player->GetPower(POWER_MANA);
-        if (maxMana == 0)
-            return;
-
-        // Calculate missing mana percentage (0-100)
-        float missingPct = 100.0f * (1.0f - static_cast<float>(curMana) / maxMana);
-        // Regen bonus = missingPct * 2% of max mana, applied per 5s tick
-        int32 bonus = static_cast<int32>(maxMana * (missingPct * 0.02f) / 100.0f);
-        // Scale to per-5s (this runs every 5s)
-        if (bonus > 0)
-            player->EnergizeBySpell(player, SPELL_RST_MANA_REGEN_PASSIVE,
-                bonus, POWER_MANA);
+        uint32 const school = eventInfo.GetSpellInfo()->GetSchoolMask();
+        Unit* shaman = GetTarget();
+        if (school & SPELL_SCHOOL_MASK_NATURE)
+            shaman->CastSpell(shaman, SPELL_ELE_RESONANCE_FIRE_BUFF, true,
+                nullptr, aurEff);
+        if (school & SPELL_SCHOOL_MASK_FIRE)
+            shaman->CastSpell(shaman, SPELL_ELE_RESONANCE_NATURE_BUFF, true,
+                nullptr, aurEff);
     }
 
-private:
-    std::unordered_map<ObjectGuid, uint32> _lastRegen;
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_ele_resonance::CheckProc);
+        OnEffectProc += AuraEffectProcFn(spell_custom_ele_resonance::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
 };
 
 // ============================================================
-//  SPELL 900435: Summons +50% (UnitScript)
-//  Any summon the shaman controls (spirit wolves, elementals,
-//  totems) deals +50% damage while the owner has the passive.
-//  DBC-only ADD_PCT_MODIFIER cannot target summon spells
-//  (different SpellFamilyName), so C++ is required.
+//  SHAMAN ELE: 900418 Lightning Shield casts Chain Lightning
+//  Hooked on the Lightning Shield damage spells (all ranks via
+//  -26364): each discharge has a 20 % chance to send the highest
+//  Chain Lightning rank the shaman knows at the attacker (free,
+//  triggered).
 // ============================================================
-class custom_enh_summon_dmg_unitscript : public UnitScript
+class spell_custom_ele_ls_chain_lightning : public SpellScript
 {
-public:
-    custom_enh_summon_dmg_unitscript()
-        : UnitScript("custom_enh_summon_dmg_unitscript") {}
+    PrepareSpellScript(spell_custom_ele_ls_chain_lightning);
 
-    void OnDamage(Unit* attacker, Unit* /*victim*/, uint32& damage) override
+    void HandleAfterHit()
     {
-        if (!attacker)
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (!caster || !target || !target->IsAlive() || !g_CustomSpellsEnabled)
             return;
 
-        Creature* creature = attacker->ToCreature();
-        if (!creature || (!creature->IsSummon() && !creature->IsTotem()))
+        Player* player = caster->ToPlayer();
+        if (!player || !player->HasAura(SPELL_ELE_LS_CHAIN_LIGHTNING_PASSIVE))
             return;
 
-        Unit* ownerUnit = creature->GetOwner();
-        if (!ownerUnit)
+        if (!roll_chance_i(20))
             return;
 
-        Player* owner = ownerUnit->ToPlayer();
-        if (!owner || !owner->HasAura(SPELL_ENH_SUMMON_DMG_PASSIVE))
-            return;
+        uint32 chainLightning = 0;
+        for (uint32 rank = SPELL_CHAIN_LIGHTNING_R1; rank;
+            rank = sSpellMgr->GetNextSpellInChain(rank))
+            if (player->HasSpell(rank))
+                chainLightning = rank;
+        if (chainLightning)
+            player->CastSpell(target, chainLightning, true);
+    }
 
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        damage = static_cast<uint32>(damage * 1.5f);
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_ele_ls_chain_lightning::HandleAfterHit);
     }
 };
 
@@ -672,14 +710,16 @@ void AddShamanSpellsScripts()
     RegisterSpellScript(spell_custom_ele_lvb_spread_fs);
     RegisterSpellScript(spell_custom_ele_fs_reset_lvb);
     RegisterSpellScript(spell_custom_ele_lvb_charges);
+    RegisterSpellScript(spell_custom_ele_cc_instant_lvb);
+    RegisterSpellScript(spell_custom_ele_resonance);
+    RegisterSpellScript(spell_custom_ele_ls_chain_lightning);
 
-    // Shaman Enhancement
+    // Shaman Enhancement (900435 Summons +50 % lives in the shared minion
+    // auras, custom_spells_global.cpp)
     RegisterSpellScript(spell_custom_enh_maelstrom_aoe);
     RegisterSpellScript(spell_custom_enh_wolf_summon);
     RegisterSpellScript(spell_custom_enh_wolf_haste);
-    new custom_wolf_cl_unitscript();
-    new custom_enh_summon_dmg_unitscript();
+    new custom_enh_summon_melee_unitscript();
 
-    // Shaman Resto
-    new custom_mana_regen_playerscript();
+    // Shaman Resto: 900467 Mana Regen is shared, custom_spells_global.cpp
 }

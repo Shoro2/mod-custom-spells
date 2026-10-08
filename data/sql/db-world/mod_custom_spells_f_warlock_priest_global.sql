@@ -8,9 +8,9 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 DELETE FROM `spell_dbc` WHERE `ID` IN (900800, 900801, 900802, 900803);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 (900800, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT AoE', 0x003F3F),
-(900801, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 0, 108, 0, 0, 0x2, 0, 0, 5, 313, 0, 0, 'Affl: Corruption +50%', 0x003F3F),
+(900801, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 0, 108, 22, 0, 0x2, 0, 0, 5, 313, 0, 0, 'Affl: Corruption +50%', 0x003F3F),
 (900802, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 5, 313, 0, 0, 'Affl: DoT Spread', 0x003F3F),
-(900803, 0, 0, 0, 0, 1, 0, 1, -1, 2, 200, 800, 15, 13, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Eruption', 0x003F3F);
+(900803, 0, 0, 0, 0, 1, 0, 1, -1, 2, 200, 800, 16, 13, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Eruption', 0x003F3F);
 
 -- Warlock Demo: spell_dbc 900833-900844
 DELETE FROM `spell_dbc` WHERE `ID` IN (900833, 900834, 900835, 900836, 900837, 900838, 900839, 900840, 900841, 900842, 900843, 900844);
@@ -46,11 +46,11 @@ INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`,
 -- Conflagrate/Chaos Bolt line flags1=0x800000 (goes in A_2, not 0x1000000).
 DELETE FROM `spell_dbc` WHERE `ID` IN (900866, 900867, 900868, 900869, 900870, 900871, 900872);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskA_2`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
-(900866, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 9, 1, 107, 17, 0, 0x1, 0, 0, 5, 313, 0, 0, 'Destro: SB +9', 0x003F3F),
+(900866, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 10, 1, 107, 17, 0, 0x1, 0, 0, 5, 313, 0, 0, 'Destro: SB +9', 0x003F3F),
 (900867, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 108, 0, 0, 0x1, 0, 0, 5, 313, 0, 0, 'Destro: SB +50%', 0x003F3F),
-(900868, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 108, 0, 0, 0, 0x800000, 0, 5, 313, 0, 0, 'Destro: CB +50%', 0x003F3F),
-(900869, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, -2000, 1, 107, 11, 0, 0, 0x800000, 0, 5, 313, 0, 0, 'Destro: CB CD -2s', 0x003F3F),
-(900870, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 9, 1, 107, 17, 0, 0, 0x800000, 0, 5, 313, 0, 0, 'Destro: CB +9', 0x003F3F),
+(900868, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 108, 0, 0, 0, 0x20000, 0, 5, 313, 0, 0, 'Destro: CB +50%', 0x003F3F),
+(900869, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, -2000, 1, 107, 11, 0, 0, 0x20000, 0, 5, 313, 0, 0, 'Destro: CB CD -2s', 0x003F3F),
+(900870, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 10, 1, 107, 17, 0, 0, 0x20000, 0, 5, 313, 0, 0, 'Destro: CB +9', 0x003F3F),
 (900871, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 32, 0, 'Shadow Bolt Bounce', 0x003F3F),
 (900872, 0x100000, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 5, 313, 4, 0, 'Chaos Bolt Bounce', 0x003F3F);
 
@@ -58,7 +58,7 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 DELETE FROM `spell_dbc` WHERE `ID` IN (900900, 900901, 900902, 900903);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 (900900, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Disc: Shield Explode', 0x003F3F),
-(900901, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 0, 108, 0, 0, 0x1, 0, 0, 6, 566, 0, 0, 'Disc: Shield +50%', 0x003F3F),
+(900901, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 0, 108, 8, 0, 0x1, 0, 0, 6, 566, 0, 0, 'Disc: Shield +50%', 0x003F3F),
 (900902, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Disc: Weakened Soul CD', 0x003F3F),
 (900903, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 15, 13, 0, 0, 0, 0, 0, 0, 6, 566, 2, 0, 'Shield Explosion', 0x003F3F);
 
@@ -72,7 +72,7 @@ DELETE FROM `spell_dbc` WHERE `ID` IN (900966, 900967, 900968);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 (900966, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Shadow: DoT AoE', 0x003F3F),
 (900967, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 6, 566, 0, 0, 'Shadow: DoT Spread', 0x003F3F),
-(900968, 0, 0, 0, 0, 1, 0, 1, -1, 2, 200, 800, 15, 13, 0, 0, 0, 0, 0, 0, 6, 566, 32, 0, 'Shadow Eruption', 0x003F3F);
+(900968, 0, 0, 0, 0, 1, 0, 1, -1, 2, 200, 800, 16, 13, 0, 0, 0, 0, 0, 0, 6, 566, 32, 0, 'Shadow Eruption', 0x003F3F);
 
 -- Priest: spell_proc - 900933 fixed to 0x4000 (DONE_SPELL_MAGIC_DMG_CLASS_POS for direct heals)
 DELETE FROM `spell_proc` WHERE `SpellId` IN (900933, 900966, 900967);
@@ -81,8 +81,11 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 (900966, 0, 6, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 20, 2000, 0),
 (900967, 0, 6, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 15, 3000, 0);
 
--- Global: spell_dbc 901100-901108
-DELETE FROM `spell_dbc` WHERE `ID` IN (901100, 901101, 901102, 901103, 901104, 901105, 901106, 901107, 901108);
+-- Global: spell_dbc 901100-901111 (901111 = concept "increase damage done by
+-- 5 %", aura 79 all schools, built 2026-10-08). 901109/901110 are the minion auras the
+-- shared minion manager puts on summons and pets (+50 % damage done /
+-- +50 % melee haste) for 900435, 900502, 900503, 900836, 900839.
+DELETE FROM `spell_dbc` WHERE `ID` IN (901100, 901101, 901102, 901103, 901104, 901105, 901106, 901107, 901108, 901109, 901110, 901111);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `EffectAuraPeriod_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
 (901100, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Cast Moving', 0x003F3F),
 (901101, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Global: Kill Heal', 0x003F3F),
@@ -92,12 +95,23 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 (901105, 0, 0, 0, 0, 1, 0, 1, -1, 10, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Kill Heal', 0x003F3F),
 (901106, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Cleave Hit', 0x003F3F),
 (901107, 0, 0, 0, 0, 1, 0, 1, -1, 2, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Counter Strike', 0x003F3F),
-(901108, 0, 0, 0, 0, 1, 0, 1, -1, 19, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Extra Attack Hit', 0x003F3F);
+(901108, 0, 0, 0, 0, 1, 0, 1, -1, 19, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 136, 1, 0, 'Extra Attack Hit', 0x003F3F),
+(901109, 0x40, 0, 0, 0, 1, 21, 1, -1, 6, 0, 50, 1, 79, 127, 0, 0, 0, 0, 0, 136, 0, 0, 'Empowered Minion', 0x003F3F),
+(901110, 0x40, 0, 0, 0, 1, 21, 1, -1, 6, 0, 50, 1, 138, 0, 0, 0, 0, 0, 0, 136, 0, 0, 'Hastened Minion', 0x003F3F),
+(901111, 0x40, 0, 0, 0, 1, 21, 1, -1, 6, 0, 5, 1, 79, 127, 0, 0, 0, 0, 0, 1661, 0, 0, 'Global: Empowered', 0x003F3F);
 
 -- Global: spell_proc - corrected ProcFlags (KILL=0x2, TAKEN_MELEE_AUTO=0x8)
 DELETE FROM `spell_proc` WHERE `SpellId` IN (901101, 901102, 901103, 901104);
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
 (901101, 0, 0, 0, 0, 0, 0x2, 0, 0, 0, 0, 0, 0, 100, 0, 0),
 (901102, 0, 0, 0, 0, 0, 0x14, 0, 2, 0, 0, 0, 0, 25, 1000, 0),
-(901103, 0, 0, 0, 0, 0, 0x10014, 1, 2, 0, 0, 0, 0, 10, 1000, 0),
-(901104, 0, 0, 0, 0, 0, 0x8, 0, 0, 0, 0, 0, 0, 100, 2000, 0);
+(901103, 0, 0, 0, 0, 0, 0x10154, 1, 2, 0, 0, 0, 0, 10, 1000, 0),
+(901104, 0, 0, 0, 0, 0, 0x8, 0, 0, 0x2074, 0, 0, 0, 100, 2000, 0);
+
+-- 900934 Holy Fire for Holy Fire Heals (900933): Holy Fire 48135 needs the priest to
+-- face its target (FacingCasterFlags 1) and a 30-yd range from the priest, so the
+-- proc reached only the enemies in front of the priest. Same damage and DoT
+-- (48135 rank 11), no facing, any range; logged under its own name.
+DELETE FROM `spell_dbc` WHERE `ID` = 900934;
+INSERT INTO `spell_dbc` (`ID`, `Attributes`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectBonusMultiplier_1`, `Effect_2`, `EffectDieSides_2`, `EffectBasePoints_2`, `ImplicitTargetA_2`, `EffectAura_2`, `EffectAuraPeriod_2`, `EffectBonusMultiplier_2`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `SpellVisualID_1`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
+(900934, 0, 1, 165, 13, -1, 2, 241, 889, 6, 0.571, 6, 1, 49, 6, 3, 1000, 0.024, 6, 156, 2, 3400, 'Holy Fire', 0x003F3F);

@@ -36,40 +36,40 @@
 
 | Class | Spec | Used | Free | Status | Spec doc |
 |--------|------|--------|------|--------|----------|
-| Warrior | Arms | 900100-900107 (8) | 900108-900132 (25) | tested | [warrior-arms](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-arms.md) |
-| Warrior | Fury | 900108-900121 (14) | 900122-900165 (44) | tested | [warrior-fury](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-fury.md) |
-| Warrior | Prot | 900168-900175 (8) | 900176-900199 (24) | implemented | [warrior-protection](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-protection.md) |
-| Paladin | Holy | 900200-900212 (13) | 900213-900232 (20) | implemented | [paladin-holy](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-holy.md) |
-| Paladin | Prot | 900234-900241 (8) | 900242-900265 (24) | implemented | [paladin-protection](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-protection.md) |
-| Paladin | Ret | 900268-900275 (8) | 900276-900299 (24) | implemented | [paladin-retribution](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-retribution.md) |
-| DK | Blood | 900300-900304 (5) | 900305-900332 (28) | implemented | [death-knight-blood](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/death-knight-blood.md) |
-| DK | Frost | 900333, 900368 (2) | 900334-900365 (32) | implemented | [death-knight-frost](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/death-knight-frost.md) |
-| DK | Unholy | 900366-900367 (2) | 900369-900399 (32) | implemented | [death-knight-unholy](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/death-knight-unholy.md) |
-| Shaman | Ele | 900400-900408 (9) | 900409-900432 (24) | implemented | [shaman-elemental](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/shaman-elemental.md) |
-| Shaman | Enh | 900433-900440 (8) | 900441-900465 (25) | implemented | [shaman-enhancement](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/shaman-enhancement.md) |
-| Shaman | Resto | 900466-900467 (2) | 900468-900499 (32) | implemented | [shaman-restoration](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/shaman-restoration.md) |
-| Hunter | Shared | 900500-900501 (2) | — | implemented | [hunter-shared](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/hunter-shared.md) |
-| Hunter | BM | 900502-900505 (4) | 900506-900532 (27) | implemented | [hunter-beast-mastery](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/hunter-beast-mastery.md) |
-| Hunter | MM | 900533-900536 (4) | 900537-900565 (29) | implemented | [hunter-marksmanship](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/hunter-marksmanship.md) |
-| Hunter | Surv | 900566-900567 (2) | 900568-900599 (32) | implemented | [hunter-survival](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/hunter-survival.md) |
-| Rogue | Assa | 900600-900604 (5) | 900605-900632 (28) | implemented | [rogue-assassination](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/rogue-assassination.md) |
-| Rogue | Combat | 900633-900638 (6) | 900639-900665 (27) | implemented | [rogue-combat](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/rogue-combat.md) |
-| Rogue | Sub | 900666-900669 (4) | 900670-900699 (30) | implemented | [rogue-subtlety](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/rogue-subtlety.md) |
-| Mage | Shared | 900700 (1) | — | implemented | [mage-shared](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/mage-shared.md) |
-| Mage | Arcane | 900701-900713 (13) | 900714-900732 (19) | implemented | [mage-arcane](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/mage-arcane.md) |
-| Mage | Fire | 900733-900740 (8) | 900741-900765 (25) | implemented | [mage-fire](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/mage-fire.md) |
-| Mage | Frost | 900766-900774 (9) | 900775-900799 (25) | implemented | [mage-frost](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/mage-frost.md) |
-| Warlock | Affli | 900800-900803 (4) | 900804-900832 (29) | implemented | [warlock-affliction](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warlock-affliction.md) |
-| Warlock | Demo | 900833-900844 (12) | 900845-900865 (21) | implemented | [warlock-demonology](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warlock-demonology.md) |
-| Warlock | Destro | 900866-900872 (7) | 900873-900899 (27) | implemented | [warlock-destruction](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warlock-destruction.md) |
-| Priest | Disc | 900900-900903 (4) | 900904-900932 (29) | implemented | [priest-discipline](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/priest-discipline.md) |
-| Priest | Holy | 900933 (1) | 900934-900965 (32) | implemented | [priest-holy](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/priest-holy.md) |
-| Priest | Shadow | 900966-900968 (3) | 900969-900999 (31) | implemented | [priest-shadow](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/priest-shadow.md) |
-| Druid | Balance | 901000-901005 (6) | 901006-901032 (27) | implemented | [druid-balance](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/druid-balance.md) |
-| Druid | Feral Tank | 901033-901034 (2) | 901035-901048 (14) | implemented | [druid-feral-tank](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/druid-feral-tank.md) |
-| Druid | Feral DPS | 901049-901051 (3) | 901052-901065 (14) | implemented | [druid-feral-dps](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/druid-feral-dps.md) |
-| Druid | Resto | 901066-901073 (8) | 901074-901099 (26) | implemented | [druid-restoration](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/druid-restoration.md) |
-| Non-Class | Global | 901100-901108 (9) | 901109-901199 (91) | implemented | [global](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/global.md) |
+| Warrior | Arms | 900100-900107 (8) | 900122-900132 (11) | implemented, T1 bots 2026-10-08 | [warrior-arms](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-arms.md) |
+| Warrior | Fury | 900108-900121, 900133 (15) | 900134-900165 (gaps 900138/140/141/144/145 retired) | implemented, T1 bots 2026-10-08 | [warrior-fury](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-fury.md) |
+| Warrior | Prot | 900168-900176 (9) | 900177-900199 (23) | implemented, T1 bots 2026-10-08 | [warrior-protection](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-protection.md) |
+| Paladin | Holy | 900200-900212 (13) | 900213-900232 (20) | implemented, T1 bots 2026-10-08 | [paladin-holy](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-holy.md) |
+| Paladin | Prot | 900234-900241 (8) | 900242-900265 (24) | implemented, T1 bots 2026-10-08 | [paladin-protection](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-protection.md) |
+| Paladin | Ret | 900268-900276 (9) | 900277-900299 (23) | implemented, T1 bots 2026-10-08 | [paladin-retribution](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/paladin-retribution.md) |
+| DK | Blood | 900300-900308 (9) | 900309-900332 (24) | implemented, T1 bots 2026-10-08 | [death-knight-blood](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/death-knight-blood.md) |
+| DK | Frost | 900333-900342, 900368 (11) | 900343-900365 (23) | implemented, T1 bots 2026-10-08 | [death-knight-frost](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/death-knight-frost.md) |
+| DK | Unholy | 900366-900367, 900369-900374 (8) | 900375-900399 (25) | implemented, T1 bots 2026-10-08 | [death-knight-unholy](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/death-knight-unholy.md) |
+| Shaman | Ele | 900400-900418 (19) | 900419-900432 (14) | implemented, T1 bots 2026-10-08 | [shaman-elemental](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/shaman-elemental.md) |
+| Shaman | Enh | 900433-900440 (8) | 900441-900465 (25) | implemented, T1 bots 2026-10-08 | [shaman-enhancement](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/shaman-enhancement.md) |
+| Shaman | Resto | 900466-900467 (2) | 900468-900499 (32) | implemented, T1 bots 2026-10-08 | [shaman-restoration](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/shaman-restoration.md) |
+| Hunter | Shared | 900500-900501 (2) | — | implemented, T1 bots 2026-10-08 | [hunter-shared](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/hunter-shared.md) |
+| Hunter | BM | 900502-900505 (4) | 900506-900532 (27) | implemented, T1 bots 2026-10-08 | [hunter-beast-mastery](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/hunter-beast-mastery.md) |
+| Hunter | MM | 900533-900536 (4) | 900537-900565 (29) | implemented, T1 bots 2026-10-08 | [hunter-marksmanship](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/hunter-marksmanship.md) |
+| Hunter | Surv | 900566-900567 (2) | 900568-900599 (32) | implemented, T1 bots 2026-10-08 | [hunter-survival](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/hunter-survival.md) |
+| Rogue | Assa | 900600-900604 (5) | 900605-900632 (28) | implemented, T1 bots 2026-10-08 | [rogue-assassination](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/rogue-assassination.md) |
+| Rogue | Combat | 900633-900638 (6) | 900639-900665 (27) | implemented, T1 bots 2026-10-08 | [rogue-combat](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/rogue-combat.md) |
+| Rogue | Sub | 900666-900669 (4) | 900670-900699 (30) | implemented, T1 bots 2026-10-08 | [rogue-subtlety](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/rogue-subtlety.md) |
+| Mage | Shared | 900700 (1) | — | implemented, T1 bots 2026-10-08 | [mage-shared](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/mage-shared.md) |
+| Mage | Arcane | 900701-900719 (19) | 900720-900732 (13) | implemented, T1 bots 2026-10-08 | [mage-arcane](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/mage-arcane.md) |
+| Mage | Fire | 900733-900743 (11) | 900744-900765 (22, 900755 taken in the client) | implemented, T1 bots 2026-10-08 | [mage-fire](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/mage-fire.md) |
+| Mage | Frost | 900766-900774 (9) | 900775-900799 (25) | implemented, T1 bots 2026-10-08 | [mage-frost](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/mage-frost.md) |
+| Warlock | Affli | 900800-900803 (4) | 900804-900832 (29) | implemented, T1 bots 2026-10-08 | [warlock-affliction](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warlock-affliction.md) |
+| Warlock | Demo | 900833-900844 (12) | 900845-900865 (21) | implemented, T1 bots 2026-10-08 | [warlock-demonology](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warlock-demonology.md) |
+| Warlock | Destro | 900866-900872 (7) | 900873-900899 (27) | implemented, T1 bots 2026-10-08 | [warlock-destruction](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warlock-destruction.md) |
+| Priest | Disc | 900900-900903 (4) | 900904-900932 (29) | implemented, T1 bots 2026-10-08 | [priest-discipline](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/priest-discipline.md) |
+| Priest | Holy | 900933-900934 (2) | 900935-900965 (31) | implemented, T1 bots 2026-10-08 | [priest-holy](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/priest-holy.md) |
+| Priest | Shadow | 900966-900968 (3) | 900969-900999 (31) | implemented, T1 bots 2026-10-08 | [priest-shadow](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/priest-shadow.md) |
+| Druid | Balance | 901000-901005 (6) | 901006-901032 (27) | implemented, T1 bots 2026-10-08 | [druid-balance](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/druid-balance.md) |
+| Druid | Feral Tank | 901033-901035 (3) | 901036-901048 (13) | implemented, T1 bots 2026-10-08 | [druid-feral-tank](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/druid-feral-tank.md) |
+| Druid | Feral DPS | 901049-901051 (3) | 901052-901065 (14) | implemented, T1 bots 2026-10-08 | [druid-feral-dps](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/druid-feral-dps.md) |
+| Druid | Resto | 901066-901075 (10) | 901076-901099 (24) | implemented, T1 bots 2026-10-08 | [druid-restoration](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/druid-restoration.md) |
+| Non-Class | Global | 901100-901111 (12) | 901112-901199 (88) | implemented, T1 bots 2026-10-08 | [global](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/global.md) |
 
 ## Cross-spec notes (kept here because they apply across multiple specs)
 

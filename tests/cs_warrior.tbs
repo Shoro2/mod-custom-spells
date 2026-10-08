@@ -1,0 +1,345 @@
+# mod-custom-spells: the Warrior custom class spells (the /spells picker) on a
+# bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md), so a FAIL marks a defect, not a typo.
+# Test ground: map 13 (the GM test map), the FL dummy arena - eight AoE
+# Training Dummies (920018: armour like a boss, take 0 damage, never die) on a
+# 4-yd circle around (-270, 150). Melee chains only jump to units in front of
+# the caster, so chain checks stand west of the ring facing it; self-centred
+# AoEs stand in its middle. Slot 4 belongs to the cs_* scenarios (testing/02);
+# the cleanup unlearns every custom spell again.
+# Spells: Mortal Strike 47486, Overpower 7384, Bloodthirst 23881, Whirlwind
+# 1680, Cleave 47520, Revenge 57823, Thunder Clap 47502, Devastate 47498,
+# Bladestorm 46924, Rend 47465, Sunder Armor debuff 58567, Berserker Stance
+# 2458, Skeleton's Sword 36528 + Frozen Shield 36458 (Devastate needs a shield).
+name    Custom spells - Warrior
+timeout 300s
+
+bot wa warrior slot=4
+
+place 13 -279 150 -423.2 0
+require wa alive
+pick d1 creature:920018 near wa
+require d1 exists
+do gm target wa
+as gm .unlearn 900100
+as gm .unlearn 900101
+as gm .unlearn 900102
+as gm .unlearn 900103
+as gm .unlearn 900104
+as gm .unlearn 900105
+as gm .unlearn 900106
+as gm .unlearn 900107
+as gm .unlearn 900108
+as gm .unlearn 900109
+as gm .unlearn 900110
+as gm .unlearn 900111
+as gm .unlearn 900112
+as gm .unlearn 900114
+as gm .unlearn 900116
+as gm .unlearn 900117
+as gm .unlearn 900118
+as gm .unlearn 900119
+as gm .unlearn 900133
+as gm .unlearn 900168
+as gm .unlearn 900169
+as gm .unlearn 900170
+as gm .unlearn 900171
+as gm .unlearn 900172
+as gm .unlearn 900173
+do wa learn 47486
+do wa learn 7384
+do wa learn 23881
+do wa learn 1680
+do wa learn 47520
+do wa learn 57823
+do wa learn 47502
+do wa learn 47498
+do wa learn 46924
+do wa learn 71
+do wa learn 2458
+# a 1H sword from the start: the bot's own weapon is not guaranteed (an
+# earlier run's cleanup may have taken it), and every strike needs one
+do wa destroy 36528
+do wa destroy 36458
+as gm .additem 36528
+do wa equip 36528
+do wa approach d1
+wait 1s
+expect wa spellmod 47486 damage 100 == 100
+
+# ---------------------------------------------------------------- Arms
+log Arms - 900101 Mortal Strike cooldown -2 sec, no damage change
+do wa learn 900101
+expect wa spellmod 47486 cooldown 6000 == 4000
+expect wa spellmod 47486 damage 100 == 100
+as gm .unlearn 900101
+
+log Arms - 900100 Mortal Strike +50 %, 900102 Overpower +50 %
+do wa learn 900100
+do wa learn 900102
+expect wa spellmod 47486 damage 100 == 150
+expect wa spellmod 7384 damage 100 == 150
+
+log Arms - 900103 Mortal Strike +9 targets (a cleave in front of you)
+do wa learn 900103
+expect wa spellmod 47486 jumptargets 0 == 10
+spelllog start
+do wa cast 47486 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wa spell 47486 maxtargets >= 6
+
+log Arms - 900104 Overpower +9 targets
+do wa learn 900104
+expect wa spellmod 7384 jumptargets 0 == 10
+spelllog start
+do wa cast 7384 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wa spell 7384 maxtargets >= 6
+
+log Arms - 900106 Critical Execution strike: (666 + 66 % AP) x (1 + 1 % per Paragon level), before armour
+spelllog start
+do wa cast 900106 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wa spell 900106 hits == 1
+expect wa spell 900106 damage >= 400
+
+log Arms - 900105 a critical ability has a 20 % chance to set off the strike (Primal Instinct 24353 = +1000 % weapon crit)
+do wa learn 900105
+as gm .aura 24353
+spelllog start
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+do wa cast 47486 on d1 triggered
+wait 300ms
+wait 500ms
+spelllog stop
+expect wa spell 47486 crits >= 15
+expect wa spell 900106 hits >= 1
+as gm .unaura 24353
+as gm .unlearn 900105
+
+log Arms - 900107 dealing physical damage shortens Bladestorm by 0.5 sec
+do wa learn 900107
+do wa goto -270 150 -423.2
+do wa reset
+as gm .modify rage 100
+do wa cast 46924
+wait 6500ms
+expect wa cooldown 46924 < 80000
+do wa stop
+as gm .unlearn 900100
+as gm .unlearn 900102
+as gm .unlearn 900103
+as gm .unlearn 900104
+as gm .unlearn 900107
+
+# ---------------------------------------------------------------- Fury
+log Fury - Whirlwind reaches 4 enemies natively (from the ring's middle)
+do wa reset
+spelllog start
+do wa cast 1680 triggered
+wait 1500ms
+spelllog stop
+expect wa spell 1680 maxtargets == 4
+
+log Fury - 900108 Whirlwind unlimited targets
+do wa learn 900108
+expect wa aura 900108
+spelllog start
+do wa cast 1680 triggered
+wait 1500ms
+spelllog stop
+expect wa spell 1680 maxtargets >= 8
+
+log Fury - 900109 Bloodthirst +50 %, 900111 Whirlwind +50 %
+do wa learn 900109
+do wa learn 900111
+expect wa spellmod 23881 damage 100 == 150
+expect wa spellmod 1680 damage 100 == 150
+
+log Fury - 900110 Bloodthirst +9 targets (a cleave in front of you)
+do wa learn 900110
+expect wa spellmod 23881 jumptargets 0 == 10
+do wa goto -279 150 -423.2
+wait 500ms
+do wa approach d1
+spelllog start
+do wa cast 23881 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wa spell 23881 maxtargets >= 6
+
+log Fury - 900112 Cleave unlimited targets (in front of you)
+do wa learn 900112
+expect wa spellmod 47520 jumptargets 0 >= 99
+spelllog start
+do wa cast 47520 on d1 triggered
+do wa attack d1
+wait 5s
+spelllog stop
+do wa stop
+expect wa spell 47520 maxtargets >= 6
+
+log Fury - 900116 Bloodthirst empowers the next Whirlwind (buff 900115)
+do wa learn 900116
+do wa reset
+do wa cast 2458
+wait 1600ms
+as gm .modify rage 100
+do wa cast 23881 on d1
+wait 500ms
+expect wa aura 900115
+wait 1100ms
+do wa cast 1680
+wait 500ms
+expect wa noaura 900115
+
+log Fury - 900117 Whirlwind resets the Bloodthirst cooldown
+do wa learn 900117
+do wa reset
+do wa cast 2458
+wait 1600ms
+as gm .modify rage 100
+do wa cast 23881 on d1
+wait 1600ms
+expect wa cooldown 23881 > 1000
+do wa cast 1680
+wait 500ms
+expect wa cooldown 23881 == 0
+
+log Fury - 900133 Whirlwind in any stance: natively Battle Stance refuses it (94 = only in a stance), with the passive it goes off
+do wa learn 2457
+do wa reset
+do wa cast 2457
+wait 1600ms
+as gm .modify rage 100
+do wa clientcast 1680
+expect output has "result 94"
+do wa learn 900133
+wait 500ms
+spelllog start
+do wa clientcast 1680
+# a one-handed warrior's Whirlwind still reports its off-hand strike 44949
+# as failed (27, no off-hand weapon) - only Whirlwind's own result counts
+expect output lacks "spell 1680, result"
+wait 1s
+spelllog stop
+expect wa spell 1680 casts >= 1
+as gm .unlearn 900133
+do wa cast 2458
+wait 1600ms
+
+# ---------------------------------------------------------------- Protection
+log Protection - 900168 Revenge +50 %, 900171 Thunder Clap +50 %
+do wa learn 900168
+do wa learn 900171
+expect wa spellmod 57823 damage 100 == 150
+expect wa spellmod 47502 damage 100 == 150
+
+log Protection - 900169 Revenge hits every enemy within 8 yd (from the middle)
+do wa learn 900169
+do wa goto -270 150 -423.2
+spelllog start
+do wa cast 57823 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wa spell 57823 targets >= 7
+
+log Protection - 900170 Thunder Clap applies Rend and 5 Sunder Armor to EVERY enemy hit (behind you too)
+do wa learn 900170
+do wa cast 47502 triggered
+wait 1s
+expect d1 aura 47465
+expect d1 aurastacks 58567 == 5
+spelllog start
+wait 3500ms
+spelllog stop
+expect wa spell 47465 targets >= 7
+
+log Protection - 900172 Devastate on 5 Sunders calls a lightning strike (needs a shield)
+do wa learn 900172
+as gm .additem 36458
+do wa equip 36458
+do wa approach d1
+wait 1s
+spelllog start
+do wa cast 47498 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wa spell 900174 hits >= 1
+expect wa spell 900174 targets >= 6
+spelllog start
+do wa cast 47498 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wa spell 900174 hits == 0
+
+cleanup
+do wa stop
+do wa destroy 36528
+do wa destroy 36458
+do gm target wa
+as gm .unlearn 900100
+as gm .unlearn 900101
+as gm .unlearn 900102
+as gm .unlearn 900103
+as gm .unlearn 900104
+as gm .unlearn 900105
+as gm .unlearn 900106
+as gm .unlearn 900107
+as gm .unlearn 900108
+as gm .unlearn 900109
+as gm .unlearn 900110
+as gm .unlearn 900111
+as gm .unlearn 900112
+as gm .unlearn 900114
+as gm .unlearn 900116
+as gm .unlearn 900117
+as gm .unlearn 900118
+as gm .unlearn 900119
+as gm .unlearn 900133
+as gm .unlearn 900168
+as gm .unlearn 900169
+as gm .unlearn 900170
+as gm .unlearn 900171
+as gm .unlearn 900172
+as gm .unlearn 900173

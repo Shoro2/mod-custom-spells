@@ -1,0 +1,237 @@
+# mod-custom-spells: the four NEW Mage concept spells (built 2026-10-08) on a
+# bot - 900714 Arcane Overflow, 900715 Mirror Shield, 900716 Mirror Images:
+# Splash, 900741 Meteor. Every check states the CONCEPT's behaviour
+# ("spending 10000 mana auto casts an empowered arcane explosion and resets the
+# cooldown of blink", "getting struck while a shield is up has a chance to spawn
+# a mirror image", "mirror images are using the mage aoes", "meteor spell"), so
+# a FAIL marks a defect. Test ground: map 13, the FL dummy arena - eight AoE
+# Training Dummies (920018) on a 4-yd circle around (-270, 150). Slot 4 belongs
+# to the cs_* scenarios; the cleanup unlearns every custom spell again.
+# Spells: Arcane Explosion 42921 (22 % of 3268 base mana = 718), Blink 1953
+# (21 % = 686; 15-s cooldown), Mana Shield 43020, Ice Lance 42914, Mirror Image
+# 55342 (3 images, NPC 31216, 29.5 s; they attack the owner's selection while
+# the owner is in combat; Frostbolt 59638, Fire Blast 59637), one image 58831.
+# Attackers for Mirror Shield: six Young Black Bears (1128, level 5, hostile,
+# not civilian) spawned on the mage while the director is in GM mode; the
+# mage's triggered Arcane Explosion kills them afterwards (checked: no bear
+# left, so none can wander into another scenario).
+name    Custom spells - Mage concept spells
+timeout 300s
+
+bot ma mage slot=4
+
+place 13 -279 150 -423.2 0
+require ma alive
+pick d1 creature:920018 near ma
+require d1 exists
+do gm target ma
+as gm .unlearn 900700
+as gm .unlearn 900701
+as gm .unlearn 900702
+as gm .unlearn 900703
+as gm .unlearn 900704
+as gm .unlearn 900705
+as gm .unlearn 900706
+as gm .unlearn 900707
+as gm .unlearn 900708
+as gm .unlearn 900709
+as gm .unlearn 900713
+as gm .unlearn 900714
+as gm .unlearn 900715
+as gm .unlearn 900716
+as gm .unlearn 900733
+as gm .unlearn 900734
+as gm .unlearn 900735
+as gm .unlearn 900736
+as gm .unlearn 900737
+as gm .unlearn 900738
+as gm .unlearn 900741
+as gm .unlearn 900766
+as gm .unlearn 900767
+as gm .unlearn 900768
+as gm .unlearn 900769
+as gm .unlearn 900770
+as gm .unlearn 900771
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 43020
+as gm .unaura 36032
+as gm .unaura 900712
+do ma learn 42921
+do ma learn 1953
+do ma learn 43020
+do ma learn 42914
+do ma learn 55342
+do ma approach d1
+wait 1s
+
+# ---------------------------------------------------------------- Meteor
+log Fire - 900741 Meteor (active, aimed): every enemy within 8 yd of the point takes the impact (900742, 3,500-4,100 Fire) and burns (900743, 200 every 2 s for 6 s); 45-s cooldown
+do ma learn 900741
+do ma reset
+spelllog start
+do ma cast 900741 at -270 150 -423.2
+wait 2500ms
+spelllog stop
+expect ma spell 900742 targets >= 8
+expect ma spell 900743 ticks >= 1
+expect ma cooldown 900741 > 0
+as gm .unlearn 900741
+
+# ---------------------------------------------------------------- Arcane Overflow
+log Arcane - 900714 Arcane Overflow: every 10,000 mana spent on casts sets off an Empowered Arcane Explosion (900718, 10 yd round the mage) and resets Blink - in the ring's middle: Arcane Explosion x8 (5744), Blink (6430), then x7 more: the 10,000 falls on the 5th of those, after the Blink
+do ma goto -270 150 -423.2
+wait 500ms
+do ma learn 900714
+do ma reset
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+as gm .modify mana 5703
+do ma cast 42921
+wait 1600ms
+do ma cast 1953
+wait 1600ms
+do ma goto -270 150 -423.2
+wait 500ms
+as gm .modify mana 5703
+expect ma cooldown 1953 > 5000
+spelllog start
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+do ma cast 42921
+wait 1600ms
+spelllog stop
+expect ma spell 42921 casts >= 7
+expect ma spell 900718 casts >= 1
+expect ma spell 900718 targets >= 7
+expect ma cooldown 1953 == 0
+as gm .unlearn 900714
+
+# ---------------------------------------------------------------- Mirror Shield
+log Arcane - 900715 Mirror Shield: struck while a self-cast shield is up -> 10 % (6 s ICD) for one Mirror Image (58831) - six level-5 bears hit the mage away from the ring; statistical
+do ma goto -290 165 -423.2
+wait 500ms
+do gm gm on
+do gm goto -290 165 -423.2
+wait 500ms
+as gm .npc add temp 1128
+as gm .npc add temp 1128
+as gm .npc add temp 1128
+as gm .npc add temp 1128
+as gm .npc add temp 1128
+as gm .npc add temp 1128
+do gm goto -279 150 -423.2
+wait 1s
+do ma learn 900715
+
+log Arcane - 900715 without a shield: 20 s of hits, no Mirror Image
+meter start
+spelllog start
+wait 20s
+spelllog stop
+meter stop
+expect ma dtps > 0
+expect ma spell 58831 casts == 0
+
+log Arcane - 900715 with the mage's own Mana Shield (43020): 30 s of hits, at least one Mirror Image
+do ma cast 43020 triggered
+spelllog start
+wait 30s
+spelllog stop
+expect ma aura 43020
+expect ma spell 58831 casts >= 1
+expect ma minions 31216 >= 1
+do ma cast 42921 triggered
+wait 1500ms
+expect creature:1128 missing
+do gm gm off
+as gm .unlearn 900715
+as gm .unaura 43020
+
+# ---------------------------------------------------------------- Mirror Images: Splash
+log Arcane - 900716 Mirror Images: Splash: the images' Frostbolt (59638) / Fire Blast (59637) also hit every other enemy within 8 yd of their target (900717 frost / 900719 fire) - images on d1
+do ma goto -279 150 -423.2
+wait 500ms
+do ma approach d1
+do ma learn 900716
+do ma reset
+do ma target d1
+do ma attack d1
+do ma cast 42914 on d1 triggered
+do ma cast 55342 triggered
+wait 1500ms
+spelllog start
+wait 10s
+spelllog stop
+expect ma minions 31216 >= 3
+expect ma spell 59638 hits >= 3
+expect ma spell 900717 targets >= 6
+expect ma spell 900719 targets >= 6
+do ma stop
+as gm .unlearn 900716
+
+cleanup
+do ma stop
+do gm gm off
+do gm target ma
+do ma cast 42921 triggered
+as gm .unlearn 900700
+as gm .unlearn 900701
+as gm .unlearn 900702
+as gm .unlearn 900703
+as gm .unlearn 900704
+as gm .unlearn 900705
+as gm .unlearn 900706
+as gm .unlearn 900707
+as gm .unlearn 900708
+as gm .unlearn 900709
+as gm .unlearn 900713
+as gm .unlearn 900714
+as gm .unlearn 900715
+as gm .unlearn 900716
+as gm .unlearn 900733
+as gm .unlearn 900734
+as gm .unlearn 900735
+as gm .unlearn 900736
+as gm .unlearn 900737
+as gm .unlearn 900738
+as gm .unlearn 900741
+as gm .unlearn 900766
+as gm .unlearn 900767
+as gm .unlearn 900768
+as gm .unlearn 900769
+as gm .unlearn 900770
+as gm .unlearn 900771
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 43020
+as gm .unaura 36032
+as gm .unaura 900712

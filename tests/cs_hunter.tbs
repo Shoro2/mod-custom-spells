@@ -1,0 +1,248 @@
+# mod-custom-spells: the Hunter custom class spells (the /spells picker) on a
+# bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md, concept source "Paragon Passive
+# Spells"), so a FAIL marks a defect, not a typo.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018: take 0 damage, never die, the combat log still reads the full
+# amount) on a 4-yd circle around (-270, 150). The hunter shoots from 15 yd
+# west of the west-most dummy d1 (-288.9, 150), facing the ring.
+# Gear: the slot-4 dwarf hunter's own Old Blunderbuss (2508) and Small Ammo
+# Pouch; Light Shot 2516 is its ammo (PLAYER_AMMO_ID - a bot cannot set it, so
+# the stack must never run dry: the cleanup leaves 1000). `.additem 2516 <n>`
+# only works when <n> is no item id: the parser takes 2516 as a character GUID
+# first (2516 200 -> "Player not found!").
+# Pet: a Snow Tracker Wolf (1138; hunter pets swing every 2.0 sec) made by
+# `tame`. A bot's new pet is passive (react state 0, no client to change it):
+# the hunter_marksmanship rotation sets it defensive and sends it at d1, where
+# it stays (a pet never leaves a living victim). Its swings log as spell 0.
+# 900504 runs on the ring: safe only because the rework build's Beast Cleave
+# trigger takes white hits only - the pre-rework OnDamage hook re-triggered on
+# its own cleave damage (8 dummies x 15 % = 1.2 expected re-triggers per
+# cleave, an unbounded recursion).
+# Spells: Auto Shot 75, Multi-Shot 49048, Rapid Fire 3045 (+40 % ranged
+# speed), Beast Cleave 900505, Explosive Burst 900567, Barrage Slow 900536,
+# minion auras 901109 (+50 % damage done) / 901110 (+50 % melee haste).
+name    Custom spells - Hunter
+timeout 300s
+
+bot hu hunter slot=4
+
+place 13 -279 150 -423.2 0
+require hu alive
+pick d1 creature:920018 near hu
+require d1 exists
+do gm target hu
+as gm .unlearn 900500
+as gm .unlearn 900501
+as gm .unlearn 900502
+as gm .unlearn 900503
+as gm .unlearn 900504
+as gm .unlearn 900533
+as gm .unlearn 900534
+as gm .unlearn 900566
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 900534
+as gm .unaura 900536
+as gm .unaura 3045
+do hu learn 75
+do hu learn 49048
+do hu destroy 2516
+as gm .additem 2516 1000
+expect hu item 2516 == 1000
+do hu tame 1138
+waitfor hu pet timeout 5s
+do hu approach d1 15
+wait 1s
+
+# ---------------------------------------------------------------- Shared
+log Shared - control for 900500: without it every Auto Shot uses up an arrow
+do hu cast 75 on d1
+wait 7s
+do hu stop
+wait 500ms
+expect hu item 2516 < 1000
+
+log Shared - 900500 Get Back Arrows: every shot gives its arrow back (7 s of Auto Shot, the count stays 1000)
+do hu learn 900500
+do hu destroy 2516
+as gm .additem 2516 1000
+do hu cast 75 on d1
+wait 7s
+do hu stop
+wait 500ms
+expect hu item 2516 == 1000
+
+log Shared - 900500 a Multi-Shot takes one arrow per target (3 here): all of them come back
+do hu destroy 2516
+as gm .additem 2516 1000
+do hu cast 49048 on d1 triggered
+wait 1500ms
+expect hu item 2516 == 1000
+as gm .unlearn 900500
+
+log Shared - 900501 Multi-Shot hits every enemy within 10 yd of its target, each one once
+do hu learn 900501
+spelllog start
+do hu cast 49048 on d1 triggered
+wait 1500ms
+spelllog stop
+expect hu spell 49048 maxtargets >= 6
+expect hu spell 49048 maxtargets >= 7
+expect hu spell 49048 hits <= 8
+as gm .unlearn 900501
+
+# ---------------------------------------------------------------- Marksmanship
+log MM - 900533 Auto Shot also hits up to 9 other enemies within 10 yd of its target
+do hu learn 900533
+spelllog start
+do hu cast 75 on d1
+wait 5s
+do hu stop
+wait 500ms
+spelllog stop
+expect hu spell 75 targets >= 6
+as gm .unlearn 900533
+
+log MM - 900534 Barrage: Multi-Shot every 0.1 sec at the target for 2 sec (20 shots)
+do hu learn 900534
+do hu target d1
+spelllog start
+do hu cast 900534
+wait 500ms
+expect hu aura 900534
+expect hu auramaxduration 900534 <= 2000
+wait 2s
+spelllog stop
+expect hu spell 49048 casts >= 15
+expect hu noaura 900534
+
+log MM - 900534 control for the slow: without Barrage the hunter runs 10 yd west in 2 sec
+do hu goto -288.9 150 -423.2
+wait 500ms
+do hu walk -298.9 150 -423.2
+wait 2s
+expect hu near -298.9 150 -423.2 1.5
+do hu goto -288.9 150 -423.2
+wait 500ms
+
+log MM - 900534 Barrage slows the hunter by 50 % while it lasts: after 1.5 sec of the same run only half way (-293.9)
+do hu cast 900534 triggered
+do hu walk -298.9 150 -423.2
+wait 1500ms
+expect hu aura 900534
+expect hu aura 900536
+expect hu near -293.9 150 -423.2 2.5
+wait 1s
+do hu stop
+do hu goto -288.9 150 -423.2
+wait 500ms
+do hu approach d1 15
+wait 500ms
+as gm .unlearn 900534
+
+# ---------------------------------------------------------------- Survival
+log Survival - 900566 ranged damage: 15 % chance (2 sec cooldown) to set off an Explosive Burst (900567) around the target - statistical: 30 s of Auto Shot under Rapid Fire plus 3 Multi-Shots
+do hu learn 900566
+do hu cast 3045 triggered
+spelllog start
+do hu cast 75 on d1
+do hu cast 49048 on d1
+wait 10500ms
+do hu cast 49048 on d1
+wait 4500ms
+do hu cast 3045 triggered
+wait 6s
+do hu cast 49048 on d1
+wait 9s
+do hu stop
+wait 500ms
+spelllog stop
+expect hu spell 900567 casts >= 1
+expect hu spell 900567 targets >= 5
+as gm .unlearn 900566
+as gm .unaura 3045
+
+# ---------------------------------------------------------------- Beast Mastery
+log BM - a bot's new pet is passive (no client sets it); the Marksmanship rotation makes it defensive and sends it at d1 (0.5 s - its auras and Hunter's Mark come off again)
+do hu rotation hunter_marksmanship on d1 for 500ms
+wait 1s
+do hu stop
+as gm .unaura 61847
+as gm .unaura 19506
+as gm .unaura 3045
+do gm target d1
+as gm .unaura 53338
+do gm target hu
+do hu goto -288.9 150 -423.2
+wait 500ms
+do hu approach d1 15
+wait 2s
+pick pt creature:1138 near hu
+expect pt victim d1
+
+log BM - control for 900502/900503: 60 s of the pet's melee on d1 without them (2.0-sec swings: 30; about 66 a swing, 1850-2100 in all)
+spelllog start
+wait 60s
+spelllog stop
+expect hu spell 0 casts >= 27
+expect hu spell 0 casts <= 33
+expect hu spell 0 damage < 2450
+
+log BM - 900502 Pet Damage +50 %: the pet's damage, as the combat log shows it, is half again as high (the same 60 s: about 2950; the line between at 2450 - statistical)
+do hu learn 900502
+wait 2s
+expect pt aura 901109
+spelllog start
+wait 60s
+spelllog stop
+expect hu spell 0 damage >= 2450
+as gm .unlearn 900502
+waitfor pt noaura 901109 timeout 3s
+
+log BM - 900503 Pet Speed +50 % (2.0 -> 1.33-sec swings: 28-32 in 40 s; without 20, at double speed 40) and 900504 Pet AoE Proc - 15 % of its white hits set off Beast Cleave 900505 on every other enemy within 10 yd of its target, never off its own cleave (statistical)
+do hu learn 900503
+do hu learn 900504
+wait 3s
+expect pt aura 901110
+spelllog start
+wait 40s
+spelllog stop
+expect hu spell 0 casts >= 27
+expect hu spell 0 casts <= 33
+expect hu spell 900505 casts >= 1
+expect hu spell 900505 targets >= 5
+expect hu spell 900505 casts <= 12
+as gm .unlearn 900503
+as gm .unlearn 900504
+waitfor pt noaura 901110 timeout 3s
+
+cleanup
+do hu stop
+do gm target hu
+as gm .unaura 900534
+as gm .unaura 900536
+as gm .unaura 3045
+as gm .unaura 61847
+as gm .unaura 19506
+do hu destroy 2516
+as gm .additem 2516 1000
+do gm target d1
+as gm .unaura 53338
+do gm target hu
+as gm .unlearn 900500
+as gm .unlearn 900501
+as gm .unlearn 900502
+as gm .unlearn 900503
+as gm .unlearn 900504
+as gm .unlearn 900533
+as gm .unlearn 900534
+as gm .unlearn 900566
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111

@@ -1,0 +1,209 @@
+# mod-custom-spells: the Priest custom class spells (the /spells picker) on a
+# bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md), so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150). Slot 4 belongs to the cs_*
+# scenarios; the cleanup unlearns every custom spell again.
+# Spells: Power Word: Shield 48066 (30 s; Weakened Soul 6788, 15 s), Flash
+# Heal 48071, Shadow Word: Pain 48125, Holy Fire 48135, Emberseer Bonus Damage
+# 16534 (2000 physical to the caster, fixed: a real hit that the shield
+# absorbs - .damage bypasses absorbs and procs).
+name    Custom spells - Priest
+timeout 300s
+
+bot pr priest slot=4
+
+place 13 -279 150 -423.2 0
+require pr alive
+pick d1 creature:920018 near pr
+require d1 exists
+do gm target pr
+as gm .unlearn 900900
+as gm .unlearn 900901
+as gm .unlearn 900902
+as gm .unlearn 900933
+as gm .unlearn 900966
+as gm .unlearn 900967
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unaura 48066
+as gm .unaura 6788
+do pr learn 48066
+do pr learn 48071
+do pr learn 48125
+do pr goto -263 150 -423.2
+wait 500ms
+pick de creature:920018 near pr
+do pr goto -270 157 -423.2
+wait 500ms
+pick dn creature:920018 near pr
+do pr goto -270 143 -423.2
+wait 500ms
+pick ds creature:920018 near pr
+do pr goto -264 155 -423.2
+wait 500ms
+pick dne creature:920018 near pr
+do pr goto -279 150 -423.2
+wait 500ms
+do pr approach d1
+wait 500ms
+
+# ---------------------------------------------------------------- Shadow
+log Shadow - 900966 CONCEPT DoT ticks (20 %, 2 s ICD) erupt in Shadow damage AROUND THE DOT TARGET (helper 900968); 900967 DoT ticks (15 %, 3 s ICD) copy the DoT to up to 2 nearby enemies - Shadow Word: Pain on 5 dummies from 23 yd away, statistical (about 30 ticks)
+do pr learn 900966
+do pr learn 900967
+do pr goto -293 150 -423.2
+wait 500ms
+do pr reset
+spelllog start
+do pr cast 48125 on d1
+wait 1600ms
+do pr cast 48125 on dn
+wait 1600ms
+do pr cast 48125 on ds
+wait 1600ms
+do pr cast 48125 on de
+wait 1600ms
+do pr cast 48125 on dne
+wait 19s
+spelllog stop
+expect pr spell 900968 casts >= 1
+expect pr spell 900968 targets >= 5
+expect pr spell 48125 targets >= 7
+as gm .unlearn 900966
+as gm .unlearn 900967
+
+# ---------------------------------------------------------------- Discipline
+log Discipline - 900901 CONCEPT shields +50 %: the absorb of Power Word: Shield is built with the all-effects modifier
+do pr goto -270 150 -423.2
+wait 500ms
+do pr learn 900901
+expect pr spellmod 48066 alleffects 100 == 150
+as gm .unlearn 900901
+
+log Discipline - 900900 a BROKEN Power Word: Shield explodes on every enemy within 10 yd of the shielded unit (the priest in the ring; 2 x 16534 break it) - also the absorb baseline without 900901
+do pr learn 900900
+do pr reset
+expect pr maxhealth > 0
+do pr cast 48066 on pr
+wait 300ms
+spelllog start
+do pr cast 16534 on pr
+do pr cast 16534 on pr
+wait 500ms
+spelllog stop
+expect pr noaura 48066
+expect pr spell 48066 targets >= 7
+expect pr health > 0
+
+log Discipline - 900901 CONCEPT shields +50 %: the same shield and hits leave the priest 50 % of the baseline absorb healthier (calibration 2026-10-08: 7450 max health, 2 x 1987 damage, base absorb about 2250: without the bonus about 5740 left, with it about 6860)
+do pr learn 900901
+wait 1600ms
+do pr reset
+as gm .unaura 6788
+do pr cast 48066 on pr
+wait 300ms
+do pr cast 16534 on pr
+do pr cast 16534 on pr
+wait 500ms
+expect pr health >= 6300
+
+log Discipline - 900902 CONCEPT Weakened Soul (6788) lasts only 5 s: on another unit (the director) and on the priest
+do pr learn 900902
+wait 1600ms
+do pr reset
+do gm target gm
+as gm .unaura 6788
+as gm .unaura 48066
+do pr cast 48066 on gm
+wait 300ms
+expect gm aura 6788
+expect gm auraduration 6788 <= 5000
+as gm .unaura 48066
+as gm .unaura 6788
+do gm target pr
+as gm .unaura 6788
+as gm .unaura 48066
+wait 1600ms
+do pr reset
+do pr cast 48066 on pr
+wait 300ms
+expect pr aura 6788
+expect pr auraduration 6788 <= 5000
+as gm .unlearn 900902
+
+# ---------------------------------------------------------------- Holy (+ a fading shield)
+log Holy - 900933 direct heals (20 %, 3 s ICD) cast Holy Fire (900934, no facing rule) on EACH enemy within 10 yd of the healed unit (8 dummies; one miss allowed) - 18 Flash Heals on the priest in the ring's middle, statistical; meanwhile (900900) a shield that FADES after 30 s explodes too
+do pr learn 900933
+wait 1600ms
+do pr reset
+as gm .unaura 6788
+as gm .unaura 48066
+do pr cast 48066 on pr
+wait 1600ms
+spelllog start
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr reset
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr reset
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+wait 1s
+spelllog stop
+expect pr spell 48071 casts >= 15
+expect pr spell 900934 targets >= 7
+expect pr noaura 48066
+expect pr spell 48066 targets >= 7
+
+cleanup
+do pr stop
+do gm target gm
+as gm .unaura 6788
+as gm .unaura 48066
+do gm target pr
+as gm .unlearn 900900
+as gm .unlearn 900901
+as gm .unlearn 900902
+as gm .unlearn 900933
+as gm .unlearn 900966
+as gm .unlearn 900967
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unaura 48066
+as gm .unaura 6788

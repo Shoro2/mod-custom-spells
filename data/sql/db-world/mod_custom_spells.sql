@@ -1,15 +1,13 @@
--- Link custom spell IDs to their SpellScript names
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (900106, 900107, 57823, 47502, 900172, 900173, -25912, -25914, 48819, -31935, 54158, -35395, 900274, 48801, 49028, -55050, 900304, 46584, 900366, 900368, -421, 2894, -51505, 900405, 900406, 53817, 900436, 51533, -2643, 75, 900534, 900566, -8921, 901004, -779, 62078, 901066, 900603, -1752, -16511, -44425, -30451, -1449, 12051, 900708, 900713, -133, -11366, -116, -30455, 31687, 900771, 900800, 900802, 900834, -3110, 47994, 18788, -686, -50796, -17, 900933, 900966, 900967, 901101, 901102, 901103, 901104);
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (-59172, -49271, -49048, -48827, -48660, -48638, -48562, -48463, -48066, -47964, -47809, -44781, -42921, -42914, -42897, -42891, -42842, -42833, -20243);
-DELETE FROM `spell_script_names` WHERE `spell_id` IN (-26573, 900211, 900212, 1953);
--- name-scoped: 53385 also carries the core's spell_pal_divine_storm binding
-DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_custom_ret_ds_aoe';
-DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_custom_exclude_anchor_target';
--- retired: the per-enemy consec-heal AuraScript died with the mobile rework
-DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_custom_holy_consec_heal';
+-- Link custom spell IDs to their SpellScript names. Every binding of this
+-- module carries the spell_custom_ prefix, so ONE name-scoped DELETE clears
+-- them; the core's own bindings on the same Blizzard spells
+-- (spell_dk_dancing_rune_weapon, spell_pal_divine_storm, spell_pal_judgement_of_*,
+-- spell_mage_arcane_blast, ...) are never deleted or re-inserted here any more.
+DELETE FROM `spell_script_names` WHERE `ScriptName` LIKE 'spell\_custom\_%';
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900106, 'spell_custom_paragon_strike'),
 (900107, 'spell_custom_bladestorm_cd_reduce'),
+(1680, 'spell_custom_warr_whirlwind_combo'),
 (57823, 'spell_custom_prot_revenge_aoe'),
 (47502, 'spell_custom_prot_tc_rend_sunder'),
 (-20243, 'spell_custom_prot_devastate_lightning'),
@@ -20,23 +18,19 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (-25914, 'spell_custom_holy_hs_both_heal'),
 (900212, 'spell_custom_mobile_consec_heal'),
 (-31935, 'spell_custom_pprot_as_consec'),
-(54158, 'spell_custom_pprot_judge_as'),
 (900274, 'spell_custom_ret_exorcism_proc'),
 (48801, 'spell_custom_ret_exorcism_consume'),
-(49028, 'spell_dk_dancing_rune_weapon'),
 (49028, 'spell_custom_dkb_3_rune_weapons'),
 (49028, 'spell_custom_dkb_double_cast'),
 (900304, 'spell_custom_dkb_deathcoil_proc'),
-(46584, 'spell_dk_raise_dead'),
 (46584, 'spell_custom_dkf_frost_wyrm'),
 (900368, 'spell_custom_frost_breath'),
 (900366, 'spell_custom_dku_dot_aoe'),
-(2894, 'spell_custom_ele_ragnaros'),
+(32982, 'spell_custom_ele_ragnaros'),
 (-51505, 'spell_custom_ele_overload_lvb'),
 (-51505, 'spell_custom_ele_lvb_spread_fs'),
 (-51505, 'spell_custom_ele_lvb_charges'),
 (900405, 'spell_custom_ele_fs_reset_lvb'),
-(53817, 'spell_sha_maelstrom_weapon'),
 (53817, 'spell_custom_enh_maelstrom_aoe'),
 (900436, 'spell_custom_enh_wolf_summon'),
 (51533, 'spell_custom_enh_wolf_haste'),
@@ -49,14 +43,11 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (62078, 'spell_custom_feral_cat_swipe_bleed'),
 (901066, 'spell_custom_drst_hot_treant'),
 (900603, 'spell_custom_rog_poison_nova'),
-(-30451, 'spell_mage_arcane_blast'),
-(-30451, 'spell_custom_mage_ab_charges'),
 (-1449, 'spell_custom_mage_ae_charges'),
 (12051, 'spell_custom_mage_evocation_power'),
 (900708, 'spell_custom_mage_emergency_shield'),
 (900713, 'spell_custom_mage_targeted_blink'),
 (-11366, 'spell_custom_mage_pyro_hotstreak'),
-(31687, 'spell_mage_summon_water_elemental'),
 (31687, 'spell_custom_mage_permanent_water_ele'),
 (900771, 'spell_custom_mage_comet_shower'),
 (900800, 'spell_custom_wlk_dot_aoe'),
@@ -65,9 +56,8 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (-3110, 'spell_custom_wlk_imp_fb_aoe'),
 (47994, 'spell_custom_wlk_fg_unlim'),
 (18788, 'spell_custom_wlk_sacrifice_all'),
-(-17, 'spell_pri_power_word_shield'),
 (-17, 'spell_custom_pri_shield_explode'),
-(-17, 'spell_custom_pri_weakened_soul_cd'),
+(6788, 'spell_custom_pri_weakened_soul_cd'),
 (900933, 'spell_custom_pri_heal_fire'),
 (900966, 'spell_custom_pri_dot_aoe'),
 (900967, 'spell_custom_pri_dot_spread'),
@@ -77,13 +67,40 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (901104, 'spell_custom_global_counter_attack'),
 (-26573, 'spell_custom_consec_around'),
 (900211, 'spell_custom_mobile_consec'),
-(53385, 'spell_custom_ret_ds_aoe'),
 (1953, 'spell_custom_mage_blink_to_target'),
 (900208, 'spell_custom_exclude_anchor_target'),
 (900367, 'spell_custom_exclude_anchor_target'),
 (900505, 'spell_custom_exclude_anchor_target'),
 (900567, 'spell_custom_exclude_anchor_target'),
-(900604, 'spell_custom_exclude_anchor_target');
+(900604, 'spell_custom_exclude_anchor_target'),
+(20271, 'spell_custom_pprot_judge_as'),
+(53407, 'spell_custom_pprot_judge_as'),
+(53408, 'spell_custom_pprot_judge_as'),
+(900803, 'spell_custom_exclude_anchor_target'),
+(900968, 'spell_custom_exclude_anchor_target'),
+(16246, 'spell_custom_ele_cc_instant_lvb'),
+(22482, 'spell_custom_rog_bf_targets'),
+(900308, 'spell_custom_dkb_bloodworm_fuse'),
+(-49184, 'spell_custom_dkf_hb_frost_fever'),
+(49039, 'spell_custom_dkf_lichborne_leech'),
+(900339, 'spell_custom_dkf_lichborne_leech_proc'),
+(55610, 'spell_custom_dkf_frozen_strikes_grant'),
+(900341, 'spell_custom_dkf_frozen_strikes_proc'),
+(900370, 'spell_custom_exclude_anchor_target'),
+(-43265, 'spell_custom_dku_dnd_around'),
+(900374, 'spell_custom_dku_dnd_mobile'),
+(900415, 'spell_custom_ele_resonance'),
+(-26364, 'spell_custom_ele_ls_chain_lightning'),
+(-6807, 'spell_custom_feral_maul_bleed'),
+(900715, 'spell_custom_mage_mirror_shield'),
+(59638, 'spell_custom_mage_mirror_splash'),
+(59637, 'spell_custom_mage_mirror_splash'),
+(900717, 'spell_custom_exclude_anchor_target'),
+(900719, 'spell_custom_exclude_anchor_target'),
+(900741, 'spell_custom_mage_meteor'),
+(901075, 'spell_custom_drst_parting_bloom_fuse'),
+(-48505, 'spell_custom_bal_starfall_stack'),
+(-48505, 'spell_custom_bal_starfall_stack_volley');
 -- The former "+N targets" C++ AoE hooks (ret_cs_aoe, dkb_hs_aoe, ele_cl_aoe,
 -- rog_ss/hemo_aoe, the six mage nuke hooks, wlk_sb/cb_aoe, bal_mf_aoe) are
 -- gone: with corrected masks the marker passives chain natively via

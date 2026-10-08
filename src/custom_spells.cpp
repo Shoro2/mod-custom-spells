@@ -65,15 +65,41 @@ public:
 //  Burst 900208, DK Shadow Eruption 900367, Beast Cleave 900505,
 //  Explosive Burst 900567, Poison Nova 900604) must not hit the
 //  anchor target again - it already took the triggering spell.
+//  The helpers are dest-targeted, so the unit target is gone by
+//  the time the targets are picked (Spell::InitExplicitTargets):
+//  CastAnchoredBurst hands the anchor over in g_CustomBurstAnchor.
 // ============================================================
+thread_local ObjectGuid g_CustomBurstAnchor;
+
+void CastAnchoredBurst(Unit* caster, Unit* anchor, uint32 spellId,
+    int32 basePoints0)
+{
+    if (!caster || !anchor)
+        return;
+
+    g_CustomBurstAnchor = anchor->GetGUID();
+    if (basePoints0 > 0)
+        caster->CastCustomSpell(anchor, spellId, &basePoints0, nullptr,
+            nullptr, true);
+    else
+        caster->CastSpell(anchor, spellId, true);
+    g_CustomBurstAnchor.Clear();
+}
+
 class spell_custom_exclude_anchor_target : public SpellScript
 {
     PrepareSpellScript(spell_custom_exclude_anchor_target);
 
     void FilterTargets(std::list<WorldObject*>& targets)
     {
-        if (Unit* anchor = GetExplTargetUnit())
-            targets.remove(anchor);
+        ObjectGuid const anchor = g_CustomBurstAnchor;
+        if (anchor.IsEmpty())
+            return;
+
+        targets.remove_if([anchor](WorldObject* target)
+        {
+            return target->GetGUID() == anchor;
+        });
     }
 
     void Register() override

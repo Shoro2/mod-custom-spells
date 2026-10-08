@@ -52,7 +52,7 @@ class spell_custom_holy_hs_aoe_dmg : public SpellScript
         if (!g_CustomSpellsEnabled)
             return;
 
-        caster->CastSpell(target, SPELL_HOLY_HS_AOE_DMG_HELPER, true);
+        CastAnchoredBurst(caster, target, SPELL_HOLY_HS_AOE_DMG_HELPER);
 
         LOG_INFO("module",
             "mod-custom-spells: Player {} -> Holy Shock AoE damage on {}",
@@ -109,8 +109,8 @@ class spell_custom_holy_hs_aoe_heal : public SpellScript
 // ============================================================
 //  SPELL 900202: Holy Shock Always Both (SpellScript)
 //  Hooked on Holy Shock damage (48824) and heal (48825).
-//  After hitting a hostile target â†’ also heal nearest ally.
-//  After healing a friendly target â†’ also damage nearest enemy.
+//  After hitting a hostile target -> also heal nearest ally.
+//  After healing a friendly target -> also damage nearest enemy.
 //  Only active when player has passive 900202.
 // ============================================================
 class spell_custom_holy_hs_both_dmg : public SpellScript
@@ -138,7 +138,7 @@ class spell_custom_holy_hs_both_dmg : public SpellScript
         if (s_hsBothReentry)
             return;
 
-        // We're on the damage spell â†’ also heal nearest injured ally
+        // We're on the damage spell -> also heal nearest injured ally
         // Find nearest friendly unit within 40yd that's injured
         Unit* healTarget = nullptr;
         float minDist = 40.0f;
@@ -153,6 +153,11 @@ class spell_custom_holy_hs_both_dmg : public SpellScript
                     continue;
                 if (member->GetHealthPct() >= 100.0f)
                     continue;
+                // same map AND instance: procedural dungeon instances
+                // share their coordinates, so a plain GetDistance picks
+                // a member standing in another instance
+                if (!player->IsWithinDistInMap(member, minDist))
+                    continue;
                 float dist = player->GetDistance(member);
                 if (dist < minDist)
                 {
@@ -166,10 +171,14 @@ class spell_custom_holy_hs_both_dmg : public SpellScript
         if (!healTarget && player->GetHealthPct() < 100.0f)
             healTarget = player;
 
-        if (healTarget)
+        // the heal of the same rank (the dummy cast spell would route by
+        // its own rank, and 48825 is the dummy's rank 7, not a heal)
+        uint32 const healId = sSpellMgr->GetSpellWithRank(
+            SPELL_HOLY_SHOCK_HEAL_R1, GetSpellInfo()->GetRank(), false);
+        if (healTarget && healId)
         {
             s_hsBothReentry = true;
-            caster->CastSpell(healTarget, SPELL_HOLY_SHOCK_HEAL_R7, true);
+            caster->CastSpell(healTarget, healId, true);
             s_hsBothReentry = false;
             LOG_INFO("module",
                 "mod-custom-spells: Player {} -> HS Both: auto-heal {}",
@@ -208,17 +217,25 @@ class spell_custom_holy_hs_both_heal : public SpellScript
         if (s_hsBothReentry)
             return;
 
-        // We're on the heal spell â†’ also damage nearest enemy
+        // We're on the heal spell: also damage the current victim, else
+        // the nearest enemy within 40 yd. The victim must still be a
+        // valid attack target in reach (a unit that turned friendly, or
+        // one left behind in another instance, is not).
         Unit* dmgTarget = player->GetVictim();
-        if (!dmgTarget || !dmgTarget->IsAlive())
-        {
-            // Find nearest hostile within 40yd
+        if (!dmgTarget || !dmgTarget->IsAlive()
+            || !player->IsValidAttackTarget(dmgTarget)
+            || !player->IsWithinDistInMap(dmgTarget, 40.0f))
             dmgTarget = player->SelectNearbyTarget(nullptr, 40.0f);
-        }
 
-        if (dmgTarget)
+        uint32 const dmgId = sSpellMgr->GetSpellWithRank(
+            SPELL_HOLY_SHOCK_DMG_R1, GetSpellInfo()->GetRank(), false);
+        if (dmgTarget && dmgId)
         {
-            caster->CastSpell(dmgTarget, SPELL_HOLY_SHOCK_DMG_R7, true);
+            // guard this direction too: the follow-up damage must not run
+            // the damage side's own follow-up heal (one heal, one damage)
+            s_hsBothReentry = true;
+            caster->CastSpell(dmgTarget, dmgId, true);
+            s_hsBothReentry = false;
             LOG_INFO("module",
                 "mod-custom-spells: Player {} -> HS Both: auto-damage {}",
                 player->GetName(), dmgTarget->GetName());
@@ -234,37 +251,54 @@ class spell_custom_holy_hs_both_heal : public SpellScript
 
 // ============================================================
 //  SPELL 900239: Avenger's Shield Leaves Consecration
-//  Hooked on Avenger's Shield (48827). After hitting each
-//  target, casts Consecration at the target's position.
-//  Only active when player has passive 900239.
+//  Hooked on Avenger's Shield (all ranks via -31935). Each enemy
+//  it hits is left standing in a Consecration of the paladin's
+//  highest rank. Consecration aims at the CASTER's feet (its
+//  destination is TARGET_DEST_CASTER), so a normal cast - the old
+//  code - put every one of them under the paladin. Like the core's
+//  Spell::EffectPersistentAA, the script creates the ground effect
+//  itself, at the target: the real Consecration (visual, combat log,
+//  the paladin's +50 % / +5 sec modifiers).
 // ============================================================
+static void PlaceConsecrationAt(Player* player, Position const& pos)
+{
+    SpellInfo const* consecInfo = sSpellMgr->GetSpellInfo(
+        player->HasSpell(SPELL_CONSECRATION_R8) ? SPELL_CONSECRATION_R8
+        : sSpellMgr->GetFirstSpellInChain(SPELL_CONSECRATION_R8));
+    if (!consecInfo || !player->IsInWorld())
+        return;
+
+    float const radius = consecInfo->Effects[EFFECT_0].CalcRadius(player);
+    DynamicObject* dynObj = new DynamicObject();
+    if (!dynObj->CreateDynamicObject(
+        player->GetMap()->GenerateLowGuid<HighGuid::DynamicObject>(), player,
+        consecInfo->Id, pos, radius, DYNAMIC_OBJECT_AREA_SPELL))
+    {
+        delete dynObj;
+        return;
+    }
+
+    if (Aura* aura = Aura::TryCreate(consecInfo, MAX_EFFECT_MASK, dynObj,
+        player))
+    {
+        aura->_RegisterForTargets();
+        aura->_ApplyEffectForTargets(EFFECT_0);
+    }
+}
+
 class spell_custom_pprot_as_consec : public SpellScript
 {
     PrepareSpellScript(spell_custom_pprot_as_consec);
 
     void HandleAfterHit()
     {
-        Unit* caster = GetCaster();
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
         Unit* target = GetHitUnit();
-        if (!caster || !target)
+        if (!player || !target || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_PPROT_AS_CONSEC_PASSIVE))
             return;
 
-        Player* player = caster->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_PPROT_AS_CONSEC_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // Cast Consecration (triggered) at target's location
-        caster->CastSpell(target, SPELL_CONSECRATION_R8, true);
-
-        LOG_INFO("module",
-            "mod-custom-spells: Player {} -> AS left Consecration on {}",
-            player->GetName(), target->GetName());
+        PlaceConsecrationAt(player, target->GetPosition());
     }
 
     void Register() override
@@ -274,9 +308,11 @@ class spell_custom_pprot_as_consec : public SpellScript
 };
 
 // ============================================================
-//  SPELL 900240: Judgement â†’ Free Avenger's Shield
-//  Hooked on Judgement Damage (54158). After Judgement hits,
-//  auto-casts Avenger's Shield at the same target.
+//  SPELL 900240: Judgement -> Free Avenger's Shield
+//  Hooked on the three Judgement casts (Light 20271, Wisdom 53408,
+//  Justice 53407): whatever seal is up, the cast hits the target
+//  once. (The damage spell differs per seal - 54158 alone missed
+//  Seal of Righteousness, Vengeance, Corruption ...)
 //  Only active when player has passive 900240.
 // ============================================================
 class spell_custom_pprot_judge_as : public SpellScript
@@ -515,84 +551,6 @@ class spell_custom_mobile_consec_heal : public AuraScript
 };
 
 // ============================================================
-//  SPELL 900270: Divine Storm +6 Targets (SpellScript)
-//  Hooked on Divine Storm itself (53385 - in this core the
-//  weapon damage IS 53385; the heal runs via 54171/54172 in the
-//  core's own script, which coexists on the same binding).
-//  SPELLMOD_JUMP_TARGETS only extends chains, so the area cap is
-//  bypassed like Multi-Shot: once per cast, deal the same damage
-//  to up to 6 further enemies within 8yd of the paladin.
-// ============================================================
-class spell_custom_ret_ds_aoe : public SpellScript
-{
-    PrepareSpellScript(spell_custom_ret_ds_aoe);
-
-    // 53385 hits several targets and AfterHit runs per target - including
-    // the caster himself (effects 1+2 are self-targeted value dummies), so
-    // the guard may only be consumed by a real enemy hit
-    bool _done = false;
-
-    void HandleAfterHit()
-    {
-        if (_done)
-            return;
-
-        Unit* caster = GetCaster();
-        Unit* mainTarget = GetHitUnit();
-        if (!caster || !mainTarget)
-            return;
-
-        Player* player = caster->ToPlayer();
-        if (!player)
-            return;
-
-        if (mainTarget == caster || !player->IsValidAttackTarget(mainTarget))
-            return;
-
-        if (!player->HasAura(SPELL_RET_DS_TARGETS_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        int32 damage = GetHitDamage();
-        if (damage <= 0)
-            return;
-
-        _done = true;
-
-        std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player, 8.0f);
-        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
-            searcher(player, targets, check);
-        Cell::VisitObjects(player, searcher, 8.0f);
-        targets.remove(mainTarget);
-
-        SpellInfo const* spellInfo = GetSpellInfo();
-
-        uint32 count = 0;
-        for (Unit* target : targets)
-        {
-            if (count >= 6)
-                break;
-            if (!target->IsAlive() || !player->IsValidAttackTarget(target))
-                continue;
-
-            SpellNonMeleeDamage dmgInfo(player, target, spellInfo, spellInfo->GetSchoolMask());
-            dmgInfo.damage = damage;
-            player->DealSpellDamage(&dmgInfo, true);
-            player->SendSpellNonMeleeDamageLog(&dmgInfo);
-            ++count;
-        }
-    }
-
-    void Register() override
-    {
-        AfterHit += SpellHitFn(spell_custom_ret_ds_aoe::HandleAfterHit);
-    }
-};
-
-// ============================================================
 //  SPELL 900274: Exorcism Buff System (AuraScript)
 //  Passive proc aura: when CS, Judgement, or Divine Storm
 //  hits an enemy, adds 1 stack of Exorcism buff (900275).
@@ -609,11 +567,15 @@ class spell_custom_ret_exorcism_proc : public AuraScript
         if (!spellInfo)
             return false;
 
-        // Only proc on CS (35395), Judgement Damage (54158), or DS (53385)
+        // Only proc on Crusader Strike, Divine Storm or a Judgement's damage.
+        // The damage spell depends on the seal (54158, Righteousness 20187,
+        // Vengeance 31804, Corruption 53733 ...); all of them carry the
+        // Judgement family flag 0x800000.
         uint32 id = spellInfo->Id;
-        return id == SPELL_CRUSADER_STRIKE_R6
-            || id == SPELL_JUDGEMENT_DAMAGE
-            || id == SPELL_DIVINE_STORM;
+        if (id == SPELL_CRUSADER_STRIKE_R6 || id == SPELL_DIVINE_STORM)
+            return true;
+        return spellInfo->SpellFamilyName == SPELLFAMILY_PALADIN
+            && (spellInfo->SpellFamilyFlags[0] & SPELLFAMILYFLAG_JUDGEMENT);
     }
 
     void HandleProc(ProcEventInfo& /*eventInfo*/)
@@ -697,7 +659,6 @@ void AddPaladinSpellsScripts()
     RegisterSpellScript(spell_custom_mobile_consec_heal);
 
     // Paladin Ret
-    RegisterSpellScript(spell_custom_ret_ds_aoe);
     RegisterSpellScript(spell_custom_ret_exorcism_proc);
     RegisterSpellScript(spell_custom_ret_exorcism_consume);
 }

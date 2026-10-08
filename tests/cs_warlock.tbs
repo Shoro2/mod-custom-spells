@@ -1,0 +1,349 @@
+# mod-custom-spells: the Warlock custom class spells (the /spells picker) on a
+# bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md), so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150). Slot 4 belongs to the cs_*
+# scenarios; the cleanup unlearns every custom spell again.
+# Spells: Corruption 47813, Shadow Bolt 47809, Chaos Bolt 59172 (family flags1
+# 0x20000), Conflagrate 17962 (flags1 0x800000), Metamorphosis aura 47241
+# (30 s), Summon Imp 688 (NPC 416, Firebolt 47964), Summon Felguard 30146 (NPC
+# 17252, Cleave 47994, Intercept strike 47995: 189 + 2.8 % AP, 8-25 yd),
+# Demonic Sacrifice 18788 (buffs 18789-18792), Diseased Young Wolf 299 (a
+# level-1 enemy to kill), Crippling Clip 23279 (30-s root), Dismiss Pet 2641.
+# Pets: a summoned demon is passive (saved ReactState 0) and has no autocast.
+# A 300-ms run of the harness's warlock_affliction rotation makes it defensive
+# and sends it at d1 (TestBotCombat.cpp Rotations::Tick); the GM then makes it
+# cast with ".cast target <spell>" - NOT "triggered": the GM's triggered cast
+# ignores every effect of the spell (TRIGGERED_IGNORE_EFFECTS).
+name    Custom spells - Warlock
+timeout 300s
+
+bot wl warlock slot=4
+
+place 13 -279 150 -423.2 0
+require wl alive
+pick d1 creature:920018 near wl
+require d1 exists
+do gm target wl
+as gm .unlearn 900800
+as gm .unlearn 900801
+as gm .unlearn 900802
+as gm .unlearn 900833
+as gm .unlearn 900834
+as gm .unlearn 900835
+as gm .unlearn 900836
+as gm .unlearn 900837
+as gm .unlearn 900838
+as gm .unlearn 900839
+as gm .unlearn 900840
+as gm .unlearn 900866
+as gm .unlearn 900867
+as gm .unlearn 900868
+as gm .unlearn 900869
+as gm .unlearn 900870
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 18788
+as gm .unaura 47241
+do wl learn 47813
+do wl learn 47809
+do wl learn 59172
+do wl learn 17962
+do wl learn 688
+do wl learn 30146
+do wl goto -263 150 -423.2
+wait 500ms
+pick de creature:920018 near wl
+do wl goto -270 157 -423.2
+wait 500ms
+pick dn creature:920018 near wl
+do wl goto -270 143 -423.2
+wait 500ms
+pick ds creature:920018 near wl
+do wl goto -264 155 -423.2
+wait 500ms
+pick dne creature:920018 near wl
+do wl goto -279 150 -423.2
+wait 500ms
+do wl approach d1
+wait 500ms
+
+# ---------------------------------------------------------------- Affliction
+log Affliction - 900801 CONCEPT Corruption +50 % (a pure DoT: the ticks read the periodic modifier)
+do wl learn 900801
+expect wl spellmod 47813 dot 100 == 150
+as gm .unlearn 900801
+
+log Affliction - 900800 CONCEPT DoT ticks (20 %, 2 s ICD) erupt in Shadow damage AROUND THE DOT TARGET (helper 900803); 900802 DoT ticks (15 %, 3 s ICD) copy the DoT to up to 2 nearby enemies - Corruption on 5 dummies from 23 yd away, statistical (about 30 ticks)
+do wl learn 900800
+do wl learn 900802
+do wl goto -293 150 -423.2
+wait 500ms
+do wl reset
+spelllog start
+do wl cast 47813 on d1
+wait 1600ms
+do wl cast 47813 on dn
+wait 1600ms
+do wl cast 47813 on ds
+wait 1600ms
+do wl cast 47813 on de
+wait 1600ms
+do wl cast 47813 on dne
+wait 19s
+spelllog stop
+expect wl spell 900803 casts >= 1
+expect wl spell 900803 targets >= 5
+expect wl spell 47813 targets >= 7
+as gm .unlearn 900800
+as gm .unlearn 900802
+
+# ---------------------------------------------------------------- Destruction
+log Destruction - 900867 Shadow Bolt +50 %, 900866 Shadow Bolt +9 targets (the target and 9 more = 10: jump-target value 0 -> 10)
+do wl goto -279 150 -423.2
+wait 500ms
+do wl approach d1
+do wl learn 900866
+do wl learn 900867
+expect wl spellmod 47809 damage 100 == 150
+expect wl spellmod 47809 jumptargets 0 == 10
+spelllog start
+do wl cast 47809 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wl spell 47809 maxtargets >= 8
+as gm .unlearn 900866
+as gm .unlearn 900867
+
+log Destruction - CONCEPT Chaos Bolt (59172): 900868 +50 %, 900869 cooldown -2 s (12 -> 10 s), 900870 +9 targets (10 in all)
+do wl learn 900868
+do wl learn 900869
+do wl learn 900870
+expect wl spellmod 59172 damage 100 == 150
+expect wl spellmod 59172 cooldown 12000 == 10000
+expect wl spellmod 59172 jumptargets 0 == 10
+spelllog start
+do wl cast 59172 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wl spell 59172 maxtargets >= 8
+log Destruction - the Chaos Bolt passives leave Conflagrate (17962) alone
+expect wl spellmod 17962 damage 100 == 100
+expect wl spellmod 17962 cooldown 10000 == 10000
+expect wl spellmod 17962 jumptargets 0 == 0
+as gm .unlearn 900868
+as gm .unlearn 900869
+as gm .unlearn 900870
+
+# ---------------------------------------------------------------- Demonology
+log Demonology - 900833 killing an enemy during Metamorphosis (47241, 30 s) adds 5 s (a level-1 wolf, one Shadow Bolt)
+do wl learn 900833
+do wl goto -270 150 -423.2
+wait 500ms
+do wl cast 47241 triggered
+as gm .npc add temp 299
+wait 500ms
+pick wolf creature:299 near gm
+expect wolf exists
+do wl approach wolf 9
+wait 500ms
+do wl cast 47809 on wolf triggered
+wait 500ms
+expect wl auraduration 47241 > 30000
+
+log Demonology - 900834 during Metamorphosis: Shadow damage around you (900842) and a self heal (900843) every 3 s (in the ring's middle)
+do wl learn 900834
+spelllog start
+wait 7s
+spelllog stop
+expect wl spell 900842 casts >= 2
+expect wl spell 900842 targets >= 6
+expect wl spell 900843 hits >= 2
+as gm .unaura 47241
+as gm .unlearn 900833
+as gm .unlearn 900834
+
+log Demonology - Imp (688): 900837 its Firebolt (47964) also hits up to 9 enemies within 10 yd of the target
+do wl cast 688 triggered
+wait 1s
+pick imp creature:416 near wl
+expect imp exists
+do wl rotation warlock_affliction on d1 for 300ms
+wait 500ms
+do wl stop
+do wl goto -270 150 -423.2
+wait 1500ms
+do wl learn 900837
+do gm target imp
+spelllog start
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 3500ms
+spelllog stop
+expect wl spell 47964 targets >= 7
+do gm target wl
+as gm .unlearn 900837
+
+log Demonology - Imp baseline: 3 Firebolts on command, no passive (reference: about 233 a hit, crits x1.5)
+do gm target imp
+spelllog start
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 3500ms
+spelllog stop
+expect wl spell 47964 hits >= 2
+
+log Demonology - 900836 CONCEPT Imp Firebolt +50 %: 8 Firebolts on command must log 1.5x the baseline (about 350 a hit; 7 hits = 2450) - statistical (misses, crits)
+do wl learn 900836
+wait 1500ms
+spelllog start
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 2800ms
+as gm .cast target 47964
+wait 3500ms
+spelllog stop
+expect wl spell 47964 damage >= 2400
+do gm target wl
+as gm .unlearn 900836
+do wl stop
+
+log Demonology - Felguard (30146) in the ring: 900838 its Cleave (47994) also hits every enemy within 8 yd (helper 900844); 900835 its damage summons a lesser demon (NPC 900836; 10 % per hit, 30 s ICD - statistical, about 40 hits)
+do wl cast 30146 triggered
+wait 1s
+pick fg creature:17252 near wl
+expect fg exists
+do wl rotation warlock_affliction on d1 for 300ms
+wait 500ms
+do wl stop
+do wl goto -270 150 -423.2
+wait 1500ms
+do wl learn 900835
+do wl learn 900838
+do gm target fg
+spelllog start
+as gm .cast target 47994
+wait 6100ms
+as gm .cast target 47994
+wait 6100ms
+as gm .cast target 47994
+wait 6100ms
+as gm .cast target 47994
+wait 1s
+spelllog stop
+expect wl spell 47994 casts >= 3
+expect wl spell 900844 targets >= 5
+expect wl minions 900836 >= 1
+do gm target wl
+as gm .unlearn 900835
+as gm .unlearn 900838
+pick lfg creature:900836 near wl
+do gm target lfg
+as gm .npc delete
+do gm target wl
+
+log Demonology - Felguard baseline: 4 Intercept strikes (47995, fixed damage) on command from 15 yd (rooted), no passive (reference: 128 a hit on the dummy's armour)
+do wl cast 2641 triggered
+do wl goto -289 150 -423.2
+wait 500ms
+do wl cast 30146 triggered
+wait 1s
+pick fg2 creature:17252 near wl
+expect fg2 exists
+do gm target fg2
+as gm .aura 23279
+do wl rotation warlock_affliction on d1 for 300ms
+wait 500ms
+do wl stop
+wait 500ms
+spelllog start
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+spelllog stop
+expect wl spell 47995 hits >= 3
+
+log Demonology - 900839 CONCEPT Felguard damage +50 %: 10 strikes must log 1.5x the baseline (192 a hit; 7 hits = 1344) - statistical (misses)
+do wl learn 900839
+wait 1500ms
+spelllog start
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+as gm .cast target 47995
+wait 1200ms
+spelllog stop
+expect wl spell 47995 damage >= 1340
+as gm .unaura 23279
+do wl stop
+
+cleanup
+do wl stop
+do gm target wl
+as gm .unlearn 900800
+as gm .unlearn 900801
+as gm .unlearn 900802
+as gm .unlearn 900833
+as gm .unlearn 900834
+as gm .unlearn 900835
+as gm .unlearn 900836
+as gm .unlearn 900837
+as gm .unlearn 900838
+as gm .unlearn 900839
+as gm .unlearn 900840
+as gm .unlearn 900866
+as gm .unlearn 900867
+as gm .unlearn 900868
+as gm .unlearn 900869
+as gm .unlearn 900870
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 18788
+as gm .unaura 47241
+as gm .unaura 18789
+as gm .unaura 18790
+as gm .unaura 18791
+as gm .unaura 18792
+as gm .unaura 47893
+do wl cast 688 triggered
+wait 500ms
+do wl cast 2641 triggered

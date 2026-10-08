@@ -1,0 +1,1457 @@
+{
+ "schema_version": 2,
+ "locale": "enUS",
+ "about": "Spellbook name, tooltip and icon of every custom class spell in the /spells picker. tools/client_spell_sync.py writes them into the client Spell.dbc carriers and the picker labels; each text states the behaviour after the 2026-10-08 rework (share-public custom-spells/08-rework-20261008.md). icon_spell = the stock spell whose SpellIconID the record shows (absent: keep the record's icon).",
+ "entries": [
+  {
+   "id": 900100,
+   "class": "Warrior",
+   "spec": "Arms",
+   "name": "Mortal Strike: +50% Damage",
+   "description": "Increases the damage of your Mortal Strike by 50%.",
+   "icon_spell": 47486
+  },
+  {
+   "id": 900101,
+   "class": "Warrior",
+   "spec": "Arms",
+   "name": "Mortal Strike: -2 sec Cooldown",
+   "description": "Reduces the cooldown of your Mortal Strike by 2 sec.",
+   "icon_spell": 47486
+  },
+  {
+   "id": 900102,
+   "class": "Warrior",
+   "spec": "Arms",
+   "name": "Overpower: +50% Damage",
+   "description": "Increases the damage of your Overpower by 50%.",
+   "icon_spell": 7384
+  },
+  {
+   "id": 900103,
+   "class": "Warrior",
+   "spec": "Arms",
+   "name": "Mortal Strike: +9 Targets",
+   "description": "Your Mortal Strike also strikes up to 9 additional enemies in front of you. Each additional strike deals 50% of the previous one's damage.",
+   "icon_spell": 47486
+  },
+  {
+   "id": 900104,
+   "class": "Warrior",
+   "spec": "Arms",
+   "name": "Overpower: +9 Targets",
+   "description": "Your Overpower also strikes up to 9 additional enemies in front of you. Each additional strike deals 50% of the previous one's damage.",
+   "icon_spell": 7384
+  },
+  {
+   "id": 900105,
+   "class": "Warrior",
+   "spec": "Arms",
+   "name": "Critical Execution",
+   "description": "Your critical melee abilities have a 20% chance to unleash a Paragon Strike at your target, dealing 666 Physical damage plus 66% of your attack power. Its damage is increased by 1% per Paragon level.",
+   "icon_spell": 47471
+  },
+  {
+   "id": 900107,
+   "class": "Warrior",
+   "spec": "Arms",
+   "name": "Timed Attacks",
+   "description": "Each of your melee hits reduces the remaining cooldown of Bladestorm by 0.5 sec.",
+   "icon_spell": 46924
+  },
+  {
+   "id": 900108,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Whirlwind: Unlimited Targets",
+   "description": "Your Whirlwind strikes every enemy in range instead of only 4.",
+   "icon_spell": 1680
+  },
+  {
+   "id": 900109,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Bloodthirst: +50% Damage",
+   "description": "Increases the damage of your Bloodthirst by 50%.",
+   "icon_spell": 23881
+  },
+  {
+   "id": 900110,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Bloodthirst: +9 Targets",
+   "description": "Your Bloodthirst also strikes up to 9 additional enemies in front of you. Each additional strike deals 50% of the previous one's damage.",
+   "icon_spell": 23881
+  },
+  {
+   "id": 900111,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Whirlwind: +50% Damage",
+   "description": "Increases the damage of your Whirlwind by 50%.",
+   "icon_spell": 1680
+  },
+  {
+   "id": 900112,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Cleave: Unlimited Targets",
+   "description": "Your Cleave strikes every enemy in front of you instead of only 2.",
+   "icon_spell": 47520
+  },
+  {
+   "id": 900114,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Whirly Attacks",
+   "description": "Your melee auto attacks have a 20% chance to unleash a free Whirlwind.",
+   "icon_spell": 1680
+  },
+  {
+   "id": 900116,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Bloody Whirlwind",
+   "description": "Bloodthirst increases the damage of your next Whirlwind by 50%. Stacks up to 5 times.",
+   "icon_spell": 23881
+  },
+  {
+   "id": 900117,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Speedy Bloodthirst",
+   "description": "Whirlwind resets the cooldown of your Bloodthirst.",
+   "icon_spell": 23881
+  },
+  {
+   "id": 900118,
+   "class": "Warrior",
+   "spec": "Arms",
+   "name": "Whirlwind: Overpower",
+   "description": "When your Whirlwind hits only one enemy, you also strike it with a free Overpower.",
+   "icon_spell": 7384
+  },
+  {
+   "id": 900119,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Whirlwind: Bloodthirst",
+   "description": "When your Whirlwind hits only one enemy, you also strike it with a free Bloodthirst.",
+   "icon_spell": 23881
+  },
+  {
+   "id": 900133,
+   "class": "Warrior",
+   "spec": "Fury",
+   "name": "Whirlwind: Any Stance",
+   "description": "Your Whirlwind can be used in any stance.",
+   "icon_spell": 1680
+  },
+  {
+   "id": 900168,
+   "class": "Warrior",
+   "spec": "Protection",
+   "name": "Revenge: +50% Damage",
+   "description": "Increases the damage of your Revenge by 50%.",
+   "icon_spell": 57823
+  },
+  {
+   "id": 900169,
+   "class": "Warrior",
+   "spec": "Protection",
+   "name": "Revenge: Sweeping",
+   "description": "Your Revenge also deals its damage to every other enemy within 8 yards of you.",
+   "icon_spell": 57823
+  },
+  {
+   "id": 900170,
+   "class": "Warrior",
+   "spec": "Protection",
+   "name": "Thunder Clap: Rend and Sunder",
+   "description": "Your Thunder Clap applies Rend and 5 applications of Sunder Armor to every enemy it hits.",
+   "icon_spell": 47502
+  },
+  {
+   "id": 900171,
+   "class": "Warrior",
+   "spec": "Protection",
+   "name": "Thunder Clap: +50% Damage",
+   "description": "Increases the damage of your Thunder Clap by 50%.",
+   "icon_spell": 47502
+  },
+  {
+   "id": 900172,
+   "class": "Warrior",
+   "spec": "Protection",
+   "name": "Devastate Lightning",
+   "description": "Casting Devastate on a target with 5 applications of Sunder Armor calls down a lightning strike, dealing 666 Nature damage plus 5 per Paragon level to the target and all enemies within 10 yards. Can occur once every 5 sec per target.",
+   "icon_spell": 47498
+  },
+  {
+   "id": 900173,
+   "class": "Warrior",
+   "spec": "Protection",
+   "name": "Block: Enhanced Thunder Clap",
+   "description": "Blocking an attack has a 10% chance to unleash an Enhanced Thunder Clap, dealing 1001 to 1200 damage to all enemies within 10 yards. Can occur once every 3 sec.",
+   "icon_spell": 2565
+  },
+  {
+   "id": 900200,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Holy Shock: Burst",
+   "description": "When your Holy Shock damages an enemy, a burst of Holy light also damages every other enemy within 10 yards of it.",
+   "icon_spell": 20473
+  },
+  {
+   "id": 900201,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Holy Shock: Radiance",
+   "description": "When your Holy Shock heals an ally, a burst of Holy light also heals every ally within 10 yards of it.",
+   "icon_spell": 20473
+  },
+  {
+   "id": 900202,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Holy Shock: Both Ways",
+   "description": "Your Holy Shock always does both: damaging an enemy also heals your nearest injured group member within 40 yards (or you), and healing an ally also strikes your target or the nearest enemy within 40 yards.",
+   "icon_spell": 20473
+  },
+  {
+   "id": 900203,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Holy Shock: +50% Effect",
+   "description": "Increases the damage and healing of your Holy Shock by 50%.",
+   "icon_spell": 20473
+  },
+  {
+   "id": 900204,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Consecration: Healing",
+   "description": "While your Consecration burns, you and allies within 8 yards of you are healed every second.",
+   "icon_spell": 48819
+  },
+  {
+   "id": 900205,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Consecration: Follows You",
+   "description": "Your Consecration moves with you, damaging enemies around your current position.",
+   "icon_spell": 48819
+  },
+  {
+   "id": 900206,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Consecration: +50% Damage",
+   "description": "Increases the damage of your Consecration by 50%.",
+   "icon_spell": 48819
+  },
+  {
+   "id": 900207,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Consecration: +5 sec Duration",
+   "description": "Increases the duration of your Consecration by 5 sec.",
+   "icon_spell": 48819
+  },
+  {
+   "id": 900234,
+   "class": "Paladin",
+   "spec": "Protection",
+   "name": "Consecration: Follows You",
+   "description": "Your Consecration moves with you, damaging enemies around your current position.",
+   "icon_spell": 48819
+  },
+  {
+   "id": 900235,
+   "class": "Paladin",
+   "spec": "Protection",
+   "name": "Avenger's Shield: +9 Targets",
+   "description": "Your Avenger's Shield bounces to up to 9 additional enemies.",
+   "icon_spell": 48827
+  },
+  {
+   "id": 900236,
+   "class": "Paladin",
+   "spec": "Protection",
+   "name": "Avenger's Shield: +50% Damage",
+   "description": "Increases the damage of your Avenger's Shield by 50%.",
+   "icon_spell": 48827
+  },
+  {
+   "id": 900237,
+   "class": "Paladin",
+   "spec": "Protection",
+   "name": "Holy Shield: +99 Charges",
+   "description": "Your Holy Shield holds 99 additional charges.",
+   "icon_spell": 48952
+  },
+  {
+   "id": 900238,
+   "class": "Paladin",
+   "spec": "Protection",
+   "name": "Holy Shield: +50% Damage",
+   "description": "Increases the damage of your Holy Shield by 50%.",
+   "icon_spell": 48952
+  },
+  {
+   "id": 900239,
+   "class": "Paladin",
+   "spec": "Protection",
+   "name": "Avenger's Shield: Consecration",
+   "description": "Each enemy hit by your Avenger's Shield is left standing in a free Consecration.",
+   "icon_spell": 48827
+  },
+  {
+   "id": 900240,
+   "class": "Paladin",
+   "spec": "Protection",
+   "name": "Judgement: Avenger's Shield",
+   "description": "Your Judgements launch a free Avenger's Shield at the target.",
+   "icon_spell": 20271
+  },
+  {
+   "id": 900241,
+   "class": "Paladin",
+   "spec": "Protection",
+   "name": "Judgement: -2 sec Cooldown",
+   "description": "Reduces the cooldown of your Judgements by 2 sec.",
+   "icon_spell": 20271
+  },
+  {
+   "id": 900268,
+   "class": "Paladin",
+   "spec": "Retribution",
+   "name": "Consecration: Follows You",
+   "description": "Your Consecration moves with you, damaging enemies around your current position.",
+   "icon_spell": 48819
+  },
+  {
+   "id": 900269,
+   "class": "Paladin",
+   "spec": "Retribution",
+   "name": "Judgement: -2 sec Cooldown",
+   "description": "Reduces the cooldown of your Judgements by 2 sec.",
+   "icon_spell": 20271
+  },
+  {
+   "id": 900270,
+   "class": "Paladin",
+   "spec": "Retribution",
+   "name": "Divine Storm: +6 Targets",
+   "description": "Your Divine Storm strikes up to 6 additional enemies.",
+   "icon_spell": 53385
+  },
+  {
+   "id": 900271,
+   "class": "Paladin",
+   "spec": "Retribution",
+   "name": "Divine Storm: +50% Damage",
+   "description": "Increases the damage of your Divine Storm by 50%.",
+   "icon_spell": 53385
+  },
+  {
+   "id": 900272,
+   "class": "Paladin",
+   "spec": "Retribution",
+   "name": "Crusader Strike: +50% Damage",
+   "description": "Increases the damage of your Crusader Strike by 50%.",
+   "icon_spell": 35395
+  },
+  {
+   "id": 900273,
+   "class": "Paladin",
+   "spec": "Retribution",
+   "name": "Crusader Strike: +9 Targets",
+   "description": "Your Crusader Strike also strikes up to 9 additional enemies in front of you.",
+   "icon_spell": 35395
+  },
+  {
+   "id": 900274,
+   "class": "Paladin",
+   "spec": "Retribution",
+   "name": "Exorcism Power",
+   "description": "Your Crusader Strike, Judgements and Divine Storm each increase the damage of your next Exorcism by 50%. Stacks up to 10 times.",
+   "icon_spell": 48801
+  },
+  {
+   "id": 900500,
+   "class": "Hunter",
+   "spec": "Shared",
+   "name": "Recovered Arrows",
+   "description": "Your ranged attacks and shots give back every arrow or bullet they used.",
+   "icon_spell": 75
+  },
+  {
+   "id": 900501,
+   "class": "Hunter",
+   "spec": "Shared",
+   "name": "Multi-Shot: Unlimited Targets",
+   "description": "Your Multi-Shot also hits every other enemy within 10 yards of its target.",
+   "icon_spell": 49048
+  },
+  {
+   "id": 900502,
+   "class": "Hunter",
+   "spec": "Beast Mastery",
+   "name": "Pet: +50% Damage",
+   "description": "Your pet deals 50% more damage.",
+   "icon_spell": 883
+  },
+  {
+   "id": 900503,
+   "class": "Hunter",
+   "spec": "Beast Mastery",
+   "name": "Pet: +50% Attack Speed",
+   "description": "Your pet attacks 50% faster.",
+   "icon_spell": 883
+  },
+  {
+   "id": 900504,
+   "class": "Hunter",
+   "spec": "Beast Mastery",
+   "name": "Pet: Beast Cleave",
+   "description": "Your pet's melee hits have a 15% chance to also damage all other enemies within 10 yards of its target.",
+   "icon_spell": 883
+  },
+  {
+   "id": 900533,
+   "class": "Hunter",
+   "spec": "Marksmanship",
+   "name": "Auto Shot: Ricochet",
+   "description": "Your Auto Shot also hits up to 9 other enemies within 10 yards of its target.",
+   "icon_spell": 75
+  },
+  {
+   "id": 900534,
+   "class": "Hunter",
+   "spec": "Marksmanship",
+   "name": "Barrage",
+   "description": "Fire a free Multi-Shot at your target every 0.1 sec for 2 sec. Your movement speed is reduced by 50% meanwhile.",
+   "icon_spell": 49048
+  },
+  {
+   "id": 900566,
+   "class": "Hunter",
+   "spec": "Survival",
+   "name": "Explosive Shots",
+   "description": "Your ranged attacks and shots have a 15% chance to set off an explosion around the target, damaging all other enemies within 10 yards. Can occur once every 2 sec.",
+   "icon_spell": 49067
+  },
+  {
+   "id": 900600,
+   "class": "Rogue",
+   "spec": "Assassination",
+   "name": "Energy: +50% Regeneration",
+   "description": "Increases your Energy regeneration by 50%.",
+   "icon_spell": 13750
+  },
+  {
+   "id": 900601,
+   "class": "Rogue",
+   "spec": "Assassination",
+   "name": "Mutilate: +50% Damage",
+   "description": "Increases the damage of your Mutilate by 50%.",
+   "icon_spell": 48666
+  },
+  {
+   "id": 900602,
+   "class": "Rogue",
+   "spec": "Assassination",
+   "name": "Poisons: +50% Damage",
+   "description": "Increases the damage of your Instant, Deadly and Wound Poisons by 50%.",
+   "icon_spell": 57970
+  },
+  {
+   "id": 900603,
+   "class": "Rogue",
+   "spec": "Assassination",
+   "name": "Poison Nova",
+   "description": "Your Nature damage has a 15% chance to release a Poison Nova, damaging all other enemies within 10 yards of the target. Can occur once every 3 sec.",
+   "icon_spell": 57970
+  },
+  {
+   "id": 900633,
+   "class": "Rogue",
+   "spec": "Combat",
+   "name": "Sinister Strike: +50% Damage",
+   "description": "Increases the damage of your Sinister Strike by 50%.",
+   "icon_spell": 48638
+  },
+  {
+   "id": 900634,
+   "class": "Rogue",
+   "spec": "Combat",
+   "name": "Sinister Strike: +9 Targets",
+   "description": "Your Sinister Strike also strikes up to 9 additional enemies in front of you.",
+   "icon_spell": 48638
+  },
+  {
+   "id": 900635,
+   "class": "Rogue",
+   "spec": "Combat",
+   "name": "Blade Flurry: 2 min Duration",
+   "description": "Your Blade Flurry lasts 2 min.",
+   "icon_spell": 13877
+  },
+  {
+   "id": 900636,
+   "class": "Rogue",
+   "spec": "Combat",
+   "name": "Blade Flurry: +9 Targets",
+   "description": "Your Blade Flurry strikes up to 9 additional enemies instead of one.",
+   "icon_spell": 13877
+  },
+  {
+   "id": 900637,
+   "class": "Rogue",
+   "spec": "Combat",
+   "name": "Energy: +50% Regeneration",
+   "description": "Increases your Energy regeneration by 50%.",
+   "icon_spell": 13750
+  },
+  {
+   "id": 900666,
+   "class": "Rogue",
+   "spec": "Subtlety",
+   "name": "Energy: +50% Regeneration",
+   "description": "Increases your Energy regeneration by 50%.",
+   "icon_spell": 13750
+  },
+  {
+   "id": 900667,
+   "class": "Rogue",
+   "spec": "Subtlety",
+   "name": "Hemorrhage: +50% Damage",
+   "description": "Increases the damage of your Hemorrhage by 50%.",
+   "icon_spell": 48660
+  },
+  {
+   "id": 900668,
+   "class": "Rogue",
+   "spec": "Subtlety",
+   "name": "Hemorrhage: +9 Targets",
+   "description": "Your Hemorrhage also strikes up to 9 additional enemies in front of you.",
+   "icon_spell": 48660
+  },
+  {
+   "id": 900900,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Power Word: Shield: Explosion",
+   "description": "When your Power Word: Shield breaks, it explodes and deals Holy damage equal to its full absorption to all enemies within 10 yards of the shielded target. When it fades, the explosion deals at least half of that.",
+   "icon_spell": 48066
+  },
+  {
+   "id": 900901,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Power Word: Shield: +50% Absorption",
+   "description": "Increases the damage absorbed by your Power Word: Shield by 50%.",
+   "icon_spell": 48066
+  },
+  {
+   "id": 900902,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Weakened Soul: 5 sec",
+   "description": "The Weakened Soul from your Power Word: Shield lasts only 5 sec.",
+   "icon_spell": 6788
+  },
+  {
+   "id": 900933,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Holy Fire Heals",
+   "description": "Your direct heals have a 20% chance to cast Holy Fire at every enemy within 10 yards of the healed target. Can occur once every 3 sec.",
+   "icon_spell": 48135
+  },
+  {
+   "id": 900966,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Shadow Eruption",
+   "description": "Your damage-over-time effects have a 20% chance on each tick to erupt, dealing Shadow damage to all other enemies within 10 yards of the target. Can occur once every 2 sec.",
+   "icon_spell": 48125
+  },
+  {
+   "id": 900967,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Spreading Shadows",
+   "description": "Your damage-over-time effects have a 15% chance on each tick to spread to up to 2 other enemies within 10 yards. Can occur once every 3 sec.",
+   "icon_spell": 48125
+  },
+  {
+   "id": 900300,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Dancing Rune Weapon: Three Blades",
+   "description": "Dancing Rune Weapon summons three rune weapons instead of one.",
+   "icon_spell": 49028
+  },
+  {
+   "id": 900301,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Dancing Rune Weapon: Double Cast",
+   "description": "Your rune weapons mirror each of your attacks and spells twice instead of once.",
+   "icon_spell": 49028
+  },
+  {
+   "id": 900302,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Heart Strike: +50% Damage",
+   "description": "Increases the damage of your Heart Strike by 50%.",
+   "icon_spell": 55050
+  },
+  {
+   "id": 900303,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Heart Strike: +9 Targets",
+   "description": "Your Heart Strike also strikes up to 9 additional enemies.",
+   "icon_spell": 55050
+  },
+  {
+   "id": 900304,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Death Coil Strikes",
+   "description": "Your melee attacks and abilities have a 15% chance to cast a free Death Coil at your target. Can occur once every 3 sec.",
+   "icon_spell": 47541
+  },
+  {
+   "id": 900306,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Bloodworm Burst",
+   "description": "When one of your Bloodworms dies or expires, it explodes, dealing 666 Shadow damage plus 5 per Paragon level to all enemies within 10 yards.",
+   "icon_spell": 49027
+  },
+  {
+   "id": 900333,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Raise Dead: Frost Wyrm",
+   "description": "Raise Dead calls a Frost Wyrm instead of a ghoul. The wyrm follows you, fights your target and breathes Frost on enemies in front of it.",
+   "icon_spell": 46584
+  },
+  {
+   "id": 900334,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Obliterate: +50% Damage",
+   "description": "Increases the damage of your Obliterate by 50%.",
+   "icon_spell": 49020
+  },
+  {
+   "id": 900335,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Obliterate: +9 Targets",
+   "description": "Your Obliterate also strikes up to 9 additional enemies in front of you.",
+   "icon_spell": 49020
+  },
+  {
+   "id": 900336,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Howling Blast: +50% Damage",
+   "description": "Increases the damage of your Howling Blast by 50%.",
+   "icon_spell": 49184
+  },
+  {
+   "id": 900337,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Howling Blast: Frost Fever",
+   "description": "Your Howling Blast infects every enemy it hits with Frost Fever.",
+   "icon_spell": 49184
+  },
+  {
+   "id": 900338,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Lichborne: Leech",
+   "description": "While Lichborne is active, 30% of the damage you deal heals you.",
+   "icon_spell": 49039
+  },
+  {
+   "id": 900340,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Icy Talons: Frozen Strikes",
+   "description": "Players affected by your Improved Icy Talons gain Frozen Strikes: their melee attacks have a 10% chance to deal 666 Frost damage plus 5 per your Paragon level to their target.",
+   "icon_spell": 55610
+  },
+  {
+   "id": 900366,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Plague Eruption",
+   "description": "Your damage-over-time effects have a 20% chance on each tick to erupt, dealing Shadow damage to all other enemies within 10 yards of the target. Can occur once every 2 sec.",
+   "icon_spell": 49194
+  },
+  {
+   "id": 900369,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Ghoul Cleave",
+   "description": "The melee attacks of your ghoul and of your Army of the Dead ghouls also deal 50% of their damage to all other enemies within 5 yards of their target.",
+   "icon_spell": 46584
+  },
+  {
+   "id": 900371,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Risen Army",
+   "description": "Your melee abilities have a 10% chance to raise an Army of the Dead ghoul that fights for you for 5 sec.",
+   "icon_spell": 42650
+  },
+  {
+   "id": 900373,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Death and Decay: Around You",
+   "description": "Your Death and Decay follows you, damaging enemies within 10 yards of your current position.",
+   "icon_spell": 49938
+  },
+  {
+   "id": 900400,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Chain Lightning: +6 Targets",
+   "description": "Your Chain Lightning jumps to up to 6 additional targets, and its damage no longer decreases with each jump.",
+   "icon_spell": 49271
+  },
+  {
+   "id": 900410,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Lightning Bolt: +50% Damage",
+   "description": "Increases the damage of your Lightning Bolt by 50%.",
+   "icon_spell": 49238
+  },
+  {
+   "id": 900411,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Lightning Bolt: +9 Targets",
+   "description": "Your Lightning Bolt jumps to up to 9 additional enemies.",
+   "icon_spell": 49238
+  },
+  {
+   "id": 900412,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Chain Lightning: +50% Damage",
+   "description": "Increases the damage of your Chain Lightning by 50%.",
+   "icon_spell": 49271
+  },
+  {
+   "id": 900401,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Totems Follow You",
+   "description": "Your totems follow you instead of staying where you placed them.",
+   "icon_spell": 2894
+  },
+  {
+   "id": 900402,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Fire Elemental: Ragnaros",
+   "description": "Your Fire Elemental takes on the shape of Ragnaros and has twice the health.",
+   "icon_spell": 2894
+  },
+  {
+   "id": 900403,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Lava Overload",
+   "description": "Lightning Overload also works on Lava Burst at twice the talent's chance: an overloaded Lava Burst strikes the target again for half damage.",
+   "icon_spell": 60043
+  },
+  {
+   "id": 900404,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Lava Burst: Spreading Flame",
+   "description": "Lava Burst spreads your Flame Shock from its target to up to 5 other enemies within 10 yards.",
+   "icon_spell": 60043
+  },
+  {
+   "id": 900405,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Flame Shock: Lava Reset",
+   "description": "The periodic damage of your Flame Shock has a 15% chance to reset the cooldown of your Lava Burst. Can occur once every 2 sec.",
+   "icon_spell": 49233
+  },
+  {
+   "id": 900406,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Lava Burst: Two Charges",
+   "description": "Lava Burst can be cast twice before its cooldown starts.",
+   "icon_spell": 60043
+  },
+  {
+   "id": 900407,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Lava Burst: Clearcast Instant",
+   "description": "While Clearcasting is active, your Lava Burst is instant.",
+   "icon_spell": 60043
+  },
+  {
+   "id": 900413,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Lava Burst: +50% Damage",
+   "description": "Increases the damage of your Lava Burst by 50%.",
+   "icon_spell": 60043
+  },
+  {
+   "id": 900414,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Lava Burst: +9 Targets",
+   "description": "Your Lava Burst jumps to up to 9 additional enemies.",
+   "icon_spell": 60043
+  },
+  {
+   "id": 900415,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Elemental Resonance",
+   "description": "Dealing Nature damage increases your Fire damage by 2%, and dealing Fire damage increases your Nature damage by 2%, for 10 sec. Each stacks up to 5 times.",
+   "icon_spell": 49238
+  },
+  {
+   "id": 900418,
+   "class": "Shaman",
+   "spec": "Elemental",
+   "name": "Lightning Shield: Chain Lightning",
+   "description": "Each time your Lightning Shield strikes an attacker, there is a 20% chance that you also cast a free Chain Lightning at it.",
+   "icon_spell": 49281
+  },
+  {
+   "id": 900433,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Totems Follow You",
+   "description": "Your totems follow you instead of staying where you placed them.",
+   "icon_spell": 2894
+  },
+  {
+   "id": 900434,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Maelstrom Fury",
+   "description": "Reaching 5 stacks of Maelstrom Weapon empowers your summons for 5 sec: each of their melee hits also damages all enemies within 10 yards of them.",
+   "icon_spell": 51530
+  },
+  {
+   "id": 900435,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Empowered Summons",
+   "description": "Your totems, spirit wolves, elementals and other summons deal 50% more damage.",
+   "icon_spell": 51533
+  },
+  {
+   "id": 900436,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Spirit Wolf Call",
+   "description": "Your melee auto attacks have a 10% chance to summon a Spirit Wolf that fights your target for 15 sec. Can occur once every 5 sec.",
+   "icon_spell": 51533
+  },
+  {
+   "id": 900437,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Spirit Wolves: Haste",
+   "description": "Your Spirit Wolves attack faster by your own haste.",
+   "icon_spell": 51533
+  },
+  {
+   "id": 900438,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Spirit Wolves: Chain Lightning",
+   "description": "Each melee hit of your Spirit Wolves has a 5% chance to cast Chain Lightning at their target.",
+   "icon_spell": 51533
+  },
+  {
+   "id": 900466,
+   "class": "Shaman",
+   "spec": "Restoration",
+   "name": "Totems Follow You",
+   "description": "Your totems follow you instead of staying where you placed them.",
+   "icon_spell": 2894
+  },
+  {
+   "id": 900467,
+   "class": "Shaman",
+   "spec": "Restoration",
+   "name": "Deep Reserves",
+   "description": "Your mana regeneration is increased by 2% for every 1% of mana you are missing.",
+   "icon_spell": 16190
+  },
+  {
+   "id": 900700,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Deep Reserves",
+   "description": "Your mana regeneration is increased by 2% for every 1% of mana you are missing.",
+   "icon_spell": 12051
+  },
+  {
+   "id": 900701,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Arcane Barrage: +50% Damage",
+   "description": "Increases the damage of your Arcane Barrage by 50%.",
+   "icon_spell": 44781
+  },
+  {
+   "id": 900702,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Arcane Barrage: +9 Targets",
+   "description": "Your Arcane Barrage jumps to up to 9 additional enemies.",
+   "icon_spell": 44781
+  },
+  {
+   "id": 900703,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Arcane Blast: -50% Cast Time",
+   "description": "Reduces the cast time of your Arcane Blast by 50%.",
+   "icon_spell": 42897
+  },
+  {
+   "id": 900704,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Arcane Blast: +9 Targets",
+   "description": "Your Arcane Blast jumps to up to 9 additional enemies.",
+   "icon_spell": 42897
+  },
+  {
+   "id": 900705,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Arcane Blast: 8 Charges",
+   "description": "Arcane Blast's effect stacks up to 8 times instead of 4.",
+   "icon_spell": 42897
+  },
+  {
+   "id": 900706,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Arcane Explosion: Charges",
+   "description": "Arcane Explosion adds a stack of Arcane Blast's effect, like Arcane Blast itself.",
+   "icon_spell": 42921
+  },
+  {
+   "id": 900707,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Evocation Power",
+   "description": "Each tick of Evocation increases your damage done by 20% for 1 min. Stacks up to 4 times.",
+   "icon_spell": 12051
+  },
+  {
+   "id": 900708,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Emergency Mana Shield",
+   "description": "Taking damage while at or below 30% health activates Mana Shield and restores all your mana. Can occur once every 60 sec.",
+   "icon_spell": 43020
+  },
+  {
+   "id": 900709,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Blink: To Your Target",
+   "description": "Blink teleports you to your selected target if it is within 30 yards and in line of sight.",
+   "icon_spell": 1953
+  },
+  {
+   "id": 900714,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Arcane Overflow",
+   "description": "Every 10,000 mana you spend unleashes an empowered Arcane Explosion that deals twice the damage, and resets the cooldown of your Blink.",
+   "icon_spell": 42921
+  },
+  {
+   "id": 900715,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Mirror Shield",
+   "description": "When you are struck while one of your absorb shields is active, there is a 10% chance to summon a Mirror Image. Can occur once every 6 sec.",
+   "icon_spell": 55342
+  },
+  {
+   "id": 900716,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Mirror Images: Splash",
+   "description": "The spells of your Mirror Images also hit all other enemies within 8 yards of their target.",
+   "icon_spell": 55342
+  },
+  {
+   "id": 900713,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Targeted Blink",
+   "description": "Teleports you to the selected ground location within 40 yards. Shares a cooldown with Blink.",
+   "icon_spell": 1953
+  },
+  {
+   "id": 900733,
+   "class": "Mage",
+   "spec": "Fire",
+   "name": "Fireball: +50% Damage",
+   "description": "Increases the damage of your Fireball by 50%.",
+   "icon_spell": 42833
+  },
+  {
+   "id": 900734,
+   "class": "Mage",
+   "spec": "Fire",
+   "name": "Fireball: +9 Targets",
+   "description": "Your Fireball jumps to up to 9 additional enemies.",
+   "icon_spell": 42833
+  },
+  {
+   "id": 900735,
+   "class": "Mage",
+   "spec": "Fire",
+   "name": "Pyroblast: +9 Targets",
+   "description": "Your Pyroblast jumps to up to 9 additional enemies.",
+   "icon_spell": 42891
+  },
+  {
+   "id": 900736,
+   "class": "Mage",
+   "spec": "Fire",
+   "name": "Pyroblast: +50% Damage",
+   "description": "Increases the damage of your Pyroblast by 50%.",
+   "icon_spell": 42891
+  },
+  {
+   "id": 900737,
+   "class": "Mage",
+   "spec": "Fire",
+   "name": "Fire Blast: Swift and Sure",
+   "description": "Your Fire Blast no longer triggers the global cooldown and always lands a critical strike.",
+   "icon_spell": 42873
+  },
+  {
+   "id": 900738,
+   "class": "Mage",
+   "spec": "Fire",
+   "name": "Pyroblast: Hot Streak",
+   "description": "Casting Pyroblast with its full cast time grants Hot Streak: your next Pyroblast is instant.",
+   "icon_spell": 48108
+  },
+  {
+   "id": 900741,
+   "class": "Mage",
+   "spec": "Fire",
+   "name": "Meteor",
+   "description": "Calls down a meteor at the target location, dealing 3,500 to 4,100 Fire damage to all enemies within 8 yards and burning them for 600 Fire damage over 6 sec. 45 sec cooldown.",
+   "icon_spell": 57467
+  },
+  {
+   "id": 900766,
+   "class": "Mage",
+   "spec": "Frost",
+   "name": "Frostbolt: +50% Damage",
+   "description": "Increases the damage of your Frostbolt by 50%.",
+   "icon_spell": 42842
+  },
+  {
+   "id": 900767,
+   "class": "Mage",
+   "spec": "Frost",
+   "name": "Frostbolt: +9 Targets",
+   "description": "Your Frostbolt jumps to up to 9 additional enemies.",
+   "icon_spell": 42842
+  },
+  {
+   "id": 900768,
+   "class": "Mage",
+   "spec": "Frost",
+   "name": "Ice Lance: +50% Damage",
+   "description": "Increases the damage of your Ice Lance by 50%.",
+   "icon_spell": 42914
+  },
+  {
+   "id": 900769,
+   "class": "Mage",
+   "spec": "Frost",
+   "name": "Ice Lance: +9 Targets",
+   "description": "Your Ice Lance jumps to up to 9 additional enemies.",
+   "icon_spell": 42914
+  },
+  {
+   "id": 900770,
+   "class": "Mage",
+   "spec": "Frost",
+   "name": "Water Elemental: Permanent",
+   "description": "Your Water Elemental stays until it dies or is dismissed.",
+   "icon_spell": 31687
+  },
+  {
+   "id": 900771,
+   "class": "Mage",
+   "spec": "Frost",
+   "name": "Comet Shower",
+   "description": "Calls down Frost Comets on the target location, striking every enemy within 15 yards of it.",
+   "icon_spell": 42940
+  },
+  {
+   "id": 900800,
+   "class": "Warlock",
+   "spec": "Affliction",
+   "name": "Shadow Eruption",
+   "description": "Your damage-over-time effects have a 20% chance on each tick to erupt, dealing Shadow damage to all other enemies within 10 yards of the target. Can occur once every 2 sec.",
+   "icon_spell": 47813
+  },
+  {
+   "id": 900801,
+   "class": "Warlock",
+   "spec": "Affliction",
+   "name": "Corruption: +50% Damage",
+   "description": "Increases the damage of your Corruption by 50%.",
+   "icon_spell": 47813
+  },
+  {
+   "id": 900802,
+   "class": "Warlock",
+   "spec": "Affliction",
+   "name": "Spreading Affliction",
+   "description": "Your damage-over-time effects have a 15% chance on each tick to spread to up to 2 other enemies within 10 yards. Can occur once every 3 sec.",
+   "icon_spell": 47813
+  },
+  {
+   "id": 900833,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Metamorphosis: Feast",
+   "description": "Each enemy you kill during Metamorphosis extends it by 5 sec, up to 2 min.",
+   "icon_spell": 47241
+  },
+  {
+   "id": 900834,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Metamorphosis: Shadow Pulse",
+   "description": "During Metamorphosis, every 3 sec you deal Shadow damage to all enemies within 10 yards and heal yourself.",
+   "icon_spell": 47241
+  },
+  {
+   "id": 900835,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Lesser Demons",
+   "description": "Your demon's attacks have a 10% chance to summon a lesser demon that fights for 30 sec. Can occur once every 30 sec.",
+   "icon_spell": 30146
+  },
+  {
+   "id": 900836,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Imp: +50% Damage",
+   "description": "Your Imp deals 50% more damage.",
+   "icon_spell": 688
+  },
+  {
+   "id": 900837,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Imp: Firebolt +9 Targets",
+   "description": "Your Imp's Firebolt also hits up to 9 other enemies within 10 yards of its target.",
+   "icon_spell": 688
+  },
+  {
+   "id": 900838,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Felguard: Unlimited Cleave",
+   "description": "Your Felguard's Cleave strikes every enemy around it.",
+   "icon_spell": 30146
+  },
+  {
+   "id": 900839,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Felguard: +50% Damage",
+   "description": "Your Felguard deals 50% more damage.",
+   "icon_spell": 30146
+  },
+  {
+   "id": 900866,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Shadow Bolt: +9 Targets",
+   "description": "Your Shadow Bolt jumps to up to 9 additional enemies.",
+   "icon_spell": 47809
+  },
+  {
+   "id": 900867,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Shadow Bolt: +50% Damage",
+   "description": "Increases the damage of your Shadow Bolt by 50%.",
+   "icon_spell": 47809
+  },
+  {
+   "id": 900868,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Chaos Bolt: +50% Damage",
+   "description": "Increases the damage of your Chaos Bolt by 50%.",
+   "icon_spell": 59172
+  },
+  {
+   "id": 900869,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Chaos Bolt: -2 sec Cooldown",
+   "description": "Reduces the cooldown of your Chaos Bolt by 2 sec.",
+   "icon_spell": 59172
+  },
+  {
+   "id": 900870,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Chaos Bolt: +9 Targets",
+   "description": "Your Chaos Bolt jumps to up to 9 additional enemies.",
+   "icon_spell": 59172
+  },
+  {
+   "id": 901000,
+   "class": "Druid",
+   "spec": "Balance",
+   "name": "Moonfire: +9 Targets",
+   "description": "Your Moonfire jumps to up to 9 additional enemies.",
+   "icon_spell": 48463
+  },
+  {
+   "id": 901001,
+   "class": "Druid",
+   "spec": "Balance",
+   "name": "Moonfire: +50% Damage",
+   "description": "Increases the damage of your Moonfire, including its damage over time, by 50%.",
+   "icon_spell": 48463
+  },
+  {
+   "id": 901002,
+   "class": "Druid",
+   "spec": "Balance",
+   "name": "Starfall: +9 Targets",
+   "description": "Each star of your Starfall jumps to up to 9 additional enemies.",
+   "icon_spell": 53201
+  },
+  {
+   "id": 901003,
+   "class": "Druid",
+   "spec": "Balance",
+   "name": "Starfall: +50% Damage",
+   "description": "Increases the damage of your Starfall by 50%.",
+   "icon_spell": 53201
+  },
+  {
+   "id": 901004,
+   "class": "Druid",
+   "spec": "Balance",
+   "name": "Starfall: Starlight Reset",
+   "description": "Each time your spells deal damage, the cooldown of your Starfall is reduced by 1 sec. Can occur once every 1 sec.",
+   "icon_spell": 53201
+  },
+  {
+   "id": 901005,
+   "class": "Druid",
+   "spec": "Balance",
+   "name": "Starfall: 10 Stacks",
+   "description": "Casting Starfall while it is active stacks it, up to 10 times: each stack calls down its own stars.",
+   "icon_spell": 53201
+  },
+  {
+   "id": 901033,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Swipe (Bear): Bleed",
+   "description": "Your Swipe in Bear Form makes every enemy it hits bleed for 6 sec.",
+   "icon_spell": 48562
+  },
+  {
+   "id": 901035,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Maul: Bleeding Wounds",
+   "description": "Your Maul deals 50% more damage to bleeding targets.",
+   "icon_spell": 48480
+  },
+  {
+   "id": 901049,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Swipe (Cat): Bleed",
+   "description": "Your Swipe in Cat Form makes every enemy it hits bleed for 6 sec.",
+   "icon_spell": 62078
+  },
+  {
+   "id": 901051,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Energy: +50% Regeneration",
+   "description": "Increases your Energy regeneration by 50%.",
+   "icon_spell": 768
+  },
+  {
+   "id": 901066,
+   "class": "Druid",
+   "spec": "Restoration",
+   "name": "Treant Call",
+   "description": "Your heal-over-time effects have a 5% chance on each tick to call a Healing Treant to fight for you for 30 sec. Can occur once every 5 sec.",
+   "icon_spell": 33831
+  },
+  {
+   "id": 901067,
+   "class": "Druid",
+   "spec": "Restoration",
+   "name": "Summons: Healing Power",
+   "description": "Your summons gain 10 health for every point of your healing power.",
+   "icon_spell": 33831
+  },
+  {
+   "id": 901068,
+   "class": "Druid",
+   "spec": "Restoration",
+   "name": "Summons: Parting Bloom",
+   "description": "When one of your summons dies or its time runs out, it heals all allies within 10 yards.",
+   "icon_spell": 33831
+  },
+  {
+   "id": 901069,
+   "class": "Druid",
+   "spec": "Restoration",
+   "name": "Thorns: Rejuvenation",
+   "description": "When an enemy strikes a target protected by your Thorns, there is a 20% chance you cast Rejuvenation on that target. Can occur once every 3 sec per target.",
+   "icon_spell": 53307
+  },
+  {
+   "id": 901070,
+   "class": "Druid",
+   "spec": "Restoration",
+   "name": "Heal over Time: +50%",
+   "description": "Increases the periodic healing of your Rejuvenation, Regrowth, Lifebloom and Wild Growth by 50%.",
+   "icon_spell": 48441
+  },
+  {
+   "id": 901071,
+   "class": "Druid",
+   "spec": "Restoration",
+   "name": "Heal over Time: Double Speed",
+   "description": "Your Rejuvenation, Regrowth, Lifebloom and Wild Growth tick twice as fast and last twice as long.",
+   "icon_spell": 48441
+  },
+  {
+   "id": 901072,
+   "class": "Druid",
+   "spec": "Restoration",
+   "name": "Deep Reserves",
+   "description": "Your mana regeneration is increased by 2% for every 1% of mana you are missing.",
+   "icon_spell": 29166
+  },
+  {
+   "id": 901101,
+   "class": "Global",
+   "spec": "Global",
+   "name": "Killing Blow: Recovery",
+   "description": "Killing an enemy heals you for 5% of your maximum health."
+  },
+  {
+   "id": 901102,
+   "class": "Global",
+   "spec": "Global",
+   "name": "Extra Attack",
+   "description": "Your melee attacks have a 25% chance to grant you an extra attack. Can occur once every 1 sec."
+  },
+  {
+   "id": 901103,
+   "class": "Global",
+   "spec": "Global",
+   "name": "Cleaving Strikes",
+   "description": "Your attacks, shots and harmful spells have a 10% chance to deal their damage to all other enemies within 10 yards of the target as well. Can occur once every 1 sec."
+  },
+  {
+   "id": 901104,
+   "class": "Global",
+   "spec": "Global",
+   "name": "Riposte",
+   "description": "When you avoid an attack - a miss, dodge, parry or block - you counter-attack for 50% of your attack power. Can occur once every 2 sec."
+  },
+  {
+   "id": 901111,
+   "class": "Global",
+   "spec": "Global",
+   "name": "Empowered",
+   "description": "Increases all damage you deal by 5%.",
+   "icon_spell": 26297
+  }
+ ],
+ "auras": [
+  {
+   "id": 900115,
+   "aura_description": "The damage of your next Whirlwind is increased by 50% per application."
+  },
+  {
+   "id": 900275,
+   "aura_description": "Increases the damage of your next Exorcism by 50% per application."
+  },
+  {
+   "id": 900339,
+   "aura_description": "30% of the damage you deal heals you."
+  },
+  {
+   "id": 900341,
+   "aura_description": "Your melee attacks have a 10% chance to deal Frost damage to the target."
+  },
+  {
+   "id": 900374,
+   "aura_description": "Your Death and Decay follows you."
+  },
+  {
+   "id": 900416,
+   "aura_description": "Fire damage increased by 2% per application."
+  },
+  {
+   "id": 900417,
+   "aura_description": "Nature damage increased by 2% per application."
+  },
+  {
+   "id": 900439,
+   "aura_description": "Your summons deal damage to all enemies near their target with each attack."
+  },
+  {
+   "id": 900712,
+   "aura_description": "Spell damage increased by 20% per application."
+  }
+ ]
+}

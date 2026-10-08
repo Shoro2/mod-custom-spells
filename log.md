@@ -3,6 +3,30 @@
 Newest entry first. Changes before 2026-09-28 are recorded only in
 [`share-public/claude_log.md`](https://github.com/Shoro2/share-public/blob/main/claude_log.md).
 
+## 2026-10-08 — Rework: bot-tested spells, concept spells, spellbook texts, cursed passives
+
+Operator request: revise, test and fix the `/spells` picker spells with server-side bots, give
+them spellbook tooltips, then add them to the cursed-item passive pool (CoA classes out of scope);
+then build the concept spells that never existed ("ja neue spells im anschluss bauen").
+- Fixes from code review and bot runs in all ten classes and the global block (list: share-public
+  `custom-spells/08-rework-20261008.md` §3): modifiers on the wrong op or mask, dead Fury combos,
+  front-only Thunder Clap, "+9 targets" = 10 targets, Holy Shock same-map pick, Critical Execution
+  crit gate, Arcane charges via SPELLMOD_MAX_AURA_STACKS, Fire Blast GCD via OnSpellPrepare, Hot
+  Streak loop, Holy Fire helper without facing, minion auras (pet/summon damage and haste, totem
+  damage through the owner), mana regeneration by missing mana, Barrage slow, Mutilate mask,
+  triggered poisons proc Poison Nova, Starfall stacks, summon health/despawn heal, thread-safe ICDs,
+  Divine Storm +6 targets through the core's own target cap (aura 277; the old AfterHit script hit
+  Divine Storm's own targets a second time).
+- 24 concept spells: Warrior 900133; DK 900306/900334-900340/900369-900373; Shaman 900410-900418;
+  Druid 901035; Mage 900714-900716 and the active 900741 Meteor; global 901111 (+5 % damage).
+  "Cast while moving" needs client work and stays out.
+- `data/spellbook_enUS.json` + `tools/client_spell_sync.py`: names, tooltips, icons and helper buff
+  tooltips into both client `Spell.dbc` carriers; picker labels from the same file. Replaces the
+  2026-10-04 draft (`data/tooltips_enUS.json`, `tools/patch_tooltips.py`).
+- Bot scenarios `tests/cs_<class>.tbs` and `tests/cs_concept_*.tbs` (mod-fl-testbots, slot 4).
+- Docs: CLAUDE.md slimmed under 8 KB; `INDEX.md`, `functions.md`, `data_structure.md`, `todo.md` new.
+- Evidence: T1 on the Windows workbench (bot runs listed in the vault doc §5); T2 owed in game.
+
 ## 2026-10-08 — Operator pause and original tooltip scope
 
 The five native Mage emergency-shield cases and their exact owned cleanup passed.

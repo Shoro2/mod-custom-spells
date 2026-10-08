@@ -1,0 +1,296 @@
+# mod-custom-spells: the Paladin custom class spells (the /spells picker) on a
+# bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md), so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150). Melee chains only jump to
+# units in front of the caster, so chain checks stand west of the ring facing
+# it; self-centred AoEs stand in its middle. Slot 4 belongs to the cs_*
+# scenarios; the cleanup unlearns every custom spell again.
+# Spells: Holy Shock 48825 (cast) -> 48823 damage / 48821 heal, Consecration
+# 48819, Avenger's Shield 48827, Holy Shield 48952, Judgement of Light 20271 ->
+# Judgement of Righteousness damage 20187, Seal of Righteousness 21084, Divine Storm 53385, Crusader
+# Strike 35395, Exorcism 48801. Gargoyle's Mace 36500 + Frozen Shield 36458 (Protection).
+name    Custom spells - Paladin
+timeout 300s
+
+bot pa paladin slot=4
+
+place 13 -279 150 -423.2 0
+require pa alive
+pick d1 creature:920018 near pa
+require d1 exists
+do gm target pa
+as gm .unlearn 900200
+as gm .unlearn 900201
+as gm .unlearn 900202
+as gm .unlearn 900203
+as gm .unlearn 900204
+as gm .unlearn 900205
+as gm .unlearn 900206
+as gm .unlearn 900207
+as gm .unlearn 900234
+as gm .unlearn 900235
+as gm .unlearn 900236
+as gm .unlearn 900237
+as gm .unlearn 900238
+as gm .unlearn 900239
+as gm .unlearn 900240
+as gm .unlearn 900241
+as gm .unlearn 900268
+as gm .unlearn 900269
+as gm .unlearn 900270
+as gm .unlearn 900271
+as gm .unlearn 900272
+as gm .unlearn 900273
+as gm .unlearn 900274
+do pa learn 48825
+do pa learn 48819
+do pa learn 48827
+do pa learn 48952
+do pa learn 20271
+do pa learn 21084
+do pa learn 53385
+do pa learn 35395
+do pa learn 48801
+do pa approach d1
+wait 1s
+
+# ---------------------------------------------------------------- Holy
+log Holy - 900203 Holy Shock +50 % (damage and heal)
+do pa learn 900203
+expect pa spellmod 48823 damage 100 == 150
+expect pa spellmod 48821 damage 100 == 150
+
+log Holy - 900200 a damaging Holy Shock bursts around its target (three tries: the bot has no spell hit, a miss is legal)
+do pa learn 900200
+spelllog start
+do pa cast 48825 on d1 triggered
+wait 500ms
+do pa cast 48825 on d1 triggered
+wait 500ms
+do pa cast 48825 on d1 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 48823 hits >= 1
+expect pa spell 900208 targets >= 6
+
+log Holy - 900201 a healing Holy Shock heals around its target
+do pa learn 900201
+as gm .damage 3000
+spelllog start
+do pa cast 48825 on pa triggered
+wait 1500ms
+spelllog stop
+expect pa spell 48821 hits >= 1
+expect pa spell 900209 hits >= 1
+as gm .unlearn 900200
+as gm .unlearn 900201
+
+log Holy - 900202 Holy Shock always does both, once each (the damage half is counted as a cast: it may miss)
+do pa learn 900202
+do pa reset
+as gm .damage 3000
+spelllog start
+do pa cast 48825 on d1 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 48823 casts == 1
+expect pa spell 48821 hits == 1
+do pa reset
+as gm .damage 3000
+spelllog start
+do pa cast 48825 on pa triggered
+wait 1500ms
+spelllog stop
+expect pa spell 48821 hits == 1
+expect pa spell 48823 casts == 1
+as gm .unlearn 900202
+
+log Holy - 900206 Consecration +50 %, 900207 +5 sec
+do pa learn 900206
+do pa learn 900207
+expect pa spellmod 48819 dot 100 == 150
+expect pa spellmod 48819 duration 8000 == 13000
+
+log Holy - 900205 Consecration follows you; 900204 it also heals (from the middle)
+do pa learn 900205
+do pa learn 900204
+do pa goto -270 150 -423.2
+do pa reset
+as gm .damage 3000
+spelllog start
+do pa cast 48819 triggered
+wait 3500ms
+spelllog stop
+expect pa aura 900211
+expect pa aura 900212
+expect pa spell 48819 targets >= 6
+expect pa spell 48819 heal > 0
+do pa reset
+as gm .unlearn 900204
+as gm .unlearn 900205
+as gm .unlearn 900206
+as gm .unlearn 900207
+
+# ---------------------------------------------------------------- Protection
+log Protection - a one-hander and a shield (Avenger's Shield and Holy Shield need one)
+do pa destroy 36500
+do pa destroy 36458
+as gm .additem 36500
+as gm .additem 36458
+do pa equip 36500
+do pa equip 36458
+
+log Protection - 900235 Avenger's Shield +9 targets, 900236 +50 %
+do pa goto -279 150 -423.2
+wait 500ms
+do pa approach d1
+do pa learn 900235
+do pa learn 900236
+expect pa spellmod 48827 jumptargets 0 == 9
+expect pa spellmod 48827 damage 100 == 150
+spelllog start
+do pa cast 48827 on d1 triggered
+wait 2s
+spelllog stop
+expect pa spell 48827 maxtargets >= 8
+
+log Protection - 900237 Holy Shield +99 charges, 900238 +50 %
+do pa learn 900237
+do pa learn 900238
+expect pa spellmod 48952 damage 100 == 150
+do pa cast 48952 triggered
+wait 500ms
+expect pa auracharges 48952 >= 100
+
+log Protection - 900239 Avenger's Shield leaves a Consecration
+do pa learn 900239
+do pa reset
+spelllog start
+do pa cast 48827 on d1 triggered
+wait 3s
+spelllog stop
+expect pa spell 48819 hits >= 1
+
+log Protection - 900240 Judgement launches a free Avenger's Shield
+do pa learn 900240
+do pa reset
+do pa cast 21084 triggered
+wait 500ms
+# a Judgement can miss the boss-like dummy: three tries, one hit suffices
+spelllog start
+do pa cast 20271 on d1 triggered
+wait 700ms
+do pa cast 20271 on d1 triggered
+wait 700ms
+do pa cast 20271 on d1 triggered
+wait 2s
+spelllog stop
+expect pa spell 20187 hits >= 1
+expect pa spell 48827 casts >= 1
+
+log Protection - 900241 Judgement cooldown -2 sec
+do pa learn 900241
+expect pa spellmod 20271 cooldown 10000 == 8000
+as gm .unlearn 900235
+as gm .unlearn 900236
+as gm .unlearn 900237
+as gm .unlearn 900238
+as gm .unlearn 900239
+as gm .unlearn 900240
+as gm .unlearn 900241
+
+# ---------------------------------------------------------------- Retribution
+log Retribution - 900269 Judgement cooldown -2 sec
+do pa learn 900269
+expect pa spellmod 20271 cooldown 10000 == 8000
+as gm .unlearn 900269
+
+log Retribution - Divine Storm hits 4 natively; 900270 +6 targets (from the middle: all 8 dummies, none twice)
+# maxtargets counts what one cast selected (the paladin's own self-targeted effects + the
+# dummies, misses included): a dummy can evade for a moment when it drops out of combat
+do pa goto -270 150 -423.2
+do pa reset
+# no miss, no dodge
+as gm .aura 59756
+as gm .aura 62627
+spelllog start
+do pa cast 53385 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 53385 maxtargets == 5
+expect pa spell 53385 hits <= 4
+do pa learn 900270
+spelllog start
+do pa cast 53385 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 53385 maxtargets == 9
+expect pa spell 53385 hits <= 8
+as gm .unaura 59756
+as gm .unaura 62627
+
+log Retribution - 900271 Divine Storm +50 %, 900272 Crusader Strike +50 %
+do pa learn 900271
+do pa learn 900272
+expect pa spellmod 53385 damage 100 == 150
+expect pa spellmod 35395 damage 100 == 150
+
+log Retribution - 900273 Crusader Strike +9 targets (a cleave in front of you)
+do pa learn 900273
+do pa goto -279 150 -423.2
+wait 500ms
+do pa approach d1
+expect pa spellmod 35395 jumptargets 0 == 10
+spelllog start
+do pa cast 35395 on d1 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 35395 maxtargets >= 6
+
+log Retribution - 900274 CS/Judgement/DS stack Exorcism Power, Exorcism eats it (normal casts: triggered ones do not proc)
+do pa learn 900274
+do pa reset
+do pa cast 35395 on d1
+wait 1600ms
+do pa cast 53385
+wait 1600ms
+do pa cast 21084
+wait 1600ms
+do pa cast 20271 on d1
+wait 1600ms
+expect pa aurastacks 900275 >= 3
+do pa cast 48801 on d1
+wait 2500ms
+expect pa noaura 900275
+
+cleanup
+do pa stop
+do pa destroy 36500
+do pa destroy 36458
+do gm target pa
+as gm .unaura 59756
+as gm .unaura 62627
+as gm .unlearn 900200
+as gm .unlearn 900201
+as gm .unlearn 900202
+as gm .unlearn 900203
+as gm .unlearn 900204
+as gm .unlearn 900205
+as gm .unlearn 900206
+as gm .unlearn 900207
+as gm .unlearn 900234
+as gm .unlearn 900235
+as gm .unlearn 900236
+as gm .unlearn 900237
+as gm .unlearn 900238
+as gm .unlearn 900239
+as gm .unlearn 900240
+as gm .unlearn 900241
+as gm .unlearn 900268
+as gm .unlearn 900269
+as gm .unlearn 900270
+as gm .unlearn 900271
+as gm .unlearn 900272
+as gm .unlearn 900273
+as gm .unlearn 900274

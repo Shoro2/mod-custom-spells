@@ -52,12 +52,31 @@
 // linearly with player count.
 extern bool g_CustomSpellsEnabled;
 
+// Area bursts cast AT a unit (Holy Shock Burst 900208, Shadow Eruption 900367,
+// Beast Cleave 900505, Explosive Burst 900567, Poison Nova 900604) must not hit
+// that unit again - it already took the triggering spell. A dest-targeted
+// helper loses its unit target in Spell::InitExplicitTargets, so the anchor
+// travels in this world-thread-local slot for the duration of the (instant,
+// triggered) cast; spell_custom_exclude_anchor_target reads it.
+extern thread_local ObjectGuid g_CustomBurstAnchor;
+// basePoints0 > 0 replaces effect 0's value (a damage share of the hit).
+void CastAnchoredBurst(Unit* caster, Unit* anchor, uint32 spellId,
+    int32 basePoints0 = 0);
+
 enum CustomSpellIds
 {
     // Custom damage spell: Base 666 + 66% AP + 1% per Paragon level
     SPELL_CUSTOM_PARAGON_STRIKE         = 900106,
     // Each cast reduces Bladestorm (46924) cooldown by 0.5s
     SPELL_CUSTOM_BLADESTORM_CD_REDUCE   = 900107,
+
+    // ---- Warrior Fury (900108-900121, manual Spell.dbc rows) ----
+    SPELL_FURY_WW_RESETS_BT_PASSIVE     = 900117,
+    SPELL_FURY_WW_OVERPOWER_PASSIVE     = 900118,
+    SPELL_FURY_WW_BLOODTHIRST_PASSIVE   = 900119,
+    SPELL_FURY_WW_OVERPOWER_STRIKE      = 900120,
+    SPELL_FURY_WW_BLOODTHIRST_STRIKE    = 900121,
+    SPELL_FURY_WW_ANY_STANCE_PASSIVE    = 900133, // DBC only (aura 275)
 
     // ---- Warrior Prot (900168-900199) ----
     SPELL_PROT_REVENGE_DMG_PASSIVE      = 900168,
@@ -113,13 +132,31 @@ enum CustomSpellIds
     SPELL_DKB_HS_AOE_PASSIVE            = 900303,
     SPELL_DKB_DEATHCOIL_PROC_PASSIVE    = 900304,
     SPELL_DKB_HS_AOE_HELPER             = 900305,
+    SPELL_DKB_BLOODWORM_BURST_PASSIVE   = 900306,
+    SPELL_DKB_BLOODWORM_BURST_DAMAGE    = 900307,
+    SPELL_DKB_BLOODWORM_FUSE            = 900308, // on the worm, ends before it
 
     // ---- DK Frost (900333-900365) ----
     SPELL_DKF_FROST_WYRM_PASSIVE        = 900333,
+    SPELL_DKF_OBLITERATE_DMG_PASSIVE    = 900334, // DBC only
+    SPELL_DKF_OBLITERATE_AOE_PASSIVE    = 900335, // DBC only
+    SPELL_DKF_HB_DMG_PASSIVE            = 900336, // DBC only
+    SPELL_DKF_HB_FROST_FEVER_PASSIVE    = 900337,
+    SPELL_DKF_LICHBORNE_LEECH_PASSIVE   = 900338,
+    SPELL_DKF_LICHBORNE_LEECH_AURA      = 900339,
+    SPELL_DKF_FROZEN_STRIKES_PASSIVE    = 900340,
+    SPELL_DKF_FROZEN_STRIKES_AURA       = 900341, // on Improved Icy Talons targets
+    SPELL_DKF_FROZEN_STRIKE_DAMAGE      = 900342,
 
     // ---- DK Unholy (900366-900399) ----
     SPELL_DKU_DOT_AOE_PASSIVE           = 900366,
     SPELL_DKU_SHADOW_AOE_HELPER         = 900367,
+    SPELL_DKU_GHOUL_CLEAVE_PASSIVE      = 900369,
+    SPELL_DKU_GHOUL_CLEAVE_DAMAGE       = 900370,
+    SPELL_DKU_RISEN_ARMY_PASSIVE        = 900371,
+    SPELL_DKU_RISEN_ARMY_SUMMON         = 900372,
+    SPELL_DKU_DND_AROUND_PASSIVE        = 900373,
+    SPELL_DKU_DND_MOBILE_AURA           = 900374,
 
     // ---- Shaman Ele (900400-900432) ----
     SPELL_ELE_CL_AOE_PASSIVE            = 900400,
@@ -131,6 +168,16 @@ enum CustomSpellIds
     SPELL_ELE_LVB_TWO_CHARGES_PASSIVE   = 900406,
     SPELL_ELE_CC_INSTANT_LVB_PASSIVE    = 900407,
     SPELL_ELE_CL_AOE_HELPER             = 900408,
+    SPELL_ELE_CC_INSTANT_LVB_AURA       = 900409, // Lava Burst instant, with Clearcasting
+    SPELL_ELE_LB_DMG_PASSIVE            = 900410, // DBC only
+    SPELL_ELE_LB_AOE_PASSIVE            = 900411, // DBC only
+    SPELL_ELE_CL_DMG_PASSIVE            = 900412, // DBC only
+    SPELL_ELE_LVB_DMG_PASSIVE           = 900413, // DBC only
+    SPELL_ELE_LVB_AOE_PASSIVE           = 900414, // DBC only
+    SPELL_ELE_RESONANCE_PASSIVE         = 900415,
+    SPELL_ELE_RESONANCE_FIRE_BUFF       = 900416, // after Nature damage
+    SPELL_ELE_RESONANCE_NATURE_BUFF     = 900417, // after Fire damage
+    SPELL_ELE_LS_CHAIN_LIGHTNING_PASSIVE = 900418,
 
     // ---- Shaman Enhance (900433-900465) ----
     SPELL_ENH_TOTEM_FOLLOW_PASSIVE      = 900433,
@@ -203,6 +250,12 @@ enum CustomSpellIds
     SPELL_MAGE_ARC_AB_AOE_HELPER       = 900711,
     SPELL_MAGE_ARC_EVOC_BUFF           = 900712,
     SPELL_MAGE_ARC_TARGETED_BLINK      = 900713,
+    SPELL_MAGE_ARC_OVERFLOW_PASSIVE    = 900714,
+    SPELL_MAGE_ARC_MIRROR_SHIELD_PASSIVE = 900715,
+    SPELL_MAGE_ARC_MIRROR_SPLASH_PASSIVE = 900716,
+    SPELL_MAGE_ARC_MIRROR_SPLASH_FROST = 900717,
+    SPELL_MAGE_ARC_OVERFLOW_EXPLOSION  = 900718,
+    SPELL_MAGE_ARC_MIRROR_SPLASH_FIRE  = 900719,
 
     // ---- Mage Fire (900733-900765) ----
     SPELL_MAGE_FIRE_FB_DMG_PASSIVE     = 900733,
@@ -213,6 +266,9 @@ enum CustomSpellIds
     SPELL_MAGE_FIRE_PYRO_HS_PASSIVE    = 900738,
     SPELL_MAGE_FIRE_FB_AOE_HELPER      = 900739,
     SPELL_MAGE_FIRE_PYRO_AOE_HELPER    = 900740,
+    SPELL_MAGE_FIRE_METEOR             = 900741, // active (picker)
+    SPELL_MAGE_FIRE_METEOR_IMPACT      = 900742,
+    SPELL_MAGE_FIRE_METEOR_BURN        = 900743,
 
     // ---- Mage Frost (900766-900799) ----
     SPELL_MAGE_FROST_FB_DMG_PASSIVE    = 900766,
@@ -262,6 +318,7 @@ enum CustomSpellIds
 
     // ---- Priest Holy (900933-900965) ----
     SPELL_PRI_HOLY_HEAL_FIRE           = 900933,
+    SPELL_PRI_HOLY_FIRE_HELPER         = 900934, // Holy Fire without facing
 
     // ---- Priest Shadow (900966-900999) ----
     SPELL_PRI_SHADOW_DOT_AOE           = 900966,
@@ -279,6 +336,7 @@ enum CustomSpellIds
     // ---- Druid Feral Tank (901033-901048) ----
     SPELL_FERAL_BEAR_SWIPE_BLEED        = 901033,
     SPELL_FERAL_BEAR_SWIPE_BLEED_DOT    = 901034,
+    SPELL_FERAL_BEAR_MAUL_BLEED_PASSIVE = 901035,
 
     // ---- Druid Feral DPS (901049-901065) ----
     SPELL_FERAL_CAT_SWIPE_BLEED         = 901049,
@@ -294,6 +352,8 @@ enum CustomSpellIds
     SPELL_DRST_HOT_HASTE_PASSIVE        = 901071,
     SPELL_DRST_MANA_REGEN_PASSIVE       = 901072,
     SPELL_DRST_TREANT_HEAL_HELPER       = 901073,
+    SPELL_DRST_SUMMON_HEALTH_AURA       = 901074, // on summons: +10 health per healing power
+    SPELL_DRST_PARTING_BLOOM_FUSE       = 901075, // on summons: ends just before the despawn
 
     // ---- Non-Class Global (901100-901199) ----
     SPELL_GLOBAL_CAST_WHILE_MOVING     = 901100,
@@ -305,6 +365,10 @@ enum CustomSpellIds
     SPELL_GLOBAL_CLEAVE_HELPER         = 901106,
     SPELL_GLOBAL_COUNTER_HELPER        = 901107,
     SPELL_GLOBAL_EXTRA_ATTACK_HELPER   = 901108,
+    // minion auras kept by custom_minion_aura_playerscript
+    SPELL_GLOBAL_MINION_DAMAGE         = 901109, // +50 % damage done
+    SPELL_GLOBAL_MINION_HASTE          = 901110, // +50 % melee haste
+    SPELL_GLOBAL_EMPOWERED             = 901111, // DBC only: +5 % damage done
 };
 
 // ---- DK constants ----
@@ -314,12 +378,18 @@ constexpr uint32 SPELL_DK_DEATH_COIL_DMG    = 47632; // Death Coil damage effect
 constexpr uint32 SPELL_DK_RAISE_DEAD        = 46584;
 constexpr uint32 NPC_DK_RUNE_WEAPON         = 27893;
 constexpr uint32 NPC_DK_GHOUL               = 26125;
+constexpr uint32 NPC_DK_ARMY_GHOUL          = 24207; // Army of the Dead ghoul
+constexpr uint32 NPC_DK_BLOODWORM           = 28017;
+constexpr uint32 SPELL_DK_FROST_FEVER       = 55095;
+constexpr uint32 SPELL_DK_DND_DAMAGE        = 52212; // Death and Decay tick
+constexpr uint32 SPELL_DK_LICHBORNE         = 49039;
+constexpr uint32 SPELL_DK_DND_VISUAL        = 49938; // DnD rank 4: ground visual
 constexpr uint32 NPC_DK_FROST_WYRM          = 900333; // Custom Frost Wyrm creature
 constexpr uint32 SPELL_FROST_BREATH         = 900368; // Frost Wyrm cone breath
 
 // ---- Shaman constants ----
 constexpr uint32 SPELL_CHAIN_LIGHTNING_R4   = 49271;  // Highest rank CL
-constexpr uint32 SPELL_LAVA_BURST_R2        = 51505;  // Highest rank LvB
+constexpr uint32 SPELL_LAVA_BURST_R1        = 51505;  // LvB rank 1 (rank 2: 60043)
 constexpr uint32 SPELL_FLAME_SHOCK_R9       = 49233;  // Highest rank Flame Shock
 constexpr uint32 SPELL_ELEMENTAL_FOCUS      = 16164;  // Clearcasting buff
 constexpr uint32 SPELL_OVERLOAD_LB          = 45284;  // Lightning Overload (LB)
@@ -332,6 +402,7 @@ constexpr uint32 SPELL_FERAL_SPIRIT         = 51533;  // Summon Spirit Wolves
 constexpr uint32 NPC_SPIRIT_WOLF            = 29264;  // Spirit Wolf NPC
 constexpr uint32 NPC_CUSTOM_WOLF            = 900436; // Custom summoned wolf
 constexpr uint32 SPELL_CL_R6               = 49271;  // Chain Lightning rank 6
+constexpr uint32 SPELL_CHAIN_LIGHTNING_R1   = 421;    // first rank of the chain
 // Flame Shock SpellFamilyFlags[0] = 0x10000000, SpellFamilyName = 11
 
 // ---- Rogue constants ----
@@ -339,6 +410,7 @@ constexpr uint32 SPELL_MUTILATE_R5         = 48666;  // Mutilate highest rank
 constexpr uint32 SPELL_SINISTER_STRIKE_R12 = 48638;  // Sinister Strike highest rank
 constexpr uint32 SPELL_HEMORRHAGE_R4       = 48660;  // Hemorrhage highest rank
 constexpr uint32 SPELL_BLADE_FLURRY        = 13877;  // Blade Flurry
+constexpr uint32 BLADE_FLURRY_EXTRA_TARGETS = 8;     // +9 with the core's own
 constexpr uint32 SPELLFAMILY_ROGUE_ID      = 8;
 // Mutilate SpellFamilyFlags[1] = 0x200000 (verify!)
 // Sinister Strike SpellFamilyFlags[0] = 0x2 (verify!)
@@ -352,6 +424,7 @@ constexpr uint32 SPELL_SWIPE_BEAR_R6       = 48562;  // Swipe (Bear) highest ran
 constexpr uint32 SPELL_SWIPE_CAT           = 62078;  // Swipe (Cat)
 constexpr uint32 SPELL_THORNS_R8           = 53307;  // Thorns highest rank
 constexpr uint32 SPELL_REJUV_R15           = 48441;  // Rejuvenation highest rank
+constexpr uint32 SPELLFAMILYFLAG_THORNS    = 0x100;  // Thorns, druid flags0
 constexpr uint32 SPELL_FORCE_OF_NATURE     = 33831;  // Force of Nature (summon treants)
 constexpr uint32 NPC_TREANT_ENTRY           = 1964;   // Treant NPC entry (avoids PetDefines.h conflict)
 constexpr uint32 NPC_CUSTOM_TREANT         = 901066; // Custom Treant NPC entry
@@ -375,6 +448,7 @@ constexpr float  CUSTOM_PARAGON_BONUS = 0.01f;    // +1% damage per Paragon leve
 
 // ---- Bladestorm CD Reduction constants ----
 constexpr uint32 SPELL_BLADESTORM     = 46924;
+constexpr uint32 SPELL_BLOODTHIRST    = 23881;
 constexpr int32  BLADESTORM_CD_REDUCE_MS = -500;  // -0.5 seconds (in ms)
 
 // ---- Warrior Prot constants ----
@@ -389,16 +463,17 @@ constexpr uint8  DEVASTATE_LIGHTNING_STACKS    = 5;
 // ---- Paladin Holy constants ----
 // Holy Shock base spell (dummy → routes to dmg/heal)
 constexpr uint32 SPELL_HOLY_SHOCK           = 20473;
-// Holy Shock damage spell (highest rank: 48824, R1: 25912)
-constexpr uint32 SPELL_HOLY_SHOCK_DMG_R7    = 48824;
-// Holy Shock heal spell (highest rank: 48825, R1: 25914)
-constexpr uint32 SPELL_HOLY_SHOCK_HEAL_R7   = 48825;
+// Holy Shock damage / heal spells, first ranks (R7: 48823 / 48821). The cast
+// spell (20473 .. 48825) is only a dummy that routes to these by rank.
+constexpr uint32 SPELL_HOLY_SHOCK_DMG_R1    = 25912;
+constexpr uint32 SPELL_HOLY_SHOCK_HEAL_R1   = 25914;
 // Consecration highest rank
 constexpr uint32 SPELL_CONSECRATION_R8      = 48819;
 // Avenger's Shield highest rank
 constexpr uint32 SPELL_AVENGERS_SHIELD_R3   = 48827;
-// Judgement damage spell (always triggered by all Judgement types)
-constexpr uint32 SPELL_JUDGEMENT_DAMAGE     = 54158;
+// Every Judgement damage spell (54158, Righteousness 20187, Vengeance 31804,
+// Corruption 53733 ...) carries this paladin family flag in word 0
+constexpr uint32 SPELLFAMILYFLAG_JUDGEMENT  = 0x800000;
 // Divine Storm
 constexpr uint32 SPELL_DIVINE_STORM        = 53385;
 constexpr uint32 SPELL_MAGE_BLINK          = 1953;
@@ -416,11 +491,17 @@ constexpr uint32 SPELL_EVOCATION               = 12051;  // Evocation
 constexpr uint32 SPELL_MANA_SHIELD_R9          = 43020;  // Mana Shield highest rank
 constexpr uint32 SPELL_BLINK                   = 1953;   // Blink
 constexpr uint32 SPELLFAMILY_MAGE_ID           = 3;
+constexpr uint32 SPELL_MAGE_MIRROR_IMAGE_ONE   = 58831;  // summons one image (31216)
+constexpr uint32 SPELL_MIRROR_IMAGE_FROSTBOLT  = 59638;
+constexpr uint32 SPELL_MIRROR_IMAGE_FIRE_BLAST = 59637;
+constexpr uint32 NPC_MAGE_MIRROR_IMAGE         = 31216;
+constexpr uint32 MAGE_OVERFLOW_MANA            = 10000;  // mana spent per explosion
 // Arcane Barrage SpellFamilyFlags[1] = 0x1000000 (verify!)
 // Arcane Blast SpellFamilyFlags[0] = 0x20000000 (verify!)
 constexpr uint32 SPELL_FIREBALL_R16        = 42833;  // Fireball highest rank
 constexpr uint32 SPELL_PYROBLAST_R12       = 42891;  // Pyroblast highest rank
 constexpr uint32 SPELL_FIRE_BLAST_R11      = 42873;  // Fire Blast highest rank
+constexpr uint32 SPELL_FIRE_BLAST_R1       = 2136;   // first rank of the chain
 constexpr uint32 SPELL_HOT_STREAK          = 48108;  // Hot Streak buff
 // Fireball SpellFamilyFlags[0] = 0x1 (verify!)
 // Pyroblast SpellFamilyFlags[0] = 0x400000 (verify!)
@@ -457,6 +538,7 @@ constexpr uint32 SPELL_CHAOS_BOLT_R4       = 59172;  // Chaos Bolt highest rank
 // ---- Priest constants ----
 constexpr uint32 SPELL_PW_SHIELD_R14       = 48066;  // Power Word: Shield highest rank
 constexpr uint32 SPELL_WEAKENED_SOUL       = 6788;   // Weakened Soul debuff
+constexpr int32  WEAKENED_SOUL_SHORT_MS    = 5000;   // 900902: 5 sec
 constexpr uint32 SPELL_HOLY_FIRE_R11       = 48135;  // Holy Fire highest rank
 constexpr uint32 SPELLFAMILY_PRIEST_ID     = 6;
 // PW:Shield SpellFamilyFlags[0] = 0x1 (verify!)

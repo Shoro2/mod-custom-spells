@@ -61,18 +61,20 @@ class spell_custom_pri_shield_explode : public AuraScript
             removeMode != AURA_REMOVE_BY_DEFAULT)
             return;
 
-        // Calculate explosion damage based on the original absorb amount
-        // aurEff->GetAmount() = remaining absorb; GetBaseAmount() = original
-        int32 originalAbsorb = aurEff->GetBaseAmount();
+        // The shield's full absorb as cast: CalculateAmount runs the core's
+        // Power Word: Shield bonuses (spell power, talents, 900901). The base
+        // amount left all of them out (a broken shield exploded for 2229
+        // where it had absorbed 3345, bot run 411).
+        int32 originalAbsorb = GetAura()->GetEffect(EFFECT_0)->CalculateAmount(caster);
         int32 remainingAbsorb = aurEff->GetAmount();
 
         // Use the absorbed amount (original - remaining) if shield was broken,
         // or the original amount if it expired with absorb remaining
         int32 explosionDamage;
         if (removeMode == AURA_REMOVE_BY_ENEMY_SPELL)
-            explosionDamage = originalAbsorb; // fully consumed â†’ full damage
+            explosionDamage = originalAbsorb; // fully consumed -> full damage
         else
-            explosionDamage = std::max(originalAbsorb / 2, remainingAbsorb); // expired â†’ at least 50%
+            explosionDamage = std::max(originalAbsorb / 2, remainingAbsorb); // expired -> at least 50%
 
         if (explosionDamage <= 0)
             return;
@@ -105,44 +107,38 @@ class spell_custom_pri_shield_explode : public AuraScript
 };
 
 // ============================================================
-//  900902: Weakened Soul cooldown reduction
-//  Hooked on Power Word: Shield (all ranks via -17). After cast,
-//  if the player has passive 900902, halve the remaining duration
-//  of the Weakened Soul debuff (6788) so they can re-shield sooner.
+//  900902: Weakened Soul lasts only 5 sec
+//  Concept: "weakened soul only 5 sec cd". AuraScript on Weakened
+//  Soul (6788) itself: whoever's Power Word: Shield put it on
+//  whichever unit, when its caster has the passive it lasts 5 sec.
+//  (The old hook halved the CASTER's own Weakened Soul after the
+//  cast - a shield on anyone else kept the full 15 sec.)
 // ============================================================
-class spell_custom_pri_weakened_soul_cd : public SpellScript
+class spell_custom_pri_weakened_soul_cd : public AuraScript
 {
-    PrepareSpellScript(spell_custom_pri_weakened_soul_cd);
+    PrepareAuraScript(spell_custom_pri_weakened_soul_cd);
 
-    void HandleAfterCast()
+    void HandleApply(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
     {
         Unit* caster = GetCaster();
-        if (!caster)
+        if (!caster || !g_CustomSpellsEnabled
+            || !caster->HasAura(SPELL_PRI_DISC_WEAKENED_SOUL_CD))
             return;
 
-        Player* player = caster->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_PRI_DISC_WEAKENED_SOUL_CD))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // Power Word: Shield applies Weakened Soul to the caster; shorten it
-        // so the next shield comes off cooldown sooner.
-        if (Aura* ws = player->GetAura(SPELL_WEAKENED_SOUL))
+        Aura* weakenedSoul = GetAura();
+        if (weakenedSoul->GetMaxDuration() > WEAKENED_SOUL_SHORT_MS)
         {
-            int32 dur = ws->GetDuration();
-            if (dur > 0)
-                ws->SetDuration(dur / 2);
+            weakenedSoul->SetMaxDuration(WEAKENED_SOUL_SHORT_MS);
+            weakenedSoul->SetDuration(WEAKENED_SOUL_SHORT_MS);
         }
     }
 
     void Register() override
     {
-        AfterCast += SpellCastFn(spell_custom_pri_weakened_soul_cd::HandleAfterCast);
+        AfterEffectApply += AuraEffectApplyFn(
+            spell_custom_pri_weakened_soul_cd::HandleApply, EFFECT_0,
+            SPELL_AURA_MECHANIC_IMMUNITY, AURA_EFFECT_HANDLE_REAL);
     }
 };
 
@@ -216,7 +212,9 @@ class spell_custom_pri_heal_fire : public AuraScript
             if (!enemy->IsAlive() || !player->IsValidAttackTarget(enemy))
                 continue;
 
-            player->CastSpell(enemy, SPELL_HOLY_FIRE_R11, true);
+            // 900934 = Holy Fire without its facing rule and range, so
+            // enemies behind the priest are reached too (bot run 411)
+            player->CastSpell(enemy, SPELL_PRI_HOLY_FIRE_HELPER, true);
         }
     }
 
@@ -265,7 +263,7 @@ class spell_custom_pri_dot_aoe : public AuraScript
             return;
 
         // Cast Shadow AoE centered on the DoT target
-        player->CastSpell(target, SPELL_PRI_SHADOW_AOE_HELPER, true);
+        CastAnchoredBurst(player, target, SPELL_PRI_SHADOW_AOE_HELPER);
     }
 
     void Register() override

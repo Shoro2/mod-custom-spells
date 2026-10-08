@@ -1,0 +1,390 @@
+# mod-custom-spells: the Shaman custom class spells (the /spells picker) on a
+# bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md), so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150); the floor at z -423.2 is flat
+# well beyond the ring (totem-follow moves). Slot 4 belongs to the cs_*
+# scenarios; the cleanup unlearns every custom spell again.
+# Spells: Chain Lightning 49271 (rank 8), Lava Burst 60043 (rank 2; rank 1
+# 51505 shares its category cooldown), Flame Shock 49233, Lightning Overload
+# 30679 (talent), Clearcasting 16246 (Elemental Focus buff), Fire Elemental
+# Totem 2894 (totem 15439 summons Greater Fire Elemental 15438), Searing Totem
+# 58704 (totem 31165, attack 58702), Strength of Earth Totem 58643 (totem
+# 31129), Totemic Recall 36936, Feral Spirit 51533 (talent, two Spirit Wolves
+# 29264), Maelstrom Weapon buff 53817, Heroism 32182 (+30 % haste), Speed
+# 53908 (Potion of Speed: +500 haste rating), totem
+# tools 5175-5178. Buffs for the mana check: Mark of the Wild 48469, Blessing
+# of Wisdom 48936.
+# Normal casts (not triggered) where a proc or a cooldown is checked.
+name    Custom spells - Shaman
+timeout 300s
+
+bot sh shaman slot=4
+
+place 13 -279 150 -423.2 0
+require sh alive
+pick d1 creature:920018 near sh
+require d1 exists
+do gm target sh
+as gm .unlearn 900400
+as gm .unlearn 900401
+as gm .unlearn 900402
+as gm .unlearn 900403
+as gm .unlearn 900404
+as gm .unlearn 900405
+as gm .unlearn 900406
+as gm .unlearn 900407
+as gm .unlearn 900433
+as gm .unlearn 900434
+as gm .unlearn 900435
+as gm .unlearn 900436
+as gm .unlearn 900437
+as gm .unlearn 900438
+as gm .unlearn 900466
+as gm .unlearn 900467
+as gm .unlearn 900410
+as gm .unlearn 900411
+as gm .unlearn 900412
+as gm .unlearn 900413
+as gm .unlearn 900414
+as gm .unlearn 900415
+as gm .unlearn 900418
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+do sh learn 49271
+do sh learn 60043
+do sh learn 49233
+do sh learn 30679
+do sh learn 51533
+do sh learn 2894
+do sh learn 58704
+do sh learn 58643
+do sh learn 36936
+do sh destroy 5175
+do sh destroy 5176
+do sh destroy 5177
+do sh destroy 5178
+as gm .additem 5175
+as gm .additem 5176
+as gm .additem 5177
+as gm .additem 5178
+do sh cast 36936 triggered
+do sh approach d1
+wait 1s
+
+# ---------------------------------------------------------------- Elemental
+log Elemental - 900400 Chain Lightning +6 targets and no damage loss per jump (natively 3 targets, each jump 70 %; 8 dummies, one miss allowed)
+do sh learn 900400
+expect sh spellmod 49271 jumptargets 0 == 6
+expect sh spellmod 49271 damagemult 70 >= 99
+spelllog start
+do sh cast 49271 on d1 triggered
+wait 1500ms
+spelllog stop
+expect sh spell 49271 maxtargets >= 7
+as gm .unlearn 900400
+
+log Elemental - 900403 with Lightning Overload, Lava Burst overloads (a 2nd Lava Burst at half damage, twice the talent chance): 10 casts give more than 10 - statistical
+do sh learn 900403
+spelllog start
+do sh cast 60043 on d1 triggered
+do sh cast 60043 on d1 triggered
+do sh cast 60043 on d1 triggered
+do sh cast 60043 on d1 triggered
+do sh cast 60043 on d1 triggered
+do sh cast 60043 on d1 triggered
+do sh cast 60043 on d1 triggered
+do sh cast 60043 on d1 triggered
+do sh cast 60043 on d1 triggered
+do sh cast 60043 on d1 triggered
+wait 1500ms
+spelllog stop
+expect sh spell 60043 casts >= 11
+as gm .unlearn 900403
+
+log Elemental - 900404 Lava Burst on a target with your Flame Shock spreads Flame Shock to up to 5 nearby enemies (1 + 5 casts); a second Lava Burst covers a resisted first one (enemies that have Flame Shock are skipped)
+do sh learn 900404
+spelllog start
+do sh cast 49233 on d1 triggered
+wait 300ms
+do sh cast 60043 on d1 triggered
+wait 300ms
+do sh cast 60043 on d1 triggered
+wait 1500ms
+spelllog stop
+expect sh spell 49233 casts >= 6
+expect sh spell 49233 targets >= 5
+
+log Elemental - 900406 Lava Burst holds two charges: two normal casts back to back, the third waits for the cooldown (baseline: one cast puts it on its 8-s cooldown)
+as gm .unlearn 900404
+do sh reset
+do sh cast 60043 on d1
+wait 2300ms
+expect sh cooldown 60043 > 5000
+do sh reset
+do sh learn 900406
+do sh cast 60043 on d1
+wait 2300ms
+expect sh cooldown 60043 == 0
+do sh cast 60043 on d1
+wait 2300ms
+expect sh cooldown 60043 > 5000
+as gm .unlearn 900406
+
+log Elemental - 900405 Flame Shock ticks have a 15 % chance (2 s ICD) to reset the Lava Burst cooldown (8 s natively) - statistical, 6 Flame Shocks ticking; no other Lava Burst passive is up
+do sh reset
+do sh learn 900404
+do sh learn 900405
+do sh cast 49233 on d1 triggered
+wait 300ms
+do sh cast 60043 on d1 triggered
+wait 300ms
+as gm .unlearn 900404
+expect sh noaura 900406
+expect sh noaura 900403
+do sh cast 60043 on d1
+wait 2300ms
+waitfor sh cooldown 60043 == 0 timeout 7500ms
+as gm .unlearn 900405
+
+log Elemental - 900407 CONCEPT: Lava Burst is instant only while Clearcasting (16246) is up
+do sh learn 900407
+expect sh spellmod 60043 casttime 2000 == 2000
+as gm .aura 16246
+waitfor sh aura 16246 timeout 2s
+expect sh spellmod 60043 casttime 2000 == 0
+as gm .unaura 16246
+as gm .unlearn 900407
+
+log Elemental - 900402 the Fire Elemental (15438) looks like Ragnaros and has twice its health (baseline first, without the passive: 8000 in run 378)
+do sh reset
+do sh cast 2894 triggered
+wait 2s
+pick fe creature:15438 near sh
+expect fe alive
+expect fe maxhealth > 0
+do sh cast 36936 triggered
+wait 1s
+expect fe missing
+do sh learn 900402
+do sh cast 2894 triggered
+wait 2s
+pick fe2 creature:15438 near sh
+expect fe2 maxhealth >= 16000
+do sh cast 36936 triggered
+wait 500ms
+as gm .unlearn 900402
+
+log Totems - baseline: a totem stays where it was dropped (Strength of Earth Totem)
+do sh cast 58643 triggered
+wait 1s
+pick tot creature:31129 near sh
+require tot exists
+track tot
+mark m0
+do sh goto -279 170 -423.2
+wait 3s
+expect tot at m0 2
+
+log Elemental - 900401 totems follow you (20 yd away, 3.5 s)
+do sh learn 900401
+do sh goto -299 170 -423.2
+wait 3500ms
+expect tot near -299 170 -423.2 8
+as gm .unlearn 900401
+
+log Enhancement - 900433 totems follow you
+do sh learn 900433
+do sh goto -299 150 -423.2
+wait 3500ms
+expect tot near -299 150 -423.2 8
+as gm .unlearn 900433
+
+log Restoration - 900466 totems follow you
+do sh learn 900466
+do sh goto -279 130 -423.2
+wait 3500ms
+expect tot near -279 130 -423.2 8
+as gm .unlearn 900466
+do sh cast 36936 triggered
+
+# ---------------------------------------------------------------- Enhancement
+log Enhancement - baseline for 900437 and 900435: two Spirit Wolves (Feral Spirit) attack the dummy for 10 s, the bot under Heroism (+30 % haste) and not attacking (spell 0 = the wolves' swings)
+do sh goto -279 150 -423.2
+wait 500ms
+do sh approach d1
+as gm .aura 32182
+do sh cast 51533 triggered
+wait 500ms
+do sh attack d1
+wait 1500ms
+do sh stop
+expect sh minions 29264 == 2
+spelllog start
+wait 10s
+spelllog stop
+
+log Enhancement - 900435 summons deal +50 % damage, in the combat log too: the two Spirit Wolves carry the damage aura (901109) and their melee over 20 s with the passive (~25 hits) reaches 6600 - natively 190-237 a hit (10-s baseline windows of runs 378-399, at most ~5900 for 25), 290-330 with it
+do sh learn 900435
+wait 1500ms
+pick w1 creature:29264 near sh
+expect w1 aura 901109
+spelllog start
+wait 20s
+spelllog stop
+expect sh spell 0 damage >= 6600
+as gm .unlearn 900435
+wait 1500ms
+
+log Enhancement - 900435 the Searing Totem: 4 hits (58702: 90-120 natively, 135-180 with +50 %) without and with the passive; a totem shoots what its owner attacks
+do sh cast 58704 triggered
+do sh attack d1
+spelllog start
+waitfor sh spell 58702 hits >= 4 timeout 20s
+spelllog stop
+do sh learn 900435
+wait 1500ms
+spelllog start
+waitfor sh spell 58702 hits >= 4 timeout 20s
+spelllog stop
+do sh stop
+expect sh spell 58702 damage >= 540
+
+log Enhancement - 900435 the Greater Fire Elemental (15438, summoned by its totem) carries the +50 % damage aura (901109) as well
+do sh cast 2894 triggered
+wait 2500ms
+pick fe3 creature:15438 near sh
+expect fe3 aura 901109
+as gm .unlearn 900435
+do sh cast 36936 triggered
+waitfor sh minions 29264 == 0 timeout 30s
+
+log Enhancement - 900437 Spirit Wolves get your haste: 10 s of swings with Heroism (+30 %) and Speed (+500 haste rating, about +15 %) on the shaman - natively 2 wolves x 10 s / 1.5 s = ~14 (baseline window), about 20 with the passive
+as gm .unaura 32182
+as gm .aura 32182
+as gm .aura 53908
+wait 500ms
+do sh learn 900437
+do sh cast 51533 triggered
+wait 500ms
+do sh attack d1
+wait 1500ms
+do sh stop
+expect sh minions 29264 == 2
+spelllog start
+wait 10s
+spelllog stop
+expect sh spell 0 casts >= 18
+
+log Enhancement - 900434 at 5 Maelstrom Weapon stacks your summons deal AoE damage on their attacks for 5 sec: 2 hasted wolves swing ~8 times in 5 s, so at least 4 Spirit Howls (900440), not one burst per summon
+do sh learn 900434
+spelllog start
+do sh cast 53817 triggered
+do sh cast 53817 triggered
+do sh cast 53817 triggered
+do sh cast 53817 triggered
+do sh cast 53817 triggered
+wait 300ms
+expect sh aurastacks 53817 == 5
+expect sh aura 900439
+wait 5s
+spelllog stop
+expect sh spell 900440 hits >= 1
+expect sh spell 900440 casts >= 4
+as gm .unlearn 900434
+
+log Enhancement - 900438 Spirit Wolves have a 5 % chance on hit to cast Chain Lightning - statistical: a fresh pair (a new Feral Spirit replaces the old one), Speed again for faster swings (about 2 hits a second), up to 40 s
+as gm .unaura 53908
+as gm .aura 53908
+wait 500ms
+do sh learn 900438
+do sh cast 51533 triggered
+wait 500ms
+do sh attack d1
+wait 1s
+do sh stop
+spelllog start
+waitfor sh spell 49271 casts >= 1 timeout 40s
+spelllog stop
+as gm .unlearn 900438
+as gm .unlearn 900437
+
+# ---------------------------------------------------------------- Restoration
+log Restoration - 900467 CONCEPT: mana regeneration +2 % per 1 % missing mana - mana regained in 10 s from 660 of 6591 (10 %), without and then with the passive (Mark of the Wild + Blessing of Wisdom, no casts): about 262 natively (run 378), so at least 660 + 2 x 262 = 1184 with it (x2.8 at 10 %)
+as gm .aura 48469
+as gm .aura 48936
+as gm .modify mana 660
+as gm .unaura 48469
+as gm .aura 48469
+expect sh power mana <= 700
+wait 10s
+expect sh power mana > 660
+do sh learn 900467
+wait 1s
+as gm .modify mana 660
+as gm .unaura 48469
+as gm .aura 48469
+wait 10s
+expect sh power mana >= 1184
+as gm .unlearn 900467
+
+# ---------------------------------------------------------------- Enhancement
+log Enhancement - 900436 auto attacks have a 10 % chance (5 s ICD) to summon a wolf (900436) for 15 s - statistical, auto attack up to 60 s under Heroism
+as gm .unaura 32182
+as gm .aura 32182
+do sh learn 900436
+do sh attack d1
+waitfor sh minions 900436 >= 1 timeout 60s
+do sh stop
+pick wo creature:900436 near sh
+require wo exists
+do gm target wo
+as gm .die
+do gm target sh
+wait 500ms
+expect sh minions 900436 == 0
+
+cleanup
+do sh stop
+do sh cast 36936 triggered
+do sh destroy 5175
+do sh destroy 5176
+do sh destroy 5177
+do sh destroy 5178
+do gm target sh
+as gm .unaura 32182
+as gm .unaura 48469
+as gm .unaura 48936
+as gm .unaura 16246
+as gm .unaura 53908
+as gm .unlearn 900400
+as gm .unlearn 900401
+as gm .unlearn 900402
+as gm .unlearn 900403
+as gm .unlearn 900404
+as gm .unlearn 900405
+as gm .unlearn 900406
+as gm .unlearn 900407
+as gm .unlearn 900433
+as gm .unlearn 900434
+as gm .unlearn 900435
+as gm .unlearn 900436
+as gm .unlearn 900437
+as gm .unlearn 900438
+as gm .unlearn 900466
+as gm .unlearn 900467
+as gm .unlearn 900410
+as gm .unlearn 900411
+as gm .unlearn 900412
+as gm .unlearn 900413
+as gm .unlearn 900414
+as gm .unlearn 900415
+as gm .unlearn 900418
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111

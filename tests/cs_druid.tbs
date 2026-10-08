@@ -1,0 +1,367 @@
+# mod-custom-spells: the Druid custom class spells (the /spells picker) on a
+# bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md), so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150). Melee chains only jump to
+# units in front of the caster, so chain checks stand west of the ring facing
+# it; self-centred AoEs stand in its middle. Slot 4 belongs to the cs_*
+# scenarios; the cleanup unlearns every custom spell again.
+# Spells: Moonfire 48463 (rank 14: direct part + ticks), Starfall 53201 (rank
+# 4, talent, 90-s cooldown; every second 53198 picks 2 enemies, each takes a
+# star 53195 and its splash 53190), Swipe (Bear) 48562, Swipe (Cat) 62078,
+# Dire Bear Form 9634, Cat Form 768, Thorns 53307, Rejuvenation 48441,
+# Regrowth 48443, Lifebloom 48451, Wild Growth 53251 (talent), Force of
+# Nature 33831 (talent, three Treants 1964), Flask of the Frost Wyrm 53755
+# (+125 spell power), Mark of the Wild 48469, Blessing of Wisdom 48936.
+# Normal casts (not triggered) where a proc or a cooldown is checked.
+name    Custom spells - Druid
+timeout 300s
+
+bot dr druid slot=4
+
+place 13 -279 150 -423.2 0
+require dr alive
+pick d1 creature:920018 near dr
+require d1 exists
+do gm target dr
+as gm .unlearn 901000
+as gm .unlearn 901001
+as gm .unlearn 901002
+as gm .unlearn 901003
+as gm .unlearn 901004
+as gm .unlearn 901005
+as gm .unlearn 901033
+as gm .unlearn 901049
+as gm .unlearn 901051
+as gm .unlearn 901066
+as gm .unlearn 901067
+as gm .unlearn 901068
+as gm .unlearn 901069
+as gm .unlearn 901070
+as gm .unlearn 901071
+as gm .unlearn 901072
+as gm .unlearn 901035
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+do dr learn 48463
+do dr learn 53201
+do dr learn 48562
+do dr learn 62078
+do dr learn 9634
+do dr learn 768
+do dr learn 53307
+do dr learn 48441
+do dr learn 48443
+do dr learn 48451
+do dr learn 53251
+do dr learn 33831
+do dr approach d1
+wait 1s
+
+# ---------------------------------------------------------------- Balance
+log Balance - 901001 Moonfire +50 % on both parts: the direct hit ('damage', op 0) and the ticks ('dot', op 22)
+do dr learn 901001
+expect dr spellmod 48463 damage 100 == 150
+expect dr spellmod 48463 dot 100 == 150
+as gm .unlearn 901001
+
+log Balance - 901000 Moonfire +9 targets = 10 targets (jump targets 0 -> 10, wave F); 8 dummies, one miss allowed
+do dr learn 901000
+expect dr spellmod 48463 jumptargets 0 == 10
+spelllog start
+do dr cast 48463 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dr spell 48463 maxtargets >= 7
+as gm .unlearn 901000
+
+log Balance - 901003 Starfall +50 %: its stars (53195) and their splash (53190)
+do dr learn 901003
+expect dr spellmod 53195 damage 100 == 150
+expect dr spellmod 53190 damage 100 == 150
+as gm .unlearn 901003
+
+log Balance - 901002 Starfall +9 targets = 10 targets (jump targets 0 -> 10, wave F): natively a volley a second hits 2 enemies; with the passive two volleys reach all 8 dummies (one miss allowed)
+do dr learn 901002
+expect dr spellmod 53201 jumptargets 0 == 10
+spelllog start
+do dr cast 53201 triggered
+wait 2200ms
+spelllog stop
+expect dr spell 53195 targets >= 7
+as gm .unaura 53201
+as gm .unlearn 901002
+
+log Balance - 901005 Starfall stacks up to 10: a second Starfall adds a stack
+do dr learn 901005
+do dr cast 53201 triggered
+wait 300ms
+do dr cast 53201 triggered
+wait 300ms
+expect dr aurastacks 53201 >= 2
+as gm .unaura 53201
+as gm .unlearn 901005
+
+log Balance - 901004 dealing spell damage takes 1 s off Starfall's cooldown (1 s ICD): a normal Starfall (90 s), then 4 normal Moonfires; natively 83 s are left after 6.9 s
+do dr reset
+do dr learn 901004
+do dr cast 53201
+wait 1600ms
+do dr cast 48463 on d1
+wait 1600ms
+do dr cast 48463 on d1
+wait 1600ms
+do dr cast 48463 on d1
+wait 1600ms
+do dr cast 48463 on d1
+wait 500ms
+expect dr cooldown 53201 < 81000
+as gm .unaura 53201
+as gm .unlearn 901004
+
+# ---------------------------------------------------------------- Feral
+log Feral - 901033 Swipe (Bear) applies a bleed (901034) to every enemy it hits (Dire Bear Form, from the ring's middle)
+do dr learn 901033
+do dr goto -270 150 -423.2
+wait 500ms
+do dr cast 9634 triggered
+wait 500ms
+spelllog start
+do dr cast 48562 triggered
+wait 3500ms
+spelllog stop
+expect dr spell 48562 maxtargets >= 6
+expect dr spell 901034 targets >= 6
+as gm .unaura 9634
+as gm .unlearn 901033
+
+log Feral - 901049 Swipe (Cat) applies a bleed (901050) to every enemy it hits (Cat Form; a melee chain in front of you, from the west)
+do dr learn 901049
+do dr goto -279 150 -423.2
+wait 500ms
+do dr approach d1
+do dr cast 768 triggered
+wait 500ms
+spelllog start
+do dr cast 62078 on d1 triggered
+wait 3500ms
+spelllog stop
+expect dr spell 62078 maxtargets >= 6
+expect dr spell 901050 targets >= 6
+as gm .unaura 768
+as gm .unlearn 901049
+
+log Feral - 901051 Energy regeneration +50 % (entering Cat Form empties the bar; after 2 s: 20 natively, 30 with the passive)
+wait 300ms
+do dr cast 768 triggered
+wait 2s
+expect dr power energy <= 24
+as gm .unaura 768
+do dr learn 901051
+wait 300ms
+do dr cast 768 triggered
+wait 2s
+expect dr power energy >= 27
+as gm .unaura 768
+as gm .unlearn 901051
+
+# ---------------------------------------------------------------- Restoration
+log Restoration - 901070 HoTs heal +50 %: the ticks ('dot', op 22) of Rejuvenation, Regrowth, Lifebloom and Wild Growth
+do dr learn 901070
+expect dr spellmod 48441 dot 100 == 150
+expect dr spellmod 48443 dot 100 == 150
+expect dr spellmod 48451 dot 100 == 150
+expect dr spellmod 53251 dot 100 == 150
+as gm .unlearn 901070
+
+log Restoration - 901071 CONCEPT: HoTs tick twice as fast (periodic interval, op 19: 3000 -> 1500 ms) and last twice as long (Rejuvenation 15 -> 30 s)
+do dr learn 901071
+expect dr spellmod 48441 19 3000 == 1500
+expect dr spellmod 48441 duration 15000 == 30000
+as gm .unlearn 901071
+
+log Restoration - setup for the summon passives: Flask of the Frost Wyrm (+125 spell power), three Force of Nature Treants (1964)
+as gm .aura 53755
+wait 500ms
+do dr cast 33831 at d1 triggered
+wait 1s
+expect dr minions 1964 == 3
+pick tr creature:1964 near dr
+require tr exists
+track tr
+
+log Restoration - 901066 HoT ticks have a 5 % chance (5 s ICD) to summon a Healing Treant (901066) - statistical: Lifebloom, Wild Growth, Rejuvenation and Regrowth on the bot and the director (about 5 ticks a second), two rounds
+do dr learn 901066
+as gm .damage 3000
+do gm target gm
+as gm .damage 3000
+do gm target dr
+do dr cast 48451 on dr triggered
+do dr cast 48451 on gm triggered
+do dr cast 53251 on dr triggered
+do dr cast 48441 on dr triggered
+do dr cast 48441 on gm triggered
+do dr cast 48443 on dr triggered
+do dr cast 48443 on gm triggered
+wait 7s
+do dr cast 48451 on dr triggered
+do dr cast 48451 on gm triggered
+do dr cast 53251 on dr triggered
+waitfor dr minions 901066 >= 1 timeout 8s
+as gm .unlearn 901066
+pick ht creature:901066 near dr
+track ht
+
+log Restoration - 901067 summons scale with healing power: a Force of Nature Treant and the Healing Treant gain health once the passive is on
+mark m1
+do dr learn 901067
+wait 4s
+expect tr health > mark:m1
+expect ht health > mark:m1
+
+log Restoration - 901068 a summon heals around it (901073) when it dies ...
+do dr learn 901068
+as gm .damage 2000
+spelllog start
+do gm target tr
+as gm .die
+do gm target dr
+wait 1s
+spelllog stop
+expect dr spell 901073 casts >= 1
+
+log Restoration - 901068 CONCEPT: ... and when it despawns - the other two Treants and the Healing Treant run out (30 s) while the next checks run, inside one spell-log window
+spelllog start
+
+log Restoration - 901069 Thorns gives a chance to cast Rejuvenation on its targets: 20 hits on the druid with its own Thorns - statistical (20 % a hit)
+do dr learn 901069
+as gm .unaura 48441
+do dr cast 53307 on dr triggered
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+expect dr aura 48441
+
+log Restoration - 901069 CONCEPT: the same on another Thorns target - the director with the druid's Thorns takes 20 hits
+do gm target gm
+as gm .unaura 48441
+do dr cast 53307 on gm triggered
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+as gm .damage 10
+expect gm aura 48441
+as gm .unaura 53307
+as gm .unaura 48441
+do gm reset
+do gm target dr
+as gm .unaura 53307
+as gm .unlearn 901069
+
+log Restoration - 901072 CONCEPT: mana regeneration +2 % per 1 % missing mana - mana regained in 10 s from 592 of 5916 (10 %), without and then with the passive (Mark of the Wild + Blessing of Wisdom, no casts, Lifebloom removed unbloomed - its bloom refunds mana): about 265 natively, so at least 592 + 2 x 265 = 1122 with it (x2.8 at 10 %)
+as gm .unaura 48451
+do gm target gm
+as gm .unaura 48451
+do gm target dr
+as gm .aura 48469
+as gm .aura 48936
+as gm .modify mana 592
+as gm .unaura 48469
+as gm .aura 48469
+expect dr power mana <= 650
+wait 10s
+expect dr power mana > 592
+do dr learn 901072
+wait 1s
+as gm .modify mana 592
+as gm .unaura 48469
+as gm .aura 48469
+wait 10s
+expect dr power mana >= 1122
+as gm .unlearn 901072
+
+log Restoration - 901068 CONCEPT (end of the window): a despawning summon heals around it
+waitfor dr minions 1964 == 0 timeout 30s
+waitfor dr minions 901066 == 0 timeout 30s
+wait 1s
+spelllog stop
+expect dr spell 901073 casts >= 1
+
+cleanup
+do dr stop
+do gm target gm
+as gm .unaura 53307
+as gm .unaura 48441
+as gm .unaura 48443
+as gm .unaura 48451
+as gm .unaura 53251
+do gm target dr
+as gm .unaura 768
+as gm .unaura 9634
+as gm .unaura 53201
+as gm .unaura 53307
+as gm .unaura 48441
+as gm .unaura 48443
+as gm .unaura 48451
+as gm .unaura 53251
+as gm .unaura 48469
+as gm .unaura 48936
+as gm .unaura 53755
+as gm .unlearn 901000
+as gm .unlearn 901001
+as gm .unlearn 901002
+as gm .unlearn 901003
+as gm .unlearn 901004
+as gm .unlearn 901005
+as gm .unlearn 901033
+as gm .unlearn 901049
+as gm .unlearn 901051
+as gm .unlearn 901066
+as gm .unlearn 901067
+as gm .unlearn 901068
+as gm .unlearn 901069
+as gm .unlearn 901070
+as gm .unlearn 901071
+as gm .unlearn 901072
+as gm .unlearn 901035
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111

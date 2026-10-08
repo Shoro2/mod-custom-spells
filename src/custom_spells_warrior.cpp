@@ -83,25 +83,11 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
 {
     PrepareAuraScript(spell_custom_bladestorm_cd_reduce);
 
-    bool CheckProc(ProcEventInfo& eventInfo)
+    bool CheckProc(ProcEventInfo& /*eventInfo*/)
     {
-        Player* player = GetTarget()->ToPlayer();
-        if (!player)
-        {
-            LOG_INFO("module", "mod-custom-spells: 900107 CheckProc -> "
-                "NO player, returning false");
-            return false;
-        }
-
-        SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
-        LOG_INFO("module", "mod-custom-spells: 900107 CheckProc -> "
-            "procSpell={}, flags=0x{:X}, hasBladestormCD={}",
-            spellInfo ? spellInfo->Id : 0,
-            eventInfo.GetTypeMask(),
-            player->HasSpellCooldown(SPELL_BLADESTORM) ? "yes" : "no");
-
         // Only proc when Bladestorm is actually on cooldown
-        return player->HasSpellCooldown(SPELL_BLADESTORM);
+        Player* player = GetTarget()->ToPlayer();
+        return player && player->HasSpellCooldown(SPELL_BLADESTORM);
     }
 
     void HandleProc(ProcEventInfo& /*eventInfo*/)
@@ -119,10 +105,6 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
         if (!g_CustomSpellsEnabled)
             return;
 
-        LOG_INFO("module", "mod-custom-spells: 900107 HandleProc -> "
-            "Player {} reducing Bladestorm CD by {}ms",
-            player->GetName(), -BLADESTORM_CD_REDUCE_MS);
-
         player->ModifySpellCooldown(SPELL_BLADESTORM, BLADESTORM_CD_REDUCE_MS);
     }
 
@@ -135,10 +117,65 @@ class spell_custom_bladestorm_cd_reduce : public AuraScript
     }
 };
 
-// NOTE: Warrior Fury spells (900108-900121) are defined purely in
-// Spell.dbc (manually created). No C++ scripts needed â€” all effects
-// are handled via DBC passive auras, proc triggers, and spell_proc.
-// The old 900138-900145 C++ implementations have been removed.
+// ============================================================
+//  SPELLS 900117 / 900118 / 900119: Whirlwind combos (SpellScript)
+//  Hooked on Whirlwind (1680). The three Fury passives are dummy
+//  auras of the manually made Spell.dbc block 900108-900121; this
+//  script is their only consumer:
+//  - 900117 Speedy Bloodthirst: Whirlwind resets Bloodthirst.
+//  - 900118 Whirlwind: Overpower: a Whirlwind that hits exactly one
+//    enemy casts a free Overpower (900120) at it.
+//  - 900119 Whirlwind: Bloodthirst: likewise a free Bloodthirst
+//    (900121).
+//  The other Fury passives work through their own Spell.dbc data
+//  (spell modifiers, 900114/900116 proc triggers, spell_proc).
+// ============================================================
+class spell_custom_warr_whirlwind_combo : public SpellScript
+{
+    PrepareSpellScript(spell_custom_warr_whirlwind_combo);
+
+    ObjectGuid _singleTarget;
+    uint32 _targetCount = 0;
+
+    void CountTargets(std::list<WorldObject*>& targets)
+    {
+        _targetCount = uint32(targets.size());
+        if (_targetCount == 1)
+            _singleTarget = targets.front()->GetGUID();
+    }
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!player || !g_CustomSpellsEnabled)
+            return;
+
+        if (player->HasAura(SPELL_FURY_WW_RESETS_BT_PASSIVE))
+            player->RemoveSpellCooldown(SPELL_BLOODTHIRST, true);
+
+        if (_targetCount != 1)
+            return;
+
+        Unit* target = ObjectAccessor::GetUnit(*player, _singleTarget);
+        if (!target || !target->IsAlive()
+            || !player->IsValidAttackTarget(target))
+            return;
+
+        if (player->HasAura(SPELL_FURY_WW_OVERPOWER_PASSIVE))
+            player->CastSpell(target, SPELL_FURY_WW_OVERPOWER_STRIKE, true);
+        if (player->HasAura(SPELL_FURY_WW_BLOODTHIRST_PASSIVE))
+            player->CastSpell(target, SPELL_FURY_WW_BLOODTHIRST_STRIKE, true);
+    }
+
+    void Register() override
+    {
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(
+            spell_custom_warr_whirlwind_combo::CountTargets,
+            EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
+        AfterCast += SpellCastFn(
+            spell_custom_warr_whirlwind_combo::HandleAfterCast);
+    }
+};
 
 // ============================================================
 //  SPELL 900169: Revenge Unlimited Targets (SpellScript)
@@ -229,10 +266,13 @@ class spell_custom_prot_tc_rend_sunder : public SpellScript
         if (!g_CustomSpellsEnabled)
             return;
 
-        caster->CastSpell(target, SPELL_REND_R10, true);
-
-        for (uint8 i = 0; i < 5; ++i)
-            caster->CastSpell(target, SPELL_SUNDER_ARMOR, true);
+        // AddAura, not CastSpell: Rend and Sunder Armor are melee
+        // abilities that a cast only lands on enemies in front of the
+        // warrior, while Thunder Clap hits all around (2026-10-08 bot run:
+        // only the enemies in front got them)
+        caster->AddAura(SPELL_REND_R10, target);
+        if (Aura* sunder = caster->AddAura(SPELL_SUNDER_ARMOR, target))
+            sunder->SetStackAmount(5);
 
         LOG_INFO("module",
             "mod-custom-spells: Player {} -> TC applied Rend + 5x Sunder on {}",
@@ -374,6 +414,9 @@ void AddWarriorSpellsScripts()
 {
     RegisterSpellScript(spell_custom_paragon_strike);
     RegisterSpellScript(spell_custom_bladestorm_cd_reduce);
+
+    // Warrior Fury
+    RegisterSpellScript(spell_custom_warr_whirlwind_combo);
 
     // Warrior Prot
     RegisterSpellScript(spell_custom_prot_revenge_aoe);

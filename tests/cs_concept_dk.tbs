@@ -1,0 +1,270 @@
+# mod-custom-spells: the Death Knight concept spells built 2026-10-08 (the
+# operator: "ja neue spells im anschluss bauen"; share-public
+# custom-spells/08-rework-20261008.md). Every check states the concept.
+# Test ground as cs_deathknight: map 13, the FL dummy arena - eight AoE
+# Training Dummies (920018) on a 4-yd circle around (-270, 150); melee chains
+# stand west of the ring facing it, self-centred areas in its middle.
+# Spells: Obliterate 51425 (rank 4), Howling Blast 51411 (rank 4, talent),
+# Frost Fever 55095, Lichborne 49039 (talent), Improved Icy Talons 55610
+# (talent: a party/raid area aura - the director is in the bot's party),
+# Death and Decay 49938 (its tick 52212), Raise Dead 46584 (ghoul 26125,
+# Corpse Dust 37201), Frost Strike 55268, Bloodworm 50452 (worm 28017),
+# Heroism 32182, a 2000-damage self hit 16534, Greatsword of the Ebon Blade
+# 38632. Normal casts where a proc is checked: a triggered cast fires none.
+name    Custom spells - Death Knight concept spells
+timeout 300s
+
+bot dk deathknight slot=4
+
+do dk learn 50977
+place 13 -279 150 -423.2 0
+require dk alive
+pick d1 creature:920018 near dk
+require d1 exists
+do gm target dk
+as gm .unlearn 900306
+as gm .unlearn 900334
+as gm .unlearn 900335
+as gm .unlearn 900336
+as gm .unlearn 900337
+as gm .unlearn 900338
+as gm .unlearn 900340
+as gm .unlearn 900369
+as gm .unlearn 900371
+as gm .unlearn 900373
+as gm .unlearn 55610
+do dk learn 51425
+do dk learn 51411
+do dk learn 49039
+do dk learn 49938
+do dk learn 46584
+do dk learn 55268
+do dk destroy 38632
+as gm .additem 38632
+do dk equip 38632
+do dk approach d1
+wait 1s
+
+# ---------------------------------------------------------------- Frost
+log Frost - 900334 Obliterate +50 %, 900335 Obliterate +9 targets (= 10: a melee chain in front of you)
+do dk learn 900334
+do dk learn 900335
+expect dk spellmod 51425 damage 100 == 150
+expect dk spellmod 51425 jumptargets 0 == 10
+spelllog start
+do dk cast 51425 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dk spell 51425 maxtargets >= 6
+
+log Frost - 900336 Howling Blast +50 %, 900337 every enemy it hits gets Frost Fever (55095)
+do dk learn 900336
+do dk learn 900337
+expect dk spellmod 51411 damage 100 == 150
+spelllog start
+do dk cast 51411 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dk spell 51411 targets >= 7
+expect dk spell 55095 casts >= 7
+expect d1 aura 55095
+
+log Frost - 900338 Lichborne also heals you for 30 % of the damage you deal (900339 while Lichborne lasts)
+do dk learn 900338
+do dk reset
+do dk cast 49039 triggered
+wait 300ms
+expect dk aura 900339
+do dk cast 16534 on dk triggered
+wait 300ms
+spelllog start
+do dk cast 51425 on d1
+wait 1500ms
+spelllog stop
+expect dk spell 900339 heal >= 1
+as gm .unaura 49039
+wait 300ms
+expect dk noaura 900339
+
+log Frost - 900340 Improved Icy Talons gives every player it reaches Frozen Strikes (900341): melee hits, 10 % -> 900342 Frost 666 + 5 per the DK's Paragon level - statistical, auto attack up to 90 s under Heroism
+do dk learn 900340
+do dk learn 55610
+wait 2s
+expect dk aura 900341
+expect gm aura 900341
+as gm .aura 32182
+spelllog start
+do dk attack d1
+waitfor dk spell 900342 hits >= 1 timeout 90s
+do dk stop
+spelllog stop
+expect dk spell 900342 damage >= 666
+as gm .unaura 32182
+as gm .unlearn 55610
+wait 2s
+expect dk noaura 900341
+expect gm noaura 900341
+
+# ---------------------------------------------------------------- Unholy
+log Unholy - 900373 Death and Decay follows you: the ground area becomes a ticker on the DK (900374) that strikes every enemy within 10 yd each second with the core's tick (52212); 20 yd away the ring takes nothing
+do dk goto -270 150 -423.2
+wait 500ms
+do dk learn 900373
+do dk reset
+do dk cast 49938 at -270 150 -423.2 triggered
+wait 300ms
+expect dk aura 900374
+spelllog start
+wait 2500ms
+spelllog stop
+expect dk spell 52212 targets >= 7
+do dk goto -250 150 -423.2
+wait 1s
+spelllog start
+wait 2500ms
+spelllog stop
+expect dk spell 52212 hits == 0
+as gm .unaura 900374
+
+log Unholy - 900369 Ghoul Cleave: the ghoul's (26125) melee hits also deal 50 % to every other enemy within 5 yd of its target (900370)
+do dk goto -279 150 -423.2
+wait 500ms
+do dk approach d1
+do dk learn 900369
+do dk destroy 37201
+as gm .additem 37201 5
+do dk reset
+do dk cast 46584
+wait 1s
+expect dk minions 26125 >= 1
+spelllog start
+do dk attack d1
+waitfor dk spell 900370 hits >= 1 timeout 20s
+do dk stop
+spelllog stop
+expect dk spell 900370 targets >= 2
+
+log Unholy - 900371 Risen Army: melee abilities have a 10 % chance to raise an Army of the Dead ghoul (24207, 5 s; summon 900372) - statistical, 30 normal Frost Strikes with the runic power refilled
+do dk learn 900371
+do dk reset
+spelllog start
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1s
+spelllog stop
+expect dk spell 55268 casts >= 20
+expect dk spell 900372 casts >= 1
+
+# ---------------------------------------------------------------- Blood
+log Blood - 900306 Bloodworm Burst: a bloodworm (28017) explodes when it dies (900307, 10 yd round the worm) and when its 20 s run out
+do dk learn 900306
+spelllog start
+do dk cast 50452 on d1 triggered
+wait 1s
+expect dk minions 28017 >= 1
+pick w1 creature:28017 near dk
+require w1 exists
+do gm target w1
+as gm .die
+do gm target dk
+wait 1s
+spelllog stop
+expect dk spell 900307 targets >= 6
+spelllog start
+do dk cast 50452 on d1 triggered
+waitfor dk spell 900307 casts >= 1 timeout 25s
+wait 500ms
+spelllog stop
+expect dk spell 900307 targets >= 6
+
+cleanup
+do dk stop
+do dk destroy 37201
+do dk destroy 38632
+do gm target dk
+as gm .unaura 32182
+as gm .unaura 49039
+as gm .unaura 900374
+as gm .unlearn 900306
+as gm .unlearn 900334
+as gm .unlearn 900335
+as gm .unlearn 900336
+as gm .unlearn 900337
+as gm .unlearn 900338
+as gm .unlearn 900340
+as gm .unlearn 900369
+as gm .unlearn 900371
+as gm .unlearn 900373
+as gm .unlearn 55610

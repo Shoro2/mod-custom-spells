@@ -1,0 +1,74 @@
+# mod-custom-spells: the Druid (Feral tank) concept spell built 2026-10-08 (the
+# operator: "ja neue spells im anschluss bauen"; share-public
+# custom-spells/08-rework-20261008.md). Test ground as cs_druid: map 13, the FL
+# dummy arena. Spells: Dire Bear Form 9634, Lacerate 48568 (a bleed), Maul 48480
+# (rank 10, on the next swing).
+name    Custom spells - Druid concept spells
+timeout 180s
+
+bot dr druid slot=4
+
+place 13 -279 150 -423.2 0
+require dr alive
+pick d1 creature:920018 near dr
+require d1 exists
+
+log Feral - 901035 Maul deals 50 % more to a bleeding target: 4 Mauls (one per swing, Maul hits on the next swing) before and 4 after Lacerate (48568) on the same dummy
+do gm target dr
+as gm .unlearn 901035
+do dr learn 9634
+do dr learn 48480
+do dr learn 48568
+do dr learn 901035
+do dr approach d1
+wait 1s
+do dr cast 9634
+wait 1600ms
+# deterministic hits: no crit (64481), no miss (Song of Sylvanas 59756), no dodge or
+# parry (NPC Hit Buffs 62627: expertise) - only the weapon roll varies
+as gm .aura 64481
+as gm .aura 59756
+as gm .aura 62627
+as gm .modify rage 100
+spelllog start
+do dr attack d1
+do dr cast 48480 on d1
+wait 2600ms
+do dr cast 48480 on d1
+wait 2600ms
+do dr cast 48480 on d1
+wait 2600ms
+do dr cast 48480 on d1
+wait 2600ms
+do dr stop
+spelllog stop
+# calibrated 2026-10-08 (runs 449, 454): a Maul ~470-510 without a bleed, ~705-765 with one
+expect dr spell 48480 hits == 4
+expect dr spell 48480 damage <= 2450
+as gm .modify rage 100
+do dr cast 48568 on d1 triggered
+wait 500ms
+expect d1 aura 48568
+spelllog start
+do dr attack d1
+do dr cast 48480 on d1
+wait 2600ms
+do dr cast 48480 on d1
+wait 2600ms
+do dr cast 48480 on d1
+wait 2600ms
+do dr cast 48480 on d1
+wait 2600ms
+do dr stop
+spelllog stop
+expect dr spell 48480 hits == 4
+expect dr spell 48480 damage >= 2450
+
+cleanup
+do dr stop
+do gm target dr
+as gm .unlearn 901035
+as gm .unaura 9634
+as gm .unaura 64481
+as gm .unaura 59756
+as gm .unaura 62627

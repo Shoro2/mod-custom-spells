@@ -6,6 +6,12 @@
 
 AzerothCore module that defines custom spell effects via C++ SpellScripts. Each custom spell has its own SpellScript class that hooks into the spell's DBC effects (e.g. `SCHOOL_DAMAGE`) and overrides damage / behavior. Pure DBC modifiers (e.g. `+50% damage`) skip C++ entirely.
 
+## Files of this repo
+
+[`INDEX.md`](./INDEX.md) · [`functions.md`](./functions.md) (how it works, pitfalls, APIs) ·
+[`data_structure.md`](./data_structure.md) (file map) · [`log.md`](./log.md) · [`todo.md`](./todo.md) ·
+[`CustomSpells.md`](./CustomSpells.md) (ID catalog) · [`tools/README.md`](./tools/README.md).
+
 ## Doc cross-refs (read these first)
 
 | Looking for… | Read |
@@ -22,67 +28,14 @@ AzerothCore module that defines custom spell effects via C++ SpellScripts. Each 
 | ID schema + current allocation summary in this repo | [`./CustomSpells.md`](./CustomSpells.md) |
 | Corrected ProcFlags reference (verified against `SpellMgr.h`) | [`./PROCFLAGS_REFERENCE.md`](./PROCFLAGS_REFERENCE.md) |
 
-## Spell editor convention (numeric values)
+## Delivery: picker, spellbook, cursed items
 
-When working on custom spells, keep in mind:
-- Numeric values (damage, healing, absorption) are **real in-game values**, not internal DBC encodings. The editor converts to DBC format: `EffectBasePoints = real_value − 1` (off-by-one). Detail: [03-procs-and-flags.md#off-by-one-basepoints](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md#off-by-one-basepoints).
-- WotLK balancing: low-level 30–150, mid 200–600, high 800–2500, boss 3000–10000+.
-- Spells have at most 3 effects (Effect1/2/3 in `Spell.dbc`).
-- Periodic effects: `AmplitudeSeconds` for the tick interval, `DurationSeconds` for the total duration.
-- Summon spells must have `DurationSeconds` set (determines summon lifetime).
-- Tooltip tokens: `$d` (duration), `$s1` (BasePoints effect 1), etc.
-- Icon: passed as a semantic hint (e.g. "frost", "fiery melee strike") — the editor resolves via fuzzy match against `SpellIcon.dbc`.
-
-## Module structure
-
-```
-mod-custom-spells/
-├── src/
-│   ├── mod_custom_spells_loader.cpp  # Module entry point, registers scripts
-│   ├── custom_spells_common.h        # Shared header: enum, constants, includes
-│   ├── custom_spells.cpp             # Main: calls per-class registration functions
-│   ├── custom_spells_warrior.cpp     # Warrior (Arms / Fury / Prot)
-│   ├── custom_spells_paladin.cpp     # Paladin (Holy / Prot / Ret)
-│   ├── custom_spells_dk.cpp          # Death Knight (Blood / Frost / Unholy)
-│   ├── custom_spells_shaman.cpp      # Shaman (Ele / Enhance / Resto)
-│   ├── custom_spells_hunter.cpp      # Hunter (BM / MM / Surv)
-│   ├── custom_spells_rogue.cpp       # Rogue (Assa / Combat / Sub)
-│   └── custom_spells_druid.cpp       # Druid (Balance / Feral / Resto)
-├── conf/
-│   └── mod_custom_spells.conf.dist   # Config: CustomSpells.Enable
-├── lua/
-│   ├── CustomSpells_Server.lua       # AIO spell picker (server): per-class whitelist + learn/forget, GM learn-all bridge
-│   └── CustomSpells_Client.lua       # AIO spell picker (client): /spells toggle UI + GM-only Learn all Talents
-└── data/sql/db-world/
-    └── mod_custom_spells.sql          # spell_script_names, spell_dbc, spell_proc
-```
-
-The Lua pair deploys to `dcore/lua_scripts/CustomSpells/` (Eluna/ALE + AIO required). The
-server file's `CLASS_SPELLS` whitelist is the delivery source of truth — update it when
-spells are added/retired, and keep helpers/orphaned markers out of it.
-
-**Spell-row hover candidate (2026-10-04).** Hovering a checkbox or its label opens
-the native `spell:<id>` tooltip, including unlearned entries. Leaving/hiding the
-row clears its owned tooltip, including pooled-row repaint. Native descriptions
-come from client Spell.dbc: a hover handler cannot fill missing DBC strings.
-See the vault's `custom-spells/06-tooltip-and-bug-review-20261004.md` for the
-isolated text candidates, concept mismatches and pending integration tests.
-
-**GM-only "Learn all Talents" (2026-09-28).** The panel also carries a button for
-mod-forgotten-talents: every Forgotten Talents node at its maximum rank, free of charge.
-The server's `State` payload has a third argument, `1` when `player:GetGMRank()` is at least
-`SEC_GAMEMASTER` (2) and `0` otherwise; the client shows the button in its own row above
-Learn All / Forget All only for `1`. A click sends `LearnAllTalents`; the handler checks the
-rank again (a forged request from a player is dropped like an unknown `Toggle`) and runs
-`player:RunCommand("forgotten learnall <own guid>")`. That bridge was chosen over the
-global `RunCommand` (console context: no player target, output only in the server log,
-runs a tick later, and `.forgotten learnall` is `Console::No`) and over the client typing
-the chat command (no server-side re-check): `player:RunCommand` runs the command in the
-GM's own session, so the core enforces its `RBAC_PERM_COMMAND_MODIFY` permission and GM
-command log as if typed, and the answer lands in the GM's chat frame. The explicit GUID
-keeps a selected player from receiving the learn-all instead of the clicking GM. The
-button needs mod-forgotten-talents built into the worldserver; without it the click
-answers "Command '...' does not exist". Relog or `/aio reset` after deploying the pair.
+The `/spells` picker whitelist (`lua/CustomSpells_Server.lua`) decides what a class may learn; every
+spell in it has a spellbook name, tooltip and icon in `data/spellbook_enUS.json`
+(`tools/client_spell_sync.py`), and every passive in it is also a cursed-item passive (mod-paragon-itemgen,
+`tools/gen_class_passives.py`). Adding a spell = row(s) in the class SQL file + binding in
+`mod_custom_spells.sql` + constant in `custom_spells_common.h` + picker entry + manifest entry + a bot
+check in `tests/` + the two generators. Details: [`functions.md`](./functions.md).
 
 ## DBC status (quick overview)
 
@@ -101,86 +54,6 @@ Custom NPCs:
 
 Next free IDs within each block are tracked in [`./CustomSpells.md`](./CustomSpells.md) (current allocation table).
 
-## Two paths for custom spells (decision aid)
-
-```
-                 ┌──────────────────────────┐
-                 │  Plan a new custom spell  │
-                 └────────────┬─────────────┘
-                              │
-                 ┌────────────▼─────────────┐
-                 │  Does the spell need C++? │
-                 └──┬───────────────────┬───┘
-                    │                   │
-               No   │                   │ Yes
-                    │                   │
-        ┌───────────▼──────┐  ┌─────────▼──────────┐
-        │  Path A: DBC only│  │  Path B: DBC + C++ │
-        │  (spell_dbc SQL) │  │  (DBC + SpellScript)│
-        └───────────┬──────┘  └─────────┬──────────┘
-                    │                   │
-                    └─────────┬─────────┘
-                              │
-                 ┌────────────▼─────────────┐
-                 │  Patch the client DBC    │
-                 │  (Spell.dbc for tooltips) │
-                 └────────────┬─────────────┘
-                              │
-                 ┌────────────▼─────────────┐
-                 │  Build the server + test │
-                 └──────────────────────────┘
-```
-
-| Effect type | Path |
-|------------|------|
-| Damage ±X %, Cooldown ±X s, Cast time ±X %, unlimited targets, passive stat modifiers, SpellFamilyMask-based buffs | **Path A** (pure DBC) |
-| Conditional procs, multi-spell triggers, single→AoE conversion, block/dodge/parry procs, custom damage formulas, runtime cooldown manipulation | **Path B** (DBC + C++ SpellScript / AuraScript) |
-
-Full step-by-step recipe (with the 4 SpellScript patterns A/B/C/D, the `spell_dbc` insert example, `spell_script_names` registration, build & test, and a 12-item checklist) is in [`share-public/docs/custom-spells/04-adding-a-spell.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/04-adding-a-spell.md).
-
-## Key APIs (SpellScript)
-
-- `GetCaster()` / `GetHitUnit()` — caster and target units
-- `SetHitDamage(amount)` / `GetHitDamage()` — override / read effect damage
-- `GetSpellInfo()` — `SpellInfo` of the spell being cast
-- `GetCaster()->ToPlayer()` — cast to `Player` for player-specific APIs
-- `player->GetTotalAttackPowerValue(BASE_ATTACK)` — melee AP
-- `player->GetAuraCount(auraId)` — aura stack count
-- `player->ModifySpellCooldown(spellId, deltaMs)` — adjust cooldown (negative = reduce)
-- `player->RemoveSpellCooldown(spellId, true)` — clear cooldown (with client update)
-- `LOG_INFO("module", "format {}", args)` — logging
-- `RegisterSpellScript(ClassName)` — register in `AddCustomSpellsScripts()`
-
-When hooking on existing Blizzard spells via `spell_script_names`, the C++ class runs on **every** cast of that spell. Always check `HasAura(<marker_aura>)` and `sConfigMgr->GetOption<bool>("CustomSpells.Enable", true)` so the effect is only active when the player has the passive and the module is enabled.
-
-## SpellFamilyName values
-
-| Value | Class | Value | Class |
-|------:|-------|------:|-------|
-| 0 | Generic | 8 | Rogue |
-| 3 | Mage | 9 | Hunter |
-| 4 | Warrior | 10 | Paladin |
-| 5 | Warlock | 11 | Shaman |
-| 6 | Priest | 15 | Death Knight |
-| 7 | Druid | | |
-
-## Common pitfalls
-
-1. **SpellFamilyFlags wrong**: ALWAYS verify against the project's own `Spell.dbc` (LOG_INFO debug pattern in [`03-spell-system.md`](https://github.com/Shoro2/share-public/blob/main/docs/03-spell-system.md#critical-always-verify-spellfamilyflags-via-debug-log)), never against online DBs (wowhead, wowdb).
-2. **`MaxAffectedTargets=0` set globally**: this affects ALL players, not only those with the passive — for conditional targets use C++.
-3. **Proc loop**: helper spells can re-proc → set ICD in `spell_proc` (`Cooldown` field) and / or check `SPELL_ATTR3_CAN_PROC_FROM_PROCS`.
-4. **`spell_script_names` missing**: the C++ class is not loaded → spell has no effect.
-5. **`DurationIndex` forgotten**: a passive aura needs `DurationIndex=21` (permanent).
-6. **Attributes missing PASSIVE**: without `0x40` the spell is castable instead of permanently active.
-7. **Off-by-one BasePoints**: writing `BasePoints=50` for "+50 %" yields **+51 %** in-game. Store `49`, not `50`. Detail: [`03-procs-and-flags.md#off-by-one-basepoints`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/03-procs-and-flags.md#off-by-one-basepoints). (Only applies with `EffectDieSides=1`; with `EffectDieSides=0` the value is used as-is.)
-8. **`EffectSpellClassMaskA/B/C` are PER-EFFECT flag96 masks**: `A_1..A_3` = the three flag words of **effect 1**, `B_*` = effect 2, `C_*` = effect 3. A spellmod whose target spell has its family bit in `SpellFamilyFlags[1]` needs the mask in **`EffectSpellClassMaskA_2`** — writing it into `B_1` gives effect 1 an empty mask and the modifier silently affects nothing. Always verify the mask against the server `Spell.dbc` `SpellClassMask_1..3` of the target spell (2026-07-18 repair wave fixed 25+ rows with this bug).
-9. **`EffectMiscValue` on aura 107/108 is the SpellModOp**: 0=DAMAGE, 1=DURATION, 4=CHARGES, 10=CASTING_TIME, 11=COOLDOWN, 14=COST, 17=JUMP_TARGETS, 22=DOT. "Instant"/"-X% cast" is op 10 (not 14), "duration" is op 1 and "double HoTs/DoTs" is op 22 (not 17).
-10. **Extra-target damage must be dealt directly, not cast via helper spells**: `CastCustomSpell(target, HELPER, &damage, ...)` with a server-only helper produced no visible damage in-game. Use the T2-proven pattern instead: build `SpellNonMeleeDamage` with the ORIGINAL spell's `SpellInfo`, then `DealSpellDamage` + `SendSpellNonMeleeDamageLog` (heals: `HealInfo` + `HealBySpell`). The client renders the known spell id; no client DBC entry needed.
-11. **`Attributes` 0x10000000 = SPELL_ATTR0_NOT_IN_COMBAT_ONLY_PEACEFUL** ("cannot be used in combat") — never put it on castable actives or helpers. Triggered casts bypass it, player casts do not.
-12. **Area effects need `EffectRadiusIndex`** (13 = 10 yd): a `TARGET_UNIT_*_AREA_*` effect with radius index 0 searches a 0-yd radius and silently hits nothing (2026-07-18: eleven helpers in files b/c/d shipped without the column). Anchor semantics: 15/30 = around the caster, 16/31 = around the explicit cast target.
-13. **Verify effect ids against `SharedDefines.h`**, never from memory: `SPELL_EFFECT_ADD_EXTRA_ATTACKS` is **19** (901108 shipped with 32 and did nothing).
-14. **`EquippedItemClass` must be -1** ("no requirement") — the `spell_dbc` TABLE DEFAULT is 0 (= consumable), and the core's equipped-item gate (right after the proc `CheckProc` hook, plus `Spell::CheckItems`) then drops every proc and cast with "HasItemFitToSpellRequirements: Not handled spell requirement for item class 0". This silently killed ALL proc-driven customs until 2026-07-18; `mod_custom_spells_z_fixups.sql` forces -1 across the block. More generally: the table defaults are NOT DBC-neutral — always audit new columns' defaults against a real Spell.dbc row.
-
 ## Build
 
 The module is built automatically when placed in `azerothcore-wotlk/modules/mod-custom-spells/`. No separate build step:
@@ -190,24 +63,9 @@ cd azerothcore-wotlk/build
 make -j$(nproc) && make install
 ```
 
-## Code style
-
-AzerothCore conventions:
-- 4-space indentation, no tabs
-- `Type const*` (not `const Type*`)
-- `UPPER_SNAKE_CASE` for spell/NPC constants with prefix `SPELL_CUSTOM_*`
-- `UpperCamelCase` for class/method names
-- No braces around single-line if/else/for/while
-
-CI runs `apps/ci/ci-codestyle.sh` which rejects: trailing whitespace, tabs, multiple consecutive blank lines, and `LOG_*` calls that use `ObjectGuid::GetCounter()` (use `ObjectGuid::ToString().c_str()` instead).
-
 ## Config
 
 `CustomSpells.Enable` (default: 1) in `mod_custom_spells.conf.dist` controls whether the module processes spell casts.
-
-## Loader convention
-
-The loader function in `mod_custom_spells_loader.cpp` must be named `Addmod_custom_spellsScripts()` — module folder name with `-` replaced by `_`.
 
 ## Spec file status (post-implementation)
 

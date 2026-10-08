@@ -1,0 +1,185 @@
+# mod-custom-spells: the Death Knight custom class spells (the /spells picker)
+# on a bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md), so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150). Melee chains only jump to
+# units in front of the caster, so chain checks stand west of the ring facing
+# it. Slot 4 belongs to the cs_* scenarios; the cleanup unlearns every custom
+# spell again.
+# Spells: Dancing Rune Weapon 49028 (talent, 60 runic power, rune weapon NPC
+# 27893), Heart Strike 55262 (rank 6, talent, one Blood rune), Death Coil
+# damage 47632, Icy Touch 49909 (Frost Fever 55095), Plague Strike 49921
+# (Blood Plague 55078), Pestilence 50842, Raise Dead 46584 (ghoul 26125,
+# reagent Corpse Dust 37201), custom Frost Wyrm NPC 900333, Death Gate 50977,
+# Virulence 49568 (talent, +3 % spell hit), Greatsword of the Ebon Blade
+# 38632, Heroism 32182 (+30 % haste).
+# Normal casts (not triggered) where a proc or a cooldown is checked: a
+# triggered cast fires no proc aura (Dancing Rune Weapon's copy included).
+name    Custom spells - Death Knight
+timeout 300s
+
+bot dk deathknight slot=4
+
+# A new death knight logs in at the Ebon Hold (map 609), which the core lets
+# a DK leave only once it knows Death Gate (Player::TeleportTo).
+do dk learn 50977
+place 13 -279 150 -423.2 0
+require dk alive
+pick d1 creature:920018 near dk
+require d1 exists
+do gm target dk
+as gm .unlearn 900300
+as gm .unlearn 900301
+as gm .unlearn 900302
+as gm .unlearn 900303
+as gm .unlearn 900304
+as gm .unlearn 900333
+as gm .unlearn 900366
+as gm .unlearn 900306
+as gm .unlearn 900334
+as gm .unlearn 900335
+as gm .unlearn 900336
+as gm .unlearn 900337
+as gm .unlearn 900338
+as gm .unlearn 900340
+as gm .unlearn 900369
+as gm .unlearn 900371
+as gm .unlearn 900373
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+do dk learn 49028
+do dk learn 55262
+do dk learn 49909
+do dk learn 49921
+do dk learn 50842
+do dk learn 46584
+do dk learn 49568
+# A new death knight wears no weapon (its runeblade is a quest reward), and
+# Dancing Rune Weapon, Heart Strike and Plague Strike need one.
+do dk destroy 38632
+as gm .additem 38632
+do dk equip 38632
+do dk approach d1
+wait 1s
+expect dk spellmod 55262 damage 100 == 100
+
+# ---------------------------------------------------------------- Blood
+log Blood - 900300 Dancing Rune Weapon summons 3 rune weapons instead of 1 (normal cast, 60 runic power)
+do dk learn 900300
+as gm .modify runicpower 100
+do dk cast 49028 on d1
+wait 500ms
+expect dk minions 27893 == 3
+
+log Blood - 900301 the rune weapon copies each of your attacks twice: a normal Icy Touch (single target; Virulence for spell hit) = 1 + 1 copy natively, 1 + 2 copies with the passive (the copies come per enemy hit, so a chaining Heart Strike would count its targets)
+wait 1100ms
+spelllog start
+do dk cast 49909 on d1
+wait 1s
+spelllog stop
+expect dk spell 49909 casts == 2
+do dk learn 900301
+wait 600ms
+spelllog start
+do dk cast 49909 on d1
+wait 1s
+spelllog stop
+expect dk spell 49909 casts == 3
+as gm .unlearn 900300
+as gm .unlearn 900301
+
+log Blood - 900302 Heart Strike +50 %, 900303 +9 targets (a melee chain in front of you; natively 3)
+do dk learn 900302
+do dk learn 900303
+expect dk spellmod 55262 damage 100 == 150
+expect dk spellmod 55262 jumptargets 0 == 9
+spelllog start
+do dk cast 55262 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dk spell 55262 maxtargets >= 6
+as gm .unlearn 900302
+as gm .unlearn 900303
+
+log Blood - 900304 melee hits have a 15 % chance (3 s ICD) to cast a free Death Coil (47632) on the target - statistical, auto attack up to 60 s under Heroism (+30 % haste)
+do dk learn 900304
+as gm .aura 32182
+spelllog start
+do dk attack d1
+waitfor dk spell 47632 casts >= 1 timeout 60s
+do dk stop
+wait 1s
+spelllog stop
+expect dk spell 47632 hits >= 1
+as gm .unaura 32182
+as gm .unlearn 900304
+
+# ---------------------------------------------------------------- Unholy
+log Unholy - 900366 disease ticks have a 20 % chance (2 s ICD) to erupt for Shadow damage around the diseased target (900367, 10 yd round the target) - statistical; the bot stands 14 yd from the ring
+do dk learn 900366
+do dk cast 49909 on d1 triggered
+do dk cast 49921 on d1 triggered
+wait 300ms
+do dk cast 50842 on d1 triggered
+wait 300ms
+do dk goto -288 150 -423.2
+wait 500ms
+spelllog start
+waitfor dk spell 900367 casts >= 1 timeout 12s
+wait 500ms
+spelllog stop
+expect dk spell 900367 targets >= 5
+as gm .unlearn 900366
+
+# ---------------------------------------------------------------- Frost
+log Frost - 900333 Raise Dead summons the Frost Wyrm (900333) instead of the ghoul (26125) - normal cast with Corpse Dust
+do dk goto -279 150 -423.2
+wait 500ms
+do dk approach d1
+do dk destroy 37201
+as gm .additem 37201 5
+do dk learn 900333
+do dk reset
+do dk cast 46584
+wait 1s
+expect dk minions 900333 >= 1
+expect dk minions 26125 == 0
+pick wy creature:900333 near dk
+require wy exists
+do gm target wy
+as gm .die
+do gm target dk
+wait 1s
+expect dk minions 900333 == 0
+
+cleanup
+do dk stop
+do dk destroy 37201
+do dk destroy 38632
+do gm target dk
+as gm .unaura 32182
+as gm .unlearn 900300
+as gm .unlearn 900301
+as gm .unlearn 900302
+as gm .unlearn 900303
+as gm .unlearn 900304
+as gm .unlearn 900333
+as gm .unlearn 900366
+as gm .unlearn 900306
+as gm .unlearn 900334
+as gm .unlearn 900335
+as gm .unlearn 900336
+as gm .unlearn 900337
+as gm .unlearn 900338
+as gm .unlearn 900340
+as gm .unlearn 900369
+as gm .unlearn 900371
+as gm .unlearn 900373
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111

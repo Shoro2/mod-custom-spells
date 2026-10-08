@@ -16,59 +16,15 @@
  */
 
 #include "custom_spells_common.h"
+#include "AllSpellScript.h"
 
 // ============================================================
-//  MAGE ARCANE: Arcane Charges stack to 8 (900705)
-//  Hooked on Arcane Blast (all ranks via -42897).
-//  Overrides the DBC stack cap of 4 on the Arcane Blast
-//  debuff (36032), allowing up to 8 stacks.
+//  MAGE ARCANE: Arcane Charges stack to 8 (900705) is pure data since
+//  2026-10-08: SPELLMOD_MAX_AURA_STACKS +4 on the Arcane Blast debuff
+//  (36032). The old AfterCast raised the stack count, and the core's
+//  own Arcane Blast script re-applied the debuff right after and
+//  clamped it back to 4 (bot run 409).
 // ============================================================
-class spell_custom_mage_ab_charges : public SpellScript
-{
-    PrepareSpellScript(spell_custom_mage_ab_charges);
-
-    uint8 _precastStacks = 0;
-
-    void HandleBeforeCast()
-    {
-        Player* player = GetCaster()->ToPlayer();
-        if (!player)
-            return;
-
-        Aura* debuff = player->GetAura(SPELL_ARCANE_BLAST_DEBUFF);
-        _precastStacks = debuff ? debuff->GetStackAmount() : 0;
-    }
-
-    void HandleAfterCast()
-    {
-        Player* player = GetCaster()->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_MAGE_ARC_CHARGES_8_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        Aura* debuff = player->GetAura(SPELL_ARCANE_BLAST_DEBUFF);
-        if (!debuff)
-            return;
-
-        // The game already applied debuff and capped at 4.
-        // Calculate what the real stack count should be (up to 8).
-        uint8 realStacks = std::min<uint8>(_precastStacks + 1, 8);
-
-        if (realStacks > debuff->GetStackAmount())
-            debuff->SetStackAmount(realStacks);
-    }
-
-    void Register() override
-    {
-        BeforeCast += SpellCastFn(spell_custom_mage_ab_charges::HandleBeforeCast);
-        AfterCast += SpellCastFn(spell_custom_mage_ab_charges::HandleAfterCast);
-    }
-};
 
 // ============================================================
 //  MAGE ARCANE: Arcane Explosion generates 1 Arcane Charge
@@ -92,24 +48,9 @@ class spell_custom_mage_ae_charges : public SpellScript
         if (!g_CustomSpellsEnabled)
             return;
 
-        // Record current stacks before applying
-        Aura* debuff = player->GetAura(SPELL_ARCANE_BLAST_DEBUFF);
-        uint8 currentStacks = debuff ? debuff->GetStackAmount() : 0;
-
-        // Apply Arcane Blast debuff (adds 1 stack, capped at 4 by DBC)
+        // one charge more, up to the stack cap - 4, or 8 with 900705 (its
+        // SPELLMOD_MAX_AURA_STACKS raises the debuff's cap in the core)
         player->CastSpell(player, SPELL_ARCANE_BLAST_DEBUFF, true);
-
-        // If player has charges-to-8 passive and we need stacks > 4
-        if (player->HasAura(SPELL_MAGE_ARC_CHARGES_8_PASSIVE) && currentStacks >= 4)
-        {
-            debuff = player->GetAura(SPELL_ARCANE_BLAST_DEBUFF);
-            if (debuff)
-            {
-                uint8 newStacks = std::min<uint8>(currentStacks + 1, 8);
-                if (newStacks > debuff->GetStackAmount())
-                    debuff->SetStackAmount(newStacks);
-            }
-        }
     }
 
     void Register() override
@@ -280,57 +221,9 @@ class spell_custom_mage_targeted_blink : public SpellScript
 };
 
 // ============================================================
-//  MAGE ARCANE: Mana regen +2% per missing mana % (900700)
-//  PlayerScript: every 5s, regenerate mana based on how much
-//  mana is missing. At 50% missing -> +1% max mana/5s.
-//  At 90% missing -> +1.8% max mana/5s.
+//  MAGE ARCANE: 900700 Mana Regen is shared with the shaman and the
+//  druid: custom_mana_regen_playerscript (custom_spells_global.cpp)
 // ============================================================
-class custom_mage_mana_regen_playerscript : public PlayerScript
-{
-public:
-    custom_mage_mana_regen_playerscript() : PlayerScript("custom_mage_mana_regen_playerscript") {}
-
-    void OnPlayerLogout(Player* player) override
-    {
-        if (player)
-            _lastRegen.erase(player->GetGUID());
-    }
-
-    void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
-    {
-        if (!player || !player->IsAlive())
-            return;
-
-        if (!player->HasAura(SPELL_MAGE_ARC_MANA_REGEN))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // Throttle: only every 5 seconds
-        uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        ObjectGuid guid = player->GetGUID();
-        if (_lastRegen.count(guid) && (now - _lastRegen[guid]) < 5)
-            return;
-        _lastRegen[guid] = now;
-
-        uint32 maxMana = player->GetMaxPower(POWER_MANA);
-        uint32 curMana = player->GetPower(POWER_MANA);
-        if (maxMana == 0)
-            return;
-
-        // Calculate missing mana percentage (0-100)
-        float missingPct = 100.0f * (1.0f - static_cast<float>(curMana) / maxMana);
-        // Regen bonus = missingPct * 2% of max mana, applied per 5s tick
-        int32 bonus = static_cast<int32>(maxMana * (missingPct * 0.02f) / 100.0f);
-        if (bonus > 0)
-            player->EnergizeBySpell(player, SPELL_MAGE_ARC_MANA_REGEN,
-                bonus, POWER_MANA);
-    }
-
-private:
-    std::unordered_map<ObjectGuid, uint32> _lastRegen;
-};
 
 // ============================================================
 //  End Mage Arcane section
@@ -356,6 +249,12 @@ class spell_custom_mage_pyro_hotstreak : public SpellScript
             return;
 
         if (!g_CustomSpellsEnabled)
+            return;
+
+        // Only a hard-cast Pyroblast grants Hot Streak: one made instant by
+        // Hot Streak would grant the next one, an endless chain of free
+        // instant Pyroblasts (bot run 409)
+        if (GetSpell()->GetCastTime() <= 0)
             return;
 
         // Apply Hot Streak buff (instant Pyroblast)
@@ -475,19 +374,212 @@ class spell_custom_mage_comet_shower : public SpellScript
 //  End Mage Frost section
 // ============================================================
 
+// ============================================================
+//  MAGE ARCANE: 900714 Arcane Overflow
+//  Concept: spending 10,000 mana auto-casts an empowered Arcane
+//  Explosion and resets the cooldown of Blink. The mana each cast
+//  costs (Spell::GetPowerCost at OnPlayerSpellCast) is summed per
+//  player; every full 10,000 sets off 900718 (Arcane Explosion at
+//  twice the damage, 10 yd round the mage) and resets Blink (1953).
+// ============================================================
+class ArcaneOverflowState : public DataMap::Base
+{
+public:
+    uint32 Spent = 0;
+};
+
+class custom_mage_arcane_overflow_playerscript : public PlayerScript
+{
+public:
+    custom_mage_arcane_overflow_playerscript()
+        : PlayerScript("custom_mage_arcane_overflow_playerscript") { }
+
+    void OnPlayerSpellCast(Player* player, Spell* spell, bool /*skipCheck*/) override
+    {
+        // a triggered cast has its cost computed but pays none
+        if (!player || !spell || !g_CustomSpellsEnabled || spell->IsTriggered()
+            || spell->GetSpellInfo()->PowerType != POWER_MANA
+            || spell->GetPowerCost() <= 0
+            || !player->HasAura(SPELL_MAGE_ARC_OVERFLOW_PASSIVE))
+            return;
+
+        ArcaneOverflowState* state = player->CustomData.GetDefault<
+            ArcaneOverflowState>("mod_custom_spells_arcane_overflow");
+        state->Spent += uint32(spell->GetPowerCost());
+        if (state->Spent < MAGE_OVERFLOW_MANA)
+            return;
+
+        state->Spent -= MAGE_OVERFLOW_MANA;
+        player->CastSpell(player, SPELL_MAGE_ARC_OVERFLOW_EXPLOSION, true);
+        player->RemoveSpellCooldown(SPELL_MAGE_BLINK, true);
+    }
+};
+
+// ============================================================
+//  MAGE ARCANE: 900715 Mirror Shield
+//  Concept: getting struck while a shield is up has a chance to
+//  spawn a mirror image. Proc (spell_proc: hits taken, 10 %, 6 s
+//  cooldown) only while the mage carries an absorb shield of its
+//  own (Mana Shield, Ice Barrier, Fire/Frost Ward): one Mirror Image
+//  (58831).
+// ============================================================
+class spell_custom_mage_mirror_shield : public AuraScript
+{
+    PrepareAuraScript(spell_custom_mage_mirror_shield);
+
+    bool CheckProc(ProcEventInfo& /*eventInfo*/)
+    {
+        Unit* mage = GetTarget();
+        if (!g_CustomSpellsEnabled)
+            return false;
+
+        for (AuraType type : { SPELL_AURA_MANA_SHIELD, SPELL_AURA_SCHOOL_ABSORB })
+            for (AuraEffect const* shield : mage->GetAuraEffectsByType(type))
+                if (shield->GetCasterGUID() == mage->GetGUID())
+                    return true;
+        return false;
+    }
+
+    void HandleProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
+    {
+        PreventDefaultAction();
+        GetTarget()->CastSpell(GetTarget(), SPELL_MAGE_MIRROR_IMAGE_ONE, true,
+            nullptr, aurEff);
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_mage_mirror_shield::CheckProc);
+        OnEffectProc += AuraEffectProcFn(spell_custom_mage_mirror_shield::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  MAGE ARCANE: 900716 Mirror Images use area spells
+//  Concept: mirror images are using the mage AoEs. Hooked on the
+//  images' Frostbolt (59638) and Fire Blast (59637): with the
+//  owner's marker, every hit also deals its damage to all other
+//  enemies within 8 yd of the target (900717 Frost / 900719 Fire).
+// ============================================================
+class spell_custom_mage_mirror_splash : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_mirror_splash);
+
+    void HandleAfterHit()
+    {
+        Unit* image = GetCaster();
+        Unit* target = GetHitUnit();
+        int32 damage = GetHitDamage();
+        if (!image || !target || damage <= 0 || !g_CustomSpellsEnabled
+            || image->GetEntry() != NPC_MAGE_MIRROR_IMAGE)
+            return;
+
+        Player* owner = image->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!owner || !owner->HasAura(SPELL_MAGE_ARC_MIRROR_SPLASH_PASSIVE))
+            return;
+
+        uint32 const splash = GetSpellInfo()->Id == SPELL_MIRROR_IMAGE_FIRE_BLAST
+            ? SPELL_MAGE_ARC_MIRROR_SPLASH_FIRE : SPELL_MAGE_ARC_MIRROR_SPLASH_FROST;
+        CastAnchoredBurst(image, target, splash, damage);
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_mage_mirror_splash::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  MAGE FIRE: 900741 Meteor (active, picker)
+//  Concept: "meteor spell". Ground-targeted like Comet Shower: every
+//  enemy within 8 yd of the aimed point takes the impact (900742,
+//  3,500-4,100 Fire) and burns for 600 over 6 sec (900743).
+// ============================================================
+class spell_custom_mage_meteor : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_meteor);
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        WorldLocation const* dest = GetExplTargetDest();
+        if (!player || !dest || !g_CustomSpellsEnabled)
+            return;
+
+        float const range = player->GetDistance(*dest) + 9.0f;
+        std::list<Unit*> targets;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player, range);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(player, targets, check);
+        Cell::VisitObjects(player, searcher, range);
+
+        for (Unit* target : targets)
+        {
+            if (!target->IsAlive() || !player->IsValidAttackTarget(target)
+                || target->GetExactDist2d(dest) > 8.0f)
+                continue;
+
+            player->CastSpell(target, SPELL_MAGE_FIRE_METEOR_IMPACT, true);
+            player->CastSpell(target, SPELL_MAGE_FIRE_METEOR_BURN, true);
+        }
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_mage_meteor::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  MAGE FIRE: 900737 Fire Blast off the GCD
+//  The passive's SPELLMOD_GLOBAL_COOLDOWN -1500 is clamped to the
+//  core's 1 s minimum (Spell::TriggerGlobalCooldown). An instant spell
+//  starts its global cooldown AFTER cast() in Spell::prepare, so an
+//  AfterCast hook is too early; OnSpellPrepare runs after it. With the
+//  marker, a Fire Blast's own global cooldown is cancelled there.
+//  (A Fire Blast inside another spell's global cooldown stays
+//  impossible: CheckCast and the client both refuse it.)
+// ============================================================
+class custom_mage_fire_blast_gcd_allspell : public AllSpellScript
+{
+public:
+    custom_mage_fire_blast_gcd_allspell()
+        : AllSpellScript("custom_mage_fire_blast_gcd_allspell",
+            { ALLSPELLHOOK_ON_PREPARE }) { }
+
+    void OnSpellPrepare(Spell* /*spell*/, Unit* caster,
+        SpellInfo const* spellInfo) override
+    {
+        if (!caster || !g_CustomSpellsEnabled
+            || spellInfo->SpellFamilyName != SPELLFAMILY_MAGE
+            || sSpellMgr->GetFirstSpellInChain(spellInfo->Id) != SPELL_FIRE_BLAST_R1)
+            return;
+
+        Player* player = caster->ToPlayer();
+        if (!player || !player->HasAura(SPELL_MAGE_FIRE_FBLAST_GCD_PASSIVE))
+            return;
+
+        player->GetGlobalCooldownMgr().CancelGlobalCooldown(spellInfo);
+    }
+};
+
 void AddMageSpellsScripts()
 {
     // Mage Arcane
-    RegisterSpellScript(spell_custom_mage_ab_charges);
     RegisterSpellScript(spell_custom_mage_ae_charges);
     RegisterSpellScript(spell_custom_mage_evocation_power);
     RegisterSpellScript(spell_custom_mage_emergency_shield);
     RegisterSpellScript(spell_custom_mage_blink_to_target);
     RegisterSpellScript(spell_custom_mage_targeted_blink);
-    new custom_mage_mana_regen_playerscript();
+    new custom_mage_arcane_overflow_playerscript();
+    RegisterSpellScript(spell_custom_mage_mirror_shield);
+    RegisterSpellScript(spell_custom_mage_mirror_splash);
 
     // Mage Fire
     RegisterSpellScript(spell_custom_mage_pyro_hotstreak);
+    new custom_mage_fire_blast_gcd_allspell();
+    RegisterSpellScript(spell_custom_mage_meteor);
 
     // Mage Frost
     RegisterSpellScript(spell_custom_mage_permanent_water_ele);

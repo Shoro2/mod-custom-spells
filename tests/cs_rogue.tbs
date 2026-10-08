@@ -1,0 +1,260 @@
+# mod-custom-spells: the Rogue custom class spells (the /spells picker) on a
+# bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md, concept source "Paragon Passive
+# Spells"), so a FAIL marks a defect, not a typo.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018: take 0 damage, never die, the combat log still reads the full
+# amount) on a 4-yd circle around (-270, 150). Melee chains only jump to units
+# in front of the caster: chain checks stand west of the ring facing it.
+# Gear: the rogue's starter Worn Dagger plus a Dirk (2139) for the off hand.
+# Energy: base regeneration 10 per sec; a reset gives 100 and Distract (1725,
+# cast at a point: it cannot miss, so it always costs its full 30 - a missed,
+# dodged or parried strike costs only 0-11, Spell::TakePower) leaves 70, so
+# 1.5 sec later a rogue has 85 (base) or 92.5 (+50 %).
+# Poisons are weapon procs the core casts TRIGGERED (Player::CastItemCombatSpell);
+# a bot cannot put a poison on a weapon (`use` sends no item target), so a
+# triggered Instant Poison IX cast stands in for the proc.
+# Spells: Distract 1725, Sinister Strike 48638, Hemorrhage 48660, Mutilate 48666 (its hits:
+# main hand 48665, off hand 48664), Blade Flurry 13877 (extra hit 22482),
+# Instant Poison IX 57965, Deadly Poison IX 57970 (DoT), Wound Poison VII
+# 57975, Poison Nova 900604.
+name    Custom spells - Rogue
+timeout 300s
+
+bot ro rogue slot=4
+
+place 13 -279 150 -423.2 0
+require ro alive
+pick d1 creature:920018 near ro
+require d1 exists
+do gm target ro
+as gm .unlearn 900600
+as gm .unlearn 900601
+as gm .unlearn 900602
+as gm .unlearn 900603
+as gm .unlearn 900633
+as gm .unlearn 900634
+as gm .unlearn 900635
+as gm .unlearn 900636
+as gm .unlearn 900637
+as gm .unlearn 900666
+as gm .unlearn 900667
+as gm .unlearn 900668
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 13877
+do ro learn 48638
+do ro learn 48660
+do ro learn 48666
+do ro learn 13877
+do ro learn 1725
+do ro destroy 2139
+as gm .additem 2139
+do ro equip 2139
+do ro approach d1
+wait 1s
+
+# ---------------------------------------------------------------- energy (all three specs)
+log Energy - control: without a passive, 1.5 sec after Distract (100 -> 70) the rogue has 85
+do ro reset
+do ro cast 1725 at d1
+wait 1500ms
+expect ro power energy <= 88
+
+log Assassination - 900600 Energy +50 %: 15 per sec, 92 1.5 sec after Distract
+do ro learn 900600
+do ro reset
+do ro cast 1725 at d1
+wait 1500ms
+expect ro power energy >= 90
+as gm .unlearn 900600
+
+log Combat - 900637 Energy +50 %: 92 1.5 sec after Distract
+do ro learn 900637
+do ro reset
+do ro cast 1725 at d1
+wait 1500ms
+expect ro power energy >= 90
+as gm .unlearn 900637
+
+log Subtlety - 900666 Energy +50 %: 92 1.5 sec after Distract
+do ro learn 900666
+do ro reset
+do ro cast 1725 at d1
+wait 1500ms
+expect ro power energy >= 90
+as gm .unlearn 900666
+
+# ---------------------------------------------------------------- Assassination
+log Assassination - 900601 Mutilate +50 %: Mutilate and the two hits that deal its damage
+do ro learn 900601
+expect ro spellmod 48666 damage 100 == 150
+expect ro spellmod 48665 damage 100 == 150
+expect ro spellmod 48664 damage 100 == 150
+as gm .unlearn 900601
+
+log Assassination - 900602 Poison +50 %: Instant and Wound Poison hits, Deadly Poison ticks
+do ro learn 900602
+expect ro spellmod 57965 damage 100 == 150
+expect ro spellmod 57975 damage 100 == 150
+expect ro spellmod 57970 dot 100 == 150
+as gm .unlearn 900602
+
+log Assassination - 900603 Poison Nova: a poison's damage has a 15 % chance (3 sec cooldown) to set off Poison Nova 900604 - poison procs are triggered casts: 30 triggered Instant Poison IX hits (statistical)
+do ro learn 900603
+spelllog start
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+wait 1s
+spelllog stop
+expect ro spell 57965 hits >= 25
+expect ro spell 900604 casts >= 1
+wait 3s
+
+log Assassination - 900603 from a nature spell the rogue casts itself (30 direct Instant Poison IX casts in one tick): one Poison Nova (3 sec cooldown) on every other dummy
+spelllog start
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+do ro cast 57965 on d1
+wait 1s
+spelllog stop
+expect ro spell 900604 casts == 1
+expect ro spell 900604 targets >= 5
+as gm .unlearn 900603
+
+# ---------------------------------------------------------------- Combat + Subtlety strikes
+log Combat - 900633 Sinister Strike +50 %
+do ro learn 900633
+expect ro spellmod 48638 damage 100 == 150
+as gm .unlearn 900633
+
+log Combat - 900634 Sinister Strike +9 targets: 10 in all (a cleave in front of you)
+do ro learn 900634
+expect ro spellmod 48638 jumptargets 0 == 10
+spelllog start
+do ro cast 48638 on d1 triggered
+wait 1500ms
+spelllog stop
+expect ro spell 48638 maxtargets >= 6
+as gm .unlearn 900634
+
+log Subtlety - 900667 Hemorrhage +50 %
+do ro learn 900667
+expect ro spellmod 48660 damage 100 == 150
+as gm .unlearn 900667
+
+log Subtlety - 900668 Hemorrhage +9 targets: 10 in all (a cleave in front of you)
+do ro learn 900668
+expect ro spellmod 48660 jumptargets 0 == 10
+spelllog start
+do ro cast 48660 on d1 triggered
+wait 1500ms
+spelllog stop
+expect ro spell 48660 maxtargets >= 6
+as gm .unlearn 900668
+
+# ---------------------------------------------------------------- Blade Flurry
+log Combat - 900635 Blade Flurry lasts 2 min (15 sec + 105 sec)
+do ro learn 900635
+expect ro spellmod 13877 duration 15000 == 120000
+do ro cast 13877 triggered
+wait 500ms
+expect ro aura 13877
+expect ro auramaxduration 13877 >= 120000
+
+log Combat - 900636 Blade Flurry hits +9 targets: with Blade Flurry up, 3 s of melee reach every other dummy (lines of its extra hit 22482), from the ring's middle
+do ro learn 900636
+do ro goto -270 150 -423.2
+wait 500ms
+do ro approach d1 3
+wait 500ms
+spelllog start
+do ro attack d1
+wait 3s
+do ro stop
+spelllog stop
+expect ro spell 22482 targets >= 6
+as gm .unlearn 900635
+as gm .unlearn 900636
+as gm .unaura 13877
+
+cleanup
+do ro stop
+do gm target ro
+as gm .unaura 13877
+do ro destroy 2139
+as gm .unlearn 900600
+as gm .unlearn 900601
+as gm .unlearn 900602
+as gm .unlearn 900603
+as gm .unlearn 900633
+as gm .unlearn 900634
+as gm .unlearn 900635
+as gm .unlearn 900636
+as gm .unlearn 900637
+as gm .unlearn 900666
+as gm .unlearn 900667
+as gm .unlearn 900668
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111

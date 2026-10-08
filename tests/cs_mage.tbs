@@ -1,0 +1,327 @@
+# mod-custom-spells: the Mage custom class spells (the /spells picker) on a
+# bot. Every check states the CONCEPT's behaviour (share-public
+# custom-spells/08-rework-20261008.md), so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150). Slot 4 belongs to the cs_*
+# scenarios; the cleanup unlearns every custom spell again.
+# Spells: Arcane Barrage 44781, Arcane Blast 42897 (debuff 36032), Arcane
+# Explosion 42921, Evocation 12051, Blink 1953, Fireball 42833, Pyroblast
+# 42891, Fire Blast 42873, Hot Streak 48108, Frostbolt 42842, Ice Lance 42914,
+# Summon Water Elemental 31687 (core script -> 70907: NPC 510 for 45 s),
+# Mana Shield 43020, Arcane Intellect 42995 (only to restore the maximum mana
+# after .modify mana, which sets maximum and current), Jealousy 29496 (500
+# shadow damage to the caster: a real hit for the taken-damage proc; .damage
+# raises no proc).
+name    Custom spells - Mage
+timeout 300s
+
+bot ma mage slot=4
+
+place 13 -279 150 -423.2 0
+require ma alive
+pick d1 creature:920018 near ma
+require d1 exists
+do gm target ma
+as gm .unlearn 900700
+as gm .unlearn 900701
+as gm .unlearn 900702
+as gm .unlearn 900703
+as gm .unlearn 900704
+as gm .unlearn 900705
+as gm .unlearn 900706
+as gm .unlearn 900707
+as gm .unlearn 900708
+as gm .unlearn 900709
+as gm .unlearn 900713
+as gm .unlearn 900733
+as gm .unlearn 900734
+as gm .unlearn 900735
+as gm .unlearn 900736
+as gm .unlearn 900737
+as gm .unlearn 900738
+as gm .unlearn 900766
+as gm .unlearn 900767
+as gm .unlearn 900768
+as gm .unlearn 900769
+as gm .unlearn 900770
+as gm .unlearn 900771
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unaura 36032
+as gm .unaura 900712
+as gm .unaura 43020
+as gm .unaura 48108
+do ma learn 44781
+do ma learn 42897
+do ma learn 42921
+do ma learn 12051
+do ma learn 1953
+do ma learn 42833
+do ma learn 42891
+do ma learn 42873
+do ma learn 42842
+do ma learn 42914
+do ma learn 31687
+do ma approach d1
+wait 1s
+
+# ---------------------------------------------------------------- Frost (long)
+log Frost - 900770 the Water Elemental (NPC 510, natively 45 s) is permanent: summoned now, checked after 50+ s
+do ma learn 900770
+do ma cast 31687 triggered
+wait 1s
+expect ma minions 510 >= 1
+
+# ---------------------------------------------------------------- Arcane
+log Arcane - 900700 baseline: natural regeneration in 16 s from 700 of 5703 mana, no passive (calibration 2026-10-08: +128)
+do ma reset
+as gm .modify mana 700
+do ma cast 42995 triggered
+as gm .unaura 42995
+wait 16s
+expect ma power mana > 700
+
+log Arcane - 900700 CONCEPT mana regeneration +2 % per 1 % missing mana: from 12 % mana (88 -> 82 % missing) about 2.7x the +128 baseline = 1000..1100
+as gm .modify mana 700
+do ma cast 42995 triggered
+as gm .unaura 42995
+do ma learn 900700
+wait 16s
+expect ma power mana >= 1000
+expect ma power mana <= 1100
+as gm .unlearn 900700
+
+log Arcane - 900701 Arcane Barrage +50 %, 900703 Arcane Blast cast time -50 % (2.5 s -> 1.25 s)
+do ma learn 900701
+do ma learn 900703
+expect ma spellmod 44781 damage 100 == 150
+expect ma spellmod 42897 casttime 2500 == 1250
+
+log Arcane - 900702 Arcane Barrage +9 targets: the target and 9 more = 10 (jump-target value of a single-target spell: 0 -> 10); live: all 8 dummies
+do ma learn 900702
+expect ma spellmod 44781 jumptargets 0 == 10
+spelllog start
+do ma cast 44781 on d1 triggered
+wait 1500ms
+spelllog stop
+expect ma spell 44781 maxtargets >= 8
+
+log Arcane - 900704 Arcane Blast +9 targets (10 in all)
+do ma learn 900704
+expect ma spellmod 42897 jumptargets 0 == 10
+spelllog start
+do ma cast 42897 on d1 triggered
+wait 1500ms
+spelllog stop
+expect ma spell 42897 maxtargets >= 8
+as gm .unlearn 900701
+as gm .unlearn 900702
+as gm .unlearn 900703
+as gm .unlearn 900704
+
+log Arcane - 900705 the Arcane Blast debuff (36032) stacks to 8 instead of 4
+do ma learn 900705
+as gm .unaura 36032
+do ma cast 42897 on d1 triggered
+do ma cast 42897 on d1 triggered
+do ma cast 42897 on d1 triggered
+do ma cast 42897 on d1 triggered
+do ma cast 42897 on d1 triggered
+do ma cast 42897 on d1 triggered
+do ma cast 42897 on d1 triggered
+do ma cast 42897 on d1 triggered
+wait 300ms
+expect ma aurastacks 36032 == 8
+as gm .unlearn 900705
+
+log Arcane - 900706 Arcane Explosion adds an Arcane Blast charge (36032) and consumes none
+do ma learn 900706
+as gm .unaura 36032
+do ma cast 42897 on d1 triggered
+do ma cast 42897 on d1 triggered
+wait 300ms
+expect ma aurastacks 36032 == 2
+do ma cast 42921 triggered
+wait 300ms
+expect ma aurastacks 36032 == 3
+as gm .unlearn 900706
+as gm .unaura 36032
+
+log Arcane - 900707 each Evocation tick (4 over 8 s) adds a stack of Evocation Power (900712, +20 % spell damage, up to 4)
+do ma learn 900707
+as gm .unaura 900712
+do ma reset
+do ma cast 12051
+wait 8500ms
+expect ma aurastacks 900712 == 4
+as gm .unlearn 900707
+
+log Arcane - 900708 smoke: a hit taken at <= 30 % health activates Mana Shield (43020) and refills all mana
+do ma learn 900708
+do ma reset
+as gm .unaura 43020
+as gm .modify mana 1000
+do ma cast 42995 triggered
+as gm .unaura 42995
+as gm .damage 75 pct
+do ma cast 29496 on ma
+wait 500ms
+expect ma aura 43020
+expect ma power mana >= 5600
+as gm .unlearn 900708
+as gm .unaura 43020
+
+log Arcane - 900709 Blink jumps to the selected unit (within 30 yd, in sight) instead of 20 yd forward (here: east)
+do ma learn 900709
+do ma reset
+do ma goto -273.9 130 -423.2
+wait 500ms
+do ma target d1
+do ma cast 1953
+wait 1s
+expect ma near -273.9 150 -423.2 3
+as gm .unlearn 900709
+
+log Arcane - 900713 Targeted Blink teleports to the aimed point; BALANCE: it needs a cooldown (no free 40-yd teleport)
+do ma learn 900713
+do ma reset
+do ma cast 900713 at -262 162 -423.2
+wait 1s
+expect ma near -262 162 -423.2 3
+expect ma cooldown 900713 > 0
+as gm .unlearn 900713
+do ma goto -279 150 -423.2
+wait 500ms
+do ma approach d1
+
+# ---------------------------------------------------------------- Fire
+log Fire - 900733 Fireball +50 %, 900736 Pyroblast +50 % (the concept says damage: the DoT part counts too)
+do ma learn 900733
+do ma learn 900736
+expect ma spellmod 42833 damage 100 == 150
+expect ma spellmod 42833 dot 100 == 150
+expect ma spellmod 42891 damage 100 == 150
+expect ma spellmod 42891 dot 100 == 150
+
+log Fire - 900734 Fireball +9 targets (10 in all)
+do ma learn 900734
+expect ma spellmod 42833 jumptargets 0 == 10
+spelllog start
+do ma cast 42833 on d1 triggered
+wait 1500ms
+spelllog stop
+expect ma spell 42833 maxtargets >= 8
+
+log Fire - 900735 Pyroblast +9 targets (10 in all)
+do ma learn 900735
+expect ma spellmod 42891 jumptargets 0 == 10
+spelllog start
+do ma cast 42891 on d1 triggered
+wait 1500ms
+spelllog stop
+expect ma spell 42891 maxtargets >= 8
+as gm .unlearn 900733
+as gm .unlearn 900734
+as gm .unlearn 900735
+as gm .unlearn 900736
+
+log Fire - 900737 CONCEPT Fire Blast starts no global cooldown and always crits ("usable while casting" needs the client - not testable here)
+do ma learn 900737
+expect ma spellmod 42873 gcd 1500 == 0
+expect ma spellmod 42873 crit 0 >= 100
+do ma reset
+do ma cast 42873 on d1
+do ma clientcast 42914 on d1
+expect output lacks "cast failed"
+wait 1600ms
+# (Fire Blast inside another spell's global cooldown stays impossible: the
+# core's CheckCast and the client refuse it before any script runs)
+as gm .unlearn 900737
+
+log Fire - 900738 a hard-cast Pyroblast grants Hot Streak (48108); the instant Pyroblast Hot Streak makes grants none (no endless chain)
+do ma learn 900738
+as gm .unaura 48108
+do ma reset
+do ma cast 42891 on d1
+wait 5500ms
+expect ma aura 48108
+do ma cast 42891 on d1
+wait 1s
+expect ma noaura 48108
+as gm .unlearn 900738
+as gm .unaura 48108
+
+# ---------------------------------------------------------------- Frost
+log Frost - 900766 Frostbolt +50 %, 900768 Ice Lance +50 %
+do ma learn 900766
+do ma learn 900768
+expect ma spellmod 42842 damage 100 == 150
+expect ma spellmod 42914 damage 100 == 150
+
+log Frost - 900767 Frostbolt +9 targets (10 in all)
+do ma learn 900767
+expect ma spellmod 42842 jumptargets 0 == 10
+spelllog start
+do ma cast 42842 on d1 triggered
+wait 1500ms
+spelllog stop
+expect ma spell 42842 maxtargets >= 8
+
+log Frost - 900769 Ice Lance +9 targets (10 in all)
+do ma learn 900769
+expect ma spellmod 42914 jumptargets 0 == 10
+spelllog start
+do ma cast 42914 on d1 triggered
+wait 1500ms
+spelllog stop
+expect ma spell 42914 maxtargets >= 8
+
+log Frost - 900771 Comet Shower: Frost Comets (900774) hit every enemy within 15 yd of the aimed point; BALANCE: it needs a cooldown
+do ma learn 900771
+spelllog start
+do ma cast 900771 at -270 150 -423.2
+wait 1s
+spelllog stop
+expect ma spell 900774 targets >= 8
+expect ma cooldown 900771 > 0
+
+log Frost - 900770 the Water Elemental is still there (well over 50 s after the summon; natively 45 s)
+wait 1s
+expect ma minions 510 >= 1
+
+cleanup
+do ma stop
+do gm target ma
+as gm .unlearn 900700
+as gm .unlearn 900701
+as gm .unlearn 900702
+as gm .unlearn 900703
+as gm .unlearn 900704
+as gm .unlearn 900705
+as gm .unlearn 900706
+as gm .unlearn 900707
+as gm .unlearn 900708
+as gm .unlearn 900709
+as gm .unlearn 900713
+as gm .unlearn 900733
+as gm .unlearn 900734
+as gm .unlearn 900735
+as gm .unlearn 900736
+as gm .unlearn 900737
+as gm .unlearn 900738
+as gm .unlearn 900766
+as gm .unlearn 900767
+as gm .unlearn 900768
+as gm .unlearn 900769
+as gm .unlearn 900770
+as gm .unlearn 900771
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unaura 36032
+as gm .unaura 900712
+as gm .unaura 43020
+as gm .unaura 48108

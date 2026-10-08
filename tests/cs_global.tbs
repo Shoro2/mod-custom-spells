@@ -1,0 +1,240 @@
+# mod-custom-spells: the class-independent custom spells (GLOBAL_SPELLS of the
+# /spells picker, every class gets them) on a warrior bot. Every check states
+# the CONCEPT's behaviour (share-public custom-spells/08-rework-20261008.md,
+# concept source "Non class spells"), so a FAIL marks a defect, not a typo.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018: take 0 damage, never die, the combat log still reads the full
+# amount) on a 4-yd circle around (-270, 150); the warrior fights d1, the
+# west-most one, from its west side. Killable and attacking enemies: a
+# Mindless Zombie (1501, level 1, undead) the director summons at its own spot
+# (.npc add temp: it despawns once dead; a Thunder Clap kills a leftover).
+# Gear: a Worn Shortsword (25) and, with Dual Wield (674), a Dirk (2139) in the
+# off hand - the warrior has no weapon of its own after cs_warrior. The NPC
+# Slice and Dice 43547 (+50 % melee speed, 40 s) gives the statistical procs
+# more swings. The warrior's class passives are unlearned as well.
+# Spells: Mortal Strike 47486, Taunt 355, Thunder Clap 47502, Instant Poison
+# IX 57965 (a direct nature spell without cost or global cooldown), Shadowflame
+# 61291 (a fixed fire DoT with SPELL_ATTR3_ALWAYS_HIT - Dark Decay 33129 can
+# miss; no 3.3.5 stance changes fire damage done).
+name    Custom spells - Global (all classes)
+timeout 300s
+
+bot gl warrior slot=4
+
+place 13 -279 150 -423.2 0
+require gl alive
+pick d1 creature:920018 near gl
+require d1 exists
+do gm target gl
+as gm .unlearn 900100
+as gm .unlearn 900101
+as gm .unlearn 900102
+as gm .unlearn 900103
+as gm .unlearn 900104
+as gm .unlearn 900105
+as gm .unlearn 900106
+as gm .unlearn 900107
+as gm .unlearn 900108
+as gm .unlearn 900109
+as gm .unlearn 900110
+as gm .unlearn 900111
+as gm .unlearn 900112
+as gm .unlearn 900114
+as gm .unlearn 900116
+as gm .unlearn 900117
+as gm .unlearn 900118
+as gm .unlearn 900119
+as gm .unlearn 900168
+as gm .unlearn 900169
+as gm .unlearn 900170
+as gm .unlearn 900171
+as gm .unlearn 900172
+as gm .unlearn 900173
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 43547
+do gl destroy 25
+do gl destroy 2139
+as gm .additem 25
+as gm .additem 2139
+do gl learn 674
+do gl equip 25
+do gl equip 2139
+do gl learn 47486
+do gl approach d1
+wait 500ms
+
+# ---------------------------------------------------------------- 901111
+log Global - control for 901111: a Shadowflame tick on d1 (61291: 161 fire every 2 sec, always hits, cannot crit; the warrior has no spell power)
+spelllog start
+do gl cast 61291 on d1 triggered
+wait 2500ms
+spelllog stop
+expect gl spell 61291 ticks == 1
+expect gl spell 61291 damage == 161
+do gm target d1
+as gm .unaura 61291
+do gm target gl
+
+log Global - 901111 Empowered: damage done +5 % (the same tick: 169)
+do gl learn 901111
+expect gl aura 901111
+spelllog start
+do gl cast 61291 on d1 triggered
+wait 2500ms
+spelllog stop
+expect gl spell 61291 damage == 169
+as gm .unlearn 901111
+do gm target d1
+as gm .unaura 61291
+do gm target gl
+
+# ---------------------------------------------------------------- 901101
+log Global - 901101 Kill Heal: killing an enemy heals 5 % of maximum health (warrior 9531: 476)
+do gl learn 901101
+as gm .damage 3000
+as gm .npc add temp 1501
+pick mob creature:1501 near gm
+do gl approach mob
+wait 500ms
+spelllog start
+do gl cast 47486 on mob triggered
+wait 1s
+spelllog stop
+expect gl spell 901101 hits >= 1
+expect gl spell 901101 heal >= 450
+expect gl spell 901101 heal <= 500
+as gm .unlearn 901101
+do gl cast 47502 triggered
+
+# ---------------------------------------------------------------- 901102
+log Global - 901102 Extra Attack: melee attacks have a 25 % chance (1 sec cooldown) to hit again (helper 901108) - statistical, 25 s of melee
+do gl approach d1
+wait 500ms
+do gl learn 901102
+do gl cast 43547 triggered
+spelllog start
+do gl attack d1
+wait 25s
+do gl stop
+spelllog stop
+expect gl spell 901108 casts >= 1
+as gm .unlearn 901102
+
+# ---------------------------------------------------------------- 901103
+log Global - 901103 Cleave Proc: spells and abilities have a 10 % chance (1 sec cooldown) to hit every enemy within 10 yd of the target - a spell: 40 direct Instant Poison IX casts in one tick, the extra lines carry its id (statistical)
+do gl learn 901103
+spelllog start
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+do gl cast 57965 on d1
+wait 1s
+spelllog stop
+expect gl spell 57965 targets >= 5
+wait 1s
+
+log Global - 901103 melee: 40 s of auto attack, the extra lines log as 901103 (statistical)
+do gl cast 43547 triggered
+spelllog start
+do gl attack d1
+wait 40s
+do gl stop
+spelllog stop
+expect gl spell 901103 targets >= 5
+as gm .unlearn 901103
+
+# ---------------------------------------------------------------- 901104
+log Global - 901104 Counter Attack: an avoided attack (miss, dodge, parry, block) strikes back for 50 % attack power (2 sec cooldown; the warrior's 568 AP: 284) - a level-1 zombie taunted onto the warrior swings at it for 20 s
+do gl learn 901104
+as gm .npc add temp 1501
+pick mob2 creature:1501 near gm
+do gl approach mob2
+wait 500ms
+spelllog start
+do gl cast 355 on mob2 triggered
+wait 20s
+spelllog stop
+expect gl spell 901104 hits >= 1
+expect gl spell 901104 damage >= 250
+as gm .unlearn 901104
+do gl cast 47502 triggered
+
+cleanup
+do gl stop
+do gl cast 47502 triggered
+do gm target d1
+as gm .unaura 61291
+do gm target gl
+as gm .unaura 43547
+do gl destroy 25
+do gl destroy 2139
+as gm .unlearn 674
+as gm .unlearn 900100
+as gm .unlearn 900101
+as gm .unlearn 900102
+as gm .unlearn 900103
+as gm .unlearn 900104
+as gm .unlearn 900105
+as gm .unlearn 900106
+as gm .unlearn 900107
+as gm .unlearn 900108
+as gm .unlearn 900109
+as gm .unlearn 900110
+as gm .unlearn 900111
+as gm .unlearn 900112
+as gm .unlearn 900114
+as gm .unlearn 900116
+as gm .unlearn 900117
+as gm .unlearn 900118
+as gm .unlearn 900119
+as gm .unlearn 900168
+as gm .unlearn 900169
+as gm .unlearn 900170
+as gm .unlearn 900171
+as gm .unlearn 900172
+as gm .unlearn 900173
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111

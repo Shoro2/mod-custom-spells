@@ -52,205 +52,112 @@ public:
         if (!ammoId)
             return;
 
-        // Restore 1 ammo after each shot
-        player->StoreNewItemInBestSlots(ammoId, 1);
+        // The core takes one ammo per target hit (Spell::HandleLaunchPhase),
+        // after this hook: Multi-Shot on three targets used three. Count
+        // now and give back what the shot used once it has launched (the
+        // event belongs to the player, so it never outlives it).
+        uint32 const before = player->GetItemCount(ammoId);
+        player->m_Events.AddEventAtOffset([player, ammoId, before]()
+        {
+            uint32 const now = player->GetItemCount(ammoId);
+            if (now < before)
+                player->StoreNewItemInBestSlots(ammoId, before - now);
+        }, 1ms);
     }
 };
 
 // ============================================================
 //  HUNTER: Shared - Multi-Shot unlimited targets (900501)
-//  Hooked on Multi-Shot (all ranks via -49048). After hitting
-//  the main target, finds ALL additional enemies in 10yd and
-//  deals the same damage.
+//  Hooked on Multi-Shot (all ranks via -2643). Multi-Shot is a
+//  chain spell (first target + 2 jumps); the script adds every other
+//  enemy within 10 yd of the first target to the chain list, so each
+//  one takes one real Multi-Shot hit (own damage roll, crits, combat
+//  log). The old AfterHit pass dealt the first target's damage to
+//  all enemies around it again - Multi-Shot's own 2nd and 3rd target
+//  were hit twice.
 // ============================================================
 class spell_custom_hunt_multishot_aoe : public SpellScript
 {
     PrepareSpellScript(spell_custom_hunt_multishot_aoe);
 
-    // Multi-Shot natively hits up to 3 targets and AfterHit runs per target;
-    // replicate to the extra enemies only once per cast.
-    bool _done = false;
-
-    void HandleAfterHit()
+    void AddTargets(std::list<WorldObject*>& targets)
     {
-        if (_done)
-            return;
-        _done = true;
-
         Unit* caster = GetCaster();
-        Unit* mainTarget = GetHitUnit();
-        if (!caster || !mainTarget)
+        Unit* mainTarget = GetExplTargetUnit();
+        if (!caster || !mainTarget || !g_CustomSpellsEnabled)
             return;
 
         Player* player = caster->ToPlayer();
-        if (!player)
+        if (!player || !player->HasAura(SPELL_HUNT_MULTISHOT_AOE_PASSIVE))
             return;
 
-        if (!player->HasAura(SPELL_HUNT_MULTISHOT_AOE_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        int32 damage = GetHitDamage();
-        if (damage <= 0)
-            return;
-
-        // Find all enemies within 10yd of the main target
-        std::list<Unit*> targets;
-        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster, 10.0f);
+        std::list<Unit*> nearby;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(mainTarget, caster,
+            10.0f);
         Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
-            searcher(caster, targets, check);
+            searcher(caster, nearby, check);
         Cell::VisitObjects(mainTarget, searcher, 10.0f);
-        targets.remove(mainTarget);
 
-        SpellInfo const* spellInfo = GetSpellInfo();
-
-        for (Unit* target : targets)
+        for (Unit* unit : nearby)
         {
-            if (!target->IsAlive() || !caster->IsValidAttackTarget(target))
+            if (unit == mainTarget || !unit->IsAlive()
+                || !caster->IsValidAttackTarget(unit))
                 continue;
-
-            SpellNonMeleeDamage dmgInfo(caster, target, spellInfo, spellInfo->GetSchoolMask());
-            dmgInfo.damage = damage;
-            caster->DealSpellDamage(&dmgInfo, true);
-            caster->SendSpellNonMeleeDamageLog(&dmgInfo);
+            if (std::find(targets.begin(), targets.end(), unit)
+                != targets.end())
+                continue;
+            targets.push_back(unit);
         }
     }
 
     void Register() override
     {
-        AfterHit += SpellHitFn(spell_custom_hunt_multishot_aoe::HandleAfterHit);
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(
+            spell_custom_hunt_multishot_aoe::AddTargets, EFFECT_0,
+            TARGET_UNIT_TARGET_ENEMY);
     }
 };
 
 // ============================================================
-//  HUNTER BM: Pet damage +50% and Pet attack speed +50% (900502/900503)
-//  UnitScript: intercepts all pet damage and multiplies by 1.5x
-//  if owner has the passive. Also modifies pet attack speed.
+//  HUNTER BM: 900502 Pet Damage +50% / 900503 Pet Speed +50% are
+//  minion auras kept by custom_minion_aura_playerscript
+//  (custom_spells_global.cpp). The old code multiplied the damage
+//  inside OnDamage (invisible in the combat log) and halved the pet's
+//  attack time every 3 sec (= +100 % speed, overwriting haste).
 // ============================================================
-class custom_hunter_pet_unitscript : public UnitScript
-{
-public:
-    custom_hunter_pet_unitscript() : UnitScript("custom_hunter_pet_unitscript") {}
-
-    void OnDamage(Unit* attacker, Unit* /*victim*/, uint32& damage) override
-    {
-        if (!attacker)
-            return;
-
-        // Only for creatures (pets)
-        Creature* pet = attacker->ToCreature();
-        if (!pet)
-            return;
-
-        Unit* owner = pet->GetOwner();
-        if (!owner)
-            return;
-
-        Player* player = owner->ToPlayer();
-        if (!player)
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // Pet damage +50%
-        if (player->HasAura(SPELL_HUNT_BM_PET_DMG_PASSIVE))
-            damage = static_cast<uint32>(damage * 1.5f);
-    }
-};
-
-// ============================================================
-//  HUNTER BM: Pet attack speed +50% (900503)
-//  PlayerScript: when player summons a pet or updates, apply
-//  50% attack speed increase to their pet.
-// ============================================================
-class custom_hunter_pet_speed_playerscript : public PlayerScript
-{
-public:
-    custom_hunter_pet_speed_playerscript() : PlayerScript("custom_hunter_pet_speed_playerscript") {}
-
-    void OnPlayerLogout(Player* player) override
-    {
-        if (player)
-            _lastCheck.erase(player->GetGUID());
-    }
-
-    void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
-    {
-        if (!player || !player->IsAlive())
-            return;
-
-        if (!player->HasAura(SPELL_HUNT_BM_PET_SPEED_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // Throttle: only every 3 seconds
-        uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        ObjectGuid guid = player->GetGUID();
-        if (_lastCheck.count(guid) && (now - _lastCheck[guid]) < 3)
-            return;
-        _lastCheck[guid] = now;
-
-        Pet* pet = player->GetPet();
-        if (!pet || !pet->IsAlive())
-            return;
-
-        // Apply 50% faster attack speed (halve the attack time)
-        uint32 baseAttack = pet->GetAttackTime(BASE_ATTACK);
-        CreatureTemplate const* cinfo = pet->GetCreatureTemplate();
-        if (!cinfo)
-            return;
-        uint32 desired = static_cast<uint32>(cinfo->BaseAttackTime * 0.5f);
-        if (baseAttack != desired)
-            pet->SetAttackTime(BASE_ATTACK, desired);
-    }
-
-private:
-    std::unordered_map<ObjectGuid, uint32> _lastCheck;
-};
 
 // ============================================================
 //  HUNTER BM: Pet chance to deal AoE damage (900504)
-//  UnitScript: On pet melee hit, 15% chance to cast AoE helper.
+//  A white melee hit of the hunter's pet has a 15 % chance to set
+//  off Beast Cleave (900505) around its target. Only white melee
+//  hits count (DealDamage with DIRECT_DAMAGE): the old OnDamage hook
+//  also fired on Beast Cleave's own damage, so on a big pack one
+//  cleave could set off the next ones.
 // ============================================================
 class custom_hunter_pet_aoe_unitscript : public UnitScript
 {
 public:
-    custom_hunter_pet_aoe_unitscript() : UnitScript("custom_hunter_pet_aoe_unitscript") {}
+    custom_hunter_pet_aoe_unitscript()
+        : UnitScript("custom_hunter_pet_aoe_unitscript") { }
 
-    void OnDamage(Unit* attacker, Unit* victim, uint32& /*damage*/) override
+    uint32 DealDamage(Unit* attacker, Unit* victim, uint32 damage,
+        DamageEffectType damagetype) override
     {
-        if (!attacker || !victim || !victim->IsAlive())
-            return;
+        if (damagetype != DIRECT_DAMAGE || !attacker || !victim
+            || !victim->IsAlive() || !g_CustomSpellsEnabled)
+            return damage;
 
         Creature* pet = attacker->ToCreature();
-        if (!pet)
-            return;
+        if (!pet || !pet->IsPet())
+            return damage;
 
-        Unit* owner = pet->GetOwner();
-        if (!owner)
-            return;
+        Player* player = pet->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!player || !player->HasAura(SPELL_HUNT_BM_PET_AOE_PASSIVE))
+            return damage;
 
-        Player* player = owner->ToPlayer();
-        if (!player)
-            return;
-
-        if (!player->HasAura(SPELL_HUNT_BM_PET_AOE_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // 15% chance
-        if (!roll_chance_i(15))
-            return;
-
-        // Cast AoE damage helper centered on victim
-        pet->CastSpell(victim, SPELL_HUNT_BM_PET_AOE_HELPER, true);
+        if (roll_chance_i(15))
+            CastAnchoredBurst(pet, victim, SPELL_HUNT_BM_PET_AOE_HELPER);
+        return damage;
     }
 };
 
@@ -407,7 +314,7 @@ class spell_custom_hunt_surv_trap_proc : public AuraScript
             return;
 
         // Cast Explosive Burst AoE at target
-        player->CastSpell(target, SPELL_HUNT_SURV_TRAP_HELPER, true);
+        CastAnchoredBurst(player, target, SPELL_HUNT_SURV_TRAP_HELPER);
     }
 
     void Register() override
@@ -427,9 +334,7 @@ void AddHunterSpellsScripts()
     new custom_hunter_arrows_playerscript();
     RegisterSpellScript(spell_custom_hunt_multishot_aoe);
 
-    // Hunter BM
-    new custom_hunter_pet_unitscript();
-    new custom_hunter_pet_speed_playerscript();
+    // Hunter BM (pet damage/speed: shared minion auras)
     new custom_hunter_pet_aoe_unitscript();
 
     // Hunter MM

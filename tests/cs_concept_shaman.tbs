@@ -1,0 +1,131 @@
+# mod-custom-spells: the Shaman (Elemental) concept spells
+# built 2026-10-08 (the operator: "ja neue spells im anschluss bauen";
+# share-public custom-spells/08-rework-20261008.md). Every check states the
+# concept. Test ground as cs_shaman: map 13, the FL dummy arena - eight AoE
+# Training Dummies (920018) on a 4-yd circle around (-270, 150).
+# Spells: Lightning Bolt 49238 (rank 14), Chain Lightning 49271 (rank 8),
+# Lava Burst 60043 (rank 2), Flame Shock 49233, Lightning Shield's discharge
+# 49279 (rank 11, cast directly - a dummy never strikes back).
+name    Custom spells - Shaman concept spells
+timeout 300s
+
+bot sh shaman slot=4
+
+place 13 -279 150 -423.2 0
+require sh alive
+pick d1 creature:920018 near sh
+require d1 exists
+do gm target sh
+as gm .unlearn 900400
+as gm .unlearn 900410
+as gm .unlearn 900411
+as gm .unlearn 900412
+as gm .unlearn 900413
+as gm .unlearn 900414
+as gm .unlearn 900415
+as gm .unlearn 900418
+as gm .unaura 900416
+as gm .unaura 900417
+do sh learn 49238
+do sh learn 49271
+do sh learn 60043
+do sh learn 49233
+do sh approach d1 20
+wait 1s
+
+# ---------------------------------------------------------------- Elemental
+log Elemental - 900410 Lightning Bolt +50 %, 900411 +9 targets (= 10), 900412 Chain Lightning +50 %, 900413 Lava Burst +50 %, 900414 +9 targets (= 10)
+do sh learn 900410
+do sh learn 900411
+do sh learn 900412
+do sh learn 900413
+do sh learn 900414
+expect sh spellmod 49238 damage 100 == 150
+expect sh spellmod 49238 jumptargets 0 == 10
+expect sh spellmod 49271 damage 100 == 150
+expect sh spellmod 60043 damage 100 == 150
+expect sh spellmod 60043 jumptargets 0 == 10
+spelllog start
+do sh cast 49238 on d1 triggered
+wait 2s
+do sh cast 60043 on d1 triggered
+wait 2s
+spelllog stop
+expect sh spell 49238 targets >= 7
+expect sh spell 60043 targets >= 7
+
+log Elemental - 900400 Chain Lightning no longer loses damage per jump (the jump multiplier 0.7 -> 1.0)
+do sh learn 900400
+expect sh spellmod 49271 damagemult 70 >= 100
+
+log Elemental - 900415 Elemental Resonance: Nature damage gives +2 % Fire damage (900416), Fire damage +2 % Nature (900417), 10 s, 5 stacks each (normal casts: a triggered one fires no proc)
+do sh learn 900415
+do sh reset
+do sh cast 49238 on d1
+wait 3500ms
+expect sh aura 900416
+do sh cast 49233 on d1
+wait 1s
+expect sh aura 900417
+
+log Elemental - 900418 Lightning Shield's discharges have a 20 % chance to cast Chain Lightning at the attacker - statistical: 20 discharges
+do sh learn 900418
+do sh reset
+spelllog start
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 300ms
+do sh cast 49279 on d1 triggered
+wait 1500ms
+spelllog stop
+expect sh spell 49279 casts >= 20
+expect sh spell 49271 casts >= 1
+
+cleanup
+do sh stop
+do gm target sh
+as gm .unaura 900416
+as gm .unaura 900417
+as gm .unlearn 900400
+as gm .unlearn 900410
+as gm .unlearn 900411
+as gm .unlearn 900412
+as gm .unlearn 900413
+as gm .unlearn 900414
+as gm .unlearn 900415
+as gm .unlearn 900418

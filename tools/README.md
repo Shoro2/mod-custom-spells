@@ -1,32 +1,44 @@
-# Offline tooltip candidates
+# Tools
 
-`data/tooltips_enUS.json` is a **review draft**, not a release declaration.
-It covers the empty picker descriptions and records concept/source conflicts
-in each entry's `review_note`. Do not silently turn a source discrepancy into
-the accepted design by publishing its current-behavior text.
+## `client_spell_sync.py` - spellbook names, tooltips and icons
 
-`patch_tooltips.py` reads the current core `spell_dbc.sql` schema and a complete
-Spell.dbc carrier, then writes a separate candidate plus JSON report. It has
-no database access, SQL execution, MPQ writer or deployment capability.
+The client draws a custom spell's name, tooltip, icon and aura from **its own**
+`Spell.dbc` record; the server reads `acore_world.spell_dbc`. FL ships the client
+file in two carriers, and both go into the combined `patch-9.MPQ`:
+
+| Carrier | Path |
+|---|---|
+| `hot_dbc` | `C:\wowstuff\ForgottenLand2.0\output\hot_dbc\DBFilesClient\Spell.dbc` |
+| `overlay` | `F:\wowstuff\coa-program\pack\overlay\DBFilesClient\Spell.dbc` (shadows `hot_dbc`) |
+
+`data/spellbook_enUS.json` is the source of the texts: one entry per picker spell
+(`id`, `class`, `spec`, `name`, `description`, optional `icon_spell` = the stock spell
+whose icon the record shows). Each description states the behaviour after the
+2026-10-08 rework. It replaces the 2026-10-04 review draft `data/tooltips_enUS.json`
+and its tool `patch_tooltips.py` (both in git history).
 
 ```powershell
-python -B tools/patch_tooltips.py --input <Spell.dbc> --output <candidate.dbc> --schema <core/data/sql/base/db_world/spell_dbc.sql>
+python -B tools/client_spell_sync.py            # check: what would change, writes nothing
+python -B tools/client_spell_sync.py --write    # back up both carriers, write them in place
+python -B tools/client_spell_sync.py --lua      # picker labels := manifest names
 ```
 
-For the observed server carrier alone, `--allow-missing 900902` declares the
-existing DB-only Weakened Soul marker. Allowances must match missing IDs
-exactly. Client carriers must contain every manifest ID. No sparse DB rows
-are created for DBC-only Warrior spells.
+Per carrier, `--write`:
 
-The patch changes only `Description_Lang_enUS` string offsets and corresponding
-locale flags. It appends/reuses UTF-8 strings; IDs, record order, gameplay
-dwords, other strings/locales and the original string block are preserved.
-Repeated application is byte-idempotent. The dated vault review links the
-actual Windows carrier verification reports and pending native tests.
+1. copies every non-string field of the server rows 900000-901199 into the record of
+   the same id (floats as floats, string offsets and locale masks untouched);
+2. appends every server-only record except the dead helpers in `SKIP_IDS`;
+3. sets `Name`, `Description` and `SpellIconID` of every manifest spell.
 
-To make the descriptions durable in the DB, add reviewed strings to the
-existing per-class module INSERTs, preserving every old value. A separate
-hash-tracked UPDATE can be lost when a later changed base INSERT is reapplied.
-The CoA overlay shadows hot staging in the combined client patch, so prepare
-both complete candidates and use the established script30 deployment path
-after the coordinator grants the exact data window. Never patch MPQ manually.
+It refuses a carrier with dangling string offsets or a string block that does not
+start with NUL, reuses identical strings (a rerun adds nothing), proves that no
+record outside the custom block changed and that the old string block is a prefix of
+the new one, and backs each carrier up to
+`F:\Backups\fl-restore-backups\{hot_dbc,overlay}\Spell.dbc.pre_<tag>_<date>_<sha8>`.
+
+Then build the client patch with the workspace's
+`scripts\30_build_hot_dbc_patch.py` (FL-only archive), then `--deploy` with the client
+closed. The host gets the new `patch-9.MPQ` through the launcher (a `client-patch`
+entry in share-public `forgotten-land/15-host-migration-log.md`).
+
+The server's own `spell_dbc` names are not shown to players; they stay as they are.

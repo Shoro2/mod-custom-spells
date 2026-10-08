@@ -21,7 +21,8 @@
 //  WARLOCK AFFLICTION: DoT ticks deal Shadow AoE (900800)
 //  Proc aura: when a periodic damage tick lands (any Warlock
 //  DoT), X% chance to cast Shadow AoE helper (900803)
-//  centered on the DoT target. 2s ICD.
+//  centered on the DoT target (dest-centred since 2026-10-08:
+//  the helper used to go off around the warlock). 2s ICD.
 // ============================================================
 class spell_custom_wlk_dot_aoe : public AuraScript
 {
@@ -47,7 +48,7 @@ class spell_custom_wlk_dot_aoe : public AuraScript
             return;
 
         // Cast Shadow AoE centered on the DoT target
-        player->CastSpell(target, SPELL_WLK_AFFL_DOT_AOE_HELPER, true);
+        CastAnchoredBurst(player, target, SPELL_WLK_AFFL_DOT_AOE_HELPER);
     }
 
     void Register() override
@@ -227,6 +228,12 @@ class spell_custom_wlk_meta_aoe_heal : public AuraScript
 //  a lesser demon (30s duration, reduced stats). Uses NPC
 //  entries based on the pet type. 30s ICD via static map.
 // ============================================================
+class LesserDemonCd : public DataMap::Base
+{
+public:
+    uint32 Last = 0;
+};
+
 class custom_wlk_lesser_demon_unitscript : public UnitScript
 {
 public:
@@ -257,30 +264,19 @@ public:
         if (!g_CustomSpellsEnabled)
             return;
 
-        // 30s ICD per player
+        // 30s ICD per player, kept on the player (the old static map was
+        // shared by every map thread)
         uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        static std::unordered_map<ObjectGuid, uint32> s_lastSpawn;
-        ObjectGuid guid = owner->GetGUID();
-        if (s_lastSpawn.count(guid) && (now - s_lastSpawn[guid]) < 30)
+        LesserDemonCd* cd = owner->CustomData.GetDefault<LesserDemonCd>(
+            "mod_custom_spells_lesser_demon");
+        if (cd->Last && now - cd->Last < 30)
             return;
 
         // 10% chance
         if (urand(1, 100) > 10)
             return;
 
-        // Clean up stale entries (players who logged out)
-        if (s_lastSpawn.size() > 200)
-        {
-            for (auto it = s_lastSpawn.begin(); it != s_lastSpawn.end(); )
-            {
-                if (now - it->second > 60)
-                    it = s_lastSpawn.erase(it);
-                else
-                    ++it;
-            }
-        }
-
-        s_lastSpawn[guid] = now;
+        cd->Last = now;
 
         // Determine lesser demon NPC based on pet entry
         uint32 petEntry = creature->GetEntry();
@@ -332,7 +328,7 @@ class spell_custom_wlk_imp_fb_aoe : public SpellScript
         if (!caster || !target)
             return;
 
-        // Caster is the Imp â€” check owner
+        // Caster is the Imp - check owner
         Unit* ownerUnit = caster->GetOwner();
         if (!ownerUnit)
             return;
@@ -509,50 +505,10 @@ class spell_custom_wlk_sacrifice_all : public SpellScript
 // ============================================================
 
 // ============================================================
-//  WARLOCK PET DAMAGE BOOST (900836, 900839)
-//  UnitScript: when a Warlock pet deals damage, boost it by 50%
-//  if the owner has the corresponding passive aura.
-//  900836 = Imp Firebolt +50%, 900839 = Felguard +50%
-//  NOTE: DBC-only ADD_PCT_MODIFIER cannot target pet spells
-//  (different SpellFamilyName), so C++ is required.
+//  WARLOCK PET DAMAGE BOOST (900836, 900839): minion auras kept by
+//  custom_minion_aura_playerscript (custom_spells_global.cpp); the
+//  old OnDamage multiplier was invisible in the combat log.
 // ============================================================
-class custom_wlk_pet_dmg_unitscript : public UnitScript
-{
-public:
-    custom_wlk_pet_dmg_unitscript()
-        : UnitScript("custom_wlk_pet_dmg_unitscript") {}
-
-    void OnDamage(Unit* attacker, Unit* /*victim*/, uint32& damage) override
-    {
-        if (!attacker)
-            return;
-
-        Creature* creature = attacker->ToCreature();
-        if (!creature || !creature->IsPet())
-            return;
-
-        Unit* ownerUnit = creature->GetOwner();
-        if (!ownerUnit)
-            return;
-
-        Player* owner = ownerUnit->ToPlayer();
-        if (!owner)
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        uint32 entry = creature->GetEntry();
-
-        // Imp: +50% all damage if owner has 900836
-        if (entry == 416 && owner->HasAura(SPELL_WLK_DEMO_IMP_FB_DMG))
-            damage = static_cast<uint32>(damage * 1.5f);
-
-        // Felguard: +50% all damage if owner has 900839
-        if (entry == 17252 && owner->HasAura(SPELL_WLK_DEMO_FG_DMG))
-            damage = static_cast<uint32>(damage * 1.5f);
-    }
-};
 
 void AddWarlockSpellsScripts()
 {
@@ -568,8 +524,5 @@ void AddWarlockSpellsScripts()
     RegisterSpellScript(spell_custom_wlk_fg_unlim);
     RegisterSpellScript(spell_custom_wlk_sacrifice_all);
 
-    // Warlock Destruction
-
-    // Warlock Pet Damage Boost
-    new custom_wlk_pet_dmg_unitscript();
+    // Warlock Destruction: pure spell data (900866-900870)
 }
