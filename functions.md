@@ -20,6 +20,37 @@ How the module works and how to extend it. What it is: [`CLAUDE.md`](./CLAUDE.md
   for the concept spells built on 2026-10-08. Queue one with
   `INSERT INTO acore_world.testbots_run (Scenario) VALUES ('cs_warrior');`.
 
+## Revision 2026-10-08: the second concept list
+
+The operator's second list (share-public `custom-spells/09-concept-revision-20261008.md`) added 44 lines
+in Hunter, Druid, Rogue, Warlock and Priest and changed 9 built spells (Paragon damage = 666 + 5 x Paragon
+level for the "damage by Paragon level" lines). Mechanics worth knowing before you touch them:
+- **Second pet** (900525 hunter, 900858 warlock; `custom_spells_second_pet.cpp`): a plain Guardian
+  (SummonProperties 61, marker aura 900526) next to the real pet - never `Player::GetPet()`, never the native
+  pet bar. A PlayerScript reconciles it every 0.5 s (hunter: a copy of the current pet with its model, level,
+  talents, bar spells and the owner's `spell_pet_auras`; warlock: the demon that was out when another one was
+  summoned). Its own bar: `lua/CustomSpells_PetBar_*.lua` (AIO); clicks go to the server Lua, which validates
+  them and runs `.cspet attack|follow|stay|aggressive|defensive|passive|cast|autocast|status|sync`
+  (SEC_PLAYER, own second pet only); the C++ pushes the state back as addon whispers with prefix `CSPB`
+  (`X` / `F` / `S` / `C` lines). Scripts that require `IsPet()` let the marker count too (Beast Cleave,
+  Lesser Demons). What reaches only the real pet: everything the core aims at `GetPet()` (Mend Pet, Kill
+  Command, Bestial Wrath, Spirit Bond, Soul Link).
+- **Behind the target from the front** (900674 rogue, 901053 druid; `custom_spells_rogue.cpp`): at startup the
+  module clears `SPELL_ATTR0_CU_REQ_CASTER_BEHIND_TARGET` from every spell carrying it and enforces it itself
+  (SPELL_FAILED_NOT_BEHIND) unless the caster has a marker (`AddFrontalAttackMarker`).
+- **Finisher bursts** (901054 Berserk, 900639 Adrenaline Rush): `AddComboFrenzyRule` (rogue file) gives the
+  speed aura while the cooldown lasts and a Paragon burst on every 5-combo-point finisher.
+- **Stacking buffs with a timer of their own** (Lunar Frenzy 901007, Ursine Bulwark 901040): a refresh by
+  CastSpell restarts every non-DoT periodic timer, so stacks are added with SetStackAmount + RefreshDuration
+  (`AddStackKeepTicking`, druid file).
+- **Free channels** (Drain Life 900806, Mind Flay 900974): periodic helper auras on the enemy, not channels,
+  so the player's own casts go on; they pick only enemies already in combat.
+- **Mobile Hellfire / Rain of Fire around you** (900873/900875): the cast's channel is ended and a self-aura
+  ticker (900874/900876) deals the ticks around the warlock, like the mobile Consecration.
+- **Summons that fight for the priest** (900964 Redemption Guardian, 900999 Lesser Tentacle) carry
+  `UNIT_FLAG_PLAYER_CONTROLLED`: two creatures may fight only if one is hostile to the other, and the
+  training dummies (and many mobs) are neutral.
+
 ## Picker UI
 
 **Spell-row hover (2026-10-04).** Hovering a checkbox or its label opens
@@ -148,6 +179,15 @@ When hooking on existing Blizzard spells via `spell_script_names`, the C++ class
     `GetGlobalCooldownMgr().CancelGlobalCooldown` after the cast (900737).
 18. **Two scripts on one spell run in no fixed order**: the core's Arcane Blast script re-applied 36032 after
     ours raised its stacks; a stack cap belongs in `SPELLMOD_MAX_AURA_STACKS` (31, this fork), not in C++.
+19. **A percent `SPELLMOD_GLOBAL_COOLDOWN` (aura 108) does nothing** outside the Backdraft case:
+    `Player::ApplySpellMod` applies it only when the same aura already modified that cast. Use a flat
+    modifier (aura 107, e.g. -500 ms) - Shadow Dance: Flow 900673.
+20. **The core queues casts** (`SpellQueue.Enabled = 1`, window 400 ms): a request within 400 ms of the end
+    of a GCD or cast is queued silently and runs later, one with more left fails NOT_READY (67).
+21. **Area caps: use aura 277** (`SPELL_AURA_MOD_MAX_AFFECTED_TARGETS` on the spell's mask). Hand-rolled
+    extra-target damage hits the spell's own targets again (Divine Storm, 2026-10-08).
+22. **A spell that only triggers its damage per target** (Mutilate 48666 -> 48665/48664) needs the jump
+    targets on the triggered strikes: a strike triggered on a far chain target fails its range check.
 
 ## Code style
 

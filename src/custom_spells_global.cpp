@@ -253,32 +253,64 @@ class spell_custom_global_counter_attack : public AuraScript
 //  - 900502 Hunter "Pet Damage +50%": the pet
 //  - 900503 Hunter "Pet Speed +50%": the pet (+50 % melee haste)
 //  - 900836 / 900839 Warlock: the Imp / the Felguard
+//  - concept revision 2026-10-08 (Warlock Demonology):
+//    900834 every demon +100 % damage (900845) while the warlock is
+//    in Metamorphosis; 900846 the Imp casts 50 % faster (900847,
+//    aura 65: cast time / 1.5); 900848 the Voidwalker +500 % health
+//    and Suffering every 10 sec in combat (900849, the pulse is
+//    spell_custom_wlk_void_bulwark in custom_spells_warlock.cpp)
 //  The damage passives used to multiply inside UnitScript::OnDamage,
 //  after the combat log line was sent, so the log, the floating
 //  numbers and every damage meter showed the old value. An aura
 //  (MOD_DAMAGE_PERCENT_DONE 901109, MOD_MELEE_HASTE 901110) works
 //  through the core's damage and haste code and shows up everywhere.
 //  Kept in sync once a second per owner; the auras are added and
-//  removed only here.
+//  removed only here. A rule reaches every minion CollectMinions
+//  finds - the pet, the guardians and totems in m_Controlled and the
+//  summon slots, the custom summons below - so a guardian demon of
+//  the pet's entry gets the same aura as the pet.
 // ============================================================
 namespace
 {
+    // Warlock Demonology ids of the 2026-10-08 revision (file-local:
+    // custom_spells_common.h stays untouched in this round)
+    constexpr uint32 SPELL_WLK_DEMO_FEL_FURY_AURA     = 900845;
+    constexpr uint32 SPELL_WLK_DEMO_IMP_SPEED         = 900846;
+    constexpr uint32 SPELL_WLK_DEMO_IMP_SPEED_AURA    = 900847;
+    constexpr uint32 SPELL_WLK_DEMO_VOID_BULWARK      = 900848;
+    constexpr uint32 SPELL_WLK_DEMO_VOID_BULWARK_AURA = 900849;
+
     struct MinionAuraRule
     {
         uint32 passive;
         uint32 aura;
-        uint32 entry;   // 0 = every minion of the owner
+        uint32 entry;       // 0 = every minion of the owner
+        uint32 ownerAura;   // 0 = always, else only while the owner has it
     };
 
     MinionAuraRule const MINION_AURA_RULES[] =
     {
-        { SPELL_ENH_SUMMON_DMG_PASSIVE,     SPELL_GLOBAL_MINION_DAMAGE, 0 },
-        { SPELL_HUNT_BM_PET_DMG_PASSIVE,    SPELL_GLOBAL_MINION_DAMAGE, 0 },
-        { SPELL_HUNT_BM_PET_SPEED_PASSIVE,  SPELL_GLOBAL_MINION_HASTE,  0 },
+        { SPELL_ENH_SUMMON_DMG_PASSIVE,     SPELL_GLOBAL_MINION_DAMAGE, 0, 0 },
+        { SPELL_HUNT_BM_PET_DMG_PASSIVE,    SPELL_GLOBAL_MINION_DAMAGE, 0, 0 },
+        { SPELL_HUNT_BM_PET_SPEED_PASSIVE,  SPELL_GLOBAL_MINION_HASTE,  0, 0 },
         { SPELL_WLK_DEMO_IMP_FB_DMG,        SPELL_GLOBAL_MINION_DAMAGE,
-            NPC_IMP },
+            NPC_IMP, 0 },
         { SPELL_WLK_DEMO_FG_DMG,            SPELL_GLOBAL_MINION_DAMAGE,
-            NPC_FELGUARD },
+            NPC_FELGUARD, 0 },
+        { SPELL_WLK_DEMO_FEL_VIGOR_PASSIVE, SPELL_WLK_DEMO_FEL_FURY_AURA,
+            0, SPELL_METAMORPHOSIS },
+        { SPELL_WLK_DEMO_IMP_SPEED,         SPELL_WLK_DEMO_IMP_SPEED_AURA,
+            NPC_IMP, 0 },
+        { SPELL_WLK_DEMO_VOID_BULWARK,      SPELL_WLK_DEMO_VOID_BULWARK_AURA,
+            NPC_VOIDWALKER, 0 },
+    };
+
+    // every aura the rules hand out, each once
+    uint32 const MINION_RULE_AURAS[] =
+    {
+        SPELL_GLOBAL_MINION_DAMAGE, SPELL_GLOBAL_MINION_HASTE,
+        SPELL_WLK_DEMO_FEL_FURY_AURA, SPELL_WLK_DEMO_IMP_SPEED_AURA,
+        SPELL_WLK_DEMO_VOID_BULWARK_AURA
     };
 
     // Custom summons made with SummonCreature: owned by the player, but
@@ -367,15 +399,16 @@ public:
             if (!minion->IsAlive())
                 continue;
 
-            for (uint32 aura : { uint32(SPELL_GLOBAL_MINION_DAMAGE),
-                uint32(SPELL_GLOBAL_MINION_HASTE) })
+            for (uint32 aura : MINION_RULE_AURAS)
             {
                 bool wanted = false;
                 if (g_CustomSpellsEnabled)
                     for (MinionAuraRule const& rule : MINION_AURA_RULES)
                         if (rule.aura == aura
                             && (!rule.entry || rule.entry == minion->GetEntry())
-                            && player->HasAura(rule.passive))
+                            && player->HasAura(rule.passive)
+                            && (!rule.ownerAura
+                                || player->HasAura(rule.ownerAura)))
                             wanted = true;
 
                 bool const has = minion->HasAura(aura);

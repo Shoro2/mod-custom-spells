@@ -1,0 +1,273 @@
+# mod-custom-spells: the Hunter spells of the concept revision of 2026-10-08
+# (share-public custom-spells/09-concept-revision-20261008.md) on a bot. Every
+# check states the revised concept, so a FAIL marks a defect, not a typo.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018: take 0 damage, never die, the combat log still reads the full
+# amount; each one faces the ring's middle) on a 3.9-yd circle around
+# (-270, 150). The hunter shoots from 15 yd west of the west-most dummy d1
+# (-273.9, 150), facing the ring.
+# Gear: the slot-4 dwarf hunter's Worn Battleaxe (12282, a two-handed axe:
+# the melee weapon for Raptor Strike and Blade Readiness) and Old Blunderbuss
+# (2508); Light Shot 2516 is its ammo (see cs_hunter: the stack must never
+# run dry, the cleanup leaves 1000).
+# Hit rolls: Song of Sylvanas 59756 (no miss) and NPC Hit Buffs 62627
+# (expertise: no dodge or parry) on the hunter where a roll would decide a
+# check (.aura lands at the next update: waitfor it).
+# Pet: the Snow Tracker Wolf (1138) cs_hunter tames (saved with the character;
+# `tame` does nothing when the bot has one).
+# Spells: Auto Shot 75, Multi-Shot 49048, Serpent Sting 49001 (rank 12),
+# Chimera Shot 53209 (talent), Aimed Shot 49050 (rank 9), Raptor Strike 48996
+# (rank 11), Explosive Trap 49067 -> Explosive Trap Effect 49065 (rank 6).
+# New/changed: 900507 Pet Health (pet aura 900508), 900537 Multi-Shot ->
+# Serpent Sting, 900538 / 900539 Chimera Shot +9 targets / +50 %, 900540
+# Running Aim (buff 900541), 900566 explosive trap on any physical damage,
+# 900568 Blade and Shot (buffs 900569 / 900570), 900571 / 900572 Raptor Strike
+# +9 targets / +50 %.
+name    Custom spells - Hunter revision 2026-10-08
+timeout 300s
+
+bot hu hunter slot=4
+
+place 13 -279 150 -423.2 0
+require hu alive
+pick d1 creature:920018 near hu
+require d1 exists
+do gm target hu
+as gm .unlearn 900500
+as gm .unlearn 900501
+as gm .unlearn 900502
+as gm .unlearn 900503
+as gm .unlearn 900504
+as gm .unlearn 900507
+as gm .unlearn 900533
+as gm .unlearn 900534
+as gm .unlearn 900537
+as gm .unlearn 900538
+as gm .unlearn 900539
+as gm .unlearn 900540
+as gm .unlearn 900566
+as gm .unlearn 900568
+as gm .unlearn 900571
+as gm .unlearn 900572
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 900541
+as gm .unaura 900569
+as gm .unaura 900570
+as gm .unaura 3045
+do hu learn 75
+do hu learn 49048
+do hu learn 49001
+do hu learn 53209
+do hu learn 49050
+do hu learn 48996
+do hu learn 49067
+do hu destroy 2516
+as gm .additem 2516 1000
+expect hu item 2516 == 1000
+do hu tame 1138
+waitfor hu pet timeout 5s
+pick pt creature:1138 near hu
+require pt exists
+track pt
+do hu approach d1 15
+as gm .aura 59756
+as gm .aura 62627
+waitfor hu aura 62627 timeout 2s
+wait 1s
+
+# ---------------------------------------------------------------- Beast Mastery
+log BM - 900507 Pet Health +100 %: spell_pet_auras (900507 -> 900508) makes the core put 900508 (aura 133, +100 % health) on the pet; its health doubles (it keeps its share)
+mark m0
+do hu learn 900507
+waitfor pt aura 900508 timeout 3s
+expect pt health > mark:m0
+
+log BM - unlearning the passive takes 900508 off the pet again
+as gm .unlearn 900507
+waitfor pt noaura 900508 timeout 3s
+
+# ---------------------------------------------------------------- Marksmanship
+log MM - control for 900537: without it a Multi-Shot (3 targets) applies no Serpent Sting
+spelllog start
+do hu cast 49048 on d1 triggered
+wait 2s
+spelllog stop
+expect hu spell 49048 hits >= 2
+expect hu spell 49001 casts == 0
+
+log MM - 900537 Multi-Shot applies Serpent Sting: every enemy the Multi-Shot hits gets the highest rank the hunter knows (49001), each one once
+do hu learn 900537
+spelllog start
+do hu cast 49048 on d1 triggered
+wait 2s
+spelllog stop
+expect hu spell 49048 hits >= 2
+expect hu spell 49001 casts >= 2
+expect hu spell 49001 casts <= 3
+expect d1 aura 49001
+as gm .unlearn 900537
+
+log MM - 900538 / 900539 Chimera Shot +9 targets (jump targets 0 -> 10: ten in all) and +50 % damage
+do hu learn 900538
+do hu learn 900539
+expect hu spellmod 53209 jumptargets 0 == 10
+expect hu spellmod 53209 damage 100 == 150
+spelllog start
+do hu cast 53209 on d1 triggered
+wait 1500ms
+spelllog stop
+expect hu spell 53209 maxtargets >= 6
+expect hu spell 53209 hits <= 8
+as gm .unlearn 900538
+as gm .unlearn 900539
+
+log MM - 900540 Running Aim: every 5 s of movement give a stack of 900541 - four 14-yd runs of about 2 s each (8 s in all): one stack
+do hu learn 900540
+as gm .unaura 900541
+# the no-miss aura 59756 (Song of Sylvanas) also gives +100 % run speed: without it
+# a 14-yd run takes 2 s
+as gm .unaura 59756
+waitfor hu noaura 59756 timeout 2s
+do hu goto -288.9 150 -423.2
+wait 500ms
+do hu walk -302.9 150 -423.2
+wait 2100ms
+do hu walk -288.9 150 -423.2
+wait 2100ms
+do hu walk -302.9 150 -423.2
+wait 2100ms
+do hu walk -288.9 150 -423.2
+wait 2100ms
+expect hu aurastacks 900541 == 1
+
+log MM - 900540 standing still adds no stack
+wait 6s
+expect hu aurastacks 900541 == 1
+
+log MM - 900540 an Aimed Shot below 5 stacks strikes its target only and uses the stacks up
+do hu stop
+as gm .aura 59756
+waitfor hu aura 59756 timeout 2s
+do hu goto -288.9 150 -423.2
+wait 300ms
+do hu approach d1 15
+wait 300ms
+spelllog start
+do hu cast 49050 on d1 triggered
+wait 1500ms
+spelllog stop
+expect hu spell 49050 maxtargets == 1
+expect hu noaura 900541
+
+log MM - 900540 at 5 stacks (+250 %) the Aimed Shot pierces: every enemy in a line from the hunter through d1 within its range takes a hit of its own (on the line: d1 and the east-most dummy; the four 2.8 yd beside it count with the dummies' reach); the shot uses the stacks up
+as gm .aura 900541
+waitfor hu aura 900541 timeout 2s
+as gm .aura stack 900541 4
+expect hu aurastacks 900541 == 5
+expect hu spellmod 49050 damage 100 == 350
+spelllog start
+do hu cast 49050 on d1 triggered
+wait 1500ms
+spelllog stop
+expect hu spell 49050 maxtargets >= 2
+expect hu spell 49050 hits <= 8
+expect hu noaura 900541
+as gm .unlearn 900540
+
+# ---------------------------------------------------------------- Survival
+log Survival - 900568 Blade and Shot: physical shot damage stacks Blade Readiness (900569, +5 % melee weapon damage) - a Multi-Shot's three hits: three stacks, no Shot Readiness (900570)
+do hu learn 900568
+as gm .unaura 900569
+as gm .unaura 900570
+do hu cast 49048 on d1 triggered
+wait 1500ms
+expect hu aurastacks 900569 >= 2
+expect hu noaura 900570
+
+log Survival - 900568 a melee hit (Raptor Strike) uses Blade Readiness up and stacks Shot Readiness (+5 % ranged weapon damage)
+do hu approach d1
+wait 300ms
+do hu cast 48996 on d1 triggered
+wait 700ms
+expect hu noaura 900569
+expect hu aurastacks 900570 >= 1
+
+log Survival - 900568 the next shot uses Shot Readiness up and stacks Blade Readiness again
+do hu approach d1 15
+wait 300ms
+do hu cast 49048 on d1 triggered
+wait 1500ms
+expect hu noaura 900570
+expect hu aura 900569
+as gm .unlearn 900568
+as gm .unaura 900569
+as gm .unaura 900570
+
+log Survival - 900571 / 900572 Raptor Strike +9 targets (jump targets 0 -> 10, a melee chain in front of you) and +50 % damage (from the west of d1, facing the ring)
+do hu learn 900571
+do hu learn 900572
+expect hu spellmod 48996 jumptargets 0 == 10
+expect hu spellmod 48996 damage 100 == 150
+do hu approach d1
+wait 300ms
+spelllog start
+do hu cast 48996 on d1 triggered
+wait 1s
+spelllog stop
+expect hu spell 48996 maxtargets >= 6
+expect hu spell 48996 hits <= 8
+
+log Survival - 900566 explosive trap on physical damage, melee included: each hit 15 % (2 s cooldown), the Explosive Trap Effect of the hunter's rank (49065) goes off at the struck enemy and hits the ring - four Raptor Strikes on the ring (about 8 hits each) 2.5 s apart, statistical (P(no trap) below 1 %)
+do hu learn 900566
+spelllog start
+do hu cast 48996 on d1 triggered
+wait 2500ms
+do hu cast 48996 on d1 triggered
+wait 2500ms
+do hu cast 48996 on d1 triggered
+wait 2500ms
+do hu cast 48996 on d1 triggered
+wait 1500ms
+spelllog stop
+expect hu spell 49065 casts >= 1
+expect hu spell 49065 targets >= 5
+as gm .unlearn 900566
+as gm .unlearn 900571
+as gm .unlearn 900572
+
+cleanup
+do hu stop
+do gm target hu
+as gm .unaura 900541
+as gm .unaura 900569
+as gm .unaura 900570
+as gm .unaura 59756
+as gm .unaura 62627
+as gm .unaura 3045
+do hu destroy 2516
+as gm .additem 2516 1000
+as gm .unlearn 900500
+as gm .unlearn 900501
+as gm .unlearn 900502
+as gm .unlearn 900503
+as gm .unlearn 900504
+as gm .unlearn 900507
+as gm .unlearn 900533
+as gm .unlearn 900534
+as gm .unlearn 900537
+as gm .unlearn 900538
+as gm .unlearn 900539
+as gm .unlearn 900540
+as gm .unlearn 900566
+as gm .unlearn 900568
+as gm .unlearn 900571
+as gm .unlearn 900572
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111

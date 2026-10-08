@@ -1,0 +1,292 @@
+# mod-custom-spells: the Rogue spells of the concept revision of 2026-10-08
+# (share-public custom-spells/09-concept-revision-20261008.md) on a bot. Every
+# check states the revised concept, so a FAIL marks a defect, not a typo.
+# (900603 Poison Nova's revised proc is checked in cs_rogue, where its old
+# check was.)
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018: take 0 damage, never die, the combat log still reads the full
+# amount; each one faces the ring's middle) on a 3.9-yd circle around
+# (-270, 150); d1 = the west-most one (-273.9, 150), facing east: from the
+# west the rogue stands behind it, from the ring's middle in front of it.
+# Melee chains only jump to units in front of the caster.
+# Gear: daggers in both hands - a Dirk (2139) in the main hand (the slot-4
+# rogue's main hand is empty after cs_rogue) and its own Worn Dirk (50055) in
+# the off hand (Mutilate, Backstab and Ambush need daggers).
+# Energy: `reset` fills it (100); Sinister Strike costs 45, Backstab 60.
+# Hit rolls: Song of Sylvanas 59756 (no miss), NPC Hit Buffs 62627 (no dodge or
+# parry) on the rogue: a dodged finisher keeps its combo points.
+# Spells: Mutilate 48666 (its hits 48665 / 48664), Sinister Strike 48638 (a
+# combo point), Eviscerate 48668 (a finisher), Adrenaline Rush 13750, Killing
+# Spree 51690 (talent; each tick teleports and strikes with 57841), Fan of
+# Knives 51723 (off hand 52874), Ambush 48691, Shadow Dance 51713 (talent),
+# Backstab 48657 (needs you behind the target).
+# New: 900605 Mutilate +9 targets, 900639 Adrenaline Rush: Unleashed (speed
+# 900640, burst 900641), 900642 Killing Spree: Fan of Knives, 900670 / 900671
+# Ambush +9 targets / +50 %, 900672 Shadow Dance: Flow (aura 900673), 900674
+# Frontal Assault.
+name    Custom spells - Rogue revision 2026-10-08
+timeout 300s
+
+bot ro rogue slot=4
+
+place 13 -279 150 -423.2 0
+require ro alive
+pick d1 creature:920018 near ro
+require d1 exists
+do gm target ro
+as gm .unlearn 900600
+as gm .unlearn 900601
+as gm .unlearn 900602
+as gm .unlearn 900603
+as gm .unlearn 900605
+as gm .unlearn 900633
+as gm .unlearn 900634
+as gm .unlearn 900635
+as gm .unlearn 900636
+as gm .unlearn 900637
+as gm .unlearn 900639
+as gm .unlearn 900642
+as gm .unlearn 900666
+as gm .unlearn 900667
+as gm .unlearn 900668
+as gm .unlearn 900670
+as gm .unlearn 900671
+as gm .unlearn 900672
+as gm .unlearn 900674
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 13750
+as gm .unaura 51713
+as gm .unaura 900640
+as gm .unaura 900673
+do ro learn 48666
+do ro learn 48638
+do ro learn 48668
+do ro learn 13750
+do ro learn 51690
+do ro learn 48691
+do ro learn 51713
+do ro learn 48657
+do ro destroy 2139
+as gm .additem 2139
+do ro equip 2139
+as gm .aura 59756
+as gm .aura 62627
+waitfor ro aura 62627 timeout 2s
+do ro approach d1
+wait 1s
+
+# ---------------------------------------------------------------- Assassination
+log Assassination - 900605 Mutilate +9 targets: each hand strike (48665 main hand, 48664 off hand) chains to up to 9 more enemies in front of you (jump targets 0 -> 10 on the strikes)
+do ro learn 900605
+expect ro spellmod 48665 jumptargets 0 == 10
+expect ro spellmod 48664 jumptargets 0 == 10
+spelllog start
+do ro cast 48666 on d1 triggered
+wait 1s
+spelllog stop
+expect ro spell 48665 maxtargets >= 6
+expect ro spell 48664 maxtargets >= 6
+expect ro spell 48665 hits <= 8
+expect ro spell 48664 hits <= 8
+as gm .unlearn 900605
+
+# ---------------------------------------------------------------- Combat
+log Combat - 900639 Adrenaline Rush: Unleashed: +100 % movement speed (900640) for as long as Adrenaline Rush lasts (in the ring's middle, in front of d1)
+do ro learn 900639
+do ro goto -270.5 150 -423.2
+wait 300ms
+do ro approach d1 1.5
+wait 300ms
+do ro reset
+do ro cast 13750 triggered
+wait 300ms
+expect ro aura 900640
+expect ro auraduration 900640 > 10000
+
+log Combat - 900639 a 5-combo-point finisher during Adrenaline Rush unleashes 900641 (Physical round the rogue): five Sinister Strikes (a point each), then Eviscerate on d1
+do ro cast 48638 on d1 triggered
+do ro cast 48638 on d1 triggered
+do ro cast 48638 on d1 triggered
+do ro cast 48638 on d1 triggered
+do ro cast 48638 on d1 triggered
+wait 300ms
+spelllog start
+do ro cast 48668 on d1
+wait 1s
+spelllog stop
+expect ro spell 48668 hits >= 1
+expect ro spell 900641 casts == 1
+expect ro spell 900641 targets >= 6
+
+log Combat - 900639 a 4-point finisher unleashes nothing
+do ro cast 48638 on d1 triggered
+do ro cast 48638 on d1 triggered
+do ro cast 48638 on d1 triggered
+do ro cast 48638 on d1 triggered
+wait 300ms
+spelllog start
+do ro cast 48668 on d1
+wait 1s
+spelllog stop
+expect ro spell 48668 hits >= 1
+expect ro spell 900641 casts == 0
+
+log Combat - 900639 the speed goes with Adrenaline Rush
+as gm .unaura 13750
+waitfor ro noaura 900640 timeout 2s
+as gm .unlearn 900639
+
+log Combat - control for 900642: Killing Spree alone (in the ring's middle: every dummy within its 10 yd) throws no Fan of Knives
+do ro goto -270 150 -423.2
+wait 300ms
+spelllog start
+do ro cast 51690 triggered
+wait 3s
+spelllog stop
+expect ro spell 57841 casts >= 3
+expect ro spell 51723 casts == 0
+
+log Combat - 900642 Killing Spree: Fan of Knives: every Killing Spree strike throws a free Fan of Knives (51723, twice its weapon damage) round the rogue's new spot
+do ro learn 900642
+do ro goto -270 150 -423.2
+wait 300ms
+spelllog start
+do ro cast 51690 triggered
+wait 3s
+spelllog stop
+expect ro spell 57841 casts >= 3
+expect ro spell 51723 casts >= 3
+expect ro spell 51723 targets >= 6
+as gm .unlearn 900642
+
+# ---------------------------------------------------------------- Subtlety
+log Subtlety - 900670 / 900671 Ambush +9 targets (jump targets 0 -> 10, a melee chain in front of you) and +50 % (a triggered Ambush needs no stealth; from the west, behind d1)
+do ro learn 900670
+do ro learn 900671
+expect ro spellmod 48691 jumptargets 0 == 10
+expect ro spellmod 48691 damage 100 == 150
+do ro goto -279 150 -423.2
+wait 300ms
+do ro approach d1
+wait 300ms
+spelllog start
+do ro cast 48691 on d1 triggered
+wait 1s
+spelllog stop
+expect ro spell 48691 maxtargets >= 6
+expect ro spell 48691 hits <= 8
+as gm .unlearn 900670
+as gm .unlearn 900671
+
+log Subtlety - control for 900672: a Sinister Strike (sent as a client sends it) costs its energy and starts a 1 s global cooldown; a second one 0.3 s later is refused - 0.7 s of the cooldown are left, more than the spell queue's 0.4 s (worldserver.conf SpellQueue.Window: a cast sent with less left is queued silently and goes off when the cooldown ends) - so 0.7 s after the first only one has gone off
+expect ro spellmod 48638 gcd 1000 == 1000
+do ro reset
+spelllog start
+do ro clientcast 48638 on d1
+expect output lacks "cast failed"
+wait 300ms
+do ro clientcast 48638 on d1
+expect output has "cast failed"
+wait 400ms
+spelllog stop
+expect ro spell 48638 casts == 1
+expect ro power energy <= 75
+
+log Subtlety - 900672 Shadow Dance: Flow: during Shadow Dance (51713) the rogue carries 900673 - energy costs nothing and the global cooldown is halved (flat -0.5 s on the rogue's 1 s): the same second Sinister Strike 0.3 s after the first is queued (0.2 s left) and goes off at 0.5 s, so 0.7 s after the first both have gone off; the energy stays full
+do ro learn 900672
+wait 1100ms
+do ro cast 51713 triggered
+wait 300ms
+expect ro aura 900673
+expect ro spellmod 48638 gcd 1000 == 500
+do ro reset
+spelllog start
+do ro clientcast 48638 on d1
+expect output lacks "cast failed"
+wait 300ms
+do ro clientcast 48638 on d1
+expect output lacks "cast failed"
+wait 400ms
+spelllog stop
+expect ro spell 48638 casts == 2
+expect ro power energy >= 95
+
+log Subtlety - 900672 the flow goes with Shadow Dance
+as gm .unaura 51713
+waitfor ro noaura 900673 timeout 2s
+as gm .unlearn 900672
+
+log Subtlety - control for 900674: Backstab (48657) from in front of d1 (in the ring's middle) is refused: "must be behind" (SpellCastResult 57)
+do ro goto -270.5 150 -423.2
+wait 300ms
+do ro approach d1 1.5
+wait 300ms
+do ro reset
+do ro clientcast 48657 on d1
+expect output has "result 57"
+
+log Subtlety - 900674 Frontal Assault: the same Backstab from the front goes through
+do ro learn 900674
+do ro reset
+spelllog start
+do ro clientcast 48657 on d1
+expect output lacks "cast failed"
+wait 500ms
+spelllog stop
+expect ro spell 48657 casts == 1
+as gm .unlearn 900674
+
+log Subtlety - the requirement stays for everyone else: without the passive Backstab from the front is refused again, from behind d1 it goes through
+do ro reset
+do ro clientcast 48657 on d1
+expect output has "result 57"
+do ro goto -279 150 -423.2
+wait 300ms
+do ro approach d1
+wait 300ms
+do ro reset
+spelllog start
+do ro clientcast 48657 on d1
+expect output lacks "cast failed"
+wait 500ms
+spelllog stop
+expect ro spell 48657 casts == 1
+
+cleanup
+do ro stop
+do gm target ro
+as gm .unaura 13750
+as gm .unaura 51713
+as gm .unaura 900640
+as gm .unaura 900673
+as gm .unaura 59756
+as gm .unaura 62627
+do ro destroy 2139
+as gm .unlearn 900600
+as gm .unlearn 900601
+as gm .unlearn 900602
+as gm .unlearn 900603
+as gm .unlearn 900605
+as gm .unlearn 900633
+as gm .unlearn 900634
+as gm .unlearn 900635
+as gm .unlearn 900636
+as gm .unlearn 900637
+as gm .unlearn 900639
+as gm .unlearn 900642
+as gm .unlearn 900666
+as gm .unlearn 900667
+as gm .unlearn 900668
+as gm .unlearn 900670
+as gm .unlearn 900671
+as gm .unlearn 900672
+as gm .unlearn 900674
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111

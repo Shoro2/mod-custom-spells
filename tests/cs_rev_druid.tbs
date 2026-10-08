@@ -1,0 +1,305 @@
+# mod-custom-spells: the Druid spells of the concept revision of 2026-10-08
+# (share-public custom-spells/09-concept-revision-20261008.md) on a bot. Every
+# check states the revised concept, so a FAIL marks a defect, not a typo.
+# (901002 Starfall area +50 % is checked in cs_druid, where its old check was.)
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018: take 0 damage, never die, the combat log still reads the full
+# amount; each one faces the ring's middle) on a 3.9-yd circle around
+# (-270, 150); d1 = the west-most one (-273.9, 150), facing east.
+# Killable and attacking enemies are summoned by the director 40 yd north of
+# the ring (-279, 190: outside every area the cs_* scenarios use; map 13 has no
+# terrain there, server-side a unit simply stands at the given height) with
+# `.npc add temp` (they despawn once dead): Mindless Zombies (1501, level 1)
+# for killing blows, a Designer Island Sabercat (23014, level 30, about 1,400
+# health, melee only, no spells) for hits taken - Growl (6795) makes it attack
+# the druid. The director selects the sabercat as soon as it exists and kills
+# that selection with `.die` when done (a sabercat that died meanwhile leaves
+# nothing to kill: `.die` then only answers with an error).
+# Hit rolls: Song of Sylvanas 59756 (no miss), NPC Hit Buffs 62627 (no dodge or
+# parry) and 64481 (no crit) on the druid where a roll would decide a check.
+# Spells: Moonfire 48463, Moonkin Form 24858 (talent), Starfire 48465 (rank
+# 10), Dire Bear Form 9634, Growl 6795, Swipe (Bear) 48562 (20 rage), Lacerate
+# 48568 (a bleed), Thorns 53307, Barkskin 22812, Cat Form 768, Swipe (Cat)
+# 62078, Shred 48572 (needs you behind the target), Mangle (Cat) 48566 (a
+# combo point), Ferocious Bite 48577 (a finisher), Berserk 50334 (talent).
+# New: 901006 Lunar Frenzy (buff 901007), 901036 Swipe (Bear) +50 %, 901037
+# Thorns: Open Wounds (901038), 901039 Ursine Bulwark (buff 901040, burst
+# 901041), 901052 Swipe (Cat) +50 %, 901053 Frontal Assault, 901054 Berserk:
+# Unleashed (speed 901055, burst 901056).
+name    Custom spells - Druid revision 2026-10-08
+timeout 300s
+
+bot dr druid slot=4
+
+place 13 -279 150 -423.2 0
+require dr alive
+pick d1 creature:920018 near dr
+require d1 exists
+do gm target dr
+as gm .unlearn 901006
+as gm .unlearn 901036
+as gm .unlearn 901037
+as gm .unlearn 901039
+as gm .unlearn 901052
+as gm .unlearn 901053
+as gm .unlearn 901054
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 901007
+as gm .unaura 901040
+as gm .unaura 901055
+as gm .unaura 24858
+as gm .unaura 9634
+as gm .unaura 768
+do dr learn 48463
+do dr learn 24858
+do dr learn 48465
+do dr learn 9634
+do dr learn 6795
+do dr learn 48562
+do dr learn 48568
+do dr learn 53307
+do dr learn 768
+do dr learn 62078
+do dr learn 48572
+do dr learn 48566
+do dr learn 48577
+do dr learn 50334
+as gm .aura 59756
+as gm .aura 62627
+as gm .aura 64481
+waitfor dr aura 64481 timeout 2s
+
+# ---------------------------------------------------------------- Balance
+log Balance - 901006 Lunar Frenzy, control: a killing blow outside Moonkin Form gives no stack (a Mindless Zombie, one Moonfire)
+do dr learn 901006
+do gm goto -279 190 -423.2
+do dr goto -279 182 -423.2
+wait 500ms
+as gm .npc add temp 1501
+pick z1 creature:1501 near gm
+require z1 exists
+do dr approach z1 8
+do dr cast 48463 on z1 triggered
+wait 800ms
+expect dr noaura 901007
+
+log Balance - 901006 in Moonkin Form every killing blow adds a stack of 901007 (+1 % damage and haste): two zombies, two stacks
+do dr cast 24858 triggered
+wait 500ms
+as gm .npc add temp 1501
+pick z2 creature:1501 near gm
+require z2 exists
+do dr approach z2 8
+do dr cast 48463 on z2 triggered
+wait 800ms
+as gm .npc add temp 1501
+pick z3 creature:1501 near gm
+require z3 exists
+do dr approach z3 8
+do dr cast 48463 on z3 triggered
+wait 800ms
+expect dr aurastacks 901007 == 2
+
+log Balance - 901006 at 100 stacks a free instant Starfire (48465, the highest rank known) goes off at a random enemy in front of the druid within range every 3 s while it fights: 7 s at the ring (Moonfire on d1 keeps the fight going)
+do gm goto -279 150 -423.2
+do dr goto -294 150 -423.2
+wait 300ms
+do dr approach d1 20
+wait 300ms
+as gm .aura stack 901007 98
+expect dr aurastacks 901007 == 100
+spelllog start
+do dr cast 48463 on d1 triggered
+wait 7s
+spelllog stop
+expect dr spell 48465 casts >= 1
+expect dr spell 48465 casts <= 3
+expect dr spell 48465 hits >= 1
+as gm .unaura 901007
+as gm .unaura 24858
+as gm .unlearn 901006
+
+# ---------------------------------------------------------------- Feral tank
+log Feral tank - 901036 Swipe (Bear) +50 %
+do dr learn 901036
+expect dr spellmod 48562 damage 100 == 150
+as gm .unlearn 901036
+
+log Feral tank - 901039 Ursine Bulwark: hits taken in Bear Form stack 901040 (+1 % maximum health) - a sabercat taunted onto the druid in Dire Bear Form
+do dr learn 901039
+do dr cast 9634 triggered
+do gm goto -279 190 -423.2
+do dr goto -279 186 -423.2
+wait 500ms
+as gm .npc add temp 23014
+pick sab1 creature:23014 near gm
+require sab1 exists
+do gm target sab1
+do dr approach sab1
+do dr cast 6795 on sab1 triggered
+waitfor dr aura 901040 timeout 15s
+expect dr aurastacks 901040 >= 1
+as gm .die
+do gm target dr
+
+log Feral tank - 901039 at 100 stacks Barkskin (22812) stays up for as long as Ursine Bulwark lasts (longer than its own 12 s)
+as gm .aura stack 901040 99
+expect dr aurastacks 901040 == 100
+waitfor dr aura 22812 timeout 3s
+expect dr auraduration 22812 > 12000
+
+log Feral tank - 901039 at 100 stacks every 100 rage spent sets off Ursine Quake (901041) round the druid: five normal Swipes (20 rage each) in the ring's middle, the rage refilled before each
+do gm goto -279 150 -423.2
+do dr goto -270 150 -423.2
+wait 500ms
+spelllog start
+as gm .modify rage 100
+do dr cast 48562
+wait 1600ms
+as gm .modify rage 100
+do dr cast 48562
+wait 1600ms
+as gm .modify rage 100
+do dr cast 48562
+wait 1600ms
+as gm .modify rage 100
+do dr cast 48562
+wait 1600ms
+as gm .modify rage 100
+do dr cast 48562
+wait 1s
+spelllog stop
+expect dr spell 48562 casts == 5
+expect dr spell 901041 casts == 1
+expect dr spell 901041 targets >= 6
+as gm .unaura 901040
+as gm .unaura 22812
+as gm .unlearn 901039
+
+log Feral tank - 901037 Thorns: Open Wounds: a bleeding attacker struck back by the druid's Thorns takes 901038 (Physical, 666 + 5 x the Paragon level, a bleed: no armor), at most once every 5 s - a sabercat with Lacerate, taunted onto the druid, about 6 s of its swings
+do dr learn 901037
+do dr cast 53307 on dr triggered
+do gm goto -279 190 -423.2
+do dr goto -279 186 -423.2
+wait 500ms
+as gm .npc add temp 23014
+pick sab2 creature:23014 near gm
+require sab2 exists
+do gm target sab2
+do dr approach sab2
+do dr cast 48568 on sab2 triggered
+do dr cast 6795 on sab2 triggered
+spelllog start
+waitfor dr spell 901038 hits >= 1 timeout 20s
+wait 6s
+spelllog stop
+expect dr spell 901038 damage >= 600
+expect dr spell 901038 hits <= 2
+as gm .die
+do gm target dr
+as gm .unaura 53307
+as gm .unaura 9634
+as gm .unlearn 901037
+
+# ---------------------------------------------------------------- Feral DPS
+log Feral DPS - 901052 Swipe (Cat) +50 %
+do dr learn 901052
+expect dr spellmod 62078 damage 100 == 150
+as gm .unlearn 901052
+
+log Feral DPS - control: Shred (48572) from in front of d1 (it faces the ring's middle) is refused: "must be behind" (SpellCastResult 57)
+do gm goto -279 150 -423.2
+do dr goto -270.5 150 -423.2
+wait 300ms
+do dr approach d1 1.5
+wait 300ms
+do dr cast 768 triggered
+wait 500ms
+do dr reset
+do dr clientcast 48572 on d1
+expect output has "result 57"
+
+log Feral DPS - 901053 Frontal Assault: the same Shred from the front goes through
+do dr learn 901053
+do dr reset
+spelllog start
+do dr clientcast 48572 on d1
+expect output lacks "cast failed"
+wait 500ms
+spelllog stop
+expect dr spell 48572 casts == 1
+as gm .unlearn 901053
+
+log Feral DPS - 901054 Berserk: Unleashed: while Berserk (50334) lasts +100 % movement speed (901055, Berserk's duration)
+do dr learn 901054
+do dr reset
+do dr cast 50334 triggered
+wait 300ms
+expect dr aura 901055
+expect dr auraduration 901055 > 10000
+
+log Feral DPS - 901054 a 5-combo-point finisher unleashes 901056 (Physical round the druid): five Mangles (a point each), then a Ferocious Bite on d1
+do dr cast 48566 on d1 triggered
+do dr cast 48566 on d1 triggered
+do dr cast 48566 on d1 triggered
+do dr cast 48566 on d1 triggered
+do dr cast 48566 on d1 triggered
+wait 300ms
+spelllog start
+do dr cast 48577 on d1
+wait 1s
+spelllog stop
+expect dr spell 48577 hits >= 1
+expect dr spell 901056 casts == 1
+expect dr spell 901056 targets >= 6
+
+log Feral DPS - 901054 a 4-point finisher unleashes nothing
+do dr cast 48566 on d1 triggered
+do dr cast 48566 on d1 triggered
+do dr cast 48566 on d1 triggered
+do dr cast 48566 on d1 triggered
+wait 300ms
+spelllog start
+do dr cast 48577 on d1
+wait 1s
+spelllog stop
+expect dr spell 48577 hits >= 1
+expect dr spell 901056 casts == 0
+
+log Feral DPS - 901054 the speed goes with Berserk
+as gm .unaura 50334
+waitfor dr noaura 901055 timeout 2s
+as gm .unlearn 901054
+
+cleanup
+do dr stop
+do gm goto -279 150 -423.2
+do gm target dr
+as gm .unaura 901007
+as gm .unaura 901040
+as gm .unaura 901055
+as gm .unaura 50334
+as gm .unaura 22812
+as gm .unaura 53307
+as gm .unaura 24858
+as gm .unaura 9634
+as gm .unaura 768
+as gm .unaura 59756
+as gm .unaura 62627
+as gm .unaura 64481
+as gm .unlearn 901006
+as gm .unlearn 901036
+as gm .unlearn 901037
+as gm .unlearn 901039
+as gm .unlearn 901052
+as gm .unlearn 901053
+as gm .unlearn 901054
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111

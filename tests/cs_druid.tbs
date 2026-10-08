@@ -84,16 +84,38 @@ expect dr spellmod 53195 damage 100 == 150
 expect dr spellmod 53190 damage 100 == 150
 as gm .unlearn 901003
 
-log Balance - 901002 Starfall +9 targets = 10 targets (jump targets 0 -> 10, wave F): natively a volley a second hits 2 enemies; with the passive two volleys reach all 8 dummies (one miss allowed)
+log Balance - 901002 Starfall area +50 % (revision 2026-10-08, was +9 targets): the volley's search (53198, 30 yd) and the stars' splash (53190, 5 yd) grow by half
 do dr learn 901002
-expect dr spellmod 53201 jumptargets 0 == 10
+expect dr spellmod 53198 radius 100 == 150
+expect dr spellmod 53190 radius 100 == 150
+as gm .unlearn 901002
+
+log Balance - 901002 control: from 41 yd west of the ring's middle (the dummies 37-45 yd away, the Beast/Dragonkin Training Dummies at (-340, 175/125) 38 yd) Starfall's stars find no target. The search reaches past its 30 yd: + 2.66 yd leeway for a player who is not walking (WorldObject::GetLeewayBonusRadius, standing still too) + the dummy's 1.5-yd reach = 34.2 yd - from 36 yd west (run 482) it found the three nearest dummies (32.1 / 33.4 yd)
+do dr goto -311 150 -423.2
+wait 500ms
+expect dr near -311 150 -423.2 1
+expect dr spellmod 53198 radius 100 == 100
 spelllog start
 do dr cast 53201 triggered
 wait 2200ms
 spelllog stop
-expect dr spell 53195 targets >= 7
+expect dr spell 53195 hits == 0
+as gm .unaura 53201
+
+log Balance - 901002 with the passive (45 + 2.66 + 1.5 = 49.2 yd: every dummy of the ring) the same Starfall reaches the ring
+do dr learn 901002
+wait 300ms
+spelllog start
+do dr cast 53201 triggered
+wait 2200ms
+spelllog stop
+expect dr spell 53195 hits >= 1
 as gm .unaura 53201
 as gm .unlearn 901002
+do dr goto -279 150 -423.2
+wait 500ms
+do dr approach d1
+wait 500ms
 
 log Balance - 901005 Starfall stacks up to 10: a second Starfall adds a stack
 do dr learn 901005

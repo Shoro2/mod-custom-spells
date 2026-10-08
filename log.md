@@ -3,6 +3,30 @@
 Newest entry first. Changes before 2026-09-28 are recorded only in
 [`share-public/claude_log.md`](https://github.com/Shoro2/share-public/blob/main/claude_log.md).
 
+## 2026-10-08 — Revision: the operator's second concept list
+
+Operator 2026-10-08 16:38: a revised class-spell list (share-public
+`custom-spells/09-concept-revision-20261008.md`); later the same day "Felhunter: Spell Lock is aoe now,
+Devour Magic also" and option "B" for the second pet (its own AIO control bar, inside this round).
+- 9 built spells changed: Paragon damage (666 + 5 x Paragon level) for Beast Cleave, Poison Nova (now 5 %
+  on poison damage), both Shadow Eruptions and the shield explosion; Explosive Traps on any physical damage
+  (the Explosive Trap Effect at the target, 900567 retired), Starfall +50 % area (901002), Metamorphosis:
+  Fel Vigor (900834: Immolation Aura heals, demons +100 %), Holy Fire Heals (50 %, one random enemy, 30 yd).
+- 44 new lines, 45 new picker passives: Hunter 900507/900537-900540/900568/900571/900572, second pet
+  900525 (+ Warlock 900858, `custom_spells_second_pet.cpp`, `lua/CustomSpells_PetBar_*.lua`, `.cspet`),
+  Druid 901006/901036/901037/901039/901052-901054, Rogue 900605/900639/900642/900670-900672/900674,
+  Warlock 900804/900846/900848/900850/900852/900873/900875, Priest 900904-900906/900935-900938/900941/
+  900942/900969-900972/900975; creatures 900525, 900964, 900999.
+- Found by the bots and fixed: Mutilate's extra targets belong on its strikes; a percent GCD modifier only
+  works for Backdraft (Shadow Dance: Flow is a flat -500 ms); the tentacle and the guardian need
+  UNIT_FLAG_PLAYER_CONTROLLED against neutral mobs; Running Aim counts a server spline as movement.
+- Found by the client probe and fixed: the pet bar's spell flag shadowed its autocast texture (Lua error,
+  the bar never showed).
+- Tests: `tests/cs_rev_<class>.tbs` (hunter, druid, rogue, warlock, priest), `tests/cs_second_pet.tbs`;
+  docs: functions.md (revision section, pitfalls 19-22), data_structure.md, todo.md, CustomSpells.md.
+- Evidence: T1 on the Windows workbench (bot runs in the vault doc 09 §6, client probe of the bar);
+  T2 owed in game.
+
 ## 2026-10-08 — Rework: bot-tested spells, concept spells, spellbook texts, cursed passives
 
 Operator request: revise, test and fix the `/spells` picker spells with server-side bots, give

@@ -103,7 +103,7 @@ expect ro spellmod 57975 damage 100 == 150
 expect ro spellmod 57970 dot 100 == 150
 as gm .unlearn 900602
 
-log Assassination - 900603 Poison Nova: a poison's damage has a 15 % chance (3 sec cooldown) to set off Poison Nova 900604 - poison procs are triggered casts: 30 triggered Instant Poison IX hits (statistical)
+log Assassination - 900603 Poison Nova (revision 2026-10-08): dealing damage with a poison has a 5 % chance, no cooldown, to set off Poison Nova 900604 - 666 + 5 x the Paragon level Nature on every other enemy within 10 yd of the target (the spelllog line's damage / hits). Weapon poisons are triggered casts: 150 triggered Instant Poison IX hits in one tick, about 7 novas - at least 2 shows there is no cooldown any more, at most 16 that the chance is no longer 15 % (statistical)
 do ro learn 900603
 spelllog start
 do ro cast 57965 on d1 triggered
@@ -136,48 +136,133 @@ do ro cast 57965 on d1 triggered
 do ro cast 57965 on d1 triggered
 do ro cast 57965 on d1 triggered
 do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
+do ro cast 57965 on d1 triggered
 wait 1s
 spelllog stop
-expect ro spell 57965 hits >= 25
-expect ro spell 900604 casts >= 1
-wait 3s
-
-log Assassination - 900603 from a nature spell the rogue casts itself (30 direct Instant Poison IX casts in one tick): one Poison Nova (3 sec cooldown) on every other dummy
-spelllog start
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-do ro cast 57965 on d1
-wait 1s
-spelllog stop
-expect ro spell 900604 casts == 1
+expect ro spell 57965 hits >= 120
+expect ro spell 900604 casts >= 2
+expect ro spell 900604 casts <= 16
 expect ro spell 900604 targets >= 5
+expect ro spell 900604 damage >= 666
 as gm .unlearn 900603
 
 # ---------------------------------------------------------------- Combat + Subtlety strikes

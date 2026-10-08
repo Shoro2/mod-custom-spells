@@ -35,7 +35,8 @@ spell in it has a spellbook name, tooltip and icon in `data/spellbook_enUS.json`
 (`tools/client_spell_sync.py`), and every passive in it is also a cursed-item passive (mod-paragon-itemgen,
 `tools/gen_class_passives.py`). Adding a spell = row(s) in the class SQL file + binding in
 `mod_custom_spells.sql` + constant in `custom_spells_common.h` + picker entry + manifest entry + a bot
-check in `tests/` + the two generators. Details: [`functions.md`](./functions.md).
+check in `tests/` + the two generators. The hunter's/warlock's second pet has its own AIO bar
+(`lua/CustomSpells_PetBar_*.lua`, `src/custom_spells_second_pet.cpp`). Details: [`functions.md`](./functions.md).
 
 ## DBC status (quick overview)
 

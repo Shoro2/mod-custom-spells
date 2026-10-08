@@ -416,7 +416,23 @@
    "class": "Hunter",
    "spec": "Beast Mastery",
    "name": "Pet: Beast Cleave",
-   "description": "Your pet's melee hits have a 15% chance to also damage all other enemies within 10 yards of its target.",
+   "description": "Your pet's melee hits have a 15% chance to deal Physical damage to all other enemies within 10 yards of its target. The damage increases with your Paragon level.",
+   "icon_spell": 883
+  },
+  {
+   "id": 900507,
+   "class": "Hunter",
+   "spec": "Beast Mastery",
+   "name": "Pet: +100% Health",
+   "description": "Your pet's maximum health is increased by 100%.",
+   "icon_spell": 883
+  },
+  {
+   "id": 900525,
+   "class": "Hunter",
+   "spec": "Beast Mastery",
+   "name": "Second Pet",
+   "description": "While your pet is out, a copy of it fights at your side: same look, level, abilities and talents. It has a control bar of its own; if it dies, it returns 10 sec after you leave combat.",
    "icon_spell": 883
   },
   {
@@ -436,12 +452,68 @@
    "icon_spell": 49048
   },
   {
+   "id": 900537,
+   "class": "Hunter",
+   "spec": "Marksmanship",
+   "name": "Multi-Shot: Serpent Sting",
+   "description": "Every enemy your Multi-Shot hits is also struck by your Serpent Sting (your highest rank).",
+   "icon_spell": 49001
+  },
+  {
+   "id": 900538,
+   "class": "Hunter",
+   "spec": "Marksmanship",
+   "name": "Chimera Shot: +9 Targets",
+   "description": "Your Chimera Shot also strikes up to 9 other enemies near its target.",
+   "icon_spell": 53209
+  },
+  {
+   "id": 900539,
+   "class": "Hunter",
+   "spec": "Marksmanship",
+   "name": "Chimera Shot: +50% Damage",
+   "description": "Increases the damage of your Chimera Shot by 50%.",
+   "icon_spell": 53209
+  },
+  {
+   "id": 900540,
+   "class": "Hunter",
+   "spec": "Marksmanship",
+   "name": "Running Aim",
+   "description": "Every 5 sec you spend moving grants a stack of Running Aim, up to 5: each one increases the damage of your next Aimed Shot by 50%. At 5 stacks your Aimed Shot also pierces its target and hits every enemy in a line up to its range. Aimed Shot uses up all stacks.",
+   "icon_spell": 49050
+  },
+  {
    "id": 900566,
    "class": "Hunter",
    "spec": "Survival",
-   "name": "Explosive Shots",
-   "description": "Your ranged attacks and shots have a 15% chance to set off an explosion around the target, damaging all other enemies within 10 yards. Can occur once every 2 sec.",
+   "name": "Explosive Traps",
+   "description": "Your Physical damage, melee or ranged, has a 15% chance to drop an Explosive Trap at the target: it goes off at once, dealing Fire damage to all enemies within 10 yards and setting the ground on fire for 20 sec. Uses your highest Explosive Trap rank. Can occur once every 2 sec.",
    "icon_spell": 49067
+  },
+  {
+   "id": 900568,
+   "class": "Hunter",
+   "spec": "Survival",
+   "name": "Blade and Shot",
+   "description": "Your Physical ranged attacks and shots grant Blade Readiness (+5% melee weapon damage, stacks 10 times), which your next melee hit uses up. Your Physical melee attacks grant Shot Readiness (+5% ranged weapon damage, stacks 10 times), which your next ranged hit uses up.",
+   "icon_spell": 53339
+  },
+  {
+   "id": 900571,
+   "class": "Hunter",
+   "spec": "Survival",
+   "name": "Raptor Strike: +9 Targets",
+   "description": "Your Raptor Strike also strikes up to 9 other enemies near its target.",
+   "icon_spell": 48996
+  },
+  {
+   "id": 900572,
+   "class": "Hunter",
+   "spec": "Survival",
+   "name": "Raptor Strike: +50% Damage",
+   "description": "Increases the damage of your Raptor Strike by 50%.",
+   "icon_spell": 48996
   },
   {
    "id": 900600,
@@ -472,8 +544,16 @@
    "class": "Rogue",
    "spec": "Assassination",
    "name": "Poison Nova",
-   "description": "Your Nature damage has a 15% chance to release a Poison Nova, damaging all other enemies within 10 yards of the target. Can occur once every 3 sec.",
+   "description": "Damage from your poisons has a 5% chance to release a Poison Nova at the target, dealing Nature damage to all other enemies within 10 yards. The damage increases with your Paragon level.",
    "icon_spell": 57970
+  },
+  {
+   "id": 900605,
+   "class": "Rogue",
+   "spec": "Assassination",
+   "name": "Mutilate: +9 Targets",
+   "description": "Your Mutilate also strikes up to 9 other enemies near its target.",
+   "icon_spell": 48666
   },
   {
    "id": 900633,
@@ -516,6 +596,22 @@
    "icon_spell": 13750
   },
   {
+   "id": 900639,
+   "class": "Rogue",
+   "spec": "Combat",
+   "name": "Adrenaline Rush: Unleashed",
+   "description": "While Adrenaline Rush is active your movement speed is increased by 100%, and every finisher you use with 5 combo points unleashes a blow that deals Physical damage to all enemies within 8 yards. The damage increases with your Paragon level.",
+   "icon_spell": 13750
+  },
+  {
+   "id": 900642,
+   "class": "Rogue",
+   "spec": "Combat",
+   "name": "Killing Spree: Fan of Knives",
+   "description": "Each strike of your Killing Spree also unleashes a free Fan of Knives that deals 100% more damage.",
+   "icon_spell": 51690
+  },
+  {
    "id": 900666,
    "class": "Rogue",
    "spec": "Subtlety",
@@ -540,11 +636,43 @@
    "icon_spell": 48660
   },
   {
+   "id": 900670,
+   "class": "Rogue",
+   "spec": "Subtlety",
+   "name": "Ambush: +9 Targets",
+   "description": "Your Ambush also strikes up to 9 other enemies near its target.",
+   "icon_spell": 48691
+  },
+  {
+   "id": 900671,
+   "class": "Rogue",
+   "spec": "Subtlety",
+   "name": "Ambush: +50% Damage",
+   "description": "Increases the damage of your Ambush by 50%.",
+   "icon_spell": 48691
+  },
+  {
+   "id": 900672,
+   "class": "Rogue",
+   "spec": "Subtlety",
+   "name": "Shadow Dance: Flow",
+   "description": "While Shadow Dance is active your abilities cost no energy and your global cooldown is reduced by 50% (to no less than 0.1 sec).",
+   "icon_spell": 51713
+  },
+  {
+   "id": 900674,
+   "class": "Rogue",
+   "spec": "Subtlety",
+   "name": "Frontal Assault",
+   "description": "You can use Backstab, Ambush and Garrote from any direction, not only from behind the target.",
+   "icon_spell": 48657
+  },
+  {
    "id": 900900,
    "class": "Priest",
    "spec": "Discipline",
    "name": "Power Word: Shield: Explosion",
-   "description": "When your Power Word: Shield breaks, it explodes and deals Holy damage equal to its full absorption to all enemies within 10 yards of the shielded target. When it fades, the explosion deals at least half of that.",
+   "description": "When your Power Word: Shield breaks or fades, it explodes, dealing 666 Holy damage plus 5 per Paragon level to all enemies within 10 yards of the shielded target.",
    "icon_spell": 48066
   },
   {
@@ -564,19 +692,91 @@
    "icon_spell": 6788
   },
   {
+   "id": 900904,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Atonement",
+   "description": "10% of all damage you deal heals the injured party or raid member with the lowest health percentage within 30 yards of you, yourself included.",
+   "icon_spell": 53007
+  },
+  {
+   "id": 900905,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Smite: +9 Targets",
+   "description": "Your Smite jumps to up to 9 additional enemies.",
+   "icon_spell": 48123
+  },
+  {
+   "id": 900906,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Smite: +50% Damage",
+   "description": "Increases the damage of your Smite by 50%.",
+   "icon_spell": 48123
+  },
+  {
    "id": 900933,
    "class": "Priest",
    "spec": "Holy",
    "name": "Holy Fire Heals",
-   "description": "Your direct heals have a 20% chance to cast Holy Fire at every enemy within 10 yards of the healed target. Can occur once every 3 sec.",
+   "description": "Your direct heals have a 50% chance to cast Holy Fire at a random enemy in combat within 30 yards of the healed target.",
    "icon_spell": 48135
+  },
+  {
+   "id": 900935,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Holy Fire: +9 Targets",
+   "description": "Your Holy Fire jumps to up to 9 additional enemies.",
+   "icon_spell": 48135
+  },
+  {
+   "id": 900936,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Holy Fire: +50% Damage",
+   "description": "Increases the damage of your Holy Fire, its burn included, by 50%.",
+   "icon_spell": 48135
+  },
+  {
+   "id": 900937,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Lightwell: Auto Renew",
+   "description": "Every 1 sec each of your Lightwells gives its Lightwell Renew to the most injured party or raid member below 90% health within 20 yards of it, using one charge. Clicking it still works.",
+   "icon_spell": 48087
+  },
+  {
+   "id": 900938,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Spirit of Redemption: Guardian",
+   "description": "Requires the Spirit of Redemption talent. When you become the Spirit of Redemption, a Redemption Guardian rises where you fell and holds the enemies that fought you, the spirit form lasts 10 sec longer, and your casting speed, damage and healing are increased by 50%. When the spirit form ends you return to life with 50% health and at least 50% mana, and the Guardian vanishes. Can occur once every 5 min.",
+   "icon_spell": 20711
+  },
+  {
+   "id": 900941,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Holy Nova: +50% Radius",
+   "description": "Increases the radius of your Holy Nova by 50%.",
+   "icon_spell": 48078
+  },
+  {
+   "id": 900942,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Holy Nova: Kindled Fire",
+   "description": "Casting Holy Nova increases the damage of your next Holy Fire by 50%. Stacks up to 10 times.",
+   "icon_spell": 48078
   },
   {
    "id": 900966,
    "class": "Priest",
    "spec": "Shadow",
    "name": "Shadow Eruption",
-   "description": "Your damage-over-time effects have a 20% chance on each tick to erupt, dealing Shadow damage to all other enemies within 10 yards of the target. Can occur once every 2 sec.",
+   "description": "Your damage-over-time effects have a 20% chance on each tick to erupt, dealing 666 Shadow damage plus 5 per Paragon level to all other enemies within 10 yards of the target. Can occur once every 2 sec.",
    "icon_spell": 48125
   },
   {
@@ -586,6 +786,46 @@
    "name": "Spreading Shadows",
    "description": "Your damage-over-time effects have a 15% chance on each tick to spread to up to 2 other enemies within 10 yards. Can occur once every 3 sec.",
    "icon_spell": 48125
+  },
+  {
+   "id": 900969,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Shadow Word: Pain: +50% Damage",
+   "description": "Increases the damage of your Shadow Word: Pain by 50%.",
+   "icon_spell": 48125
+  },
+  {
+   "id": 900970,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Mind Blast: +50% Damage",
+   "description": "Increases the damage of your Mind Blast by 50%.",
+   "icon_spell": 48127
+  },
+  {
+   "id": 900971,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Mind Blast: +9 Targets",
+   "description": "Your Mind Blast jumps to up to 9 additional enemies.",
+   "icon_spell": 48127
+  },
+  {
+   "id": 900972,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Shadowform: Soul Feast",
+   "description": "Each enemy you kill in Shadowform increases your Shadow damage by 1% for 60 sec, stacking up to 100 times. At 100 stacks, every 5 sec a free Mind Flay strikes a random enemy in combat within 30 yards, dealing 196 Shadow damage every 1 sec for 3 sec and slowing it by 50%. It is not channeled: your own casts go on.",
+   "icon_spell": 15473
+  },
+  {
+   "id": 900975,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Shadowform: Lesser Tentacles",
+   "description": "Each enemy you kill in Shadowform leaves a Lesser Tentacle where it fell for 15 sec. It does not move and lashes the nearest enemy within 15 yards every 2 sec for 401 to 600 Shadow damage. Up to 10 at a time.",
+   "icon_spell": 34433
   },
   {
    "id": 900300,
@@ -1128,7 +1368,7 @@
    "class": "Warlock",
    "spec": "Affliction",
    "name": "Shadow Eruption",
-   "description": "Your damage-over-time effects have a 20% chance on each tick to erupt, dealing Shadow damage to all other enemies within 10 yards of the target. Can occur once every 2 sec.",
+   "description": "Your damage-over-time effects have a 20% chance on each tick to erupt, dealing 666 Shadow damage plus 5 per Paragon level to all other enemies within 10 yards of the target. Can occur once every 2 sec.",
    "icon_spell": 47813
   },
   {
@@ -1148,6 +1388,14 @@
    "icon_spell": 47813
   },
   {
+   "id": 900804,
+   "class": "Warlock",
+   "spec": "Affliction",
+   "name": "Withering Harvest",
+   "description": "Each tick of your damage-over-time effects increases the damage of your damage-over-time effects by 1% for 30 sec, stacking up to 100 times. At 100 stacks, every 5 sec a free Drain Life strikes a random enemy in combat within 30 yards, draining 133 health every 1 sec for 5 sec. It is not channeled: your own casts go on.",
+   "icon_spell": 47857
+  },
+  {
    "id": 900833,
    "class": "Warlock",
    "spec": "Demonology",
@@ -1159,8 +1407,8 @@
    "id": 900834,
    "class": "Warlock",
    "spec": "Demonology",
-   "name": "Metamorphosis: Shadow Pulse",
-   "description": "During Metamorphosis, every 3 sec you deal Shadow damage to all enemies within 10 yards and heal yourself.",
+   "name": "Metamorphosis: Fel Vigor",
+   "description": "During Metamorphosis, your Immolation Aura heals you for all the damage it deals, and your demons deal 100% more damage.",
    "icon_spell": 47241
   },
   {
@@ -1188,6 +1436,38 @@
    "icon_spell": 688
   },
   {
+   "id": 900846,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Imp: Firebolt 50% Faster",
+   "description": "Your Imp casts 50% faster: its Firebolt takes a third less time to cast.",
+   "icon_spell": 47964
+  },
+  {
+   "id": 900848,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Voidwalker: Void Bulwark",
+   "description": "Your Voidwalker has 500% more health, and while it is in combat it casts Suffering every 10 sec on its own.",
+   "icon_spell": 697
+  },
+  {
+   "id": 900850,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Succubus: Mass Seduction",
+   "description": "Your Succubus's Seduction jumps to up to 9 additional enemies, and every enemy it seduces takes 25% more damage for 30 sec. Stacks up to 4 times.",
+   "icon_spell": 6358
+  },
+  {
+   "id": 900852,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Felhunter: Area Spell Lock and Devour Magic",
+   "description": "Your Felhunter's Spell Lock and Devour Magic also hit every other enemy within 10 yards of their target. A Devour Magic on an ally also cleanses every other ally within 10 yards.",
+   "icon_spell": 19647
+  },
+  {
    "id": 900838,
    "class": "Warlock",
    "spec": "Demonology",
@@ -1202,6 +1482,14 @@
    "name": "Felguard: +50% Damage",
    "description": "Your Felguard deals 50% more damage.",
    "icon_spell": 30146
+  },
+  {
+   "id": 900858,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Second Demon",
+   "description": "When you summon a demon while another one is out, the one that was out stays at your side - two demons at most. It has a control bar of its own and leaves when you dismiss or lose your demon.",
+   "icon_spell": 18708
   },
   {
    "id": 900866,
@@ -1244,6 +1532,22 @@
    "icon_spell": 59172
   },
   {
+   "id": 900873,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Hellfire: Free Movement",
+   "description": "Your Hellfire is no longer channeled: for its full duration it burns you and all enemies within 10 yards of you every 1 sec wherever you move, and you can cast other spells meanwhile.",
+   "icon_spell": 47823
+  },
+  {
+   "id": 900875,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Rain of Fire: Around You",
+   "description": "Your Rain of Fire is no longer channeled: wherever you aim it, it falls around you for its full duration, hitting all enemies within 8 yards of you every 2 sec, and you can move and cast other spells meanwhile.",
+   "icon_spell": 47820
+  },
+  {
    "id": 901000,
    "class": "Druid",
    "spec": "Balance",
@@ -1263,8 +1567,8 @@
    "id": 901002,
    "class": "Druid",
    "spec": "Balance",
-   "name": "Starfall: +9 Targets",
-   "description": "Each star of your Starfall jumps to up to 9 additional enemies.",
+   "name": "Starfall: +50% Area",
+   "description": "Increases the area of your Starfall by 50%: its stars fall on enemies within 45 yards and their splash hits enemies within 7.5 yards of each star's target.",
    "icon_spell": 53201
   },
   {
@@ -1292,6 +1596,14 @@
    "icon_spell": 53201
   },
   {
+   "id": 901006,
+   "class": "Druid",
+   "spec": "Balance",
+   "name": "Lunar Frenzy",
+   "description": "In Moonkin Form every killing blow grants Lunar Frenzy for 60 sec: +1% damage and casting speed, stacking up to 100 times. At 100 stacks you cast a free instant Starfire at a random enemy in front of you every 3 sec while in combat.",
+   "icon_spell": 24858
+  },
+  {
    "id": 901033,
    "class": "Druid",
    "spec": "Feral",
@@ -1308,6 +1620,30 @@
    "icon_spell": 48480
   },
   {
+   "id": 901036,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Swipe (Bear): +50% Damage",
+   "description": "Increases the damage of your Swipe in Bear Form by 50%.",
+   "icon_spell": 48562
+  },
+  {
+   "id": 901037,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Thorns: Open Wounds",
+   "description": "When your Thorns damages a bleeding enemy, its wound opens: you deal Physical damage to it that increases with your Paragon level and ignores armor. Can occur once every 5 sec per enemy.",
+   "icon_spell": 53307
+  },
+  {
+   "id": 901039,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Ursine Bulwark",
+   "description": "Each hit you take in Bear Form grants Ursine Bulwark for 30 sec: +1% maximum health, stacking up to 100 times. At 100 stacks Barkskin stays active on you, and every 100 Rage you spend sends out a quake that deals Physical damage to all enemies within 8 yards; the damage increases with your Paragon level.",
+   "icon_spell": 9634
+  },
+  {
    "id": 901049,
    "class": "Druid",
    "spec": "Feral",
@@ -1322,6 +1658,30 @@
    "name": "Energy: +50% Regeneration",
    "description": "Increases your Energy regeneration by 50%.",
    "icon_spell": 768
+  },
+  {
+   "id": 901052,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Swipe (Cat): +50% Damage",
+   "description": "Increases the damage of your Swipe in Cat Form by 50%.",
+   "icon_spell": 62078
+  },
+  {
+   "id": 901053,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Frontal Assault",
+   "description": "You can use Shred and Ravage from any direction, not only from behind the target.",
+   "icon_spell": 48572
+  },
+  {
+   "id": 901054,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Berserk: Unleashed",
+   "description": "While Berserk is active your movement speed is increased by 100%, and every finisher you use with 5 combo points unleashes a blow that deals Physical damage to all enemies within 8 yards. The damage increases with your Paragon level.",
+   "icon_spell": 50334
   },
   {
    "id": 901066,
@@ -1452,6 +1812,94 @@
   {
    "id": 900712,
    "aura_description": "Spell damage increased by 20% per application."
+  },
+  {
+   "id": 900508,
+   "aura_description": "Maximum health increased by 100%."
+  },
+  {
+   "id": 900541,
+   "aura_description": "The damage of your next Aimed Shot is increased by 50% per application. At 5 applications it pierces its target."
+  },
+  {
+   "id": 900569,
+   "aura_description": "Melee weapon damage increased by 5% per application. Used up by your next melee hit."
+  },
+  {
+   "id": 900570,
+   "aura_description": "Ranged weapon damage increased by 5% per application. Used up by your next ranged hit."
+  },
+  {
+   "id": 901007,
+   "aura_description": "Damage and casting speed increased by 1% per application."
+  },
+  {
+   "id": 901040,
+   "aura_description": "Maximum health increased by 1% per application."
+  },
+  {
+   "id": 901055,
+   "aura_description": "Movement speed increased by 100%."
+  },
+  {
+   "id": 900640,
+   "aura_description": "Movement speed increased by 100%."
+  },
+  {
+   "id": 900673,
+   "aura_description": "Your abilities cost no energy and your global cooldown is reduced by 50%."
+  },
+  {
+   "id": 900805,
+   "aura_description": "Damage of your damage-over-time effects increased by 1% per application."
+  },
+  {
+   "id": 900806,
+   "aura_description": "Drains health every 1 sec, transferring it to the warlock."
+  },
+  {
+   "id": 900845,
+   "aura_description": "Damage done increased by 100%."
+  },
+  {
+   "id": 900847,
+   "aura_description": "Casting speed increased by 50%."
+  },
+  {
+   "id": 900849,
+   "aura_description": "Maximum health increased by 500%. Casts Suffering every 10 sec while in combat."
+  },
+  {
+   "id": 900851,
+   "aura_description": "Damage taken increased by 25% per application."
+  },
+  {
+   "id": 900874,
+   "aura_description": "Burns you and all enemies within 10 yards of you every 1 sec."
+  },
+  {
+   "id": 900876,
+   "aura_description": "Fire rains around you, hitting all enemies within 8 yards every 2 sec."
+  },
+  {
+   "id": 900939,
+   "aura_description": "Casting speed, damage done and healing done increased by 50%."
+  },
+  {
+   "id": 900940,
+   "aura_description": "Spirit of Redemption: Guardian was used and cannot occur again yet."
+  },
+  {
+   "id": 900943,
+   "aura_description": "Increases the damage of your next Holy Fire by 50% per application."
+  },
+  {
+   "id": 900973,
+   "aura_description": "Shadow damage increased by 1% per application."
+  },
+  {
+   "id": 900974,
+   "aura_description": "Movement slowed by 50%. Taking Shadow damage every 1 sec."
   }
  ]
 }

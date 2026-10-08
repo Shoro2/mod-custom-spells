@@ -20,8 +20,12 @@
 # its own cleave damage (8 dummies x 15 % = 1.2 expected re-triggers per
 # cleave, an unbounded recursion).
 # Spells: Auto Shot 75, Multi-Shot 49048, Rapid Fire 3045 (+40 % ranged
-# speed), Beast Cleave 900505, Explosive Burst 900567, Barrage Slow 900536,
-# minion auras 901109 (+50 % damage done) / 901110 (+50 % melee haste).
+# speed), Beast Cleave 900505 (666 + 5 x the hunter's Paragon level since the
+# revision of 2026-10-08), Explosive Trap Effect 49065 (rank 6: what 900566 sets
+# off since the revision; the hunter knows no Explosive Trap here, so the rank
+# its level allows), Barrage Slow 900536, minion auras 901109 (+50 % damage
+# done) / 901110 (+50 % melee haste). The revision's new hunter spells and the
+# melee half of 900566: cs_rev_hunter.
 name    Custom spells - Hunter
 timeout 300s
 
@@ -145,7 +149,7 @@ wait 500ms
 as gm .unlearn 900534
 
 # ---------------------------------------------------------------- Survival
-log Survival - 900566 ranged damage: 15 % chance (2 sec cooldown) to set off an Explosive Burst (900567) around the target - statistical: 30 s of Auto Shot under Rapid Fire plus 3 Multi-Shots
+log Survival - 900566 physical damage (revision 2026-10-08: ranged and melee), here ranged: 15 % chance (2 sec cooldown) to drop an explosive trap - the Explosive Trap Effect (49065) goes off at the struck target and hits the ring - statistical: 30 s of Auto Shot under Rapid Fire plus 3 Multi-Shots
 do hu learn 900566
 do hu cast 3045 triggered
 spelllog start
@@ -161,8 +165,8 @@ wait 9s
 do hu stop
 wait 500ms
 spelllog stop
-expect hu spell 900567 casts >= 1
-expect hu spell 900567 targets >= 5
+expect hu spell 49065 casts >= 1
+expect hu spell 49065 targets >= 5
 as gm .unlearn 900566
 as gm .unaura 3045
 
@@ -203,7 +207,7 @@ expect hu spell 0 damage >= 2450
 as gm .unlearn 900502
 waitfor pt noaura 901109 timeout 3s
 
-log BM - 900503 Pet Speed +50 % (2.0 -> 1.33-sec swings: 28-32 in 40 s; without 20, at double speed 40) and 900504 Pet AoE Proc - 15 % of its white hits set off Beast Cleave 900505 on every other enemy within 10 yd of its target, never off its own cleave (statistical)
+log BM - 900503 Pet Speed +50 % (2.0 -> 1.33-sec swings: 28-32 in 40 s; without 20, at double speed 40) and 900504 Pet AoE Proc - 15 % of its white hits set off Beast Cleave 900505 (666 + 5 x the hunter's Paragon level Physical, less the dummies' armor; the spelllog line's damage / hits) on every other enemy within 10 yd of its target, never off its own cleave (statistical)
 do hu learn 900503
 do hu learn 900504
 wait 3s

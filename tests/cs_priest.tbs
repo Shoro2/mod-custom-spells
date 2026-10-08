@@ -5,9 +5,12 @@
 # (920018) on a 4-yd circle around (-270, 150). Slot 4 belongs to the cs_*
 # scenarios; the cleanup unlearns every custom spell again.
 # Spells: Power Word: Shield 48066 (30 s; Weakened Soul 6788, 15 s), Flash
-# Heal 48071, Shadow Word: Pain 48125, Holy Fire 48135, Emberseer Bonus Damage
-# 16534 (2000 physical to the caster, fixed: a real hit that the shield
-# absorbs - .damage bypasses absorbs and procs).
+# Heal 48071, Shadow Word: Pain 48125, Holy Fire 48135, Holy Nova 48078 (a
+# triggered cast keeps the dummies in combat: a dummy leaves combat 5 s after
+# its last direct hit), Emberseer Bonus Damage 16534 (2000 physical to the
+# caster, fixed: a real hit that the shield absorbs - .damage bypasses absorbs
+# and procs). 900900, 900933 and 900966 as revised on 2026-10-08
+# (custom-spells/09; their new numbers: cs_rev_priest).
 name    Custom spells - Priest
 timeout 300s
 
@@ -51,7 +54,7 @@ do pr approach d1
 wait 500ms
 
 # ---------------------------------------------------------------- Shadow
-log Shadow - 900966 CONCEPT DoT ticks (20 %, 2 s ICD) erupt in Shadow damage AROUND THE DOT TARGET (helper 900968); 900967 DoT ticks (15 %, 3 s ICD) copy the DoT to up to 2 nearby enemies - Shadow Word: Pain on 5 dummies from 23 yd away, statistical (about 30 ticks)
+log Shadow - 900966 CONCEPT DoT ticks (20 %, 2 s ICD) erupt in Shadow damage AROUND THE DOT TARGET (helper 900968); 900967 DoT ticks (15 %, 3 s ICD) copy the DoT to up to 2 nearby enemies - Shadow Word: Pain on 5 dummies from 23 yd away, statistical (about 30 ticks); a copy is a cast of its own, so the copies are counted as casts (5 + at least 2) - a missed copy damages nobody (bot run 485: 7 casts, 1 miss, 6 damaged)
 do pr learn 900966
 do pr learn 900967
 do pr goto -293 150 -423.2
@@ -71,7 +74,7 @@ wait 19s
 spelllog stop
 expect pr spell 900968 casts >= 1
 expect pr spell 900968 targets >= 5
-expect pr spell 48125 targets >= 7
+expect pr spell 48125 casts >= 7
 as gm .unlearn 900966
 as gm .unlearn 900967
 
@@ -83,7 +86,7 @@ do pr learn 900901
 expect pr spellmod 48066 alleffects 100 == 150
 as gm .unlearn 900901
 
-log Discipline - 900900 a BROKEN Power Word: Shield explodes on every enemy within 10 yd of the shielded unit (the priest in the ring; 2 x 16534 break it) - also the absorb baseline without 900901
+log Discipline - 900900 a BROKEN Power Word: Shield explodes (900903) on every enemy within 10 yd of the shielded unit (the priest in the ring; 2 x 16534 break it) - also the absorb baseline without 900901
 do pr learn 900900
 do pr reset
 expect pr maxhealth > 0
@@ -95,7 +98,7 @@ do pr cast 16534 on pr
 wait 500ms
 spelllog stop
 expect pr noaura 48066
-expect pr spell 48066 targets >= 7
+expect pr spell 900903 targets >= 7
 expect pr health > 0
 
 log Discipline - 900901 CONCEPT shields +50 %: the same shield and hits leave the priest 50 % of the baseline absorb healthier (calibration 2026-10-08: 7450 max health, 2 x 1987 damage, base absorb about 2250: without the bonus about 5740 left, with it about 6860)
@@ -135,7 +138,7 @@ expect pr auraduration 6788 <= 5000
 as gm .unlearn 900902
 
 # ---------------------------------------------------------------- Holy (+ a fading shield)
-log Holy - 900933 direct heals (20 %, 3 s ICD) cast Holy Fire (900934, no facing rule) on EACH enemy within 10 yd of the healed unit (8 dummies; one miss allowed) - 18 Flash Heals on the priest in the ring's middle, statistical; meanwhile (900900) a shield that FADES after 30 s explodes too
+log Holy - 900933 (revised 2026-10-08) direct heals: 50 % (no cooldown) for Holy Fire (900934, no facing rule) on ONE random enemy in combat within 30 yd of the healed unit - 18 Flash Heals on the priest in the ring's middle, a Holy Nova (triggered) before every second heal keeps the dummies in combat; statistical (9 expected); meanwhile (900900) a shield that FADES after 30 s explodes too
 do pr learn 900933
 wait 1600ms
 do pr reset
@@ -144,40 +147,49 @@ as gm .unaura 48066
 do pr cast 48066 on pr
 wait 1600ms
 spelllog start
+do pr cast 48078 triggered
 do pr cast 48071 on pr
 wait 1700ms
 do pr cast 48071 on pr
 wait 1700ms
+do pr cast 48078 triggered
 do pr cast 48071 on pr
 wait 1700ms
 do pr cast 48071 on pr
 wait 1700ms
-do pr cast 48071 on pr
-wait 1700ms
-do pr cast 48071 on pr
-wait 1700ms
-do pr reset
-do pr cast 48071 on pr
-wait 1700ms
-do pr cast 48071 on pr
-wait 1700ms
-do pr cast 48071 on pr
-wait 1700ms
-do pr cast 48071 on pr
-wait 1700ms
+do pr cast 48078 triggered
 do pr cast 48071 on pr
 wait 1700ms
 do pr cast 48071 on pr
 wait 1700ms
 do pr reset
+do pr cast 48078 triggered
 do pr cast 48071 on pr
 wait 1700ms
 do pr cast 48071 on pr
 wait 1700ms
+do pr cast 48078 triggered
 do pr cast 48071 on pr
 wait 1700ms
 do pr cast 48071 on pr
 wait 1700ms
+do pr cast 48078 triggered
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr reset
+do pr cast 48078 triggered
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48078 triggered
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48071 on pr
+wait 1700ms
+do pr cast 48078 triggered
 do pr cast 48071 on pr
 wait 1700ms
 do pr cast 48071 on pr
@@ -185,9 +197,10 @@ wait 1700ms
 wait 1s
 spelllog stop
 expect pr spell 48071 casts >= 15
-expect pr spell 900934 targets >= 7
+expect pr spell 900934 casts >= 3
+expect pr spell 900934 maxtargets == 1
 expect pr noaura 48066
-expect pr spell 48066 targets >= 7
+expect pr spell 900903 targets >= 7
 
 cleanup
 do pr stop

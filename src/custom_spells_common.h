@@ -53,7 +53,7 @@
 extern bool g_CustomSpellsEnabled;
 
 // Area bursts cast AT a unit (Holy Shock Burst 900208, Shadow Eruption 900367,
-// Beast Cleave 900505, Explosive Burst 900567, Poison Nova 900604) must not hit
+// Beast Cleave 900505, Poison Nova 900604) must not hit
 // that unit again - it already took the triggering spell. A dest-targeted
 // helper loses its unit target in Spell::InitExplicitTargets, so the anchor
 // travels in this world-thread-local slot for the duration of the (instant,
@@ -212,7 +212,6 @@ enum CustomSpellIds
 
     // ---- Hunter Surv (900566-900599) ----
     SPELL_HUNT_SURV_TRAP_PROC_PASSIVE   = 900566,
-    SPELL_HUNT_SURV_TRAP_HELPER         = 900567,
 
     // ---- Rogue Assa (900600-900632) ----
     SPELL_ROG_ASSA_ENERGY_REGEN         = 900600,
@@ -289,7 +288,7 @@ enum CustomSpellIds
 
     // ---- Warlock Demonology (900833-900865) ----
     SPELL_WLK_DEMO_META_KILL_EXT       = 900833,
-    SPELL_WLK_DEMO_META_AOE_HEAL       = 900834,
+    SPELL_WLK_DEMO_FEL_VIGOR_PASSIVE   = 900834,
     SPELL_WLK_DEMO_LESSER_SPAWN        = 900835,
     SPELL_WLK_DEMO_IMP_FB_DMG          = 900836,
     SPELL_WLK_DEMO_IMP_FB_AOE          = 900837,
@@ -297,8 +296,6 @@ enum CustomSpellIds
     SPELL_WLK_DEMO_FG_DMG              = 900839,
     SPELL_WLK_DEMO_SACRIFICE_ALL       = 900840,
     SPELL_WLK_DEMO_IMP_FB_HELPER       = 900841,
-    SPELL_WLK_DEMO_META_AOE_HELPER     = 900842,
-    SPELL_WLK_DEMO_META_HEAL_HELPER    = 900843,
     SPELL_WLK_DEMO_FG_CLEAVE_HELPER    = 900844,
 
     // ---- Warlock Destruction (900866-900899) ----
@@ -544,6 +541,15 @@ constexpr uint32 SPELLFAMILY_PRIEST_ID     = 6;
 // PW:Shield SpellFamilyFlags[0] = 0x1 (verify!)
 // Holy Fire SpellFamilyFlags[0] = 0x8000 (verify!)
 
+// Shared by the rogue and druid scripts (custom_spells_rogue.cpp holds the one
+// implementation of each): a passive that lets its owner use the "must be
+// behind the target" abilities from the front, and a cooldown (Berserk /
+// Adrenaline Rush) that gives +100 % movement speed and an area burst on
+// every 5-combo-point finisher while it lasts.
+void AddFrontalAttackMarker(uint32 markerSpellId);
+void AddComboFrenzyRule(uint32 buffSpellId, uint32 passiveSpellId,
+    uint32 speedAuraId, uint32 burstSpellId);
+
 // Per-class registration functions
 void AddWarriorSpellsScripts();
 void AddPaladinSpellsScripts();
@@ -556,3 +562,4 @@ void AddMageSpellsScripts();
 void AddWarlockSpellsScripts();
 void AddPriestSpellsScripts();
 void AddGlobalSpellsScripts();
+void AddSecondPetSpellsScripts();

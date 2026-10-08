@@ -63,7 +63,7 @@ public:
 // ============================================================
 //  Shared helper: area bursts cast AT a hit target (Holy Shock
 //  Burst 900208, DK Shadow Eruption 900367, Beast Cleave 900505,
-//  Explosive Burst 900567, Poison Nova 900604) must not hit the
+//  Poison Nova 900604) must not hit the
 //  anchor target again - it already took the triggering spell.
 //  The helpers are dest-targeted, so the unit target is gone by
 //  the time the targets are picked (Spell::InitExplicitTargets):
@@ -127,4 +127,5 @@ void AddCustomSpellsScripts()
     AddWarlockSpellsScripts();
     AddPriestSpellsScripts();
     AddGlobalSpellsScripts();
+    AddSecondPetSpellsScripts();
 }

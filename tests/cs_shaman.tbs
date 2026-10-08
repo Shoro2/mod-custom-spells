@@ -227,15 +227,15 @@ spelllog start
 wait 10s
 spelllog stop
 
-log Enhancement - 900435 summons deal +50 % damage, in the combat log too: the two Spirit Wolves carry the damage aura (901109) and their melee over 20 s with the passive (~25 hits) reaches 6600 - natively 190-237 a hit (10-s baseline windows of runs 378-399, at most ~5900 for 25), 290-330 with it
+log Enhancement - 900435 summons deal +50 % damage, in the combat log too: the two Spirit Wolves carry the damage aura (901109) and their melee over 28 s with the passive (~39 hits, ~270 a hit without a crit) reaches 8400 - natively ~178 a hit (run 506's 10-s baseline), ~7000 for 39 (20 s and 6600 failed once without a crit, run 506)
 do sh learn 900435
 wait 1500ms
 pick w1 creature:29264 near sh
 expect w1 aura 901109
 spelllog start
-wait 20s
+wait 28s
 spelllog stop
-expect sh spell 0 damage >= 6600
+expect sh spell 0 damage >= 8400
 as gm .unlearn 900435
 wait 1500ms
 

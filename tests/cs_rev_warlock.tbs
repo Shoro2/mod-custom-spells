@@ -1,0 +1,416 @@
+# mod-custom-spells: the Warlock spells of the concept revision of 2026-10-08
+# (share-public custom-spells/09-concept-revision-20261008.md) on a bot - the
+# changed 900800 (Paragon damage) and 900834 (Fel Vigor) and the new 900804,
+# 900846, 900848, 900850, 900852, 900873, 900875. Every check states the
+# revised line, so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018: take 0 damage, never die, the combat log still reads the full
+# amount; a dummy stays in combat 5 s after its last direct hit) on a 4-yd
+# circle around (-270, 150), 3 health each. Slot 4 belongs to the cs_*
+# scenarios; the cleanup unlearns every custom spell again. TBOT04's Paragon
+# level is 1 (2026-10-08): "666 + 5 x Paragon level" = 671.
+# The core's spell queue (SpellQueue.Enabled = 1): a bot's own, non-triggered
+# cast inside the global cooldown fails with result 67 (NOT_READY), so each
+# waits 1.6 s after the last one. Target counts read `maxtargets` (the units a
+# cast picked): a missed unit is no damaged target (`targets`).
+# Spells: Corruption 47813, Shadow Bolt 47809 (3-s cast), Metamorphosis 47241,
+# Immolation Aura (demon) 50589 -> Immolation 50590 every 1 s, Hellfire 47823
+# (channel, 15 s) -> Hellfire Effect 47822, Rain of Fire 47820 (channel, 8 s,
+# aimed), Summon Imp 688 (NPC 416, Firebolt 47964: 2.5-s cast), Summon
+# Voidwalker 697 (NPC 1860, Suffering rank 8 47990), Summon Felhunter 691 (NPC
+# 417, Spell Lock 19647 -> silence 24259, Devour Magic 48011), Seduction 6358
+# (humanoids only), Dismiss Pet 2641, Power Word: Fortitude 48161 (a magic buff
+# for Devour Magic to take), Defias Thug 38 (level 3, humanoid, neutral),
+# Combat Tester 11080 (level 60, hostile, 305,200 health, melee only, attacks
+# only when attacked: the leech's target).
+# Pets: a summoned demon is passive; a 300-ms run of the warlock_affliction
+# rotation sends it at d1, the GM then makes it cast with ".cast target <spell>"
+# (not "triggered": the GM's triggered cast ignores every effect).
+name    Custom spells - Warlock revision 2026-10-08
+timeout 360s
+
+bot wl warlock slot=4
+
+place 13 -279 150 -423.2 0
+require wl alive
+pick d1 creature:920018 near wl
+require d1 exists
+do gm target wl
+as gm .unlearn 900800
+as gm .unlearn 900801
+as gm .unlearn 900802
+as gm .unlearn 900804
+as gm .unlearn 900833
+as gm .unlearn 900834
+as gm .unlearn 900835
+as gm .unlearn 900836
+as gm .unlearn 900837
+as gm .unlearn 900838
+as gm .unlearn 900839
+as gm .unlearn 900840
+as gm .unlearn 900846
+as gm .unlearn 900848
+as gm .unlearn 900850
+as gm .unlearn 900852
+as gm .unlearn 900866
+as gm .unlearn 900867
+as gm .unlearn 900868
+as gm .unlearn 900869
+as gm .unlearn 900870
+as gm .unlearn 900873
+as gm .unlearn 900875
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 47241
+as gm .unaura 900805
+as gm .unaura 900874
+as gm .unaura 900876
+do wl learn 47813
+do wl learn 47809
+do wl learn 688
+do wl learn 697
+do wl learn 691
+do wl learn 47823
+do wl learn 47820
+do wl goto -263 150 -423.2
+wait 500ms
+pick de creature:920018 near wl
+do wl goto -270 157 -423.2
+wait 500ms
+pick dn creature:920018 near wl
+do wl goto -270 143 -423.2
+wait 500ms
+pick ds creature:920018 near wl
+do wl goto -264 155 -423.2
+wait 500ms
+pick dne creature:920018 near wl
+do wl goto -279 150 -423.2
+wait 500ms
+do wl approach d1
+wait 500ms
+
+# ---------------------------------------------------------------- Affliction
+log Affliction - 900800 Shadow Eruption, its helper row: 900803 deals 666 Shadow without a die and cannot miss - aimed at d1 it hits all 8 dummies for 5,328 (a crit adds 333; the old row's 801-1,000 a hit came to at least 6,408)
+spelllog start
+do wl cast 900803 at d1 triggered
+wait 1s
+spelllog stop
+expect wl spell 900803 hits == 8
+expect wl spell 900803 damage >= 5328
+expect wl spell 900803 damage <= 6327
+
+log Affliction - 900800 CONCEPT "dmg dependent on paragon lvl": a DoT tick's eruption (20 %, 2 s ICD) hits the 7 other dummies for 666 + 5 x Paragon level each - the window closes on the first eruption: 7 hits, 4,662-5,600 (Paragon 1-18, crits included; 801-1,000 a hit would be 5,607 or more)
+do wl learn 900800
+do wl goto -293 150 -423.2
+wait 500ms
+do wl reset
+spelllog start
+do wl cast 47813 on d1
+wait 1600ms
+do wl cast 47813 on dn
+wait 1600ms
+do wl cast 47813 on ds
+wait 1600ms
+do wl cast 47813 on de
+wait 1600ms
+do wl cast 47813 on dne
+waitfor wl spell 900803 casts >= 1 timeout 40s
+spelllog stop
+expect wl spell 900803 casts == 1
+expect wl spell 900803 hits == 7
+expect wl spell 900803 damage >= 4662
+expect wl spell 900803 damage <= 5600
+as gm .unlearn 900800
+
+log Affliction - 900804 CONCEPT Withering Harvest: every DoT tick adds a stack of 900805 (+1 % damage-over-time damage each, 30 s) - a fresh Corruption on d1 ticks every 3 s (first the global cooldown of the last Corruption runs out: a cast inside it fails with result 67, NOT_READY)
+do wl learn 900804
+wait 1600ms
+do wl cast 47813 on d1
+wait 7s
+expect wl aurastacks 900805 >= 2
+expect wl spellmod 47813 dot 100 >= 102
+
+log Affliction - 900804 CONCEPT at 100 stacks: every 5 sec a free Drain Life (900806: a leech, 133 a second for 5 s) on a random enemy in combat within 30 yd - an aura on the enemy, no channel: the warlock's own Shadow Bolt (3-s cast) goes on meanwhile. The enemy is a Combat Tester (11080: level 60, hostile, 305,200 health - no window can kill it -, melee only, no spells, a civilian: it fights only when attacked, so neither the GM nor the warlock draws it) 75 yd north of the ring, no dummy within 30 yd, put in combat by a triggered Shadow Bolt (a triggered hit engages, as the Hellfire Effect showed in bot run 478) and fighting the warlock; the warlock 3000 health down for the leech to fill. Not a dummy: the core caps a leech tick at the target's health and heals by the damage dealt - on a dummy (3 health, takes no damage) 3 a tick and no heal (bot run 478). A leech tick is a damage line, not a periodic one: hits and damage count, ticks stay 0
+as gm .aura stack 900805 99
+expect wl aurastacks 900805 == 100
+do wl goto -270 228 -422.72
+do gm goto -270 230 -422.72
+wait 500ms
+as gm .npc add temp 11080
+do gm goto -279 150 -423.2
+wait 300ms
+pick ct creature:11080 near wl
+require ct exists
+do wl approach ct 3
+do wl cast 47809 on ct triggered
+waitfor ct victim wl timeout 5s
+wait 300ms
+as gm .damage 3000
+spelllog start
+do wl cast 47809 on ct
+wait 11s
+spelllog stop
+expect wl spell 900806 casts >= 1
+expect wl spell 900806 damage >= 600
+expect wl spell 900806 heal >= 600
+expect wl spell 47809 casts >= 1
+do gm target ct
+as gm .die
+do gm target wl
+as gm .unlearn 900804
+as gm .unaura 900805
+do wl reset
+
+# ---------------------------------------------------------------- Demonology
+log Demonology - 900834 CONCEPT Fel Vigor: during Metamorphosis the Immolation Aura (50589 -> 50590 each second) heals the warlock for all the damage it deals (one heal a tick, logged as 900834) - in the ring's middle, 3000 health down first
+do wl learn 900834
+do wl goto -270 150 -423.2
+wait 500ms
+as gm .damage 3000
+do wl cast 47241 triggered
+wait 300ms
+spelllog start
+do wl cast 50589 triggered
+wait 3500ms
+spelllog stop
+expect wl spell 50590 maxtargets >= 7
+expect wl spell 900834 hits >= 2
+expect wl spell 900834 heal >= 1000
+
+log Demonology - 900834 CONCEPT "your demon get +100% damage" in demon form: the Imp carries Fel Fury (900845, +100 % damage done) while Metamorphosis lasts, and loses it with Metamorphosis
+do wl cast 688 triggered
+wait 1s
+pick imp creature:416 near wl
+expect imp exists
+waitfor imp aura 900845 timeout 3s
+as gm .unaura 47241
+waitfor imp noaura 900845 timeout 3s
+as gm .unlearn 900834
+
+log Demonology - 900846 CONCEPT "imp: his firebolt attacks 50% faster": the Imp carries Quickened Firebolt (900847, casting speed +50 %), Firebolt's 2.5-s cast takes 1.67 s - a Firebolt on command completes within 1.9 s with it and never without it
+do wl goto -279 150 -423.2
+wait 500ms
+do wl rotation warlock_affliction on d1 for 300ms
+wait 500ms
+do wl stop
+wait 3s
+do gm target imp
+spelllog start
+as gm .cast target 47964
+wait 1900ms
+spelllog stop
+expect wl spell 47964 casts == 0
+do gm target wl
+do wl learn 900846
+waitfor imp aura 900847 timeout 3s
+wait 3s
+do gm target imp
+spelllog start
+as gm .cast target 47964
+wait 1900ms
+spelllog stop
+expect wl spell 47964 casts >= 1
+do gm target wl
+as gm .unlearn 900846
+waitfor imp noaura 900847 timeout 3s
+
+log Demonology - 900848 CONCEPT "voidwalker: +500% hp and passive cast his aoe taunt every 10 sec in combat": Void Bulwark (900849) on the Voidwalker - six times its health (TBOT04's: 6,154 -> 36,924, bot run 478) - and Suffering (47990, rank 8) every 10 s while it fights d1 (the rotation leaves the warlock 30 yd from d1: the Voidwalker walks there first)
+do wl cast 697 triggered
+wait 1s
+pick vw creature:1860 near wl
+expect vw exists
+expect vw maxhealth < 7000
+do wl learn 900848
+waitfor vw aura 900849 timeout 3s
+expect vw maxhealth >= 35000
+do wl rotation warlock_affliction on d1 for 300ms
+wait 500ms
+do wl stop
+waitfor vw incombat timeout 10s
+spelllog start
+wait 21s
+spelllog stop
+expect wl spell 47990 casts >= 2
+as gm .unlearn 900848
+waitfor vw noaura 900849 timeout 3s
+
+log Demonology - 900850 CONCEPT "succubus: charm now hits +9 targets and their damage take is increased by 25% for 30seconds (stacks 4 times)": Seduction (6358) jumps to 9 more enemies (jump targets 0 -> 10) and every unit it lands on gets a stack of Seductive Torment (900851) - five Defias Thugs (humanoids) 20 yd north-west of the ring, the warlock's own Seduction (a succubus casts with its owner's modifiers, as Demonic Power shows)
+do wl learn 900850
+expect wl spellmod 6358 jumptargets 0 == 10
+do gm goto -290 165 -423.2
+wait 500ms
+as gm .npc add temp 38
+as gm .npc add temp 38
+as gm .npc add temp 38
+as gm .npc add temp 38
+as gm .npc add temp 38
+do gm goto -279 150 -423.2
+wait 1s
+pick k1 creature:38 near wl
+require k1 exists
+do wl goto -290 158 -423.2
+wait 500ms
+spelllog start
+do wl cast 6358 on k1 triggered
+wait 1s
+spelllog stop
+expect wl spell 6358 maxtargets >= 5
+expect k1 aurastacks 900851 == 1
+expect k1 auraduration 900851 > 25000
+do wl cast 6358 on k1 triggered
+wait 500ms
+expect k1 aurastacks 900851 == 2
+log Demonology - the thugs die to a Hellfire Effect next to them (no thug left)
+do wl goto -290 163 -423.2
+wait 500ms
+do wl cast 47822 triggered
+wait 1500ms
+do wl cast 47822 triggered
+wait 1500ms
+expect creature:38 missing
+do wl stop
+as gm .unlearn 900850
+
+log Demonology - 900852 CONCEPT "Spell Lock is aoe now, Devour Magic also": the Felhunter's Spell Lock (19647) on d1 is cast again, triggered, on every other enemy within 10 yd of d1 (8 casts; one without the passive - each spell once, their cooldowns forbid a second command); so is Devour Magic (48011) - Power Word: Fortitude on d1, dn and ds for it to take
+do wl goto -279 150 -423.2
+wait 500ms
+do wl cast 691 triggered
+wait 1s
+pick fh creature:417 near wl
+expect fh exists
+do wl rotation warlock_affliction on d1 for 300ms
+wait 500ms
+do wl stop
+wait 1s
+do wl learn 900852
+do gm target fh
+spelllog start
+as gm .cast target 19647
+wait 1s
+spelllog stop
+expect wl spell 19647 casts >= 7
+do gm target d1
+as gm .aura 48161
+do gm target dn
+as gm .aura 48161
+do gm target ds
+as gm .aura 48161
+waitfor ds aura 48161 timeout 2s
+do gm target fh
+spelllog start
+as gm .cast target 48011
+wait 1s
+spelllog stop
+expect wl spell 48011 casts >= 7
+do gm target wl
+as gm .unlearn 900852
+do wl cast 2641 triggered
+
+# ---------------------------------------------------------------- Destruction
+log Destruction - control: without 900873 Hellfire (47823) is a channel
+do wl goto -270 150 -423.2
+wait 500ms
+do wl reset
+do wl cast 47823
+wait 500ms
+expect wl casting 47823
+do wl stop
+wait 300ms
+expect wl notcasting
+
+log Destruction - 900873 CONCEPT "you can now move while using hellfire": with it a Hellfire cast is no channel - the warlock carries the ticker 900874 for the 15 s; each second Hellfire Effect (47822) strikes every enemy within 10 yd of where he stands now and he burns himself (47823); 25 yd away the ring takes nothing (the control's global cooldown runs out first; the target counts are the units each cast picked - a miss damages nobody)
+do wl learn 900873
+do wl reset
+wait 1600ms
+do wl cast 47823
+wait 500ms
+expect wl notcasting
+expect wl aura 900874
+expect wl auraduration 900874 > 13000
+spelllog start
+wait 2500ms
+spelllog stop
+expect wl spell 47822 casts >= 2
+expect wl spell 47822 maxtargets >= 7
+expect wl spell 47823 hits >= 2
+do wl goto -295 150 -423.2
+wait 300ms
+spelllog start
+wait 2500ms
+spelllog stop
+expect wl spell 47822 casts >= 2
+expect wl spell 47822 maxtargets == 0
+as gm .unaura 900874
+as gm .unlearn 900873
+
+log Destruction - 900875 CONCEPT "rain of fire is around you for its duration instead on target ground and dont need a channel anymore": a Rain of Fire (47820) aimed 20 yd west of the ring is no channel - ticker 900876 (8 s) rains every 2 s round the warlock in the ring's middle (900877: every enemy within 8 yd)
+do wl learn 900875
+do wl goto -270 150 -423.2
+wait 500ms
+do wl reset
+do wl cast 47820 at -290 150 -423.2
+wait 500ms
+expect wl notcasting
+expect wl aura 900876
+spelllog start
+wait 4500ms
+spelllog stop
+expect wl spell 900877 casts >= 2
+expect wl spell 900877 maxtargets >= 7
+as gm .unaura 900876
+as gm .unlearn 900875
+
+cleanup
+do wl stop
+do gm target d1
+as gm .unaura 48161
+do gm target dn
+as gm .unaura 48161
+do gm target ds
+as gm .unaura 48161
+do gm target wl
+as gm .unlearn 900800
+as gm .unlearn 900801
+as gm .unlearn 900802
+as gm .unlearn 900804
+as gm .unlearn 900833
+as gm .unlearn 900834
+as gm .unlearn 900835
+as gm .unlearn 900836
+as gm .unlearn 900837
+as gm .unlearn 900838
+as gm .unlearn 900839
+as gm .unlearn 900840
+as gm .unlearn 900846
+as gm .unlearn 900848
+as gm .unlearn 900850
+as gm .unlearn 900852
+as gm .unlearn 900866
+as gm .unlearn 900867
+as gm .unlearn 900868
+as gm .unlearn 900869
+as gm .unlearn 900870
+as gm .unlearn 900873
+as gm .unlearn 900875
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 47241
+as gm .unaura 900805
+as gm .unaura 900874
+as gm .unaura 900876
+as gm .unaura 47823
+as gm .unaura 47893
+do wl goto -290 163 -423.2
+wait 300ms
+do wl cast 47822 triggered
+wait 500ms
+do wl cast 688 triggered
+wait 500ms
+do wl cast 2641 triggered
+do wl goto -279 150 -423.2

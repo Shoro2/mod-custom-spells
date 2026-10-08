@@ -144,10 +144,55 @@ do dk stop
 spelllog stop
 expect dk spell 900370 targets >= 2
 
-log Unholy - 900371 Risen Army: melee abilities have a 10 % chance to raise an Army of the Dead ghoul (24207, 5 s; summon 900372) - statistical, 30 normal Frost Strikes with the runic power refilled
+log Unholy - 900371 Risen Army: melee abilities have a 10 % chance to raise an Army of the Dead ghoul (24207, 5 s; summon 900372) - statistical, 48 normal Frost Strikes with the runic power refilled (30 missed every proc in run 505: 0.9^30 = 4 %)
 do dk learn 900371
 do dk reset
 spelllog start
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 55268 on d1
+wait 1600ms
+do dk cast 55268 on d1
+wait 1600ms
 as gm .modify runicpower 100
 do dk cast 55268 on d1
 wait 1600ms

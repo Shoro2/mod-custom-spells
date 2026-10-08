@@ -76,7 +76,7 @@ do wl learn 900801
 expect wl spellmod 47813 dot 100 == 150
 as gm .unlearn 900801
 
-log Affliction - 900800 CONCEPT DoT ticks (20 %, 2 s ICD) erupt in Shadow damage AROUND THE DOT TARGET (helper 900803); 900802 DoT ticks (15 %, 3 s ICD) copy the DoT to up to 2 nearby enemies - Corruption on 5 dummies from 23 yd away, statistical (about 30 ticks)
+log Affliction - 900800 CONCEPT DoT ticks (20 %, 2 s ICD) erupt in Shadow damage AROUND THE DOT TARGET (helper 900803); 900802 DoT ticks (15 %, 3 s ICD) copy the DoT to up to 2 nearby enemies - Corruption on 5 dummies from 23 yd away, statistical (about 30 ticks); a copy is a cast of its own, so the copies are counted as casts (5 + at least 2) - a missed copy damages nobody (the hit-roll trap of cs_priest, bot run 485)
 do wl learn 900800
 do wl learn 900802
 do wl goto -293 150 -423.2
@@ -96,7 +96,7 @@ wait 19s
 spelllog stop
 expect wl spell 900803 casts >= 1
 expect wl spell 900803 targets >= 5
-expect wl spell 47813 targets >= 7
+expect wl spell 47813 casts >= 7
 as gm .unlearn 900800
 as gm .unlearn 900802
 
@@ -153,14 +153,18 @@ do wl cast 47809 on wolf triggered
 wait 500ms
 expect wl auraduration 47241 > 30000
 
-log Demonology - 900834 during Metamorphosis: Shadow damage around you (900842) and a self heal (900843) every 3 s (in the ring's middle)
+log Demonology - 900834 (reworked 2026-10-08, Fel Vigor) during Metamorphosis the Immolation Aura's damage (50589 -> 50590 each second) heals the warlock (logged as 900834) - in the ring's middle, 3000 health down first (cs_rev_warlock also checks the demons' +100 %)
 do wl learn 900834
+do wl goto -270 150 -423.2
+wait 500ms
+as gm .damage 3000
 spelllog start
-wait 7s
+do wl cast 50589 triggered
+wait 3500ms
 spelllog stop
-expect wl spell 900842 casts >= 2
-expect wl spell 900842 targets >= 6
-expect wl spell 900843 hits >= 2
+expect wl spell 50590 maxtargets >= 7
+expect wl spell 900834 hits >= 2
+expect wl spell 900834 heal >= 1000
 as gm .unaura 47241
 as gm .unlearn 900833
 as gm .unlearn 900834
