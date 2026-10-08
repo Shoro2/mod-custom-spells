@@ -34,7 +34,10 @@ level for the "damage by Paragon level" lines). Mechanics worth knowing before y
   (SEC_PLAYER, own second pet only); the C++ pushes the state back as addon whispers with prefix `CSPB`
   (`X` / `F` / `S` / `C` lines). Scripts that require `IsPet()` let the marker count too (Beast Cleave,
   Lesser Demons). What reaches only the real pet: everything the core aims at `GetPet()` (Mend Pet, Kill
-  Command, Bestial Wrath, Spirit Bond, Soul Link).
+  Command, Bestial Wrath, Spirit Bond, Soul Link). The hunter pet's happiness reaches the copy as the
+  marker's second effect (physical damage done +25 / 0 / -25, set every 0.5 s = the pet's 125 / 100 / 75 %
+  melee weapon damage), and the copy is drawn at the pet's size (pitfall 23); `.cspet status` prints both
+  in its "Second pet look" line.
 - **Behind the target from the front** (900674 rogue, 901053 druid; `custom_spells_rogue.cpp`): at startup the
   module clears `SPELL_ATTR0_CU_REQ_CASTER_BEHIND_TARGET` from every spell carrying it and enforces it itself
   (SPELL_FAILED_NOT_BEHIND) unless the caster has a marker (`AddFrontalAttackMarker`).
@@ -188,6 +191,14 @@ When hooking on existing Blizzard spells via `spell_script_names`, the C++ class
     extra-target damage hits the spell's own targets again (Divine Storm, 2026-10-08).
 22. **A spell that only triggers its damage per target** (Mutilate 48666 -> 48665/48664) needs the jump
     targets on the triggered strikes: a strike triggered on a far chain target fails its range check.
+
+23. **The client sizes a pet by its family, any other creature by its model** (build 12340, `0x0071C110`):
+    a unit's base size is the model's (`CreatureDisplayInfo` x `CreatureModelData` scale), raised to its
+    creature family's size at its level (`CreatureFamily.dbc` min/max scale and level) - and set to the
+    family's size outright when the unit has a pet number; `OBJECT_FIELD_SCALE_X` multiplies that. Same
+    look and same scale field can so draw differently: the Diseased Young Wolf (look 0.4) as a hunter pet
+    at the wolf family's 1.0, its copy (creature 900525, no family) at 0.4. `ClientModelScale` in
+    `custom_spells_second_pet.cpp` mirrors the rule; the copy's scale makes up the difference.
 
 ## Code style
 

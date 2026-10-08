@@ -18,7 +18,7 @@ mod-custom-spells/
 │       ├── mod_custom_spells_d_hunter_druid_rogue.sql
 │       ├── mod_custom_spells_e_mage.sql
 │       ├── mod_custom_spells_f_warlock_priest_global.sql
-│       ├── mod_custom_spells_g_second_pet.sql   # 900525/900526/900858 + creature 900525
+│       ├── mod_custom_spells_g_second_pet.sql   # 900525/900526 (marker; effect 2 = the pet's happiness)/900858 + creature 900525
 │       └── mod_custom_spells_z_fixups.sql   # EquippedItemClass -1 across the block, retired rows
 ├── lua/                              # AIO picker: CustomSpells_Server.lua (whitelist) + _Client.lua (UI);
 │                                     # second-pet bar: CustomSpells_PetBar_Server.lua + _Client.lua

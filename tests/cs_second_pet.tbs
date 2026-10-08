@@ -20,6 +20,14 @@
 # outlast the test. The hunter's pet is out again at the end: cs_hunter expects
 # it at login (a dismissed pet is not loaded at login, and tame does nothing
 # while the bot has one).
+# Size and happiness: the client draws a hunter pet at its family's size (a
+# wolf: 1.0 from level 60) and the copy, which has no family, at its model's
+# (the Snow Tracker Wolf's look 604: 0.55) - the copy's scale makes up the
+# difference. The pet's happiness is set through its power field 29
+# (UNIT_FIELD_POWER1 + POWER_HAPPINESS): unhappy below 333,000, happy from
+# 666,000; the "Second pet look" line of .cspet status reads it back from the
+# copy, its "weapon damage" is the copy's damage factor against the pet's own
+# (1 = mirrored). The body leaves the pet unhappy, as an unfed bot pet is.
 # Spells: Call Pet 883, Revive Pet 982, Dismiss Pet 2641, Summon Imp 688 (NPC
 # 416, Firebolt 47964), Summon Voidwalker 697 (1860), Summon Succubus 712 (1863);
 # minion auras 901109 (+50 % damage, 900502 / 900836) and 901110 (+50 % melee
@@ -112,6 +120,31 @@ pick sp2 creature:900525 near hu
 require sp2 exists
 pick pt2 creature:1138 near hu
 require pt2 exists
+
+log Hunter - drawn at the pet's size: scale 1.818 = the pet's 1.0 x size ratio 1/0.55 (wolf family 1.0 against the look's 0.55)
+as hu .cspet status
+expect output value ratio >= 1.81
+expect output value ratio <= 1.83
+expect output value scale >= 1.81
+expect output value scale <= 1.83
+
+log Hunter - the pet's happiness reaches the copy's weapon damage: content 100 %, happy 125 %, unhappy 75 % (marker 900526, effect 2) - the copy's damage factor stays the pet's own, happiness included
+do gm target pt2
+as gm .debug setvalue 29 500000
+wait 1s
+as hu .cspet status
+expect output value happiness == 100
+expect output value damage == 1
+as gm .debug setvalue 29 900000
+wait 1s
+as hu .cspet status
+expect output value happiness == 125
+expect output value damage == 1
+as gm .debug setvalue 29 100000
+wait 1s
+as hu .cspet status
+expect output value happiness == 75
+expect output value damage == 1
 
 log Hunter - .cspet attack: the second pet attacks the hunter's target d1 (passive first: it attacks on command only)
 do hu target d1
@@ -223,6 +256,8 @@ expect pi noaura 900526
 expect wl pet
 as wl .cspet status
 expect output has "entry 1860"
+expect output value ratio == 1
+expect output value happiness == 100
 
 log Warlock - two demons at most: the Succubus (712) replaces the second demon with the demon that was out, the Imp
 do wl cast 712 triggered
@@ -307,3 +342,7 @@ do hu cast 2641 triggered
 wait 1s
 do hu cast 883 triggered
 waitfor hu pet timeout 8s
+# the pet loads asynchronously: a logout before the load completes skips its
+# save (Pet::SavePetToDB returns while m_loading), and the pet stays dismissed
+# (slot 100) - no pet at the next login (runs 533/534)
+wait 3s

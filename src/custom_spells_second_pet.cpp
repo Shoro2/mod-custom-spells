@@ -30,6 +30,7 @@
 #include "World.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
+#include <cmath>
 #include <numbers>
 #include <set>
 #include <string>
@@ -57,7 +58,10 @@ using namespace Acore::ChatCommands;
 //    goes with the pet - dismissed, dead, unsummoned for a mount, a
 //    taxi or a teleport - and comes back with it (Call Pet, Revive
 //    Pet, login). Another pet, a level, a learned spell or talent, a
-//    renamed pet or a rearranged pet bar makes a new copy.
+//    renamed pet or a rearranged pet bar makes a new copy. The pet's
+//    happiness reaches the copy (its melee damage, as the pet's), and
+//    the copy is drawn at the pet's size: the client sizes a pet by its
+//    family, the copy by its model (ClientModelScale).
 //  - Warlock: when a demon is summoned while another one is out, the
 //    one that was out stays as the second demon (a copy of it under
 //    its own entry), two demons at most. Summoning the type that is
@@ -146,7 +150,9 @@ namespace
         uint32 Key = 0;             // pet number of the copied pet
         uint32 Entry = 0;           // creature entry of the second pet
         uint32 DisplayId = 0;
-        float Scale = 1.0f;
+        float Scale = 1.0f;         // the pet's OBJECT_FIELD_SCALE_X without scale auras
+        uint32 Family = 0;          // the pet's creature family (its client size)
+        bool Numbered = false;      // the pet has a pet number (ditto)
         uint8 Level = 0;
         PetType Type = MAX_PET_TYPE;
         ReactStates React = REACT_DEFENSIVE;
@@ -163,6 +169,9 @@ namespace
         ObjectGuid Guid;            // the second pet in the world
         uint32 Key = 0;             // its source's key and signature
         uint32 Signature = 0;
+        float Scale = 1.0f;         // its source's size (SecondPetSource)
+        uint32 Family = 0;
+        bool Numbered = false;
 
         SecondPetSource Demon;      // warlock: the demon before the last summon
         bool DemonValid = false;
@@ -280,6 +289,117 @@ namespace
         return second;
     }
 
+    // The size the 3.3.5a client draws a creature model at before it applies
+    // OBJECT_FIELD_SCALE_X (build 12340: 0x0071C110, reached from the unit's
+    // model setup through 0x00722AE0): the model's own size (CreatureDisplayInfo
+    // x CreatureModelData), raised to its creature family's size at the unit's
+    // level - and set to the family's size outright for a unit with a pet
+    // number. So a hunter pet is drawn at its family's size whatever creature
+    // it was tamed from, the copy (creature 900525, no family) at its model's:
+    // the Diseased Young Wolf's 0.4 against the wolf family's 1.0 at level 60+.
+    // A humanoid look (ExtendedDisplayInfoID) also takes its race model's size
+    // in, by the look's sex, which the server's DBC stores do not load: 0 =
+    // unknown (beasts and demons have none).
+    float ClientModelScale(uint32 displayId, uint32 familyId, uint8 level, bool petNumber)
+    {
+        CreatureDisplayInfoEntry const* display = sCreatureDisplayInfoStore.LookupEntry(displayId);
+        CreatureModelDataEntry const* model = display
+            ? sCreatureModelDataStore.LookupEntry(display->ModelId) : nullptr;
+        if (!model)
+            return 1.0f;
+        if (display->ExtendedDisplayInfoID)
+            return 0.0f;
+
+        float scale = display->scale * model->Scale;
+        if (scale <= 0.0f)
+            scale = 1.0f;
+
+        CreatureFamilyEntry const* family = sCreatureFamilyStore.LookupEntry(familyId);
+        if (!family)
+            return scale;
+
+        int32 const range = int32(family->maxScaleLevel) - int32(family->minScaleLevel);
+        int32 step = int32(level) >= int32(family->minScaleLevel)
+            ? int32(level) - int32(family->minScaleLevel) : 0;
+        if (step > range)
+            step = range;
+        float const part = range ? float(step) / float(range) : 0.0f;
+        float const familyScale = (family->maxScale - family->minScale) * part + family->minScale;
+        return familyScale > scale || petNumber ? familyScale : scale;
+    }
+
+    // How much larger the client draws the pet than the second pet in its
+    // current look at the same OBJECT_FIELD_SCALE_X (1 for a second demon:
+    // the demon's own entry)
+    float SecondPetSizeRatio(Creature* second, SecondPetState const& state)
+    {
+        uint32 const displayId = second->GetDisplayId();
+        uint8 const level = second->GetLevel();
+        float const petSize = ClientModelScale(displayId, state.Family, level, state.Numbered);
+        float const ownSize = ClientModelScale(displayId, second->GetCreatureTemplate()->family, level,
+            second->GetUInt32Value(UNIT_FIELD_PETNUMBER) != 0);
+        return petSize > 0.0f && ownSize > 0.0f ? petSize / ownSize : 1.0f;
+    }
+
+    // The second pet drawn at the pet's size: the pet's scale (plus scale
+    // auras, as Unit::RecalculateObjectScale adds them) times the size ratio,
+    // with a pet's reach for that scale (Creature::SetObjectScale: 1 and
+    // DEFAULT_COMBAT_REACH times the scale for a pet, the model's for a
+    // guardian). Checked every half second: a scale aura coming or going, or a
+    // look restored, sets the guardian's scale from its own template again.
+    void ApplySecondPetSize(Creature* second, SecondPetState const& state, bool force)
+    {
+        int32 const auras = second->GetTotalAuraModifier(SPELL_AURA_MOD_SCALE)
+            + second->GetTotalAuraModifier(SPELL_AURA_MOD_SCALE_2);
+        float const petScale = std::max(state.Scale + CalculatePct(1.0f, auras), 0.01f);
+        float const scale = petScale * SecondPetSizeRatio(second, state);
+        if (!force && std::fabs(second->GetObjectScale() - scale) < 0.0001f)
+            return;
+
+        second->SetObjectScale(scale);
+        second->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, petScale);
+        second->SetFloatValue(UNIT_FIELD_COMBATREACH, DEFAULT_COMBAT_REACH * petScale);
+    }
+
+    // The hunter pet whose copy the second pet is, or nullptr (a second demon)
+    Pet* CopiedHunterPet(Player* player, Creature* second)
+    {
+        Pet* pet = player->GetPet();
+        return pet && pet->IsHunterPet() && second->GetEntry() == NPC_HUNTER_SECOND_PET ? pet : nullptr;
+    }
+
+    // What a hunter pet's happiness adds to its melee weapon damage
+    // (Guardian::UpdateDamagePhysical: 125 % happy, 75 % unhappy), in percent
+    int32 HappinessDamagePct(Pet* pet)
+    {
+        switch (pet->GetHappinessState())
+        {
+            case HAPPY:
+                return 25;
+            case UNHAPPY:
+                return -25;
+            default:
+                return 0;
+        }
+    }
+
+    // The hunter pet's happiness on its copy. The core gives it to a hunter
+    // pet only, never to a guardian: the marker's second effect, a physical
+    // damage-done aura, does the same for the copy - physical percent auras
+    // reach the weapon damage only (Unit::UpdateDamagePctDoneMods;
+    // MeleeDamageBonusDone skips them). 0 on a second demon.
+    void MirrorHappiness(Player* player, Creature* second)
+    {
+        AuraEffect* effect = second->GetAuraEffect(SPELL_CUSTOM_SECOND_PET_MARKER, EFFECT_1);
+        if (!effect)
+            return;
+
+        Pet* pet = CopiedHunterPet(player, second);
+        int32 const amount = pet ? HappinessDamagePct(pet) : 0;
+        if (effect->GetAmount() != amount)
+            effect->ChangeAmount(amount);
+    }
+
     // full = false fills only what Reconcile compares (key, entry,
     // signature); a copy needs the full snapshot
     void SnapshotPet(Pet* pet, uint32 entry, SecondPetSource& out, bool full)
@@ -327,7 +447,13 @@ namespace
         if (!full)
             return;
 
-        out.Scale = pet->GetNativeObjectScale();
+        int32 const scaleAuras = pet->GetTotalAuraModifier(SPELL_AURA_MOD_SCALE)
+            + pet->GetTotalAuraModifier(SPELL_AURA_MOD_SCALE_2);
+        out.Scale = pet->GetObjectScale() - CalculatePct(1.0f, scaleAuras);
+        if (out.Scale <= 0.0f)
+            out.Scale = pet->GetNativeObjectScale();
+        out.Family = pet->GetCreatureTemplate()->family;
+        out.Numbered = pet->GetUInt32Value(UNIT_FIELD_PETNUMBER) != 0;
         out.React = pet->GetReactState();
         out.Name = pet->GetName();
         for (auto const& [spellId, petSpell] : pet->m_spells)
@@ -474,7 +600,7 @@ namespace
         // show the pet's name over the copy as it does over the pet
         if (source.DisplayId)
         {
-            guardian->SetDisplayId(source.DisplayId, source.Scale > 0.0f ? source.Scale : 1.0f);
+            guardian->SetDisplayId(source.DisplayId);
             guardian->SetNativeDisplayId(source.DisplayId);
         }
         if (!source.Name.empty())
@@ -483,6 +609,12 @@ namespace
         CharmInfo* charmInfo = guardian->InitCharmInfo();
         charmInfo->SetPetNumber(source.Key, true);
         guardian->SetUInt32Value(UNIT_FIELD_PET_NAME_TIMESTAMP, source.NameTimestamp);
+
+        // the pet's size, once the copy has its look and pet number
+        state.Scale = source.Scale;
+        state.Family = source.Family;
+        state.Numbered = source.Numbered;
+        ApplySecondPetSize(guardian, state, true);
 
         // the pet bar's spells become the second pet's charm spells
         for (uint32& spellId : guardian->m_spells)
@@ -516,6 +648,7 @@ namespace
         state.PetAuras.clear();
         SyncPetAuras(player, state, guardian);
         guardian->AddAura(SPELL_CUSTOM_SECOND_PET_MARKER, guardian);
+        MirrorHappiness(player, guardian);
 
         // a hunter pet's focus: Unit::GetCreatePowers gives it to real
         // hunter pets only, Pet::Update regenerates it (here: MaintainSecondPet)
@@ -594,6 +727,8 @@ namespace
 
         state.HealthPct = second->GetHealthPct();
         SyncPetAuras(player, state, second);
+        ApplySecondPetSize(second, state, false);
+        MirrorHappiness(player, second);
 
         // left behind by its owner's near teleport: bring it along
         if (!second->IsWithinDistInMap(player, SECOND_PET_CATCH_UP_DIST))
@@ -1175,6 +1310,24 @@ public:
             second->GetMaxPower(power), ReactName(second->GetReactState()),
             charmInfo->HasCommandState(COMMAND_STAY) ? "stay" : "follow",
             victim ? victim->GetName() : std::string("none"));
+
+        // its size against the pet's, and the pet's happiness on it: the
+        // copy's weapon damage factor against the hunter pet's own, its
+        // happiness included - 1 while the copy mirrors it (the pet's own
+        // buffs, such as Bestial Wrath, are the pet's alone)
+        AuraEffect const* happiness = second->GetAuraEffect(SPELL_CUSTOM_SECOND_PET_MARKER, EFFECT_1);
+        std::string damage = "n/a";
+        if (Pet* pet = CopiedHunterPet(player, second))
+        {
+            float const petFactor = pet->GetPctModifierValue(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_PCT)
+                * (100 + HappinessDamagePct(pet)) / 100.0f;
+            if (petFactor > 0.0f)
+                damage = Acore::StringFormat("{:.3f}",
+                    second->GetPctModifierValue(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_PCT) / petFactor);
+        }
+        handler->PSendSysMessage("Second pet look: scale {:.3f}, pet scale {:.3f}, size ratio {:.3f}; happiness {}%, weapon damage {} x the pet's",
+            second->GetObjectScale(), state->Scale, SecondPetSizeRatio(second, *state),
+            100 + (happiness ? happiness->GetAmount() : 0), damage);
 
         LocaleConstant const locale = handler->GetSessionDbcLocale();
         for (uint8 i = 0; i < MAX_SPELL_CHARM; ++i)

@@ -3,6 +3,21 @@
 Newest entry first. Changes before 2026-09-28 are recorded only in
 [`share-public/claude_log.md`](https://github.com/Shoro2/share-public/blob/main/claude_log.md).
 
+## 2026-10-08 — Second pet: the pet's size and happiness
+
+Operator (thread "Paragon-Klassenzauber"): "ja mitspiegeln" (the second hunter pet mirrors the pet's
+happiness) and "außerdem ist ein pet deutlich kleiner als das andere".
+- Size: both units sent the same look (31049) and scale (1.0); the client draws a unit with a pet number
+  at its creature family's size and a creature without a family at its model's (client decompile,
+  `0x0071C110`; functions.md pitfall 23) - the copy (900525, no family) was the Diseased Young Wolf's
+  0.4 against the wolf family's 1.0. `ClientModelScale` mirrors the rule; the copy's scale = the pet's x
+  the ratio, with a pet's reach, kept every 0.5 s (`ApplySecondPetSize`).
+- Happiness: 900526 gets a second effect, physical damage done (weapon damage only); `MirrorHappiness`
+  sets +25 / 0 / -25 from the pet's happiness state, the pet's own 125 / 100 / 75 %.
+- `.cspet status`: a "Second pet look" line (scale, pet scale, size ratio, happiness, the weapon damage
+  factor against the pet's own with its happiness - 1 while mirrored);
+  `cs_second_pet.tbs` checks both (Snow Tracker Wolf 604: ratio 1.818; the Voidwalker copy 1).
+
 ## 2026-10-08 — Revision: the operator's second concept list
 
 Operator 2026-10-08 16:38: a revised class-spell list (share-public
