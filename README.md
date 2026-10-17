@@ -2,87 +2,81 @@
 
 Custom spell library for an [AzerothCore](https://www.azerothcore.org/) **WoW 3.3.5a (WotLK)** server.
 
-## What it does
+The module defines new class spell effects and modifiers through `spell_dbc` overrides plus C++ `SpellScript` / `AuraScript` classes, and ships an in-game picker (`/spells`) where players choose which of the custom spells their class learns. Part of the Forgotten Land server project.
 
-Defines new spell effects and modifiers via DBC overrides plus C++ `SpellScript` / `AuraScript` classes. The catalog covers all 10 player classes, with custom IDs grouped per class and per spec:
+## Features
 
-| Class | ID block |
-|-------|----------|
-| Warrior | 900100-900199 |
-| Paladin | 900200-900299 |
-| Death Knight | 900300-900399 |
-| Shaman | 900400-900499 |
-| Hunter | 900500-900599 |
-| Rogue | 900600-900699 |
-| Mage | 900700-900799 |
-| Warlock | 900800-900899 |
-| Priest | 900900-900999 |
-| Druid | 901000-901099 |
-| Non-class (global) | 901100-901199 |
+- Custom spells for all 10 player classes, with custom IDs grouped per class:
 
-Effects range from simple DBC modifiers (e.g. *"Mortal Strike +50 % damage"*, *"Bloodthirst cooldown −2 s"*) to custom C++ logic (recursion-guarded procs, multi-spell triggers, single-target → AoE conversions, custom damage formulas, on-block / on-dodge / on-parry effects, summon overrides such as *"Ghoul → Frost Wyrm"*). Three custom NPCs ship with the module (Frost Wyrm, Spirit Wolf, Healing Treant).
+  | Class | ID block |
+  |-------|----------|
+  | Warrior | 900100-900199 |
+  | Paladin | 900200-900299 |
+  | Death Knight | 900300-900399 |
+  | Shaman | 900400-900499 |
+  | Hunter | 900500-900599 |
+  | Rogue | 900600-900699 |
+  | Mage | 900700-900799 |
+  | Warlock | 900800-900899 |
+  | Priest | 900900-900999 |
+  | Druid | 901000-901099 |
+  | Non-class (global) | 901100-901199 |
 
-Full ID-by-ID catalog with effect descriptions, status, and implementation notes: [`CustomSpells.md`](./CustomSpells.md) and per-spec files in [`share-public/docs/custom-spells/specs/`](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells/specs).
+- Effects range from pure DBC modifiers (e.g. *"Mortal Strike +50 % damage"*, *"Bloodthirst cooldown -2 s"*) to custom C++ logic: recursion-guarded procs, multi-spell triggers, single-target to AoE conversions, custom damage formulas, on-block / on-dodge / on-parry effects, summon overrides (*"Ghoul -> Frost Wyrm"*).
+- Custom NPCs with their own scripts, e.g. Frost Wyrm (900333), Spirit Wolf (900436), Healing Treant (901066), and a second pet for hunters and warlocks (Beast Companion, 900525) with its own pet bar.
+- Per-class C++ source files (`custom_spells_warrior.cpp`, `..._paladin.cpp`, ...).
+- In-game spell picker (`/spells` or `/cs`) built on AIO: players toggle which custom spells they know; the server validates every request against a per-class whitelist.
 
-## Key features
+## Requirements
 
-- **Two implementation paths**:
-  - *Pure DBC* — passive modifiers via `SPELL_AURA_ADD_PCT_MODIFIER` / `ADD_FLAT_MODIFIER`, no C++ needed
-  - *DBC + C++* — `SpellScript` / `AuraScript` for conditional procs, AoE conversions, runtime cooldown manipulation, custom damage formulas
-- **Proc system** integration via `spell_proc` with corrected `ProcFlags` reference (see [`PROCFLAGS_REFERENCE.md`](./PROCFLAGS_REFERENCE.md))
-- **Custom NPCs** with their own AI scripts (`npc_custom_frost_wyrm`)
-- **Off-by-one BasePoints** documented (`Spell.dbc` stores `real_value − 1`)
-- Per-class C++ source files (`custom_spells_warrior.cpp`, `…_paladin.cpp`, …) for clean separation
-- Comprehensive cross-cutting docs in [share-public](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells) covering architecture, ID blocks, proc flags, the step-by-step recipe for new spells, and complex-spell patterns (recursion guards, target caps, ICDs, owner→pet aura transfer, …)
+- AzerothCore WotLK, **the [Shoro2/azerothcore-wotlk](https://github.com/Shoro2/azerothcore-wotlk) fork**. Some scripts use script hooks (for example `OnSpellBeforeEffects`, `OnSpellHitResult`) and a spell-modifier type (`SPELLMOD_MAX_AURA_STACKS`) that upstream AzerothCore does not have; on upstream the module does not build or those effects stay inactive.
+- For the picker and pet bar: a Lua engine module ([mod-ale](https://github.com/azerothcore/mod-ale), Eluna-compatible) and [AIO](https://github.com/Rochet2/AIO). The C++ spell effects work without them.
+- Optional: the GM-only "Learn all Talents" button of the picker calls the `.forgotten learnall` command of mod-forgotten-talents when that module is present.
+- Optional client patch: the client draws names, tooltips and icons from its own `Spell.dbc`, so custom spells need records there to show proper text. `data/spellbook_enUS.json` holds name, tooltip and icon per picker spell, and `tools/client_spell_sync.py` writes them into a client `Spell.dbc`. Marker auras and helper spells need no client entry.
 
 ## Installation
 
-1. Place this module inside the AzerothCore `modules/` directory:
+1. Clone the module into the `modules/` directory of the server source:
    ```bash
    cd azerothcore-wotlk/modules
    git clone https://github.com/Shoro2/mod-custom-spells.git
    ```
-2. Re-run CMake and build the server:
-   ```bash
-   cd ../build
-   cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/azeroth-server \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DSCRIPTS=static -DMODULES=static
-   make -j$(nproc) && make install
-   ```
-3. Apply the SQL files shipped under `data/sql/db-world/` (the AzerothCore SQL updater picks them up automatically). The world DB import populates `spell_dbc`, `spell_proc`, `spell_script_names`, and `creature_template` for the custom NPCs.
-4. Copy the config and adjust if needed:
-   ```bash
-   cp $HOME/azeroth-server/etc/mod_custom_spells.conf.dist $HOME/azeroth-server/etc/mod_custom_spells.conf
-   ```
-5. (Optional) Patch the client `Spell.dbc` so tooltips show the custom spell names. Use `share-public/python_scripts/copy_spells_dbc.py` and `patch_dbc.py`. Marker auras and helper spells need no client patch.
-6. Restart the world server.
+2. Re-run CMake and rebuild the server (the module is picked up automatically).
+3. SQL: the files in `data/sql/db-world/` are applied by the AzerothCore DB updater on the next world server start. They populate `spell_dbc`, `spell_proc`, `spell_script_names` and `creature_template` for the custom NPCs.
+4. Copy `conf/mod_custom_spells.conf.dist` to your server's module config folder as `mod_custom_spells.conf`.
+5. Picker and pet bar: copy the four files in `lua/` into the server's `lua_scripts/` folder (the `*_Server.lua` files run on the server, the `*_Client.lua` files are sent to clients by AIO).
+6. Optional: patch the client `Spell.dbc` as described above.
+7. Restart the world server.
 
 ## Configuration
 
 `conf/mod_custom_spells.conf.dist`:
 
-- `CustomSpells.Enable` (default `1`) — master toggle. When `0`, no SpellScript / AuraScript hook does any work.
+- `CustomSpells.Enable` (default `1`) - master toggle. When `0`, no custom spell script does any work.
+
+## Usage
+
+- `/spells` or `/cs` (client chat) - opens the spell picker.
+- `.cspet attack | follow | stay | aggressive | defensive | passive | cast <spell> | autocast | status | sync` - controls the hunter/warlock second pet; normally sent by the pet bar, available to players for their own second pet.
 
 ## Adding a new custom spell
 
-The full step-by-step recipe (DBC entry → SQL → C++ → build → test) is in [`share-public/docs/custom-spells/04-adding-a-spell.md`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/04-adding-a-spell.md). Quick decision aid:
+Pick the cheapest path that does the job:
 
 | Effect | Path |
 |--------|------|
-| Damage ±X %, Cooldown ±X s, Cast time ±X %, unlimited targets, passive modifiers | Pure DBC |
-| Conditional procs, multi-spell triggers, single→AoE conversion, block/dodge/parry, custom damage formulas | DBC + C++ |
+| Damage +-X %, cooldown +-X s, cast time +-X %, unlimited targets, passive modifiers | Pure DBC: a `spell_dbc` row with `SPELL_AURA_ADD_PCT_MODIFIER` / `ADD_FLAT_MODIFIER`, no C++ |
+| Conditional procs, multi-spell triggers, single-target to AoE, block/dodge/parry hooks, custom damage formulas | `spell_dbc` row plus a `SpellScript` / `AuraScript`, registered through `spell_script_names` |
 
-After implementation, log the change in [`share-public/claude_log.md`](https://github.com/Shoro2/share-public/blob/main/claude_log.md).
+Steps: add the `spell_dbc` row (and a `spell_proc` row for procs) to the class SQL file in `data/sql/db-world/`, add the spell ID constant to `src/custom_spells_common.h`, implement and register the script in the class's `custom_spells_<class>.cpp`, add the picker entry in `lua/CustomSpells_Server.lua` and the name/tooltip in `data/spellbook_enUS.json`, then rebuild.
 
-## Requirements
+Pitfalls worth knowing:
 
-- [AzerothCore](https://github.com/azerothcore/azerothcore-wotlk) (WoW 3.3.5a / WotLK)
-
-## Project context
-
-Part of a multi-repo project. Cross-cutting documentation, the proc flags reference (verified against `SpellMgr.h`), and the curated per-spec catalog live in [share-public](https://github.com/Shoro2/share-public).
+- `EffectBasePoints` in `spell_dbc` stores `real_value - 1`.
+- Set `EquippedItemClass` to `-1` on every inserted `spell_dbc` row; the table default `0` means "needs a consumable" and silently blocks casts and procs.
+- A spell has at most three effects; `EffectSpellClassMaskA/B/C` are per-effect masks (`A_1..A_3` belong to effect 1).
+- Check `SpellFamilyFlags` against your own `Spell.dbc`, not against online databases.
 
 ## License
 
-GPL v2 (see `LICENSE`).
+MIT (see `LICENSE`).

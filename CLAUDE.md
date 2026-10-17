@@ -1,5 +1,11 @@
 # CLAUDE.md - mod-custom-spells
 
+> **Internal docs live in the vault, not here** (rule since 2026-10-18: this public repo keeps only
+> README.md with the general info and installation, this CLAUDE.md, the license and the code).
+> Index, data structure, functions, log and todo: share-public `docs/World of Warcraft/module-repos/mod-custom-spells/`
+> (local checkout `C:\Users\Anwender\Documents\GitHub\share-public`). Update them there,
+> in a vault worktree, in the same session as the code change.
+
 > **Signpost only.** Cross-cutting documentation, code patterns, the proc system, the `spell_dbc` column reference and the step-by-step recipe for new spells live in [`share-public/docs/custom-spells/`](https://github.com/Shoro2/share-public/tree/main/docs/custom-spells) and [`share-public/docs/03-spell-system.md`](https://github.com/Shoro2/share-public/blob/main/docs/03-spell-system.md). Read only what you need for the task.
 
 ## What is the module?
@@ -8,9 +14,9 @@ AzerothCore module that defines custom spell effects via C++ SpellScripts. Each 
 
 ## Files of this repo
 
-[`INDEX.md`](./INDEX.md) · [`functions.md`](./functions.md) (how it works, pitfalls, APIs) ·
-[`data_structure.md`](./data_structure.md) (file map) · [`log.md`](./log.md) · [`todo.md`](./todo.md) ·
-[`CustomSpells.md`](./CustomSpells.md) (ID catalog) · [`tools/README.md`](./tools/README.md).
+[`INDEX.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/00-index.md) · [`functions.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/functions.md) (how it works, pitfalls, APIs) ·
+[`data_structure.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/data_structure.md) (file map) · [`log.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/log.md) · [`todo.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/todo.md) ·
+[`CustomSpells.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/custom-spells-catalog.md) (ID catalog) · [`tools/README.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/tools.md).
 
 ## Doc cross-refs (read these first)
 
@@ -25,8 +31,8 @@ AzerothCore module that defines custom spell effects via C++ SpellScripts. Each 
 | What does spell X do? Status? Implementation notes? | `share-public/docs/custom-spells/specs/<class>-<spec>.md` (e.g. [`warrior-arms`](https://github.com/Shoro2/share-public/blob/main/docs/custom-spells/specs/warrior-arms.md)) |
 | SpellScript / AuraScript hook lifecycle, proc full chain, **`spell_dbc` column reference** (257 cols), `EffectAura` values, `EffectSpellClassMask`, DBC override pipeline | [`share-public/docs/03-spell-system.md`](https://github.com/Shoro2/share-public/blob/main/docs/03-spell-system.md) |
 | Cross-repo change log, plans, TODOs | [`share-public/claude_log.md`](https://github.com/Shoro2/share-public/blob/main/claude_log.md) |
-| ID schema + current allocation summary in this repo | [`./CustomSpells.md`](./CustomSpells.md) |
-| Corrected ProcFlags reference (verified against `SpellMgr.h`) | [`./PROCFLAGS_REFERENCE.md`](./PROCFLAGS_REFERENCE.md) |
+| ID schema + current allocation summary in this repo | [`./CustomSpells.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/custom-spells-catalog.md) |
+| Corrected ProcFlags reference (verified against `SpellMgr.h`) | [`./PROCFLAGS_REFERENCE.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/procflags-reference.md) |
 
 ## Delivery: picker, spellbook, cursed items
 
@@ -36,7 +42,7 @@ spell in it has a spellbook name, tooltip and icon in `data/spellbook_enUS.json`
 `tools/gen_class_passives.py`). Adding a spell = row(s) in the class SQL file + binding in
 `mod_custom_spells.sql` + constant in `custom_spells_common.h` + picker entry + manifest entry + a bot
 check in `tests/` + the two generators. The hunter's/warlock's second pet has its own AIO bar
-(`lua/CustomSpells_PetBar_*.lua`, `src/custom_spells_second_pet.cpp`). Details: [`functions.md`](./functions.md).
+(`lua/CustomSpells_PetBar_*.lua`, `src/custom_spells_second_pet.cpp`). Details: [`functions.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/functions.md).
 
 ## DBC status (quick overview)
 
@@ -53,7 +59,7 @@ Custom NPCs:
 - `900436` — Spirit Wolf (Shaman Enhance proc summon, DisplayID 27074)
 - `901066` — Healing Treant (Druid Resto HoT proc)
 
-Next free IDs within each block are tracked in [`./CustomSpells.md`](./CustomSpells.md) (current allocation table).
+Next free IDs within each block are tracked in [`./CustomSpells.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/custom-spells-catalog.md) (current allocation table).
 
 ## Build
 
@@ -71,7 +77,7 @@ make -j$(nproc) && make install
 ## Spec file status (post-implementation)
 
 After a spell is implemented, update both:
-- the row in this repo's [`CustomSpells.md`](./CustomSpells.md) "current allocation" table (set the spec status if it changed)
+- the row in this repo's [`CustomSpells.md`](https://github.com/Shoro2/share-public/blob/main/docs/World%20of%20Warcraft/module-repos/mod-custom-spells/custom-spells-catalog.md) "current allocation" table (set the spec status if it changed)
 - the row + per-spell `Status` column in `share-public/docs/custom-spells/specs/<class>-<spec>.md`
 
 After in-game testing, change the per-spell status from `implemented` to `tested`.
