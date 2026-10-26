@@ -241,10 +241,12 @@ class spell_custom_drst_hot_treant : public AuraScript
         if (!target)
             target = caster;
 
-        // Summon a treant at the target's location (30s duration)
+        // Summon a treant at the target's location (30s duration), as the
+        // druid's guardian
         if (Creature* treant = player->SummonCreature(NPC_CUSTOM_TREANT,
             target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),
-            player->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 30000))
+            player->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 30000,
+            sSummonPropertiesStore.LookupEntry(SUMMON_PROPERTIES_PROC_GUARDIAN)))
         {
             treant->SetOwnerGUID(player->GetGUID());
             treant->SetCreatorGUID(player->GetGUID());

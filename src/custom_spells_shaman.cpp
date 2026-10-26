@@ -491,10 +491,11 @@ class spell_custom_enh_wolf_summon : public AuraScript
         if (!target || !target->IsAlive())
             return;
 
-        // Summon a temporary wolf (15s)
+        // Summon a temporary wolf (15s), as the shaman's guardian
         if (Creature* wolf = player->SummonCreature(NPC_CUSTOM_WOLF,
             target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),
-            player->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
+            player->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000,
+            sSummonPropertiesStore.LookupEntry(SUMMON_PROPERTIES_PROC_GUARDIAN)))
         {
             wolf->SetOwnerGUID(player->GetGUID());
             wolf->SetCreatorGUID(player->GetGUID());

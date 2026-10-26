@@ -35,6 +35,7 @@
 #include "PetDefines.h"
 #include "PlayerScript.h"
 #include "GameTime.h"
+#include "DBCStores.h"
 #include "UnitScript.h"
 
 // mod-paragon: true Paragon level (the marker aura 100000 stack caps at 255).
@@ -398,6 +399,11 @@ constexpr uint32 SPELL_MAELSTROM_WEAPON     = 53817;  // Maelstrom Weapon buff
 constexpr uint32 SPELL_FERAL_SPIRIT         = 51533;  // Summon Spirit Wolves
 constexpr uint32 NPC_SPIRIT_WOLF            = 29264;  // Spirit Wolf NPC
 constexpr uint32 NPC_CUSTOM_WOLF            = 900436; // Custom summoned wolf
+// SummonProperties.dbc 61: category ally, type guardian, no slot. The proc
+// wolf and the Healing Treant are summoned with it: a bare SummonCreature
+// with a copied faction is no guardian (no UNIT_FLAG_PLAYER_CONTROLLED), and
+// the owner's client drew it as hostile (operator 2026-10-26, report #8).
+constexpr uint32 SUMMON_PROPERTIES_PROC_GUARDIAN = 61;
 constexpr uint32 SPELL_CL_R6               = 49271;  // Chain Lightning rank 6
 constexpr uint32 SPELL_CHAIN_LIGHTNING_R1   = 421;    // first rank of the chain
 // Flame Shock SpellFamilyFlags[0] = 0x10000000, SpellFamilyName = 11
