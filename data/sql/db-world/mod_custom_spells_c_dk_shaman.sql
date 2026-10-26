@@ -147,11 +147,11 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 (900466, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Resto: Totem Follow', 0x003F3F, 0, 0, 0, 0, 0, 0),
 (900467, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 11, 136, 0, 0, 'Resto: Mana Regen', 0x003F3F, 0, 0, 0, 0, 0, 0);
 
--- Spirit Wolf NPC 900436
+-- Spirit Wolf NPC 900436 (display 21114 = the Feral Spirit wolf; 27074 was a Val'kyr)
 DELETE FROM `creature_template` WHERE `entry` = 900436;
 INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`, `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`, `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`, `speed_swim`, `speed_flight`, `detection_range`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`, `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`, `dynamicflags`, `family`, `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`, `PetSpellDataId`, `VehicleId`, `mingold`, `maxgold`, `AIName`, `MovementType`, `HoverHeight`, `HealthModifier`, `ManaModifier`, `ArmorModifier`, `ExperienceModifier`, `RacialLeader`, `movementId`, `RegenHealth`, `CreatureImmunitiesId`, `flags_extra`, `ScriptName`, `VerifiedBuild`) VALUES
 (900436, 0, 0, 0, 0, 0, 'Spirit Wolf', '', '', 0, 80, 80, 2, 14, 0, 1, 1.14286, 1, 1, 20, 0, 0, 0.5, 1500, 2000, 1, 1, 1, 0, 2048, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, '', 0, 1, 0.5, 0, 0.5, 0, 0, 0, 1, 0, 0, '', 12340);
 
 DELETE FROM `creature_template_model` WHERE `CreatureID` = 900436;
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
-(900436, 0, 27074, 1, 1, 12340);
+(900436, 0, 21114, 1, 1, 12340);

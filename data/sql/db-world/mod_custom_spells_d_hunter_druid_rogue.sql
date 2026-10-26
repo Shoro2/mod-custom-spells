@@ -33,10 +33,11 @@ DELETE FROM `spell_proc` WHERE `SpellId` = 901004;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
 (901004, 0, 7, 0, 0, 0, 0x10010, 1, 2, 0, 0, 0, 0, 100, 1000, 0);
 
--- Druid Resto: HoT->Treant proc 901066 (DONE_PERIODIC=0x40000)
+-- Druid Resto: HoT->Treant proc 901066 (DONE_PERIODIC=0x40000, SpellTypeMask 2 = heal ticks only;
+-- 0 also let DoT ticks summon it, player report #8)
 DELETE FROM `spell_proc` WHERE `SpellId` = 901066;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(901066, 0, 7, 0, 0, 0, 0x40000, 0, 2, 0, 0, 0, 0, 5, 5000, 0);
+(901066, 0, 7, 0, 0, 0, 0x40000, 2, 2, 0, 0, 0, 0, 5, 5000, 0);
 
 -- Druid: spell_dbc 901000-901073 (901002 has its own statement in the revision
 -- section below: its modifier needs effect 1's third mask word)
@@ -64,14 +65,14 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `A
 (901072, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 7, 132, 0, 0, 'Resto: Mana Regen', 0x003F3F, 0, 0, 0, 0, 0, 0, 0),
 (901073, 0, 0, 0, 0, 1, 0, 1, -1, 10, 500, 2000, 30, 13, 0, 0, 0, 0, 0, 0, 7, 132, 8, 0, 'Nature Bloom', 0x003F3F, 0, 0, 0, 0, 0, 0, 0);
 
--- Druid Resto Treant NPC 901066
+-- Druid Resto Treant NPC 901066 (display 18922 = the Force of Nature treant; 3889 was a bare Tauren male)
 DELETE FROM `creature_template` WHERE `entry` = 901066;
 INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`, `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`, `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`, `speed_swim`, `speed_flight`, `detection_range`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`, `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`, `dynamicflags`, `family`, `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`, `PetSpellDataId`, `VehicleId`, `mingold`, `maxgold`, `AIName`, `MovementType`, `HoverHeight`, `HealthModifier`, `ManaModifier`, `ArmorModifier`, `ExperienceModifier`, `RacialLeader`, `movementId`, `RegenHealth`, `CreatureImmunitiesId`, `flags_extra`, `ScriptName`, `VerifiedBuild`) VALUES
 (901066, 0, 0, 0, 0, 0, 'Healing Treant', '', '', 0, 80, 80, 2, 14, 0, 1, 1.14286, 1, 1, 20, 0, 0, 0.5, 2000, 2000, 1, 1, 1, 0, 2048, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, '', 0, 1, 0.5, 0, 0.5, 0, 0, 0, 1, 0, 0, '', 12340);
 
 DELETE FROM `creature_template_model` WHERE `CreatureID` = 901066;
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
-(901066, 0, 3889, 1, 1, 12340);
+(901066, 0, 18922, 1, 1, 12340);
 
 -- Rogue: Poison Nova proc 900603 (revision 2026-10-08: dealing damage with a
 -- poison, 5 %, no cooldown). Rogue family flags0 Instant 0x2000 | Deadly 0x10000

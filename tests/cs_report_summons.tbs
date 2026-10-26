@@ -1,0 +1,112 @@
+# mod-custom-spells: player reports of 2026-10-17 / 10-26 on two proc summons.
+# (1) 901066 Healing Treant: DoT ticks summoned it (spell_proc SpellTypeMask 0
+#     let every periodic tick through), it wore a bare Tauren model (3889) and
+#     reportedly turned hostile. (2) 900436 Spirit Wolf wore a Val'kyr (27074).
+# Bots check the numbers: no treant from DoT ticks, treants from HoT ticks,
+# every summon on its owner's faction (never the template's 14) and on the
+# right display id; how the model looks stays with a client.
+# Test ground: map 13, the FL dummy arena (AoE Training Dummies 920018).
+name    Custom spells - report summons
+timeout 240s
+
+bot dr druid slot=4
+bot sh shaman slot=5
+
+place 13 -279 150 -423.2 0
+require dr alive
+require sh alive
+pick d1 creature:920018 near dr
+require d1 exists
+do dr learn 48463
+do dr learn 48468
+do dr learn 48441
+do dr learn 48443
+do dr learn 48451
+do dr learn 53251
+
+log Druid - 901066 DoT ticks (Moonfire, Insect Swarm on the dummy, 24 s) summon no Healing Treant
+do dr learn 901066
+do dr cast 48463 on d1 triggered
+do dr cast 48468 on d1 triggered
+wait 8s
+do dr cast 48463 on d1 triggered
+do dr cast 48468 on d1 triggered
+wait 8s
+do dr cast 48463 on d1 triggered
+do dr cast 48468 on d1 triggered
+wait 8s
+expect dr minions 901066 == 0
+
+log Druid - 901066 HoT ticks still summon it, on the druid's faction and the treant display 18922
+as gm .damage 3000
+do gm target gm
+as gm .damage 3000
+do gm target dr
+do dr cast 48451 on dr triggered
+do dr cast 48451 on gm triggered
+do dr cast 53251 on dr triggered
+do dr cast 48441 on dr triggered
+do dr cast 48441 on gm triggered
+do dr cast 48443 on dr triggered
+do dr cast 48443 on gm triggered
+wait 7s
+do dr cast 48451 on dr triggered
+do dr cast 48451 on gm triggered
+do dr cast 53251 on dr triggered
+waitfor dr minions 901066 >= 1 timeout 8s
+as gm .unlearn 901066
+pick ht creature:901066 near dr
+require ht exists
+do gm target ht
+as gm .npc info
+expect output value DisplayID == 18922
+expect output value Faction != 14
+do gm target dr
+
+log Druid - the treant stays on the druid's side while the druid fights the dummy (20 s of combat and evade)
+do dr cast 48463 on d1 triggered
+wait 10s
+do dr cast 48463 on d1 triggered
+wait 10s
+expect ht alive
+do gm target ht
+as gm .npc info
+expect output value Faction != 14
+expect dr cannotattack ht
+expect sh cannotattack ht
+do gm target dr
+
+log Shaman - 900436 auto attacks summon the Spirit Wolf on the shaman's faction and the Feral Spirit display 21114
+as gm .unaura 32182
+do gm target sh
+as gm .aura 32182
+do sh learn 900436
+do sh approach d1
+do sh attack d1
+waitfor sh minions 900436 >= 1 timeout 60s
+do sh stop
+pick wo creature:900436 near sh
+require wo exists
+do gm target wo
+as gm .npc info
+expect output value DisplayID == 21114
+expect output value Faction != 14
+as gm .die
+
+cleanup
+do dr stop
+do sh stop
+do gm target gm
+as gm .unaura 48441
+as gm .unaura 48443
+as gm .unaura 48451
+as gm .unaura 53251
+do gm target dr
+as gm .unaura 48441
+as gm .unaura 48443
+as gm .unaura 48451
+as gm .unaura 53251
+as gm .unlearn 901066
+do gm target sh
+as gm .unaura 32182
+as gm .unlearn 900436
