@@ -26,6 +26,7 @@ The module defines new class spell effects and modifiers through `spell_dbc` ove
 - Custom NPCs with their own scripts, e.g. Frost Wyrm (900333), Spirit Wolf (900436), Healing Treant (901066), and a second pet for hunters and warlocks (Beast Companion, 900525) with its own pet bar.
 - Per-class C++ source files (`custom_spells_warrior.cpp`, `..._paladin.cpp`, ...).
 - In-game spell picker (`/spells` or `/cs`) built on AIO: players toggle which custom spells they know; the server validates every request against a per-class whitelist.
+- A weaker recast of your own buff asks first: when a buff of yours on the target (Thorns, a mark, a blessing, a lower rank of the same buff, ...) is stronger than the one you are casting, the cast is held back and a popup asks whether to replace it. Needs the core hook `PlayerScript::OnPlayerCanReplaceStrongerOwnBuff` of the FL AzerothCore fork.
 
 ## Requirements
 
@@ -44,7 +45,7 @@ The module defines new class spell effects and modifiers through `spell_dbc` ove
 2. Re-run CMake and rebuild the server (the module is picked up automatically).
 3. SQL: the files in `data/sql/db-world/` are applied by the AzerothCore DB updater on the next world server start. They populate `spell_dbc`, `spell_proc`, `spell_script_names` and `creature_template` for the custom NPCs.
 4. Copy `conf/mod_custom_spells.conf.dist` to your server's module config folder as `mod_custom_spells.conf`.
-5. Picker and pet bar: copy the four files in `lua/` into the server's `lua_scripts/` folder (the `*_Server.lua` files run on the server, the `*_Client.lua` files are sent to clients by AIO).
+5. Picker, pet bar and the buff popup: copy the files in `lua/` into the server's `lua_scripts/` folder (the `*_Server.lua` files run on the server, the `*_Client.lua` files are sent to clients by AIO).
 6. Optional: patch the client `Spell.dbc` as described above.
 7. Restart the world server.
 
@@ -53,11 +54,13 @@ The module defines new class spell effects and modifiers through `spell_dbc` ove
 `conf/mod_custom_spells.conf.dist`:
 
 - `CustomSpells.Enable` (default `1`) - master toggle. When `0`, no custom spell script does any work.
+- `CustomSpells.BuffReplaceConfirm.Enable` (default `1`) - ask before a weaker recast replaces your own stronger buff. When `0`, such a cast always replaces.
 
 ## Usage
 
 - `/spells` or `/cs` (client chat) - opens the spell picker.
 - `.cspet attack | follow | stay | aggressive | defensive | passive | cast <spell> | autocast | status | sync` - controls the hunter/warlock second pet; normally sent by the pet bar, available to players for their own second pet.
+- `.csbuff yes | no` - the buff popup's answers (yes casts the held-back buff again and replaces the old one).
 
 ## Adding a new custom spell
 

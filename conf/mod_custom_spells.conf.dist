@@ -15,3 +15,14 @@
 #
 
 CustomSpells.Enable = 1
+
+#
+#    CustomSpells.BuffReplaceConfirm.Enable
+#        Description: A player's cast of his own buff (an exclusive-highest group: Thorns, marks, blessings, ...)
+#                     that would come out weaker than the one already on the target asks first in a popup
+#                     (Yes casts it again and replaces the old buff). Off: such a cast always replaces.
+#        Default:     1 - Ask
+#                     0 - Always replace
+#
+
+CustomSpells.BuffReplaceConfirm.Enable = 1

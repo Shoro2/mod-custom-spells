@@ -569,3 +569,4 @@ void AddWarlockSpellsScripts();
 void AddPriestSpellsScripts();
 void AddGlobalSpellsScripts();
 void AddSecondPetSpellsScripts();
+void AddBuffConfirmScripts();

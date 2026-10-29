@@ -128,4 +128,5 @@ void AddCustomSpellsScripts()
     AddPriestSpellsScripts();
     AddGlobalSpellsScripts();
     AddSecondPetSpellsScripts();
+    AddBuffConfirmScripts();
 }
