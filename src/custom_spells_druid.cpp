@@ -129,8 +129,12 @@ class spell_custom_bal_sf_cd_reduce : public AuraScript
         if (!g_CustomSpellsEnabled)
             return;
 
-        // Reduce Starfall cooldown by 1 second
-        player->ModifySpellCooldown(SPELL_STARFALL_R2, -1000);
+        // Reduce Starfall cooldown by 1 second - on every rank: the cooldown
+        // sits on the rank the druid knows (a level-53 druid has rank 1,
+        // 48505, and the top rank alone never moved; report 2026-10-29)
+        for (uint32 rank = sSpellMgr->GetFirstSpellInChain(SPELL_STARFALL_R2); rank;
+            rank = sSpellMgr->GetNextSpellInChain(rank))
+            player->ModifySpellCooldown(rank, -1000);
     }
 
     void Register() override

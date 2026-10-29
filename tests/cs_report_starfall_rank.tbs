@@ -1,0 +1,39 @@
+# mod-custom-spells: 901004 (spell damage takes 1 s off Starfall's cooldown) for a druid below level 80
+# (player report 2026-10-29: a level-53 druid with Starfall rank 1, 48505 - "the starfall refresh thingy is
+# not working"). The code reduced the top rank 53201 only. Here the bot knows rank 1 alone; as in
+# cs_druid.tbs, a Starfall (90 s), then 4 Moonfires: natively 83 s are left after 6.9 s.
+# Test ground: map 13, the FL dummy arena (AoE Training Dummies 920018).
+name    Custom spells - Starfall cooldown reduction on Starfall rank 1
+timeout 60s
+
+bot dr druid slot=4
+
+place 13 -279 150 -423.2 0
+require dr alive
+pick d1 creature:920018 near dr
+require d1 exists
+do gm target dr
+as gm .unlearn 53201
+as gm .unlearn 901004
+do dr learn 48505
+do dr learn 48463
+do dr learn 901004
+do dr cast 48505
+wait 1600ms
+do dr cast 48463 on d1
+wait 1600ms
+do dr cast 48463 on d1
+wait 1600ms
+do dr cast 48463 on d1
+wait 1600ms
+do dr cast 48463 on d1
+wait 500ms
+expect dr cooldown 48505 < 81000
+
+cleanup
+do dr stop
+do gm target dr
+as gm .unaura 48505
+as gm .unlearn 901004
+as gm .unlearn 48505
+do dr learn 53201
