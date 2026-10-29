@@ -520,10 +520,14 @@ public:
         else
             lesserNpc = NPC_LESSER_IMP; // fallback
 
+        // as the warlock's guardian: the owner's level, faction and the
+        // player-controlled flag (a bare summon drew hostile at level 80,
+        // player report 2026-10-29)
         if (Creature* lesser = owner->SummonCreature(lesserNpc,
             creature->GetPositionX(), creature->GetPositionY(),
             creature->GetPositionZ(), creature->GetOrientation(),
-            TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+            TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000,
+            sSummonPropertiesStore.LookupEntry(SUMMON_PROPERTIES_PROC_GUARDIAN)))
         {
             lesser->SetOwnerGUID(owner->GetGUID());
             lesser->SetCreatorGUID(owner->GetGUID());

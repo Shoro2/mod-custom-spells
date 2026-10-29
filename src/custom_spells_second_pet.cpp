@@ -498,6 +498,10 @@ namespace
         if (warlock && state.DemonValid && pet->getPetType() == SUMMON_PET
             && IsWarlockDemon(pet->GetEntry()) && pet->GetEntry() != state.Demon.Entry)
         {
+            // the remembered demon levels with the warlock's demon (report
+            // 2026-10-29: it stayed at the level it was summoned at);
+            // Reconcile makes a new copy when the level differs
+            state.Demon.Level = pet->GetLevel();
             out = state.Demon;
             return SECOND_PET_WARLOCK;
         }
@@ -777,7 +781,8 @@ namespace
         }
 
         if (second && (state.Key != wanted.Key || state.Signature != wanted.Signature
-            || second->GetEntry() != wanted.Entry))
+            || second->GetEntry() != wanted.Entry
+            || (kind == SECOND_PET_WARLOCK && second->GetLevel() != wanted.Level)))
         {
             DespawnSecondPet(player, state);
             second = nullptr;

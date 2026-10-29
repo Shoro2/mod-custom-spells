@@ -1,0 +1,71 @@
+# mod-custom-spells: player reports of 2026-10-29 on the warlock's extra demons.
+# (1) 900835 lesser demons came from a bare summon: level 80 whatever the
+#     warlock's level, drawn hostile by the client; now the warlock's guardian
+#     (SummonProperties 61), so it takes the warlock's level.
+# (2) 900858's second demon kept the level it was made at; now it follows the
+#     warlock's demon (a new copy at the new level).
+# The warlock is set to level 70 (and back to 80 in the cleanup) to make both visible;
+# the second demon is sent at the dummy with .cspet attack. Test ground: map 13, the FL dummy
+# arena (AoE Training Dummies 920018). Spells: Summon Imp 688 (416), Summon
+# Voidwalker 697 (1860); lesser demons 900835-900837.
+name    Custom spells - report warlock demons
+timeout 180s
+
+bot wl warlock slot=5
+
+place 13 -279 150 -423.2 0
+require wl alive
+pick d1 creature:920018 near wl
+require d1 exists
+do gm target wl
+as gm .levelup -10
+as gm .unlearn 900835
+as gm .unlearn 900858
+do wl learn 688
+do wl learn 697
+
+log 900858 - the Voidwalker stays as the second demon at the warlock's level 70
+do wl learn 900858
+do wl cast 697 triggered
+waitfor wl minions 1860 == 1 timeout 5s
+do wl cast 688 triggered
+waitfor wl minions 416 == 1 timeout 5s
+wait 1500ms
+pick sv creature:1860 near wl
+require sv exists
+waitfor sv aura 900526 timeout 3s
+do gm target sv
+as gm .npc info
+expect output value Level == 70
+
+log 900858 - one level up: the second demon follows to 71
+do gm target wl
+as gm .levelup 1
+wait 3s
+pick sv2 creature:1860 near wl
+require sv2 exists
+do gm target sv2
+as gm .npc info
+expect output value Level == 71
+
+log 900835 - the second demon's (Voidwalker) hits summon a Lesser Voidwalker (900837) at the warlock's level (71), not 80
+do wl learn 900835
+do wl approach d1
+do wl target d1
+as wl .cspet attack
+do wl attack d1
+waitfor wl minions 900837 >= 1 timeout 90s
+pick ls creature:900837 near wl
+require ls exists
+do gm target ls
+as gm .npc info
+expect output value Level == 71
+expect output value Faction != 14
+expect wl cannotattack ls
+
+cleanup
+do wl stop
+do gm target wl
+as gm .unlearn 900835
+as gm .unlearn 900858
+as gm .levelup 9
