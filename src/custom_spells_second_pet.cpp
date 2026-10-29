@@ -20,6 +20,7 @@
 #include "Chat.h"
 #include "CommandScript.h"
 #include "DBCStores.h"
+#include "DatabaseEnv.h"
 #include "ObjectMgr.h"
 #include "Pet.h"
 #include "PetAI.h"
@@ -31,6 +32,8 @@
 #include "WorldPacket.h"
 #include "WorldSession.h"
 #include <cmath>
+#include <cstring>
+#include <sstream>
 #include <numbers>
 #include <set>
 #include <string>
@@ -206,6 +209,85 @@ namespace
     SecondPetState* GetState(Player* player)
     {
         return player->CustomData.GetDefault<SecondPetState>(STATE_KEY);
+    }
+
+    // 900858: the remembered demon survives a logout (the operator
+    // 2026-10-29: "ja" to keeping the second demon across a relog). One row
+    // per character in mod_custom_spells_second_demon, written when a summon
+    // remembers a demon, deleted when the second demon ends; the login reads
+    // it back and waits for the demon that comes with the login.
+    std::string SerializeDemon(SecondPetSource const& s)
+    {
+        uint32 scaleBits = 0;
+        static_assert(sizeof(scaleBits) == sizeof(s.Scale));
+        std::memcpy(&scaleBits, &s.Scale, sizeof(scaleBits));
+
+        std::ostringstream out;
+        out << s.Key << ' ' << s.Entry << ' ' << s.DisplayId << ' ' << scaleBits << ' ' << s.Family
+            << ' ' << uint32(s.Numbered) << ' ' << uint32(s.Level) << ' ' << uint32(s.Type)
+            << ' ' << uint32(s.React) << ' ' << s.NameTimestamp << ' ' << s.Signature
+            << ' ' << s.Spells.size();
+        for (SecondPetSpell const& spell : s.Spells)
+            out << ' ' << spell.Id << ' ' << uint32(spell.Autocast);
+        out << ' ' << s.Passives.size();
+        for (uint32 passive : s.Passives)
+            out << ' ' << passive;
+        out << '|' << s.Name;
+        return out.str();
+    }
+
+    bool ParseDemon(std::string const& text, SecondPetSource& s)
+    {
+        std::size_t const bar = text.find('|');
+        if (bar == std::string::npos)
+            return false;
+
+        std::istringstream in(text.substr(0, bar));
+        uint32 scaleBits = 0, numbered = 0, level = 0, type = 0, react = 0;
+        std::size_t spells = 0, passives = 0;
+        in >> s.Key >> s.Entry >> s.DisplayId >> scaleBits >> s.Family >> numbered >> level >> type
+           >> react >> s.NameTimestamp >> s.Signature >> spells;
+        if (!in || spells > MAX_SPELL_CHARM || type >= MAX_PET_TYPE)
+            return false;
+
+        std::memcpy(&s.Scale, &scaleBits, sizeof(scaleBits));
+        s.Numbered = numbered != 0;
+        s.Level = uint8(level);
+        s.Type = PetType(type);
+        s.React = ReactStates(react);
+        s.Spells.clear();
+        for (std::size_t i = 0; i < spells; ++i)
+        {
+            uint32 id = 0, autocast = 0;
+            in >> id >> autocast;
+            s.Spells.push_back({ id, autocast != 0 });
+        }
+        in >> passives;
+        if (!in || passives > 64)
+            return false;
+        s.Passives.clear();
+        for (std::size_t i = 0; i < passives; ++i)
+        {
+            uint32 id = 0;
+            in >> id;
+            s.Passives.push_back(id);
+        }
+        s.Name = text.substr(bar + 1);
+        return bool(in) && s.Entry;
+    }
+
+    void SaveDemon(Player* player, SecondPetSource const& s)
+    {
+        std::string data = SerializeDemon(s);
+        CharacterDatabase.EscapeString(data);
+        CharacterDatabase.Execute("REPLACE INTO `mod_custom_spells_second_demon` (`guid`, `data`) VALUES ({}, '{}')",
+            player->GetGUID().GetCounter(), data);
+    }
+
+    void ForgetDemon(Player* player)
+    {
+        CharacterDatabase.Execute("DELETE FROM `mod_custom_spells_second_demon` WHERE `guid` = {}",
+            player->GetGUID().GetCounter());
     }
 
     bool IsWarlockDemon(uint32 entry)
@@ -478,6 +560,7 @@ namespace
         // out ends the swap (the summon's effect removes the old demon in the
         // same cast, before any check here), so a dismiss right after a swap
         // ends the second demon at once.
+        bool const demonWasValid = state.DemonValid;
         if (petOut)
             state.DemonSwapMs = 0;
         if (!warlock)
@@ -485,6 +568,8 @@ namespace
         else if (state.DemonValid && !petOut && !state.DemonSwapMs
             && !player->GetTemporaryUnsummonedPetNumber())
             state.DemonValid = false;
+        if (demonWasValid && !state.DemonValid)
+            ForgetDemon(player);
 
         if (!g_CustomSpellsEnabled || !player->IsAlive() || !petOut)
             return SECOND_PET_NONE;
@@ -1038,7 +1123,7 @@ class custom_second_pet_playerscript : public PlayerScript
 {
 public:
     custom_second_pet_playerscript() : PlayerScript("custom_second_pet_playerscript",
-        { PLAYERHOOK_ON_UPDATE, PLAYERHOOK_ON_SPELL_CAST,
+        { PLAYERHOOK_ON_UPDATE, PLAYERHOOK_ON_SPELL_CAST, PLAYERHOOK_ON_LOGIN,
           PLAYERHOOK_ON_BEFORE_GUARDIAN_INIT_STATS_FOR_LEVEL }) { }
 
     void OnPlayerUpdate(Player* player, uint32 diff) override
@@ -1098,6 +1183,33 @@ public:
                 DespawnSecondPet(player, *state);
 
         SnapshotPet(pet, pet->GetEntry(), state->Demon, true);
+        state->DemonValid = true;
+        state->DemonSwapMs = DEMON_SWAP_WAIT_MS;
+        SaveDemon(player, state->Demon);
+    }
+
+    // 900858 across a relog: the remembered demon comes back from its row and
+    // waits (as during a swap) for the demon that the login summons
+    void OnPlayerLogin(Player* player) override
+    {
+        if (!g_CustomSpellsEnabled || !player->HasAura(SPELL_WLK_DEMO_SECOND_DEMON))
+            return;
+
+        QueryResult result = CharacterDatabase.Query(
+            "SELECT `data` FROM `mod_custom_spells_second_demon` WHERE `guid` = {}",
+            player->GetGUID().GetCounter());
+        if (!result)
+            return;
+
+        SecondPetState* state = GetState(player);
+        SecondPetSource demon;
+        if (!ParseDemon(result->Fetch()[0].Get<std::string>(), demon) || !IsWarlockDemon(demon.Entry))
+        {
+            ForgetDemon(player);
+            return;
+        }
+
+        state->Demon = demon;
         state->DemonValid = true;
         state->DemonSwapMs = DEMON_SWAP_WAIT_MS;
     }

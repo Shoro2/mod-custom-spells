@@ -3,7 +3,8 @@
 #     warlock's level, drawn hostile by the client; now the warlock's guardian
 #     (SummonProperties 61), so it takes the warlock's level.
 # (2) 900858's second demon kept the level it was made at; now it follows the
-#     warlock's demon (a new copy at the new level).
+#     warlock's demon (a new copy at the new level). It also survives a relog now
+#     (operator 2026-10-29: "ja"; table mod_custom_spells_second_demon).
 # The warlock is set to level 70 (and back to 80 in the cleanup) to make both visible;
 # the second demon is sent at the dummy with .cspet attack. Test ground: map 13, the FL dummy
 # arena (AoE Training Dummies 920018). Spells: Summon Imp 688 (416), Summon
@@ -47,6 +48,15 @@ require sv2 exists
 do gm target sv2
 as gm .npc info
 expect output value Level == 71
+
+log 900858 - a relog: the Imp comes back with the login, the Voidwalker as the second demon again
+do wl relog
+waitfor wl exists timeout 20s
+waitfor wl minions 416 == 1 timeout 20s
+waitfor wl minions 1860 == 1 timeout 20s
+pick sv3 creature:1860 near wl
+require sv3 exists
+waitfor sv3 aura 900526 timeout 3s
 
 log 900835 - the second demon's (Voidwalker) hits summon a Lesser Voidwalker (900837) at the warlock's level (71), not 80
 do wl learn 900835
