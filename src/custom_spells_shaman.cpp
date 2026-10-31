@@ -16,6 +16,8 @@
  */
 
 #include "custom_spells_common.h"
+#include "AllCreatureScript.h"
+#include "Totem.h"
 
 // Re-entrancy guard for the Lava Burst hooks (overload / charges / spread-FS).
 // The Lightning-Overload-on-Lava-Burst effect (900403) recasts Lava Burst; this
@@ -87,65 +89,532 @@ namespace
 }
 
 // ============================================================
-//  SPELL 900401: Totems -> Following Creatures (PlayerScript)
-//  When player has 900401, totems follow the player instead
-//  of being static. Checked every 2 seconds via OnUpdate.
+//  SPELLS 900401 / 900433 / 900466: Totem Spirits (PlayerScript, the
+//  creature script and an AllCreatureScript)
+//  List line (third concept list 2026-10-31, all three Shaman specs,
+//  operator answer 2 a): "Totems replaced by creatures that follow/fight".
+//  Until wave 3 these passives only made the totems follow the shaman;
+//  now each totem keeps its effect AND gets a creature body.
+//
+//  Design - the real totem stays (its aura, its attack, its pulse, its
+//  duration, the totem bar and Totemic Recall all stay the core's), and a
+//  guardian "spirit" (NPC 900419 fire / 900420 earth / 900421 water /
+//  900422 air, summoned like the proc wolf with SummonProperties 61) is
+//  summoned next to it:
+//   - The spirit follows the shaman and fights what the shaman fights
+//     (npc_custom_totem_body below): the shaman's victim, else the
+//     selected enemy while the shaman is in combat, else whoever attacks
+//     the shaman. It is a minion of the shaman (m_Controlled), so the
+//     minion auras of 900435 (+50 % damage), the Maelstrom Fury howl of
+//     900434 (a melee hit of any summon of a Shaman) reach it without
+//     extra code.
+//   - While the spirit lives the totem is made invisible (display 11686,
+//     the id Hexlord's siphon trigger uses) and tracks the spirit, so the
+//     totem's spells (Searing Totem's bolt, Magma Totem's pulse, an
+//     area aura's centre) come from where the spirit stands. The totem
+//     stays within 15 yd of the shaman, else it stays next to him as
+//     900401 always made it (old rule: pulled to within 5 yd when further).
+//     The totem is NOT made unselectable: Grounding Totem's magnet and the
+//     totem's own self casts check that flag.
+//   - The spirit lives with the totem: it leaves when the totem is gone
+//     (expired, killed, Totemic Recall, replaced by a totem of the same
+//     element). Killing the spirit does not take the totem away: the totem
+//     becomes visible again and a new spirit comes after 15 s.
+//   - Totems that already ARE a fighting creature (Fire Elemental Totem,
+//     Earth Elemental Totem - their summoned elemental, which 900402 turns
+//     into Ragnaros) and the stationary Sentry Totem get no spirit.
+//
+//  Totems are immune to helpful spells (Totem::IsImmunedToSpellEffect), so
+//  a heal on the totem itself is refused by the core; the spirit is the
+//  unit a player targets and heals (900473 reads the Healing Stream
+//  spirit).
+//
+//  State per shaman lives in the player's DataMap (never a static map): the
+//  guid of the totem and of the spirit per slot, a 500-ms timer and the
+//  respawn countdown. The spirit also checks its own link every 500 ms
+//  (npc_custom_totem_body::Sync), so it cannot outlive its totem even if
+//  the player script stops (logout, module switched off).
 // ============================================================
-class custom_totem_follow_playerscript : public PlayerScript
+namespace
 {
-public:
-    custom_totem_follow_playerscript() : PlayerScript("custom_totem_follow_playerscript") {}
+    constexpr uint32 TOTEM_SPIRIT_SYNC_MS        = 500;
+    constexpr uint32 TOTEM_SPIRIT_RESPAWN_MS     = 15000; // after it was killed
+    constexpr uint32 TOTEM_SPIRIT_LOST_MS        = 1500;  // after it vanished otherwise
+    constexpr uint32 DISPLAY_INVISIBLE           = 11686;
+    constexpr float  TOTEM_SPIRIT_TRACK_RANGE    = 15.0f; // the totem follows the spirit within this
+    constexpr float  TOTEM_SPIRIT_TELEPORT_RANGE = 45.0f; // further than this the spirit is brought back
+    constexpr float  TOTEM_SPIRIT_ASSIST_RANGE   = 40.0f; // a target further than this from the shaman is dropped
+    constexpr float  TOTEM_STAY_RANGE            = 5.0f;  // the pre-wave-3 rule: pulled in when further
+    constexpr uint32 NPC_FIRE_ELEMENTAL_TOTEM    = 15439;
+    constexpr uint32 NPC_EARTH_ELEMENTAL_TOTEM   = 15430;
+    constexpr uint32 NPC_SENTRY_TOTEM            = 3968;
+    constexpr uint32 SPELL_HEALING_STREAM_R1_AURA = 5672;   // the totem's own aura, first rank
+    char const* const TOTEM_SPIRIT_LINK_KEY      = "mod_custom_spells_totem_spirit_link";
+    char const* const TOTEM_SPIRIT_STATE_KEY     = "mod_custom_spells_totem_spirit_state";
+    char const* const TOTEM_SHOWN_KEY            = "mod_custom_spells_totem_shown";
 
-    void OnPlayerLogout(Player* player) override
+    // On the spirit: the totem it belongs to.
+    class TotemSpiritLink : public DataMap::Base
     {
-        if (player)
-            _lastCheck.erase(player->GetGUID());
+    public:
+        ObjectGuid TotemGuid;
+        uint8 Slot = 0;                 // SUMMON_SLOT_TOTEM_FIRE .. _AIR
+        bool HealingStream = false;     // the spirit of a Healing Stream Totem
+    };
+
+    // On a totem we made invisible: the display to give back.
+    class TotemShownDisplay : public DataMap::Base
+    {
+    public:
+        uint32 Display = 0;             // 0 = not hidden by us
+        float Scale = 1.0f;             // Unit::SetDisplayId resets the scale
+    };
+
+    // On the shaman.
+    class TotemSpiritState : public DataMap::Base
+    {
+    public:
+        uint32 Timer = 0;
+        bool Active = false;            // had spirits at the last sync
+        ObjectGuid TotemGuid[MAX_TOTEM_SLOT];
+        ObjectGuid Spirit[MAX_TOTEM_SLOT];
+        uint32 Respawn[MAX_TOTEM_SLOT] = {};
+    };
+
+    bool HasTotemSpiritPassive(Player* player)
+    {
+        return player->HasAura(SPELL_ELE_TOTEM_FOLLOW_PASSIVE)
+            || player->HasAura(SPELL_ENH_TOTEM_FOLLOW_PASSIVE)
+            || player->HasAura(SPELL_RST_TOTEM_FOLLOW_PASSIVE);
     }
 
-    void OnPlayerUpdate(Player* player, uint32 /*p_time*/) override
+    // A real totem that gets a spirit.
+    bool TotemWantsSpirit(Creature const* totem)
     {
-        if (!player || !player->IsAlive())
-            return;
+        if (!totem->IsTotem() || totem->GetCreatureType() != CREATURE_TYPE_TOTEM)
+            return false;
 
-        // Check for any of the three totem follow passives (Ele/Enh/Resto)
-        if (!player->HasAura(SPELL_ELE_TOTEM_FOLLOW_PASSIVE) &&
-            !player->HasAura(SPELL_ENH_TOTEM_FOLLOW_PASSIVE) &&
-            !player->HasAura(SPELL_RST_TOTEM_FOLLOW_PASSIVE))
-            return;
-
-        if (!g_CustomSpellsEnabled)
-            return;
-
-        // Throttle: only check every ~2 seconds using game time
-        uint32 now = static_cast<uint32>(GameTime::GetGameTime().count());
-        ObjectGuid guid = player->GetGUID();
-        if (_lastCheck.count(guid) && (now - _lastCheck[guid]) < 2)
-            return;
-        _lastCheck[guid] = now;
-
-        for (uint8 i = 0; i < MAX_TOTEM_SLOT; ++i)
+        switch (totem->GetEntry())
         {
-            if (!player->m_SummonSlot[i])
-                continue;
-
-            Creature* totem = player->GetMap()->GetCreature(player->m_SummonSlot[i]);
-            if (!totem || !totem->IsAlive())
-                continue;
-
-            // Teleport totem near player if too far away
-            float dist = totem->GetDistance(player);
-            if (dist > 5.0f)
-            {
-                float x, y, z;
-                player->GetClosePoint(x, y, z, totem->GetCombatReach(),
-                    PET_FOLLOW_DIST + i * 1.5f, (M_PI / 2) * i);
-                totem->NearTeleportTo(x, y, z, player->GetOrientation());
-            }
+            case NPC_FIRE_ELEMENTAL_TOTEM:
+            case NPC_EARTH_ELEMENTAL_TOTEM:
+            case NPC_SENTRY_TOTEM:
+                return false;
+            default:
+                return true;
         }
     }
 
+    bool IsHealingStreamTotem(Creature* totem)
+    {
+        uint32 const created = totem->GetUInt32Value(UNIT_CREATED_BY_SPELL);
+        if (created && sSpellMgr->GetFirstSpellInChain(created)
+            == SPELL_HEALING_STREAM_TOTEM_R1)
+            return true;
+
+        Totem* real = totem->ToTotem();
+        return real && real->GetSpell()
+            && sSpellMgr->GetFirstSpellInChain(real->GetSpell())
+                == SPELL_HEALING_STREAM_R1_AURA;
+    }
+
+    uint32 SpiritEntryForSlot(uint8 slot)
+    {
+        switch (slot)
+        {
+            case SUMMON_SLOT_TOTEM_FIRE:  return NPC_TOTEM_BODY_FIRE;
+            case SUMMON_SLOT_TOTEM_EARTH: return NPC_TOTEM_BODY_EARTH;
+            case SUMMON_SLOT_TOTEM_WATER: return NPC_TOTEM_BODY_WATER;
+            case SUMMON_SLOT_TOTEM_AIR:   return NPC_TOTEM_BODY_AIR;
+            default:                      return 0;
+        }
+    }
+
+    // Where the four spirits stand round the shaman (behind and beside, so
+    // none blocks his front): left, right, back-left, back-right.
+    float SpiritFollowAngle(uint8 slot)
+    {
+        switch (slot)
+        {
+            case SUMMON_SLOT_TOTEM_FIRE:  return float(M_PI) / 2.0f;
+            case SUMMON_SLOT_TOTEM_EARTH: return 3.0f * float(M_PI) / 2.0f;
+            case SUMMON_SLOT_TOTEM_WATER: return 3.0f * float(M_PI) / 4.0f;
+            default:                      return 5.0f * float(M_PI) / 4.0f;
+        }
+    }
+
+    float SpiritFollowDist(uint8 slot)
+    {
+        return slot <= SUMMON_SLOT_TOTEM_EARTH ? 2.5f : 4.0f;
+    }
+
+    void HideTotem(Creature* totem)
+    {
+        TotemShownDisplay* shown = totem->CustomData.GetDefault<
+            TotemShownDisplay>(TOTEM_SHOWN_KEY);
+        if (shown->Display)
+            return;
+        shown->Display = totem->GetDisplayId();
+        shown->Scale = totem->GetObjectScale();
+        totem->SetDisplayId(DISPLAY_INVISIBLE, shown->Scale);
+    }
+
+    void ShowTotem(Creature* totem)
+    {
+        TotemShownDisplay* shown = totem->CustomData.Get<TotemShownDisplay>(
+            TOTEM_SHOWN_KEY);
+        if (!shown || !shown->Display)
+            return;
+        totem->SetDisplayId(shown->Display, shown->Scale);
+        shown->Display = 0;
+    }
+
+    // Summons the spirit of `totem` next to the shaman and links the two.
+    Creature* SummonTotemSpirit(Player* player, Creature* totem, uint8 slot)
+    {
+        uint32 const entry = SpiritEntryForSlot(slot);
+        if (!entry)
+            return nullptr;
+
+        float x, y, z;
+        player->GetClosePoint(x, y, z, totem->GetCombatReach(),
+            SpiritFollowDist(slot), SpiritFollowAngle(slot));
+        Creature* spirit = player->SummonCreature(entry, x, y, z,
+            player->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0,
+            sSummonPropertiesStore.LookupEntry(SUMMON_PROPERTIES_PROC_GUARDIAN));
+        if (!spirit)
+            return nullptr;
+
+        // as the proc wolf: a guardian of the shaman, the shaman's faction
+        spirit->SetOwnerGUID(player->GetGUID());
+        spirit->SetCreatorGUID(player->GetGUID());
+        spirit->SetFaction(player->GetFaction());
+
+        TotemSpiritLink* link = spirit->CustomData.GetDefault<TotemSpiritLink>(
+            TOTEM_SPIRIT_LINK_KEY);
+        link->TotemGuid = totem->GetGUID();
+        link->Slot = slot;
+        link->HealingStream = IsHealingStreamTotem(totem);
+        return spirit;
+    }
+
+    // Takes every spirit of the shaman away and shows the totems again.
+    void ReleaseTotemSpirits(Player* player, TotemSpiritState* state)
+    {
+        if (player->IsInWorld())
+            for (uint8 slot = SUMMON_SLOT_TOTEM_FIRE; slot < MAX_TOTEM_SLOT;
+                ++slot)
+            {
+                if (!state->Spirit[slot].IsEmpty())
+                    if (Creature* spirit = ObjectAccessor::GetCreature(*player,
+                        state->Spirit[slot]))
+                        spirit->DespawnOrUnsummon();
+                if (!player->m_SummonSlot[slot].IsEmpty())
+                    if (Creature* totem = ObjectAccessor::GetCreature(*player,
+                        player->m_SummonSlot[slot]))
+                        ShowTotem(totem);
+            }
+
+        for (uint8 slot = 0; slot < MAX_TOTEM_SLOT; ++slot)
+        {
+            state->Spirit[slot].Clear();
+            state->TotemGuid[slot].Clear();
+            state->Respawn[slot] = 0;
+        }
+        state->Active = false;
+    }
+}
+
+class custom_totem_spirit_playerscript : public PlayerScript
+{
+public:
+    custom_totem_spirit_playerscript()
+        : PlayerScript("custom_totem_follow_playerscript") {}
+
+    void OnPlayerLogout(Player* player) override
+    {
+        if (!player)
+            return;
+
+        if (TotemSpiritState* state = player->CustomData.Get<TotemSpiritState>(
+            TOTEM_SPIRIT_STATE_KEY))
+            ReleaseTotemSpirits(player, state);
+    }
+
+    void OnPlayerUpdate(Player* player, uint32 diff) override
+    {
+        if (!player || player->getClass() != CLASS_SHAMAN || !player->IsInWorld())
+            return;
+
+        TotemSpiritState* state = player->CustomData.Get<TotemSpiritState>(
+            TOTEM_SPIRIT_STATE_KEY);
+        bool const active = g_CustomSpellsEnabled && player->IsAlive()
+            && HasTotemSpiritPassive(player);
+        if (!active && (!state || !state->Active))
+            return;                                 // the common case
+
+        if (!state)
+            state = player->CustomData.GetDefault<TotemSpiritState>(
+                TOTEM_SPIRIT_STATE_KEY);
+
+        state->Timer += diff;
+        if (state->Timer < TOTEM_SPIRIT_SYNC_MS)
+            return;
+        uint32 const elapsed = state->Timer;
+        state->Timer = 0;
+
+        if (!active)
+        {
+            ReleaseTotemSpirits(player, state);     // passive gone / owner dead
+            return;
+        }
+
+        state->Active = true;
+        for (uint8 slot = SUMMON_SLOT_TOTEM_FIRE; slot < MAX_TOTEM_SLOT; ++slot)
+            SyncSlot(player, state, slot, elapsed);
+    }
+
 private:
-    std::unordered_map<ObjectGuid, uint32> _lastCheck;
+    static void SyncSlot(Player* player, TotemSpiritState* state, uint8 slot,
+        uint32 elapsed)
+    {
+        Creature* totem = nullptr;
+        if (!player->m_SummonSlot[slot].IsEmpty())
+            totem = ObjectAccessor::GetCreature(*player,
+                player->m_SummonSlot[slot]);
+        if (totem && (!totem->IsAlive() || !totem->IsTotem()))
+            totem = nullptr;
+
+        Creature* spirit = nullptr;
+        if (!state->Spirit[slot].IsEmpty())
+            spirit = ObjectAccessor::GetCreature(*player, state->Spirit[slot]);
+
+        // the totem is gone or is a new one: the old spirit goes with it
+        if (!totem || state->TotemGuid[slot] != totem->GetGUID())
+        {
+            if (spirit)
+                spirit->DespawnOrUnsummon();
+            spirit = nullptr;
+            state->Spirit[slot].Clear();
+            state->Respawn[slot] = 0;
+            state->TotemGuid[slot] = totem ? totem->GetGUID() : ObjectGuid::Empty;
+        }
+        if (!totem)
+            return;
+
+        // the spirit was killed (a corpse) or is gone (despawned some other way)
+        if (spirit && !spirit->IsAlive())
+        {
+            state->Spirit[slot].Clear();
+            state->Respawn[slot] = TOTEM_SPIRIT_RESPAWN_MS;
+            spirit = nullptr;
+        }
+        else if (!spirit && !state->Spirit[slot].IsEmpty())
+        {
+            state->Spirit[slot].Clear();
+            state->Respawn[slot] = TOTEM_SPIRIT_LOST_MS;
+        }
+
+        bool const wantsSpirit = TotemWantsSpirit(totem);
+        if (wantsSpirit && !spirit)
+        {
+            if (state->Respawn[slot] > elapsed)
+                state->Respawn[slot] -= elapsed;
+            else
+            {
+                state->Respawn[slot] = 0;
+                spirit = SummonTotemSpirit(player, totem, slot);
+                if (spirit)
+                    state->Spirit[slot] = spirit->GetGUID();
+            }
+        }
+
+        // visible while there is no spirit to stand for it
+        if (spirit)
+            HideTotem(totem);
+        else
+            ShowTotem(totem);
+
+        // where the totem stands: at its spirit, else near the shaman
+        float x = 0.0f, y = 0.0f, z = 0.0f, o = player->GetOrientation();
+        bool move = false;
+        if (spirit && spirit->GetExactDist(player) <= TOTEM_SPIRIT_TRACK_RANGE)
+        {
+            spirit->GetPosition(x, y, z);
+            o = spirit->GetOrientation();
+            move = totem->GetExactDist(x, y, z) > 2.5f;
+        }
+        else if (totem->GetExactDist(player) > TOTEM_STAY_RANGE)
+        {
+            player->GetClosePoint(x, y, z, totem->GetCombatReach(),
+                PET_FOLLOW_DIST + slot * 1.5f, (float(M_PI) / 2.0f) * slot);
+            move = true;
+        }
+
+        // an active totem is not moved in the middle of a cast
+        if (move && !totem->IsNonMeleeSpellCast(false))
+            totem->NearTeleportTo(x, y, z, o);
+    }
+};
+
+// A totem of a shaman with the passive is invisible from the moment it
+// stands - its spirit follows within half a second (the player script).
+class custom_totem_spirit_creature : public AllCreatureScript
+{
+public:
+    custom_totem_spirit_creature()
+        : AllCreatureScript("custom_totem_spirit_creature") { }
+
+    void OnCreatureAddWorld(Creature* creature) override
+    {
+        if (!creature->IsTotem() || !g_CustomSpellsEnabled)
+            return;
+
+        Player* owner = creature->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!owner || owner->getClass() != CLASS_SHAMAN
+            || !HasTotemSpiritPassive(owner) || !TotemWantsSpirit(creature))
+            return;
+
+        HideTotem(creature);
+    }
+};
+
+// ============================================================
+//  NPC 900419-900422: the totem spirit (CreatureScript AI)
+//  A guardian of the shaman (SummonProperties 61). Every 500 ms it
+//   - leaves (DespawnOrUnsummon) when its shaman is gone, dead, on another
+//     map, has lost the passive, or when its totem is gone (the link set by
+//     SummonTotemSpirit);
+//   - is brought back to the shaman when it is further than 45 yd away;
+//   - picks the shaman's target: the shaman's victim, else the shaman's
+//     selected enemy that is in combat (the shaman must be in combat too,
+//     so selecting an idle mob pulls nothing), else an enemy that attacks
+//     the shaman, else one that attacks the spirit; a target further than
+//     40 yd from the shaman is dropped;
+//   - attacks it (chase + melee), or follows the shaman at its own place
+//     round him when there is nothing to fight.
+//  A melee spirit: the damage is the creature's (DamageModifier), plus the
+//  minion auras of the shaman (900435 +50 %).
+// ============================================================
+struct npc_custom_totem_body : public ScriptedAI
+{
+    explicit npc_custom_totem_body(Creature* creature) : ScriptedAI(creature)
+    {
+        _syncTimer = 0;
+    }
+
+    void InitializeAI() override
+    {
+        ScriptedAI::InitializeAI();
+        me->SetReactState(REACT_AGGRESSIVE);
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        _syncTimer += diff;
+        if (_syncTimer >= TOTEM_SPIRIT_SYNC_MS)
+        {
+            _syncTimer = 0;
+            Sync();
+        }
+
+        if (me->IsAlive() && me->GetVictim())
+            DoMeleeAttackIfReady();
+    }
+
+    void JustDied(Unit* /*killer*/) override
+    {
+        // the player script notices the corpse and starts the 15-s respawn
+        me->DespawnOrUnsummon(Milliseconds(3000));
+    }
+
+private:
+    void Sync()
+    {
+        Unit* owner = me->GetOwner();
+        Player* player = owner ? owner->ToPlayer() : nullptr;
+        TotemSpiritLink* link = me->CustomData.Get<TotemSpiritLink>(
+            TOTEM_SPIRIT_LINK_KEY);
+        if (!player || !link || !g_CustomSpellsEnabled || !player->IsInWorld()
+            || !player->IsAlive() || !player->IsInMap(me)
+            || !HasTotemSpiritPassive(player))
+        {
+            me->DespawnOrUnsummon();
+            return;
+        }
+
+        Creature* totem = ObjectAccessor::GetCreature(*me, link->TotemGuid);
+        if (!totem || !totem->IsAlive())
+        {
+            me->DespawnOrUnsummon();
+            return;
+        }
+
+        if (me->GetExactDist(player) > TOTEM_SPIRIT_TELEPORT_RANGE)
+        {
+            float x, y, z;
+            player->GetClosePoint(x, y, z, me->GetCombatReach(),
+                SpiritFollowDist(link->Slot), SpiritFollowAngle(link->Slot));
+            me->CombatStop(true);
+            me->NearTeleportTo(x, y, z, player->GetOrientation());
+            Follow(player, link);
+            return;
+        }
+
+        Unit* wanted = PickTarget(player);
+        Unit* current = me->GetVictim();
+        if (wanted)
+        {
+            if (current != wanted && me->Attack(wanted, true))
+                me->GetMotionMaster()->MoveChase(wanted);
+        }
+        else if (current || me->IsInCombat())
+        {
+            me->CombatStop(true);
+            Follow(player, link);
+        }
+        else if (me->GetMotionMaster()->GetCurrentMovementGeneratorType()
+            != FOLLOW_MOTION_TYPE)
+            Follow(player, link);
+    }
+
+    void Follow(Player* player, TotemSpiritLink const* link)
+    {
+        me->GetMotionMaster()->MoveFollow(player, SpiritFollowDist(link->Slot),
+            SpiritFollowAngle(link->Slot));
+    }
+
+    bool IsUsable(Player* player, Unit* target) const
+    {
+        return target && target != me && target->IsAlive()
+            && me->IsValidAttackTarget(target)
+            && player->IsValidAttackTarget(target)
+            && target->GetExactDist(player) <= TOTEM_SPIRIT_ASSIST_RANGE;
+    }
+
+    Unit* PickTarget(Player* player) const
+    {
+        Unit* candidate = player->GetVictim();
+        if (IsUsable(player, candidate))
+            return candidate;
+
+        if (player->IsInCombat())
+        {
+            Unit* selected = player->GetSelectedUnit();
+            if (selected && selected->IsInCombat() && IsUsable(player, selected))
+                return selected;
+
+            Unit* attacker = player->getAttackerForHelper();
+            if (IsUsable(player, attacker))
+                return attacker;
+        }
+
+        // an enemy that attacks the spirit itself is fought back
+        Unit* assailant = me->getAttackerForHelper();
+        return IsUsable(player, assailant) ? assailant : nullptr;
+    }
+
+    uint32 _syncTimer;
 };
 
 // ============================================================
@@ -1044,10 +1513,163 @@ class spell_custom_rst_shield_stacks : public SpellScript
     }
 };
 
+// ============================================================
+//  SPELL 900472: Earth Shield on unlimited targets (SpellScript)
+//  List line: "You can now use earth shield on unlimited targets".
+//  Earth Shield carries SPELL_ATTR5_LIMIT_N (SpellInfo::IsSingleTarget):
+//  when the aura is created, Unit::_AddAura registers it in the caster's
+//  single-cast list and removes every other single-target aura of that
+//  list that is a rank of the same spell (Unit.cpp _AddAura, the loop over
+//  GetSingleCastAuras with Aura::IsSingleTargetWith). A DBC change would
+//  free the attribute for every shaman, so the module takes the earlier
+//  applications out of that list instead - the way wave 2's Prayer of
+//  Mending second jump does - BEFORE the new one is created: this hook
+//  runs in Spell::DoAllEffectOnTarget ahead of the aura (Spell.cpp,
+//  CallScriptBeforeHitHandlers, then the effect that creates it). An aura
+//  taken out with Aura::UnregisterSingleTarget lives on as a normal aura
+//  (its own duration, charges and removal); only the newest application
+//  stays registered, so the next cast frees it the same way. No core change
+//  is needed (the module-side approach worked, so the core worktree of this
+//  item stays untouched).
+//  Side effects of an unregistered shield (stock single-target auras also):
+//  Unit::RemoveNotOwnSingleTargetAuras (the target changes map or logs out)
+//  no longer takes it, and Aura::CanBeSaved lets a player's shield survive
+//  a logout. Hooked on Earth Shield (-974).
+//  Only active when the shaman has passive 900472.
+// ============================================================
+class spell_custom_rst_earth_unlimited : public SpellScript
+{
+    PrepareSpellScript(spell_custom_rst_earth_unlimited);
+
+    void HandleBeforeHit(SpellMissInfo /*missInfo*/)
+    {
+        Player* shaman = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!shaman || !g_CustomSpellsEnabled
+            || !shaman->HasAura(SPELL_RST_EARTH_UNLIMITED_PASSIVE))
+            return;
+
+        // a copy: UnregisterSingleTarget erases from the list itself
+        std::vector<Aura*> earlier;
+        for (Aura* aura : shaman->GetSingleCastAuras())
+            if (aura->IsSingleTarget()
+                && aura->GetSpellInfo()->IsRankOf(GetSpellInfo()))
+                earlier.push_back(aura);
+
+        for (Aura* aura : earlier)
+            aura->UnregisterSingleTarget();
+
+        if (!earlier.empty())
+            LOG_INFO("module",
+                "mod-custom-spells: Player {} -> Earth Shield: {} earlier shield(s) kept",
+                shaman->GetName(), earlier.size());
+    }
+
+    void Register() override
+    {
+        BeforeHit += BeforeSpellHitFn(
+            spell_custom_rst_earth_unlimited::HandleBeforeHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900473: Healing Stream surge (SpellScript)
+//  List line: "if you direct heal your healing stream totem, your heal also
+//  applies with 75% to near allies. also increases healing stream totems
+//  healing by 25% for 30 seconds. stacks 10 times."
+//  Hooked on the same four direct heals as 900468 / 900470 (Healing Wave,
+//  Lesser Healing Wave, Chain Heal, Riptide's direct heal). "Your Healing
+//  Stream totem" is the SPIRIT of the totem (npc_custom_totem_body, link
+//  flag HealingStream): the totem itself is immune to helpful spells
+//  (Totem::IsImmunedToSpellEffect) and is invisible, so the spirit is what
+//  a player targets. When the heal lands on the shaman's own Healing
+//  Stream spirit:
+//   - 75 % of the heal (Spell::GetScriptHealingIncludingOverheal - the
+//     healing with crits and the overheal, which a spirit at full health
+//     wastes) goes, through Unit::HealBySpell and the log id 900474, to
+//     every player and pet of the shaman's group within 10 yd of the
+//     spirit (the shaman included; the spirit and other summons left
+//     out). HealBySpell is no spell cast, so the splash cannot set this
+//     script off again.
+//   - the shaman gets one more stack of 900475 (30 s refreshed, 10 stacks):
+//     a spell modifier of +25 % per stack on family 11 flags 0x2000 (the
+//     Healing Stream aura 5672 .. 58765 that the totem casts). The totem's
+//     pulse takes the OWNER's spell mods (spell_sha_healing_stream_totem:
+//     owner->SpellHealingBonusDone(.., triggeringSpell = the aura), which
+//     ends in modOwner->ApplySpellMod, Unit.cpp), as 900435's +50 % on the
+//     Searing Totem's attack does.
+//  Only active when the shaman has passive 900473.
+// ============================================================
+class spell_custom_rst_stream_surge : public SpellScript
+{
+    PrepareSpellScript(spell_custom_rst_stream_surge);
+
+    static constexpr float SPLASH_RADIUS = 10.0f;
+    static constexpr uint32 SPLASH_PCT   = 75;
+
+    void HandleAfterHit()
+    {
+        Player* shaman = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Creature* spirit = GetHitUnit() ? GetHitUnit()->ToCreature() : nullptr;
+        if (!shaman || !spirit || !g_CustomSpellsEnabled
+            || !shaman->HasAura(SPELL_RST_STREAM_SURGE_PASSIVE)
+            || spirit->GetOwnerGUID() != shaman->GetGUID())
+            return;
+
+        TotemSpiritLink const* link = spirit->CustomData.Get<TotemSpiritLink>(
+            TOTEM_SPIRIT_LINK_KEY);
+        if (!link || !link->HealingStream)
+            return;
+
+        shaman->CastSpell(shaman, SPELL_RST_STREAM_SURGE_BUFF, true);
+
+        SpellInfo const* splash = sSpellMgr->GetSpellInfo(SPELL_RST_STREAM_SPLASH);
+        uint32 const heal = GetSpell()->GetScriptHealingIncludingOverheal();
+        uint32 const amount = CalculatePct(heal, SPLASH_PCT);
+        if (!splash || !amount)
+            return;
+
+        std::list<Unit*> allies;
+        Acore::AnyFriendlyUnitInObjectRangeCheck check(spirit, shaman,
+            SPLASH_RADIUS);
+        Acore::UnitListSearcher<Acore::AnyFriendlyUnitInObjectRangeCheck>
+            searcher(spirit, allies, check);
+        Cell::VisitObjects(spirit, searcher, SPLASH_RADIUS);
+
+        uint32 count = 0;
+        for (Unit* ally : allies)
+        {
+            // players and pets of the shaman's own group (as the totem's
+            // pulse heals); the spirits, totems and wolves are left out
+            if (ally == spirit || (!ally->IsPlayer() && !ally->IsPet()))
+                continue;
+            Player* allyPlayer = ally->GetCharmerOrOwnerPlayerOrPlayerItself();
+            if (!allyPlayer
+                || (allyPlayer != shaman && !shaman->IsInSameRaidWith(allyPlayer)))
+                continue;
+
+            HealInfo healInfo(shaman, ally, amount, splash,
+                splash->GetSchoolMask());
+            shaman->HealBySpell(healInfo);
+            ++count;
+        }
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Healing Stream spirit healed for {}: {} allies get {}",
+            shaman->GetName(), heal, count, amount);
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_rst_stream_surge::HandleAfterHit);
+    }
+};
+
 void AddShamanSpellsScripts()
 {
     // Shaman Elemental
-    new custom_totem_follow_playerscript();
+    new custom_totem_spirit_playerscript();
+    new custom_totem_spirit_creature();
+    RegisterCreatureAI(npc_custom_totem_body);
     RegisterSpellScript(spell_custom_ele_ragnaros);
     RegisterSpellScript(spell_custom_ele_overload_lvb);
     RegisterSpellScript(spell_custom_ele_lvb_spread_fs);
@@ -1070,4 +1692,6 @@ void AddShamanSpellsScripts()
     RegisterSpellScript(spell_custom_rst_heal_strikes);
     RegisterSpellScript(spell_custom_rst_earth_spikes);
     RegisterSpellScript(spell_custom_rst_shield_stacks);
+    RegisterSpellScript(spell_custom_rst_earth_unlimited);
+    RegisterSpellScript(spell_custom_rst_stream_surge);
 }
