@@ -1025,12 +1025,461 @@ private:
 //  End Priest Shadow section
 // ============================================================
 
+// ============================================================
+//  THIRD CONCEPT LIST, WAVE 2 (2026-10-31): procs and stacking buffs
+//  Plan: share-public custom-spells/records/2026-10-31-third-concept-list.md
+// ============================================================
+namespace
+{
+    constexpr float MANA_BURN_SHIELD_RANGE    = 30.0f;  // the priest's party
+    constexpr float SEAR_EXTRA_RANGE          = 15.0f;  // around the channel target
+    constexpr uint32 SEAR_EXTRA_TICKS         = 3;
+
+    // 900911: +1 % healing done per Inner Fire charge. The aura's amount is
+    // the charge count; it is made with the Inner Fire and refreshed after
+    // every charge spent.
+    void SyncInnerFireHealing(Unit* priest, Aura const* innerFire)
+    {
+        uint32 const charges = innerFire ? innerFire->GetCharges() : 0;
+        if (!charges)
+        {
+            priest->RemoveAurasDueToSpell(SPELL_PRI_DISC_INNERFIRE_HEAL);
+            return;
+        }
+
+        Aura* bonus = priest->GetAura(SPELL_PRI_DISC_INNERFIRE_HEAL);
+        if (!bonus)
+            bonus = priest->AddAura(SPELL_PRI_DISC_INNERFIRE_HEAL, priest);
+        if (bonus)
+            if (AuraEffect* effect = bonus->GetEffect(EFFECT_0))
+                effect->ChangeAmount(int32(charges));
+    }
+
+    bool IsInnerFireSpell(SpellInfo const* spell)
+    {
+        return spell && spell->SpellFamilyName == SPELLFAMILY_PRIEST_ID
+            && (spell->SpellFamilyFlags[0] & SPELLFAMILYFLAG_PRIEST_INNER_FIRE);
+    }
+}
+
+// ============================================================
+//  900908 / 900909 Mana Burn: Burnt Reserve (Discipline)
+//  List: "mana burnt by mana burn transforms into a shiel for nearby
+//  allies (of the priest)".
+//  Mana Burn (-8129) is hooked around its hit: the target's mana before
+//  and after is the mana actually burnt (a target without mana, or one
+//  already empty, burns nothing and gives nothing). After the hit every
+//  player of the priest's party or raid within 30 yd of the priest - the
+//  priest included - gets a Burnt Reserve (900909, a Holy absorb aura,
+//  15 s) of the FULL burnt amount each (decision: not split; the list says
+//  "a shield", the full amount is the generous reading).
+// ============================================================
+class spell_custom_pri_manaburn_shield : public SpellScript
+{
+    PrepareSpellScript(spell_custom_pri_manaburn_shield);
+
+    void HandleBeforeHit(SpellMissInfo /*missInfo*/)
+    {
+        Unit* target = GetHitUnit();
+        _manaBefore = target ? target->GetPower(POWER_MANA) : 0;
+    }
+
+    void HandleAfterHit()
+    {
+        Player* priest = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* target = GetHitUnit();
+        if (!priest || !target || !g_CustomSpellsEnabled
+            || !priest->HasAura(SPELL_PRI_DISC_MANABURN_PASSIVE))
+            return;
+
+        uint32 const manaAfter = target->GetPower(POWER_MANA);
+        if (_manaBefore <= manaAfter)
+            return;
+
+        int32 const burnt = int32(_manaBefore - manaAfter);
+        for (Player* ally : PriestAndGroup(priest))
+        {
+            if (!ally->IsAlive()
+                || !priest->IsWithinDistInMap(ally, MANA_BURN_SHIELD_RANGE))
+                continue;
+
+            int32 points = burnt;
+            priest->CastCustomSpell(ally, SPELL_PRI_DISC_MANABURN_SHIELD,
+                &points, nullptr, nullptr, true);
+        }
+    }
+
+    void Register() override
+    {
+        BeforeHit += BeforeSpellHitFn(spell_custom_pri_manaburn_shield::HandleBeforeHit);
+        AfterHit += SpellHitFn(spell_custom_pri_manaburn_shield::HandleAfterHit);
+    }
+
+private:
+    uint32 _manaBefore = 0;
+};
+
+// ============================================================
+//  900910 / 900911 Inner Fire: Fifty Stacks (Discipline)
+//  List: "inner fire also increases healing done by 1% per stack. max
+//  stacks increased to 50 but you loose 1 stack for every cast" -
+//  operator answer 8 a: stacks are lost ONLY per cast, not when hit.
+//  Inner Fire's "stacks" are its 20 proc charges, spent when the priest
+//  is hit (DBC ProcFlags 0x2a8, ProcCharges 20). With the passive:
+//  - max 50: effect 0 of the marker is aura 107 SPELLMOD_CHARGES +30 on
+//    Inner Fire's family flag 0x2 - the core (Aura::CalcMaxCharges) gives
+//    the new aura 20 + 30 charges, a recast refreshes to 50;
+//  - no loss when hit: the Inner Fire aura (spell_custom_pri_inner_fire,
+//    every rank) refuses its proc while the priest has the passive;
+//  - minus one per cast: the marker's second effect is a proc aura (spell
+//    cast phase of every non-triggered spell the priest casts, except
+//    Inner Fire itself) that takes one charge; the aura goes at 0;
+//  - +1 % healing done per charge: 900911 (aura 136) sits on the priest
+//    while Inner Fire does, its amount = the charge count.
+// ============================================================
+class spell_custom_pri_inner_fire : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pri_inner_fire);
+
+    bool CheckProc(ProcEventInfo& /*eventInfo*/)
+    {
+        Unit* priest = GetTarget();
+        return !(priest && g_CustomSpellsEnabled
+            && priest->HasAura(SPELL_PRI_DISC_INNERFIRE_PASSIVE));
+    }
+
+    void HandleApply(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        Unit* priest = GetTarget();
+        if (priest && g_CustomSpellsEnabled
+            && priest->HasAura(SPELL_PRI_DISC_INNERFIRE_PASSIVE))
+            SyncInnerFireHealing(priest, GetAura());
+    }
+
+    void HandleRemove(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        if (Unit* priest = GetTarget())
+            priest->RemoveAurasDueToSpell(SPELL_PRI_DISC_INNERFIRE_HEAL);
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_pri_inner_fire::CheckProc);
+        AfterEffectApply += AuraEffectApplyFn(
+            spell_custom_pri_inner_fire::HandleApply, EFFECT_0,
+            SPELL_AURA_MOD_RESISTANCE, AURA_EFFECT_HANDLE_REAL);
+        AfterEffectRemove += AuraEffectRemoveFn(
+            spell_custom_pri_inner_fire::HandleRemove, EFFECT_0,
+            SPELL_AURA_MOD_RESISTANCE, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+class spell_custom_pri_inner_fire_cast : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pri_inner_fire_cast);
+
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        Unit* priest = GetTarget();
+        if (!priest || !g_CustomSpellsEnabled)
+            return false;
+
+        SpellInfo const* spell = eventInfo.GetSpellInfo();
+        if (!spell || IsInnerFireSpell(spell))
+            return false;
+
+        return priest->GetAuraOfRankedSpell(SPELL_PRI_INNER_FIRE_R1,
+            priest->GetGUID()) != nullptr;
+    }
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
+    {
+        PreventDefaultAction();
+
+        Unit* priest = GetTarget();
+        Aura* fire = priest->GetAuraOfRankedSpell(SPELL_PRI_INNER_FIRE_R1,
+            priest->GetGUID());
+        if (!fire)
+            return;
+
+        // true = the last charge went and the aura with it (its removal
+        // takes 900911 along)
+        if (!fire->ModCharges(-1))
+            SyncInnerFireHealing(priest, fire);
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_pri_inner_fire_cast::CheckProc);
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_pri_inner_fire_cast::HandleProc, EFFECT_1,
+            SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  900946 Prayer of Mending: Second Jump (Holy)
+//  List: "prayer of mending healing +50% and it jumps to 2 allies (only
+//  if they dont have the buff yet)". The +50 % healing is 900945 (a
+//  plain modifier on the heal 33110). This is the jump: the stock
+//  Prayer of Mending (the three aura ranks 41635 / 48110 / 48111)
+//  jumps to the group member with the most health missing; right after
+//  that jump a second ally - the lowest health percentage among the
+//  priest's party and raid within the jump radius of the holder who does
+//  not carry this priest's Prayer of Mending yet (the one the core just
+//  chose does, so it is never taken twice) - gets the same aura with the
+//  same value and the same remaining jumps.
+// ============================================================
+class spell_custom_pri_pom_second_jump : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pri_pom_second_jump);
+
+    // before the core's own handler spends the charges
+    void HandleBeforeProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
+    {
+        _jumps = GetAura()->GetCharges();
+    }
+
+    void HandleAfterProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
+    {
+        uint32 const jumps = _jumps;
+        _jumps = 0;
+
+        Unit* holder = GetTarget();
+        Unit* casterUnit = GetCaster();
+        Player* priest = casterUnit ? casterUnit->ToPlayer() : nullptr;
+        if (!jumps || !holder || !priest || !g_CustomSpellsEnabled
+            || !priest->HasAura(SPELL_PRI_HOLY_POM_JUMP_PASSIVE))
+            return;
+
+        float const radius = aurEff->GetSpellInfo()->Effects[
+            aurEff->GetEffIndex()].CalcRadius(priest);
+
+        Player* second = nullptr;
+        for (Player* ally : PriestAndGroup(priest))
+        {
+            if (!ally->IsAlive() || ally == holder || !ally->IsInMap(holder)
+                || !holder->IsWithinDistInMap(ally, radius)
+                || ally->HasAura(GetId(), priest->GetGUID()))
+                continue;
+
+            if (!second || ally->GetHealthPct() < second->GetHealthPct())
+                second = ally;
+        }
+
+        if (!second)
+            return;
+
+        int32 value = aurEff->GetAmount();
+        holder->CastSpell(second, SPELL_PRI_POM_VISUAL, true);
+        holder->CastCustomSpell(second, GetId(), &value, nullptr, nullptr,
+            true, nullptr, aurEff, priest->GetGUID());
+        if (Aura* mending = second->GetAura(GetId(), priest->GetGUID()))
+            mending->SetCharges(uint8(jumps));
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_pri_pom_second_jump::HandleBeforeProc, EFFECT_0,
+            SPELL_AURA_RAID_PROC_FROM_CHARGE_WITH_VALUE);
+        AfterEffectProc += AuraEffectProcFn(
+            spell_custom_pri_pom_second_jump::HandleAfterProc, EFFECT_0,
+            SPELL_AURA_RAID_PROC_FROM_CHARGE_WITH_VALUE);
+    }
+
+private:
+    uint32 _jumps = 0;
+};
+
+// ============================================================
+//  900947 / 900948 Divine Hymn: Waves of Light (Holy)
+//  List: "divine hymn also unleases holy waves of light damaging all
+//  enemies in range dependent on paragon level".
+//  Divine Hymn (64843) is a self aura whose tick every 2 s casts the
+//  heal 64844. With the passive each tick also casts 900948 at the
+//  priest's spot: 666 + 5 x the priest's Paragon level Holy damage to
+//  every enemy within 40 yd (Divine Hymn's own range) that is already in
+//  combat - the wave never pulls an idle mob (decision, as for the
+//  Holy Fire heals: the priest heals in a fight).
+// ============================================================
+class spell_custom_pri_hymn_waves : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pri_hymn_waves);
+
+    void HandlePeriodic(AuraEffect const* /*aurEff*/)
+    {
+        Player* priest = GetTarget()->ToPlayer();
+        if (!priest || !priest->IsAlive() || !g_CustomSpellsEnabled
+            || !priest->HasAura(SPELL_PRI_HOLY_HYMN_PASSIVE))
+            return;
+
+        SpellInfo const* wave = sSpellMgr->GetSpellInfo(SPELL_PRI_HOLY_HYMN_WAVE);
+        if (!wave)
+            return;
+
+        // dest-centred helper (40 yd), aimed at the priest's spot
+        SpellCastTargets targets;
+        targets.SetDst(*priest);
+        CustomSpellValues values;
+        values.AddSpellMod(SPELLVALUE_BASE_POINT0, ParagonDamage(priest));
+        priest->CastSpell(targets, wave, &values, TRIGGERED_FULL_MASK);
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_pri_hymn_waves::HandlePeriodic, EFFECT_0,
+            SPELL_AURA_PERIODIC_TRIGGER_SPELL);
+    }
+};
+
+// the wave leaves out enemies that are not in combat
+class spell_custom_pri_hymn_wave_filter : public SpellScript
+{
+    PrepareSpellScript(spell_custom_pri_hymn_wave_filter);
+
+    void FilterTargets(std::list<WorldObject*>& targets)
+    {
+        targets.remove_if([](WorldObject* target)
+        {
+            Unit* unit = target->ToUnit();
+            return !unit || !unit->IsInCombat();
+        });
+    }
+
+    void Register() override
+    {
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(
+            spell_custom_pri_hymn_wave_filter::FilterTargets,
+            EFFECT_0, TARGET_UNIT_DEST_AREA_ENEMY);
+    }
+};
+
+// ============================================================
+//  900978 / 900979 Mind Flay: Quickened Flay (Shadow)
+//  List: "casting mind flay increases the damage and speed of the next
+//  mind flay by 25%. stacks 2 times. 10sec duration".
+//  When a Mind Flay (-15407, every rank) channel ends - finished or
+//  broken - the priest gets a stack of 900979 (10 s, 2 stacks): aura 108
+//  +25 % damage on the tick spell 58381 (flags0 0x800000, op 0), -17 %
+//  tick period (op 19) and -17 % channel and aura duration (op 1) on
+//  Mind Flay itself (flags2 0x40; the three ticks of a Mind Flay come
+//  in 0.66 of the time with 2 stacks, 0.83 with one: about +25 % speed
+//  per stack). The channel that grants the stack at its end never has it
+//  itself: the buff is "for the next Mind Flay".
+//  DECISION (the brief said "consumed by the next Mind Flay"): the stacks
+//  are NOT consumed. A Mind Flay that used up the stacks and granted one
+//  would leave one stack at most, and "stacks 2 times" could never happen;
+//  so the buff is a ramp - each Mind Flay adds a stack (to 2) and
+//  refreshes the 10 s, every Mind Flay inside the window is stronger
+//  and faster, and it ends 10 s after the last one.
+// ============================================================
+class spell_custom_pri_flay_stack : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pri_flay_stack);
+
+    void HandleRemove(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        Player* priest = GetTarget()->ToPlayer();
+        if (!priest || !g_CustomSpellsEnabled
+            || !priest->HasAura(SPELL_PRI_SHADOW_FLAY_PASSIVE))
+            return;
+
+        if (Aura* flay = priest->GetAura(SPELL_PRI_SHADOW_FLAY_BUFF))
+            flay->ModStackAmount(1);
+        else
+            priest->AddAura(SPELL_PRI_SHADOW_FLAY_BUFF, priest);
+    }
+
+    void Register() override
+    {
+        // effect 2 of Mind Flay is the aura on the priest (the tick trigger
+        // with value); the enemy's aura carries effects 0 and 1 only
+        AfterEffectRemove += AuraEffectRemoveFn(
+            spell_custom_pri_flay_stack::HandleRemove, EFFECT_2,
+            SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE,
+            AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+// ============================================================
+//  900980 Mind Sear: Three More (Shadow)
+//  List: "mind sear +3 targets" - operator answer 5 a: three more Mind
+//  Sears on enemies near the target, script-driven, no extra channels.
+//  Every tick of the real channel (the aura on the channel target,
+//  -48045 every rank) also casts the same rank's tick spell - Mind
+//  Sear's damage burst, centred on its target - at up to three other
+//  enemies within 15 yd of the channel target, the nearest first. Each
+//  one is a full tick round its own spot (10 yd), so the sear reaches
+//  further than its own radius and hits what stands where two of them
+//  overlap more than once.
+// ============================================================
+class spell_custom_pri_sear_plus3 : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pri_sear_plus3);
+
+    void HandlePeriodic(AuraEffect const* aurEff)
+    {
+        Unit* casterUnit = GetCaster();
+        Player* priest = casterUnit ? casterUnit->ToPlayer() : nullptr;
+        Unit* anchor = GetTarget();
+        if (!priest || !anchor || !g_CustomSpellsEnabled
+            || !priest->HasAura(SPELL_PRI_SHADOW_SEAR_PLUS3_PASSIVE))
+            return;
+
+        uint32 const tick = aurEff->GetSpellInfo()->Effects[
+            aurEff->GetEffIndex()].TriggerSpell;
+        if (!tick)
+            return;
+
+        std::list<Unit*> enemies;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(anchor, priest,
+            SEAR_EXTRA_RANGE);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(anchor, enemies, check);
+        Cell::VisitObjects(anchor, searcher, SEAR_EXTRA_RANGE);
+
+        enemies.remove_if([priest, anchor](Unit* enemy)
+        {
+            return enemy == anchor || !enemy->IsAlive()
+                || !priest->IsValidAttackTarget(enemy);
+        });
+        enemies.sort([anchor](Unit* a, Unit* b)
+        {
+            return anchor->GetDistance(a) < anchor->GetDistance(b);
+        });
+
+        uint32 count = 0;
+        for (Unit* enemy : enemies)
+        {
+            if (count++ >= SEAR_EXTRA_TICKS)
+                break;
+
+            priest->CastSpell(enemy, tick, true);
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_pri_sear_plus3::HandlePeriodic, EFFECT_0,
+            SPELL_AURA_PERIODIC_TRIGGER_SPELL);
+    }
+};
+
 void AddPriestSpellsScripts()
 {
     // Priest Discipline
     RegisterSpellScript(spell_custom_pri_shield_explode);
     RegisterSpellScript(spell_custom_pri_weakened_soul_cd);
     RegisterSpellScript(spell_custom_pri_atonement);
+    RegisterSpellScript(spell_custom_pri_manaburn_shield);
+    RegisterSpellScript(spell_custom_pri_inner_fire);
+    RegisterSpellScript(spell_custom_pri_inner_fire_cast);
 
     // Priest Holy
     RegisterSpellScript(spell_custom_pri_heal_fire);
@@ -1040,6 +1489,9 @@ void AddPriestSpellsScripts()
     RegisterSpellScript(spell_custom_pri_redemption_no_death);
     RegisterSpellScript(spell_custom_pri_nova_kindle);
     RegisterSpellScript(spell_custom_pri_holy_fire_consume);
+    RegisterSpellScript(spell_custom_pri_pom_second_jump);
+    RegisterSpellScript(spell_custom_pri_hymn_waves);
+    RegisterSpellScript(spell_custom_pri_hymn_wave_filter);
 
     // Priest Shadow
     RegisterSpellScript(spell_custom_pri_dot_aoe);
@@ -1047,4 +1499,6 @@ void AddPriestSpellsScripts()
     new custom_pri_shadow_kill_playerscript();
     RegisterSpellScript(spell_custom_pri_soul_feast);
     RegisterCreatureAI(npc_custom_lesser_tentacle);
+    RegisterSpellScript(spell_custom_pri_flay_stack);
+    RegisterSpellScript(spell_custom_pri_sear_plus3);
 }

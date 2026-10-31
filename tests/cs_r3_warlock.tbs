@@ -1,7 +1,8 @@
 # mod-custom-spells: the Warlock lines of the third concept list
 # (operator 2026-10-31; share-public
 # custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
-# spell modifiers and Shadow Cleave. Every check states the list's line, so a
+# spell modifiers and Shadow Cleave, wave 2 (the end of the file) = procs and
+# stacking buffs. Every check states the list's line, so a
 # FAIL marks a defect.
 # Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
 # (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
@@ -10,7 +11,7 @@
 # 47811, Metamorphosis 47241 (talent) and its Shadow Cleave 50581 (no family
 # flags: the two Shadow Cleave passives are C++).
 name    Custom spells - Warlock third list
-timeout 300s
+timeout 360s
 
 bot wl warlock slot=4
 
@@ -26,6 +27,12 @@ as gm .unlearn 900854
 as gm .unlearn 900878
 as gm .unlearn 900879
 as gm .unlearn 900880
+as gm .unlearn 900809
+as gm .unlearn 900855
+as gm .unlearn 900857
+as gm .unlearn 900881
+as gm .unaura 900810
+as gm .unaura 900882
 as gm .unaura 47241
 do wl learn 47864
 do wl learn 47857
@@ -90,6 +97,164 @@ wait 1s
 spelllog stop
 expect wl spell 50581 targets >= 5
 
+# ================================================================ wave 2
+# Procs and stacking buffs (agent C, 2026-10-31). Spells: Life Tap rank 8
+# 57946 (health -> mana; triggered casts count too), Corruption 47813,
+# Incinerate rank 4 47838, Immolate 47811, Soul Fire 47825, Summon Felhunter
+# 691 (NPC 417), Demon Charge 54785 (Metamorphosis; its stock stun 60995,
+# cooldown 45 s), Full Heal 25840, Diseased Young Wolf 299 (level 1, to kill).
+# The dummies take 0 damage and never die; a kill needs the wolf.
+
+# ---------------------------------------------------------------- Affliction
+log Affliction - 900809 CONCEPT "casting lifetap also increases the damage of your next dot by 10%, stacks 5 times. last 30sec": control, then three Life Taps (triggered: the passive hooks the cast, not a proc) = 3 stacks of Dark Tithe (900810), and the DoT modifier reads +30 %
+do wl learn 57946
+do wl learn 47813
+do gm target wl
+as gm .unaura 900810
+do wl reset
+expect wl spellmod 47813 dot 100 == 100
+do wl learn 900809
+do wl cast 57946 triggered
+do wl cast 57946 triggered
+do wl cast 57946 triggered
+wait 500ms
+expect wl aurastacks 900810 == 3
+expect wl spellmod 47813 dot 100 == 130
+expect wl spellmod 47864 dot 100 == 180
+expect wl spellmod 47811 dot 100 == 130
+expect wl auramaxduration 900810 == 30000
+
+log Affliction - 900809 the stacks stop at 5 (heal the warlock first: a Life Tap costs health)
+do gm cast 25840 on wl triggered
+wait 500ms
+do wl cast 57946 triggered
+do wl cast 57946 triggered
+do wl cast 57946 triggered
+wait 500ms
+expect wl aurastacks 900810 == 5
+expect wl spellmod 47813 dot 100 == 150
+
+log Affliction - 900809 the NEXT dot cast uses every stack up (a normal cast of Corruption), the DoT is on the dummy
+do gm cast 25840 on wl triggered
+wait 1700ms
+do wl cast 47813 on d1
+wait 1s
+expect wl noaura 900810
+expect d1 aura 47813
+expect wl spellmod 47813 dot 100 == 100
+
+# ---------------------------------------------------------------- Demonology
+log Demonology - 900855 CONCEPT "felhunter: aura that increases cast time of enemies by 25% in 40y range": control - a Felhunter without the passive puts nothing on the ring
+do wl goto -279 150 -423.2
+wait 500ms
+do wl reset
+do wl learn 691
+do wl cast 691 triggered
+wait 1s
+pick fh creature:417 near wl
+require fh exists
+wait 2s
+expect fh noaura 900856
+expect d1 noaura 900856
+
+log Demonology - 900855 with the passive the Felhunter carries Spell Shackles (900856, an area aura of 40 yd: the dummies, 5-13 yd away, carry it, cast times x1.25 through the cast-speed field)
+do wl learn 900855
+waitfor fh aura 900856 timeout 4s
+waitfor d1 aura 900856 timeout 4s
+expect fh aura 900856
+expect d1 aura 900856
+
+log Demonology - 900855 the passive gone, the aura goes with it
+as gm .unlearn 900855
+waitfor fh noaura 900856 timeout 3s
+waitfor d1 noaura 900856 timeout 3s
+expect d1 noaura 900856
+do wl cast 2641 triggered
+wait 500ms
+
+log Demonology - 900857 CONCEPT "demon charge now stun all enemies within 10y of the target and deal fire damage based on paragon level. if it kills an enemie, colldown is reset": control - without the passive Demon Charge (stock) neither burns nor stuns the ring and goes on its 45-s cooldown
+do wl goto -279 150 -423.2
+wait 500ms
+do wl reset
+do wl learn 47241
+do wl cast 47241 triggered
+wait 500ms
+spelllog start
+do wl cast 54785 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wl spell 900860 casts == 0
+expect wl spell 900859 casts == 0
+expect wl cooldown 54785 > 30000
+
+log Demonology - 900857 with the passive every enemy within 10 yd of d1 takes the Paragon Fire damage (8 dummies: 8 hits of 666 + 5 x Paragon level, 5,328-6,400 with crits) and the 7 others are stunned; no kill, so the cooldown holds
+do wl learn 900857
+do wl reset
+do wl cast 47241 triggered
+wait 500ms
+spelllog start
+do wl cast 54785 on d1 triggered
+wait 1500ms
+spelllog stop
+expect wl spell 900860 casts == 8
+expect wl spell 900860 hits >= 6
+expect wl spell 900860 damage >= 3996
+expect wl spell 900860 damage <= 6400
+expect wl spell 900859 casts == 7
+expect wl cooldown 54785 > 30000
+
+log Demonology - 900857 a kill resets Demon Charge: a Diseased Young Wolf (level 1) 5 yd from d1 dies of the shockwave and the cooldown is gone
+do wl reset
+do gm goto -272 152 -423.2
+wait 300ms
+as gm .npc add temp 299
+wait 500ms
+pick wolf creature:299 near d1 alive
+require wolf exists
+do wl cast 47241 triggered
+wait 500ms
+do wl cast 54785 on d1 triggered
+wait 1500ms
+expect wolf dead
+expect wl cooldown 54785 == 0
+do gm goto -279 150 -423.2
+
+# ---------------------------------------------------------------- Destruction
+log Destruction - 900881 CONCEPT "if you hit a target affected by shadow immolate with your incenerate, your next soulfire does +50% damage, stacks 10 times" (Shadow Immolate is wave 3: the warlock's Immolate stands in): control - Incinerate on a dummy without Immolate gives no stack
+do wl learn 47838
+do wl learn 47811
+do wl learn 47825
+do wl learn 900881
+do wl goto -279 150 -423.2
+wait 500ms
+do wl approach d1
+do gm target wl
+as gm .unaura 900882
+do gm target d1
+as gm .unaura 47811
+wait 300ms
+do wl reset
+do wl cast 47838 on d1 triggered
+wait 1500ms
+expect wl noaura 900882
+
+log Destruction - 900881 with Immolate on the dummy every Incinerate hit adds a stack of Stoked Flames (900882, +50 % Soul Fire damage each): two hits = 2 stacks, the Soul Fire modifier reads 100 + 50 (900878, learned above) + 2 x 50
+do wl cast 47811 on d1 triggered
+wait 800ms
+expect d1 aura 47811
+do wl cast 47838 on d1 triggered
+wait 1500ms
+do wl cast 47838 on d1 triggered
+wait 1500ms
+expect wl aurastacks 900882 == 2
+expect wl spellmod 47825 damage 100 == 250
+
+log Destruction - 900881 the next Soul Fire uses every stack up
+do wl cast 47825 on d1 triggered
+wait 700ms
+expect wl noaura 900882
+expect wl spellmod 47825 damage 100 == 150
+
 cleanup
 do wl stop
 do gm target wl
@@ -102,3 +267,10 @@ as gm .unlearn 900854
 as gm .unlearn 900878
 as gm .unlearn 900879
 as gm .unlearn 900880
+as gm .unlearn 900809
+as gm .unlearn 900855
+as gm .unlearn 900857
+as gm .unlearn 900881
+as gm .unaura 900810
+as gm .unaura 900882
+do wl cast 2641 triggered

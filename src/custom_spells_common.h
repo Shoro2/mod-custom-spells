@@ -338,6 +338,9 @@ enum CustomSpellIds
     SPELL_WLK_AFFL_DOT_AOE_HELPER      = 900803,
     SPELL_WLK_AFFL_COA_DMG_PASSIVE      = 900807, // third list 2026-10-31, DBC only
     SPELL_WLK_AFFL_DL_DMG_PASSIVE       = 900808, // third list 2026-10-31, DBC only
+    // third list wave 2 (2026-10-31): Life Tap feeds the next DoT
+    SPELL_WLK_AFFL_LIFETAP_PASSIVE      = 900809,
+    SPELL_WLK_AFFL_LIFETAP_BUFF         = 900810, // +10 % DoT damage / stack, 5 stacks, 30 s
 
     // ---- Warlock Demonology (900833-900865) ----
     SPELL_WLK_DEMO_META_KILL_EXT       = 900833,
@@ -353,6 +356,12 @@ enum CustomSpellIds
     // third concept list 2026-10-31: Shadow Cleave (50581, Metamorphosis)
     SPELL_WLK_DEMO_SC_UNLIM_TARGETS    = 900853,
     SPELL_WLK_DEMO_SC_DMG              = 900854,
+    // third list wave 2 (2026-10-31)
+    SPELL_WLK_DEMO_FELHUNTER_SLOW_PASSIVE = 900855, // Felhunter: enemy casts 25 % slower
+    SPELL_WLK_DEMO_FELHUNTER_SLOW_AURA = 900856,   // the area aura on the Felhunter
+    SPELL_WLK_DEMO_CHARGE_PASSIVE      = 900857,   // Demon Charge shockwave
+    SPELL_WLK_DEMO_CHARGE_STUN         = 900859,   // 3 s stun helper
+    SPELL_WLK_DEMO_CHARGE_DAMAGE       = 900860,   // Paragon Fire damage helper
 
     // ---- Warlock Destruction (900866-900899) ----
     SPELL_WLK_DEST_SB_AOE              = 900866,
@@ -365,6 +374,9 @@ enum CustomSpellIds
     SPELL_WLK_DEST_SF_DMG               = 900878, // third list 2026-10-31, DBC only
     SPELL_WLK_DEST_SF_AOE               = 900879, // third list 2026-10-31, DBC only
     SPELL_WLK_DEST_IMMO_AOE             = 900880, // third list 2026-10-31, DBC only
+    // third list wave 2 (2026-10-31): Incinerate on Immolate feeds Soul Fire
+    SPELL_WLK_DEST_SOULFIRE_PASSIVE     = 900881,
+    SPELL_WLK_DEST_SOULFIRE_BUFF        = 900882, // +50 % Soul Fire damage / stack, 10 stacks
 
     // ---- Priest Discipline (900900-900932) ----
     SPELL_PRI_DISC_SHIELD_EXPLODE      = 900900,
@@ -372,17 +384,31 @@ enum CustomSpellIds
     SPELL_PRI_DISC_WEAKENED_SOUL_CD    = 900902,
     SPELL_PRI_DISC_EXPLODE_HELPER      = 900903,
     SPELL_PRI_DISC_PENANCE_HEAL         = 900907, // third list 2026-10-31, DBC only
+    // third list wave 2 (2026-10-31)
+    SPELL_PRI_DISC_MANABURN_PASSIVE     = 900908, // burnt mana becomes shields
+    SPELL_PRI_DISC_MANABURN_SHIELD      = 900909, // the absorb aura
+    SPELL_PRI_DISC_INNERFIRE_PASSIVE    = 900910, // 50 charges, lost per cast
+    SPELL_PRI_DISC_INNERFIRE_HEAL       = 900911, // +1 % healing done per charge
 
     // ---- Priest Holy (900933-900965) ----
     SPELL_PRI_HOLY_HEAL_FIRE           = 900933,
     SPELL_PRI_HOLY_FIRE_HELPER         = 900934, // Holy Fire without facing
     SPELL_PRI_HOLY_NOVA_DMG             = 900944, // third list 2026-10-31, DBC only
+    // third list wave 2 (2026-10-31)
+    SPELL_PRI_HOLY_POM_HEAL_PASSIVE     = 900945, // Prayer of Mending +50 % healing, DBC only
+    SPELL_PRI_HOLY_POM_JUMP_PASSIVE     = 900946, // jumps to a second ally
+    SPELL_PRI_HOLY_HYMN_PASSIVE         = 900947, // Divine Hymn waves of light
+    SPELL_PRI_HOLY_HYMN_WAVE            = 900948, // the Holy damage helper
 
     // ---- Priest Shadow (900966-900999) ----
     SPELL_PRI_SHADOW_DOT_AOE           = 900966,
     SPELL_PRI_SHADOW_DOT_SPREAD        = 900967,
     SPELL_PRI_SHADOW_AOE_HELPER        = 900968,
     SPELL_PRI_SHADOW_SEAR_DMG           = 900977, // third list 2026-10-31, DBC only
+    // third list wave 2 (2026-10-31)
+    SPELL_PRI_SHADOW_FLAY_PASSIVE       = 900978, // Mind Flay quickens the next Mind Flay
+    SPELL_PRI_SHADOW_FLAY_BUFF          = 900979, // +25 % damage and speed / stack, 2 stacks
+    SPELL_PRI_SHADOW_SEAR_PLUS3_PASSIVE = 900980, // three more Mind Sear ticks
 
     // ---- Druid Balance (901000-901032) ----
     SPELL_BAL_MF_AOE_PASSIVE            = 901000,
@@ -629,6 +655,8 @@ constexpr uint32 SPELL_CHAOS_BOLT_R4       = 59172;  // Chaos Bolt highest rank
 // Shadow Bolt SpellFamilyFlags[0] = 0x1 (verify!)
 // Chaos Bolt SpellFamilyFlags[1] = 0x1000000 (verify!)
 // Warlock DoTs: Corruption, Curse of Agony, Immolate, Unstable Affliction, Seed of Corruption
+// Immolate SpellFamilyFlags[0] = 0x4 (checked against the server Spell.dbc 2026-10-31)
+constexpr uint32 SPELLFAMILYFLAG_WARLOCK_IMMOLATE = 0x4;
 
 // ---- Priest constants ----
 constexpr uint32 SPELL_PW_SHIELD_R14       = 48066;  // Power Word: Shield highest rank
@@ -636,6 +664,9 @@ constexpr uint32 SPELL_WEAKENED_SOUL       = 6788;   // Weakened Soul debuff
 constexpr int32  WEAKENED_SOUL_SHORT_MS    = 5000;   // 900902: 5 sec
 constexpr uint32 SPELL_HOLY_FIRE_R11       = 48135;  // Holy Fire highest rank
 constexpr uint32 SPELLFAMILY_PRIEST_ID     = 6;
+constexpr uint32 SPELL_PRI_INNER_FIRE_R1   = 588;    // first rank of Inner Fire
+constexpr uint32 SPELLFAMILYFLAG_PRIEST_INNER_FIRE = 0x2; // Inner Fire, priest flags0
+constexpr uint32 SPELL_PRI_POM_VISUAL      = 41637;  // Prayer of Mending jump visual
 // PW:Shield SpellFamilyFlags[0] = 0x1 (verify!)
 // Holy Fire SpellFamilyFlags[0] = 0x8000 (verify!)
 
