@@ -120,7 +120,8 @@ do wl cast 57946 triggered
 wait 500ms
 expect wl aurastacks 900810 == 3
 expect wl spellmod 47813 dot 100 == 130
-expect wl spellmod 47864 dot 100 == 180
+# percent modifiers multiply: Curse of Agony +50 % (900807) x 3 stacks +30 % = 1.5 x 1.3
+expect wl spellmod 47864 dot 100 == 195
 expect wl spellmod 47811 dot 100 == 130
 expect wl auramaxduration 900810 == 30000
 
@@ -154,19 +155,17 @@ wait 1s
 pick fh creature:417 near wl
 require fh exists
 wait 2s
-expect fh noaura 900856
 expect d1 noaura 900856
 
 log Demonology - 900855 with the passive the Felhunter carries Spell Shackles (900856, an area aura of 40 yd: the dummies, 5-13 yd away, carry it, cast times x1.25 through the cast-speed field)
 do wl learn 900855
-waitfor fh aura 900856 timeout 4s
+# the area aura is owned by the Felhunter and applied to the enemies only: the
+# Felhunter itself reports nothing, the dummies do
 waitfor d1 aura 900856 timeout 4s
-expect fh aura 900856
 expect d1 aura 900856
 
 log Demonology - 900855 the passive gone, the aura goes with it
 as gm .unlearn 900855
-waitfor fh noaura 900856 timeout 3s
 waitfor d1 noaura 900856 timeout 3s
 expect d1 noaura 900856
 do wl cast 2641 triggered
@@ -178,6 +177,9 @@ wait 500ms
 do wl reset
 do wl learn 47241
 do wl cast 47241 triggered
+wait 500ms
+# Demon Charge has a minimum range (result 128 TOO_CLOSE): 16 yd from d1
+do wl goto -290 150 -423.2
 wait 500ms
 spelllog start
 do wl cast 54785 on d1 triggered
@@ -191,6 +193,7 @@ log Demonology - 900857 with the passive every enemy within 10 yd of d1 takes th
 do wl learn 900857
 do wl reset
 do wl cast 47241 triggered
+do wl goto -290 150 -423.2
 wait 500ms
 spelllog start
 do wl cast 54785 on d1 triggered
@@ -212,6 +215,7 @@ wait 500ms
 pick wolf creature:299 near d1 alive
 require wolf exists
 do wl cast 47241 triggered
+do wl goto -290 150 -423.2
 wait 500ms
 do wl cast 54785 on d1 triggered
 wait 1500ms
@@ -247,7 +251,8 @@ wait 1500ms
 do wl cast 47838 on d1 triggered
 wait 1500ms
 expect wl aurastacks 900882 == 2
-expect wl spellmod 47825 damage 100 == 250
+# multiplying: Soul Fire +50 % (900878, learned above) x 2 stacks +100 % = 1.5 x 2.0
+expect wl spellmod 47825 damage 100 == 300
 
 log Destruction - 900881 the next Soul Fire uses every stack up
 do wl cast 47825 on d1 triggered
@@ -273,4 +278,3 @@ as gm .unlearn 900857
 as gm .unlearn 900881
 as gm .unaura 900810
 as gm .unaura 900882
-do wl cast 2641 triggered
