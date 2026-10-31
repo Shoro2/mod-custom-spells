@@ -15,6 +15,8 @@
 # first: every copy in the bags and on the body goes).
 # Hit rolls: Song of Sylvanas 59756 (no miss) and NPC Hit Buffs 62627 (no dodge
 # or parry) on the rogue.
+# A neutral Defias Thug (38, level 3, humanoid) stands 40 yd away as the
+# creature the jump must not reach.
 # Kills: Young Black Bears (1128, level 5, hostile, beasts: no poison immunity)
 # the director spawns on its own spot (.npc add temp: they despawn once dead).
 # The Deadly Poison IX DoT 57970 (a poison: a tick of 74 and more every 3 s,
@@ -113,7 +115,7 @@ wait 300ms
 do ro cast 57970 on bearB triggered
 waitfor bearB missing timeout 14s
 
-log Assassination - 900606 "if you kill the target affected by hunger for blood, it jumps to the next enemy with 50% increased effect": two bears with the passive - when the poison kills the first one the Deadly Poison jumps to the second (within 10 yd) with +50 % damage, which dies of it too; a third bear 40 yd away gets nothing
+log Assassination - 900606 "if you kill the target affected by hunger for blood, it jumps to the next enemy with 50% increased effect": two bears with the passive - when the poison kills the first one the Deadly Poison jumps to the second (within 10 yd) with +50 % damage, which dies of it too; a neutral Defias Thug 40 yd away gets nothing (a third bear would run to the rogue within seconds and be a legitimate next jump target)
 do ro learn 900606
 as gm .aura 63848
 waitfor ro aura 63848 timeout 2s
@@ -126,9 +128,9 @@ require bearA exists
 require bearB exists
 do gm goto -279 190 -423.2
 wait 500ms
-as gm .npc add temp 1128
+as gm .npc add temp 38
 wait 500ms
-pick bearC creature:1128 near gm fresh
+pick bearC creature:38 near gm
 require bearC exists
 do gm goto -279 150 -423.2
 wait 500ms
