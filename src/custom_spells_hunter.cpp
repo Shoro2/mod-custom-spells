@@ -95,6 +95,121 @@ namespace
         return sSpellMgr->GetSpellWithRank(SPELL_EXPLOSIVE_TRAP_EFFECT_R1,
             std::max<uint8>(rank, 1));
     }
+
+    // ---- The five traps of the third concept list, wave 2 ----
+    // A trap kind: its ranks (the spells the hunter learns and casts, which
+    // summon the trap game object) and, rank for rank, the effect spell that
+    // game object casts when an enemy walks into it.
+    struct TrapKind
+    {
+        uint32 traps[8];
+        uint32 effects[8];
+        uint8  count;
+    };
+
+    constexpr TrapKind TRAP_KINDS[] =
+    {
+        // Explosive Trap
+        { { 13813, 14316, 14317, 27025, 49066, 49067, 0, 0 },
+          { 13812, 14314, 14315, 27026, 49064, 49065, 0, 0 }, 6 },
+        // Immolation Trap
+        { { 13795, 14302, 14303, 14304, 14305, 27023, 49055, 49056 },
+          { 13797, 14298, 14299, 14300, 14301, 27024, 49053, 49054 }, 8 },
+        // Freezing Trap
+        { { 1499, 14310, 14311, 0, 0, 0, 0, 0 },
+          { 3355, 14308, 14309, 0, 0, 0, 0, 0 }, 3 },
+        // Frost Trap (one rank; its effect is the ground aura)
+        { { 13809, 0, 0, 0, 0, 0, 0, 0 },
+          { 13810, 0, 0, 0, 0, 0, 0, 0 }, 1 },
+        // Snake Trap (one rank; its effect summons the snakes)
+        { { 34600, 0, 0, 0, 0, 0, 0, 0 },
+          { 57879, 0, 0, 0, 0, 0, 0, 0 }, 1 },
+    };
+
+    constexpr float TRAP_REACH         = 40.0f;  // the target a trap is thrown at
+    constexpr float TRAP_FEET_RADIUS   = 8.0f;   // a trap at the hunter's feet needs an enemy this close
+
+    // The effect spell of the highest rank of a trap kind the hunter knows
+    // (0 = the hunter knows none)
+    uint32 KnownTrapEffect(Player* player, TrapKind const& kind)
+    {
+        uint32 effect = 0;
+        for (uint8 i = 0; i < kind.count; ++i)
+            if (player->HasSpell(kind.traps[i]))
+                effect = kind.effects[i];
+        return effect;
+    }
+
+    // True for the effect spell of any rank of any trap kind
+    bool IsTrapEffectSpell(uint32 spellId)
+    {
+        for (TrapKind const& kind : TRAP_KINDS)
+            for (uint8 i = 0; i < kind.count; ++i)
+                if (kind.effects[i] == spellId)
+                    return true;
+        return false;
+    }
+
+    // Immolation and Freezing Trap hit one enemy chosen as the spell's target;
+    // the others (Explosive, Frost, Snake) work on the ground round the trap
+    bool TrapNeedsUnitTarget(SpellInfo const* trapEffect)
+    {
+        for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+            if (trapEffect->Effects[i].TargetA.GetTarget() == TARGET_UNIT_TARGET_ENEMY)
+                return true;
+        return false;
+    }
+
+    Unit* NearestEnemy(Player* player, float range)
+    {
+        std::list<Unit*> nearby;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player, range);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(player, nearby, check);
+        Cell::VisitObjects(player, searcher, range);
+
+        Unit* best = nullptr;
+        float bestDist = range + 1.0f;
+        for (Unit* unit : nearby)
+        {
+            if (!unit->IsAlive() || !player->IsValidAttackTarget(unit))
+                continue;
+            float const dist = player->GetExactDist(unit);
+            if (dist < bestDist)
+            {
+                best = unit;
+                bestDist = dist;
+            }
+        }
+        return best;
+    }
+
+    // Sets a trap effect off at a spot for its owner, exactly as a trap game
+    // object does it (GameObject::CastSpell): a world trigger summoned there
+    // casts the effect for the hunter, so the damage, the burning ground (its
+    // DynamicObject belongs to the hunter, Spell::EffectPersistentAA), the
+    // snakes and the combat log are the hunter's, and the trap's activation
+    // procs go to the hunter. victim = the unit the effect is cast at (null:
+    // at the trigger itself, for the traps that work on the ground).
+    // triggeredBy = the aura that sets the trap off: the core never lets an
+    // aura proc from a spell it triggered itself, which is what keeps a trap
+    // that 900575 spawned from spawning another one.
+    void LaunchTrapEffect(Player* player, SpellInfo const* trapEffect, Unit* victim,
+        float x, float y, float z, AuraEffect const* triggeredBy)
+    {
+        Creature* trigger = player->SummonTrigger(x, y, z, 0.0f, 2000, true);
+        if (!trigger)
+            return;
+
+        trigger->SetOwnerGUID(player->GetGUID());
+        if (player->HasUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED))
+            trigger->SetUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED);
+        trigger->SetImmuneToNPC(false);
+        if (victim)
+            trigger->SetInFront(victim);
+        trigger->CastSpell(victim ? victim : trigger, trapEffect, true, nullptr,
+            triggeredBy, player->GetGUID());
+    }
 }
 
 // ============================================================
@@ -575,24 +690,147 @@ class spell_custom_hunt_surv_trap_proc : public AuraScript
         if (!trapEffect)
             return;
 
-        Creature* trigger = player->SummonTrigger(target->GetPositionX(),
-            target->GetPositionY(), target->GetPositionZ(), 0.0f, 2000, true);
-        if (!trigger)
-            return;
-
-        trigger->SetOwnerGUID(player->GetGUID());
-        if (player->HasUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED))
-            trigger->SetUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED);
-        trigger->SetImmuneToNPC(false);
-        trigger->SetInFront(target);
-        trigger->CastSpell(target, trapEffect, true, nullptr, nullptr,
-            player->GetGUID());
+        LaunchTrapEffect(player, trapEffect, target, target->GetPositionX(),
+            target->GetPositionY(), target->GetPositionZ(), nullptr);
     }
 
     void Register() override
     {
         DoCheckProc += AuraCheckProcFn(spell_custom_hunt_surv_trap_proc::CheckProc);
         OnEffectProc += AuraEffectProcFn(spell_custom_hunt_surv_trap_proc::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  HUNTER SURV: 900574 Random Traps
+//  List line: "auto cast a random trap every 5 seconds while in combat".
+//  Operator reading: while the hunter is in combat, every 5 s the highest
+//  known rank of one random trap kind the hunter knows (Explosive,
+//  Immolation, Freezing, Frost, Snake) goes off at the hunter's current
+//  target, or at the hunter's feet without one. The marker is a 5-s
+//  periodic dummy aura (infinite). A trap goes off the way 900566's does
+//  (LaunchTrapEffect: a world trigger casts the trap's effect spell for
+//  the hunter, as a trap game object would), so 900573 (+50 % traps) and
+//  900575 (a trap may spawn another) see it like a placed trap.
+//  - Target: the selected enemy within 40 yd in line of sight. Without one
+//    the trap lands at the hunter's feet; Immolation and Freezing Trap,
+//    which hit one chosen enemy, then need an enemy within 8 yd (they are
+//    left out of the draw without one).
+//  - A hunter who knows no trap does nothing.
+// ============================================================
+class spell_custom_hunt_surv_auto_trap : public AuraScript
+{
+    PrepareAuraScript(spell_custom_hunt_surv_auto_trap);
+
+    void HandlePeriodic(AuraEffect const* aurEff)
+    {
+        Player* player = GetTarget() ? GetTarget()->ToPlayer() : nullptr;
+        if (!player || !g_CustomSpellsEnabled || !player->IsAlive()
+            || !player->IsInCombat() || !player->IsInWorld())
+            return;
+
+        Unit* target = ObjectAccessor::GetUnit(*player, player->GetTarget());
+        if (target && (!target->IsAlive() || !player->IsValidAttackTarget(target)
+            || !player->IsWithinDistInMap(target, TRAP_REACH)
+            || !player->IsWithinLOSInMap(target)))
+            target = nullptr;
+
+        // the enemy a single-target trap at the hunter's feet is cast at
+        Unit* nearby = target ? nullptr : NearestEnemy(player, TRAP_FEET_RADIUS);
+
+        std::vector<SpellInfo const*> draw;
+        for (TrapKind const& kind : TRAP_KINDS)
+        {
+            SpellInfo const* effect = sSpellMgr->GetSpellInfo(
+                KnownTrapEffect(player, kind));
+            if (!effect || (TrapNeedsUnitTarget(effect) && !target && !nearby))
+                continue;
+            draw.push_back(effect);
+        }
+        if (draw.empty())
+            return;
+
+        SpellInfo const* trap = draw[urand(0, uint32(draw.size() - 1))];
+        Unit* victim = target ? target
+            : (TrapNeedsUnitTarget(trap) ? nearby : nullptr);
+        WorldObject const* spot = target ? static_cast<WorldObject const*>(target)
+            : static_cast<WorldObject const*>(player);
+        LaunchTrapEffect(player, trap, victim, spot->GetPositionX(),
+            spot->GetPositionY(), spot->GetPositionZ(), aurEff);
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_hunt_surv_auto_trap::HandlePeriodic, EFFECT_0,
+            SPELL_AURA_PERIODIC_DUMMY);
+    }
+};
+
+// ============================================================
+//  HUNTER SURV: 900575 Trap Echo
+//  List line: "when a trap triggers, it has a 25% chance to spawn another
+//  trap". Proc passive on the trap activation event (spell_proc:
+//  PROC_FLAG_DONE_TRAP_ACTIVATION, finish phase = once per trap cast,
+//  25 %, PROC_ATTR_TRIGGERED_CAN_PROC: a trap's effect is a triggered
+//  cast). The core raises that event for the effect spells of Explosive,
+//  Immolation, Freezing, Frost and Snake Trap (Spell::Spell sets
+//  PROC_FLAG_DONE_TRAP_ACTIVATION, Spell::_handle_finish_phase fires it at
+//  the hunter), cast by the trap game object, by 900566 or by 900574
+//  alike. The proc sets the same trap effect off once more at the same
+//  spot, at the same victim. No endless chain: the second trap is
+//  triggered by this very aura (LaunchTrapEffect's triggeredBy), and the
+//  core never lets an aura proc from a spell it triggered itself
+//  (Aura::GetProcEffectMask), so an echo never echoes.
+// ============================================================
+class spell_custom_hunt_surv_trap_echo : public AuraScript
+{
+    PrepareAuraScript(spell_custom_hunt_surv_trap_echo);
+
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        SpellInfo const* trap = eventInfo.GetSpellInfo();
+        Spell const* cast = eventInfo.GetProcSpell();
+        return g_CustomSpellsEnabled && trap && cast && cast->GetCaster()
+            && IsTrapEffectSpell(trap->Id)
+            && eventInfo.GetTriggerAuraSpell() != GetSpellInfo();
+    }
+
+    void HandleProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Player* player = GetTarget() ? GetTarget()->ToPlayer() : nullptr;
+        Spell const* cast = eventInfo.GetProcSpell();
+        SpellInfo const* trap = eventInfo.GetSpellInfo();
+        if (!player || !cast || !trap || !cast->GetCaster()
+            || !cast->GetCaster()->IsInWorld())
+            return;
+
+        // the spot of the trap that just went off: its trigger (or the game
+        // object's trigger); read now, the trigger despawns soon
+        WorldObject const* source = cast->GetCaster();
+        float const x = source->GetPositionX();
+        float const y = source->GetPositionY();
+        float const z = source->GetPositionZ();
+
+        // the unit that set it off; a ground trap that was cast at its own
+        // trigger has none
+        Unit* victim = eventInfo.GetActionTarget();
+        if (victim && (victim->GetGUID() == source->GetGUID() || !victim->IsAlive()
+            || (victim->ToCreature() && victim->ToCreature()->IsTrigger())))
+            victim = nullptr;
+        if (!victim && TrapNeedsUnitTarget(trap))
+            return;
+
+        LaunchTrapEffect(player, trap, victim, x, y, z, aurEff);
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_hunt_surv_trap_echo::CheckProc);
+        OnEffectProc += AuraEffectProcFn(spell_custom_hunt_surv_trap_echo::HandleProc,
             EFFECT_0, SPELL_AURA_DUMMY);
     }
 };
@@ -686,5 +924,7 @@ void AddHunterSpellsScripts()
 
     // Hunter Surv
     RegisterSpellScript(spell_custom_hunt_surv_trap_proc);
+    RegisterSpellScript(spell_custom_hunt_surv_auto_trap);
+    RegisterSpellScript(spell_custom_hunt_surv_trap_echo);
     RegisterSpellScript(spell_custom_hunt_surv_blade_and_shot);
 }

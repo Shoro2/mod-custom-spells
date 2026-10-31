@@ -1,0 +1,236 @@
+# mod-custom-spells: the Mage lines of the third concept list
+# (operator 2026-10-31; share-public
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 2 = procs and
+# stacking buffs (900720 Blink: Mirror Image, 900721 Mirror Images: Strength in
+# Numbers with its aura 900722, 900744 Dragon's Breath: Living Bomb, 900745
+# Molten Armor: Flamestrike, 900775 Ice Block: Ice Lance Barrage, 900776 Ice
+# Block: Detonation with the helpers 900777 / 900778). Every check states the
+# list's line, so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. Slot 4
+# belongs to the cs_* scenarios; the cleanup unlearns every custom spell again.
+# Spells: Blink 1953 (a 20-yd leap forward), Mirror Image 55342 (3 images, NPC
+# 31216, about 30 s), Dragon's Breath 42950 (rank 6, a cone in front), Living
+# Bomb 55360 (rank 3, talent), Molten Armor 43046 (rank 3), Arcane Explosion
+# 42921 (22 % of 3268 base mana = 718, 8 yd round the mage: the ring's every
+# dummy), Flamestrike 42926 (rank 9), Ice Block 45438, Ice Lance 42914 (rank 3).
+name    Custom spells - Mage third list
+timeout 300s
+
+bot ma mage slot=4
+
+place 13 -279 150 -423.2 0
+require ma alive
+pick d1 creature:920018 near ma
+require d1 exists
+do gm target ma
+as gm .unlearn 900700
+as gm .unlearn 900709
+as gm .unlearn 900713
+as gm .unlearn 900714
+as gm .unlearn 900715
+as gm .unlearn 900716
+as gm .unlearn 900720
+as gm .unlearn 900721
+as gm .unlearn 900744
+as gm .unlearn 900745
+as gm .unlearn 900775
+as gm .unlearn 900776
+as gm .unlearn 901101
+as gm .unlearn 901102
+as gm .unlearn 901103
+as gm .unlearn 901104
+as gm .unlearn 901111
+as gm .unaura 43046
+as gm .unaura 45438
+do ma learn 1953
+do ma learn 55342
+do ma learn 42950
+do ma learn 55360
+do ma learn 43046
+do ma learn 42921
+do ma learn 42926
+do ma learn 45438
+do ma learn 42914
+as gm .aura 59756
+waitfor ma aura 59756 timeout 2s
+
+# ---------------------------------------------------------------- Arcane
+log Arcane - control for 900720: a Blink without the passive spawns no Mirror Image
+do ma reset
+do ma cast 1953 triggered
+wait 1500ms
+expect ma minions 31216 == 0
+
+log Arcane - 900720 "blinking spawns a mirror image for 20seconds on the target location": one Mirror Image (31216) of the mage appears with the Blink and is gone 20 s later
+do ma learn 900720
+do ma goto -279 150 -423.2
+wait 500ms
+do ma reset
+do ma cast 1953 triggered
+waitfor ma minions 31216 >= 1 timeout 3s
+wait 500ms
+expect ma minions 31216 == 1
+wait 17s
+expect ma minions 31216 == 1
+wait 4s
+expect ma minions 31216 == 0
+as gm .unlearn 900720
+
+log Arcane - control for 900721: Mirror Image (3 images) without the passive - the images carry no Strength in Numbers (900722)
+do ma goto -279 150 -423.2
+wait 500ms
+do ma reset
+do ma cast 55342 triggered
+waitfor ma minions 31216 >= 3 timeout 3s
+wait 1s
+pick img creature:31216 near ma
+require img exists
+expect img noaura 900722
+
+log Arcane - 900721 "mirror images damage is increased by 5% for each mirror image alive": with the passive each of the 3 images carries Strength in Numbers (900722, +5 % damage done per stack) with 3 stacks
+do ma learn 900721
+wait 1s
+expect img aurastacks 900722 == 3
+
+log Arcane - 900721 without the passive the aura goes again
+as gm .unlearn 900721
+wait 1s
+expect img noaura 900722
+
+# ---------------------------------------------------------------- Fire
+log Fire - control for 900744: Dragon's Breath (a cone in front of the mage, standing next to d1 facing it) hits d1 and puts no Living Bomb on anybody without the passive
+do ma approach d1 3
+wait 500ms
+do ma reset
+spelllog start
+do ma cast 42950 triggered
+wait 1500ms
+spelllog stop
+expect ma spell 42950 casts >= 1
+expect ma spell 55360 casts == 0
+
+log Fire - 900744 "enemies hit by dragon breath also receive living bomb": with the passive every enemy the breath hits also gets the mage's highest Living Bomb (55360)
+do ma learn 900744
+do ma reset
+spelllog start
+do ma cast 42950 triggered
+wait 1500ms
+spelllog stop
+expect ma spell 42950 casts >= 1
+expect ma spell 55360 casts >= 1
+expect d1 aura 55360
+as gm .unlearn 900744
+
+log Fire - 900745 "molten armor has a 5% chance on damage to cast a free flamestrike on the target": Molten Armor up, 20 Arcane Explosions on the ring (8 dummies each, 1 s cooldown on the proc: about 30 % per explosion; P(none) below 0.1 %) - the free Flamestrike (42926) is cast by the proc, the mage never casts it itself
+do ma goto -270 150 -423.2
+wait 500ms
+do ma learn 900745
+do ma cast 43046 triggered
+waitfor ma aura 43046 timeout 2s
+do ma reset
+spelllog start
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma reset
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma reset
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma reset
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+do ma cast 42921
+wait 1700ms
+spelllog stop
+expect ma spell 42921 casts >= 18
+expect ma spell 42926 casts >= 1
+as gm .unlearn 900745
+as gm .unaura 43046
+
+# ---------------------------------------------------------------- Frost
+log Frost - control for 900775 / 900776: Ice Block (45438) without the passives fires no Ice Lance and detonates nothing (ring's middle, 3 s, then the block is taken off)
+do ma goto -270 150 -423.2
+wait 500ms
+do ma reset
+spelllog start
+do ma cast 45438 triggered
+waitfor ma aura 45438 timeout 2s
+wait 3s
+as gm .unaura 45438
+waitfor ma noaura 45438 timeout 2s
+wait 500ms
+spelllog stop
+expect ma spell 42914 casts == 0
+expect ma spell 900778 casts == 0
+
+log Frost - 900775 "while in iceblock you auto fire an ice lance to every enemy in 25y range every 0.5 sec": the ticker 900777 lives with the block, about 6 ticks in 3.2 s each throw an Ice Lance (42914) at the 8 dummies (hit rolls decide how many land: 24 casts at least)
+do ma learn 900775
+do ma reset
+spelllog start
+do ma cast 45438 triggered
+waitfor ma aura 45438 timeout 2s
+wait 500ms
+expect ma aura 900777
+wait 2700ms
+spelllog stop
+expect ma spell 42914 casts >= 24
+expect ma spell 42914 targets >= 7
+
+log Frost - 900776 "when iceblock end it detonates and deal aoe damage dependend on paragon level": taking the block off ends the ticker and detonates 900778 (Frost, 666 + 5 x the Paragon level) on the 8 dummies once
+do ma learn 900776
+spelllog start
+as gm .unaura 45438
+waitfor ma noaura 45438 timeout 2s
+wait 1s
+spelllog stop
+expect ma noaura 900777
+expect ma spell 900778 casts == 1
+expect ma spell 900778 targets >= 7
+as gm .unlearn 900775
+as gm .unlearn 900776
+
+cleanup
+do ma stop
+do gm target ma
+as gm .unaura 43046
+as gm .unaura 45438
+as gm .unaura 59756
+as gm .unaura 900722
+as gm .unlearn 900720
+as gm .unlearn 900721
+as gm .unlearn 900744
+as gm .unlearn 900745
+as gm .unlearn 900775
+as gm .unlearn 900776

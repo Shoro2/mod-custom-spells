@@ -618,6 +618,54 @@ class spell_custom_bal_lunar_frenzy_volley : public AuraScript
 };
 
 // ============================================================
+//  DRUID BALANCE: 901008 Wrath: Starfire Surge
+//  List line: "casting wrath increases your next starfire damage by 10%,
+//  stacks 10 times".
+//  - Every Wrath (all ranks, -5176) a marked druid casts adds a stack of
+//    901009: a spell modifier of +10 % damage per stack on Starfire
+//    (family 7, flags0 0x4), 10 stacks, 30 s, renewed by every stack.
+//  - The next Starfire (all ranks, -2912) uses the stacks up: its damage
+//    is computed at launch, inside the cast, so the stacks are removed in
+//    AfterCast (Running Aim 900540 works the same way).
+// ============================================================
+class spell_custom_bal_wrath_stack : public SpellScript
+{
+    PrepareSpellScript(spell_custom_bal_wrath_stack);
+
+    void HandleAfterCast()
+    {
+        Player* druid = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!druid || !druid->IsAlive() || !g_CustomSpellsEnabled
+            || !druid->HasAura(SPELL_BAL_WRATH_SURGE_PASSIVE))
+            return;
+
+        druid->CastSpell(druid, SPELL_BAL_WRATH_SURGE_BUFF, true);
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_bal_wrath_stack::HandleAfterCast);
+    }
+};
+
+class spell_custom_bal_starfire_consume : public SpellScript
+{
+    PrepareSpellScript(spell_custom_bal_starfire_consume);
+
+    void HandleAfterCast()
+    {
+        Unit* druid = GetCaster();
+        if (druid && druid->HasAura(SPELL_BAL_WRATH_SURGE_BUFF))
+            druid->RemoveAurasDueToSpell(SPELL_BAL_WRATH_SURGE_BUFF);
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_bal_starfire_consume::HandleAfterCast);
+    }
+};
+
+// ============================================================
 //  DRUID FERAL TANK: 901036 Swipe (Bear) +50 % is DBC only.
 // ============================================================
 
@@ -816,6 +864,8 @@ void AddDruidSpellsScripts()
     RegisterSpellScript(spell_custom_bal_starfall_stack_volley);
     RegisterSpellScript(spell_custom_bal_lunar_frenzy);
     RegisterSpellScript(spell_custom_bal_lunar_frenzy_volley);
+    RegisterSpellScript(spell_custom_bal_wrath_stack);
+    RegisterSpellScript(spell_custom_bal_starfire_consume);
 
     // Druid Feral
     RegisterSpellScript(spell_custom_feral_bear_swipe_bleed);

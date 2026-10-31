@@ -248,6 +248,8 @@ enum CustomSpellIds
     // ---- Hunter Surv (900566-900599) ----
     SPELL_HUNT_SURV_TRAP_PROC_PASSIVE   = 900566,
     SPELL_SURV_TRAP_DMG_PASSIVE         = 900573, // third list 2026-10-31, DBC only
+    SPELL_SURV_AUTO_TRAP_PASSIVE        = 900574, // third list wave 2: a random trap every 5 s in combat
+    SPELL_SURV_TRAP_ECHO_PASSIVE        = 900575, // third list wave 2: 25 % for a second trap
 
     // ---- Rogue Assa (900600-900632) ----
     SPELL_ROG_ASSA_ENERGY_REGEN         = 900600,
@@ -255,6 +257,7 @@ enum CustomSpellIds
     SPELL_ROG_ASSA_POISON_DMG_PASSIVE   = 900602,
     SPELL_ROG_ASSA_POISON_NOVA_PASSIVE  = 900603,
     SPELL_ROG_ASSA_POISON_NOVA_HELPER   = 900604,
+    SPELL_ROG_ASSA_HFB_JUMP_PASSIVE     = 900606, // third list wave 2: bleeds and poisons jump on a kill
 
     // ---- Rogue Combat (900633-900665) ----
     SPELL_ROG_COMBAT_SS_DMG_PASSIVE     = 900633,
@@ -263,6 +266,9 @@ enum CustomSpellIds
     SPELL_ROG_COMBAT_BF_TARGETS_PASSIVE = 900636,
     SPELL_ROG_COMBAT_ENERGY_REGEN       = 900637,
     SPELL_ROG_COMBAT_SS_AOE_HELPER      = 900638,
+    SPELL_ROG_COMBAT_FAN_BLEED_PASSIVE  = 900643, // third list wave 2
+    SPELL_ROG_COMBAT_FAN_BLEED_MAIN     = 900644, // the bleed of the main-hand Fan of Knives hit
+    SPELL_ROG_COMBAT_FAN_BLEED_OFF      = 900645, // the bleed of the off-hand hit
 
     // ---- Rogue Sub (900666-900699) ----
     SPELL_ROG_SUB_ENERGY_REGEN          = 900666,
@@ -291,6 +297,9 @@ enum CustomSpellIds
     SPELL_MAGE_ARC_MIRROR_SPLASH_FROST = 900717,
     SPELL_MAGE_ARC_OVERFLOW_EXPLOSION  = 900718,
     SPELL_MAGE_ARC_MIRROR_SPLASH_FIRE  = 900719,
+    SPELL_MAGE_ARC_BLINK_IMAGE_PASSIVE = 900720, // third list wave 2: a Mirror Image where you arrive
+    SPELL_MAGE_ARC_IMAGE_POWER_PASSIVE = 900721, // third list wave 2: +5 % image damage per image
+    SPELL_MAGE_ARC_IMAGE_POWER_AURA    = 900722, // on each image, stacks = images alive
 
     // ---- Mage Fire (900733-900765) ----
     SPELL_MAGE_FIRE_FB_DMG_PASSIVE     = 900733,
@@ -304,6 +313,8 @@ enum CustomSpellIds
     SPELL_MAGE_FIRE_METEOR             = 900741, // active (picker)
     SPELL_MAGE_FIRE_METEOR_IMPACT      = 900742,
     SPELL_MAGE_FIRE_METEOR_BURN        = 900743,
+    SPELL_MAGE_FIRE_DB_BOMB_PASSIVE    = 900744, // third list wave 2: Dragon's Breath applies Living Bomb
+    SPELL_MAGE_FIRE_MOLTEN_STRIKE_PASSIVE = 900745, // third list wave 2: Molten Armor, 5 % Flamestrike
 
     // ---- Mage Frost (900766-900799) ----
     SPELL_MAGE_FROST_FB_DMG_PASSIVE    = 900766,
@@ -315,6 +326,10 @@ enum CustomSpellIds
     SPELL_MAGE_FROST_FB_AOE_HELPER     = 900772,
     SPELL_MAGE_FROST_IL_AOE_HELPER     = 900773,
     SPELL_MAGE_FROST_COMET_HELPER      = 900774,
+    SPELL_MAGE_FROST_BLOCK_LANCES_PASSIVE = 900775, // third list wave 2: Ice Lances while in Ice Block
+    SPELL_MAGE_FROST_BLOCK_BURST_PASSIVE  = 900776, // third list wave 2: Ice Block detonates
+    SPELL_MAGE_FROST_BLOCK_TICK        = 900777, // helper: the 0.5-s ticker, lives with Ice Block
+    SPELL_MAGE_FROST_BLOCK_BURST       = 900778, // helper: the detonation
 
     // ---- Warlock Affliction (900800-900832) ----
     SPELL_WLK_AFFL_DOT_AOE_PASSIVE     = 900800,
@@ -376,6 +391,8 @@ enum CustomSpellIds
     SPELL_BAL_SF_DMG_PASSIVE            = 901003,
     SPELL_BAL_SF_CD_REDUCE_PASSIVE      = 901004,
     SPELL_BAL_SF_STACKS_PASSIVE         = 901005,
+    SPELL_BAL_WRATH_SURGE_PASSIVE       = 901008, // third list wave 2: Wrath builds up Starfire
+    SPELL_BAL_WRATH_SURGE_BUFF          = 901009, // +10 % Starfire damage per stack, 10 stacks
 
     // ---- Druid Feral Tank (901033-901048) ----
     SPELL_FERAL_BEAR_SWIPE_BLEED        = 901033,
@@ -475,6 +492,9 @@ constexpr uint32 SPELL_HEMORRHAGE_R4       = 48660;  // Hemorrhage highest rank
 constexpr uint32 SPELL_BLADE_FLURRY        = 13877;  // Blade Flurry
 constexpr uint32 BLADE_FLURRY_EXTRA_TARGETS = 8;     // +9 with the core's own
 constexpr uint32 SPELLFAMILY_ROGUE_ID      = 8;
+constexpr uint32 SPELL_ROGUE_HUNGER_FOR_BLOOD_AURA = 63848; // the self buff (the cast, 51662, has no aura)
+constexpr uint32 SPELL_ROGUE_FAN_OF_KNIVES_MAIN    = 51723; // main-hand Fan of Knives hit
+constexpr uint32 SPELL_ROGUE_FAN_OF_KNIVES_OFF     = 52874; // off-hand hit, linked to the main one
 // Mutilate SpellFamilyFlags[1] = 0x200000 (verify!)
 // Sinister Strike SpellFamilyFlags[0] = 0x2 (verify!)
 // Hemorrhage SpellFamilyFlags[0] = 0x2000000 (verify!)
@@ -558,6 +578,14 @@ constexpr uint32 SPELL_EVOCATION               = 12051;  // Evocation
 constexpr uint32 SPELL_MANA_SHIELD_R9          = 43020;  // Mana Shield highest rank
 constexpr uint32 SPELL_BLINK                   = 1953;   // Blink
 constexpr uint32 SPELLFAMILY_MAGE_ID           = 3;
+constexpr uint32 SPELL_MAGE_LIVING_BOMB_R1     = 44457;  // first rank of the chain (3 ranks)
+constexpr uint32 SPELL_MAGE_FLAMESTRIKE_R1     = 2120;   // first rank of the chain (9 ranks)
+constexpr uint32 SPELL_MAGE_ICE_LANCE_R1       = 30455;  // first rank of the chain (3 ranks)
+constexpr uint32 SPELL_MAGE_ICE_BLOCK          = 45438;
+constexpr uint32 SPELL_MAGE_MOLTEN_ARMOR_R1    = 30482;  // Molten Armor ranks 1-3
+constexpr uint32 SPELL_MAGE_MOLTEN_ARMOR_R2    = 43045;
+constexpr uint32 SPELL_MAGE_MOLTEN_ARMOR_R3    = 43046;
+constexpr uint32 SUMMON_PROPERTIES_MIRROR_IMAGE = 1021;  // the Mirror Image spells' summon properties
 constexpr uint32 SPELL_MAGE_MIRROR_IMAGE_ONE   = 58831;  // summons one image (31216)
 constexpr uint32 SPELL_MIRROR_IMAGE_FROSTBOLT  = 59638;
 constexpr uint32 SPELL_MIRROR_IMAGE_FIRE_BLAST = 59637;

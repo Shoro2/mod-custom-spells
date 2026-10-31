@@ -1,14 +1,16 @@
 # mod-custom-spells: the Druid lines of the third concept list
 # (operator 2026-10-31; share-public
 # custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
-# spell modifiers. Every check states the list's line, so a FAIL marks a
+# spell modifiers, wave 2 = procs and stacking buffs (901008 Wrath: Starfire
+# Surge, buff 901009). Every check states the list's line, so a FAIL marks a
 # defect.
 # Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
 # (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
 # bot stands west of the ring facing it.
 # Spells: Dire Bear Form 9634, Maul 48480 (rank 10), Cat Form 768, Claw
 # 48570 (rank 8), Shred 48572 (rank 9; from behind, Frontal Assault 901053
-# lifts that).
+# lifts that). Wave 2: Wrath 48461 (rank 12), Starfire 48465 (rank 10), cast
+# triggered from the west of d1 (no cast time, no mana).
 name    Custom spells - Druid third list
 timeout 300s
 
@@ -65,6 +67,52 @@ do dr learn 901060
 expect dr spellmod 48572 damage 100 == 150
 expect dr spellmod 48572 jumptargets 0 == 10
 
+# ---------------------------------------------------------------- wave 2
+log Balance - 901008 "casting wrath increases your next starfire damage by 10%, stacks 10 times": out of Cat Form, Wrath and Starfire known; without the passive Wrath adds nothing
+as gm .unaura 768
+as gm .unlearn 901008
+do dr learn 48461
+do dr learn 48465
+do dr approach d1 15
+wait 500ms
+do dr cast 48461 on d1 triggered
+wait 300ms
+expect dr noaura 901009
+expect dr spellmod 48465 damage 100 == 100
+
+log Balance - 901008 each Wrath adds a stack of Wrath Surge (901009): +10 % Starfire damage per stack (3 Wraths: 130)
+do dr learn 901008
+do dr cast 48461 on d1 triggered
+do dr cast 48461 on d1 triggered
+do dr cast 48461 on d1 triggered
+wait 300ms
+expect dr aurastacks 901009 == 3
+expect dr spellmod 48465 damage 100 == 130
+expect dr spellmod 48461 damage 100 == 100
+
+log Balance - 901008 the stacks go up to 10 (+100 %), an 11th Wrath adds nothing
+do dr cast 48461 on d1 triggered
+do dr cast 48461 on d1 triggered
+do dr cast 48461 on d1 triggered
+do dr cast 48461 on d1 triggered
+do dr cast 48461 on d1 triggered
+do dr cast 48461 on d1 triggered
+do dr cast 48461 on d1 triggered
+do dr cast 48461 on d1 triggered
+wait 300ms
+expect dr aurastacks 901009 == 10
+expect dr spellmod 48465 damage 100 == 200
+
+log Balance - 901008 the next Starfire uses the stacks up (its damage is computed first, at launch)
+spelllog start
+do dr cast 48465 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dr spell 48465 casts == 1
+expect dr noaura 901009
+expect dr spellmod 48465 damage 100 == 100
+as gm .unlearn 901008
+
 cleanup
 do dr stop
 do gm target dr
@@ -77,3 +125,5 @@ as gm .unlearn 901057
 as gm .unlearn 901058
 as gm .unlearn 901059
 as gm .unlearn 901060
+as gm .unlearn 901008
+as gm .unaura 901009
