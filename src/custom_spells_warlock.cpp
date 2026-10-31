@@ -18,6 +18,7 @@
 #include "custom_spells_common.h"
 #include "Containers.h"
 #include "DynamicObject.h"
+#include "Pet.h"
 
 // ============================================================
 //  Concept revision of 2026-10-08 (share-public custom-spells/09):
@@ -1093,6 +1094,292 @@ class spell_custom_wlk_rof_ticker : public AuraScript
 // ============================================================
 
 // ============================================================
+//  THIRD CONCEPT LIST, WAVE 2 (2026-10-31): procs and stacking buffs
+//  Plan: share-public custom-spells/records/2026-10-31-third-concept-list.md
+// ============================================================
+namespace
+{
+    constexpr float WLK_DEMON_CHARGE_RADIUS   = 10.0f;
+    constexpr uint32 SPELL_WLK_DEMON_CHARGE_ID = 54785; // Demon Charge (Metamorphosis)
+
+    // "if you hit a target affected by shadow immolate": Shadow Immolate is
+    // wave 3 and does not exist yet, so for now the warlock's own Immolate
+    // stands in for it. Wave 3 switches THIS function (and nothing else) to
+    // the Shadow Immolate aura - the Incinerate hook below only asks it.
+    bool HasShadowImmolate(Unit* target, Unit* warlock)
+    {
+        return target && warlock
+            && target->GetAuraEffect(SPELL_AURA_PERIODIC_DAMAGE,
+                SPELLFAMILY_WARLOCK, SPELLFAMILYFLAG_WARLOCK_IMMOLATE, 0, 0,
+                warlock->GetGUID()) != nullptr;
+    }
+
+    // One stack on a buff of the warlock: a new aura at 1, else +1 (a stack
+    // at the cap only refreshes the duration).
+    void AddBuffStack(Unit* unit, uint32 buffId)
+    {
+        if (Aura* buff = unit->GetAura(buffId))
+            buff->ModStackAmount(1);
+        else
+            unit->AddAura(buffId, unit);
+    }
+
+    // The warlock's Felhunters, living: the pet and the second demon
+    // (a guardian of the same entry).
+    void CollectFelhunters(Player* warlock, std::vector<Unit*>& felhunters)
+    {
+        for (Unit* controlled : warlock->m_Controlled)
+            if (controlled && controlled->IsInWorld() && controlled->IsAlive()
+                && controlled->GetEntry() == NPC_FELHUNTER)
+                felhunters.push_back(controlled);
+
+        if (Pet* pet = warlock->GetPet())
+            if (pet->IsInWorld() && pet->IsAlive()
+                && pet->GetEntry() == NPC_FELHUNTER
+                && std::find(felhunters.begin(), felhunters.end(), pet)
+                    == felhunters.end())
+                felhunters.push_back(pet);
+    }
+}
+
+// ============================================================
+//  900809 / 900810 Life Tap: Dark Tithe (Affliction)
+//  List: "casting lifetap also increases the damage of your next dot by
+//  10%, stacks 5 times. last 30sec".
+//  Life Tap (-1454, every rank) adds a stack of 900810 (aura 108,
+//  SPELLMOD_DOT +10 % on Corruption flags0 0x2, Curse of Agony 0x400,
+//  Immolate 0x4, Unstable Affliction flags1 0x100 and Seed of Corruption
+//  flags1 0x10; 5 stacks, 30 s). The next cast of one of those DoTs (the
+//  same five chains, spell_custom_wlk_lifetap_dot) takes the bonus - the
+//  core snapshots a DoT's damage when its aura is created - and uses
+//  every stack up. An instant or timed DoT spends them after its cast
+//  (its aura exists by then); Seed of Corruption flies for a moment, so
+//  it spends them when it lands. A triggered DoT (a spread copy) spends
+//  nothing: only the warlock's own cast is "the next dot".
+// ============================================================
+class spell_custom_wlk_lifetap_tithe : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_lifetap_tithe);
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!player || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_WLK_AFFL_LIFETAP_PASSIVE))
+            return;
+
+        AddBuffStack(player, SPELL_WLK_AFFL_LIFETAP_BUFF);
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_wlk_lifetap_tithe::HandleAfterCast);
+    }
+};
+
+class spell_custom_wlk_lifetap_dot : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_lifetap_dot);
+
+    void Spend()
+    {
+        Unit* caster = GetCaster();
+        if (!caster || !g_CustomSpellsEnabled || GetSpell()->IsTriggered())
+            return;
+
+        if (caster->HasAura(SPELL_WLK_AFFL_LIFETAP_BUFF))
+            caster->RemoveAurasDueToSpell(SPELL_WLK_AFFL_LIFETAP_BUFF);
+    }
+
+    // no flight time: the aura exists when the cast ends
+    void HandleAfterCast()
+    {
+        if (GetSpellInfo()->Speed <= 0.0f)
+            Spend();
+    }
+
+    // flight time (Seed of Corruption): the aura is made on impact
+    void HandleAfterHit()
+    {
+        if (GetSpellInfo()->Speed > 0.0f)
+            Spend();
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_wlk_lifetap_dot::HandleAfterCast);
+        AfterHit += SpellHitFn(spell_custom_wlk_lifetap_dot::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  900855 / 900856 Felhunter: Spell Shackles (Demonology)
+//  List: "felhunter: aura that increases cast time of enemies by 25% in
+//  40y range" - operator answer 3 = both: 900852 (area Spell Lock and
+//  Devour Magic) stays, this is a second passive.
+//  The passive's 1-s pulse puts 900856 on every Felhunter of the warlock
+//  (the pet and the second demon): an area aura (effect 129, enemies
+//  within 40 yd of the Felhunter, aura 65 casting speed -25 %, that is
+//  cast times x1.25 through the unit's cast-speed field, creatures
+//  included). It leaves with the Felhunter, and with the passive.
+// ============================================================
+class spell_custom_wlk_felhunter_slow : public AuraScript
+{
+    PrepareAuraScript(spell_custom_wlk_felhunter_slow);
+
+    void HandlePeriodic(AuraEffect const* /*aurEff*/)
+    {
+        Player* warlock = GetTarget()->ToPlayer();
+        if (!warlock || !warlock->IsAlive() || !g_CustomSpellsEnabled)
+            return;
+
+        std::vector<Unit*> felhunters;
+        CollectFelhunters(warlock, felhunters);
+        for (Unit* felhunter : felhunters)
+            if (!felhunter->HasAura(SPELL_WLK_DEMO_FELHUNTER_SLOW_AURA))
+                felhunter->AddAura(SPELL_WLK_DEMO_FELHUNTER_SLOW_AURA, felhunter);
+    }
+
+    void HandleRemove(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        Player* warlock = GetTarget()->ToPlayer();
+        if (!warlock)
+            return;
+
+        std::vector<Unit*> felhunters;
+        CollectFelhunters(warlock, felhunters);
+        for (Unit* felhunter : felhunters)
+            felhunter->RemoveAurasDueToSpell(SPELL_WLK_DEMO_FELHUNTER_SLOW_AURA);
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_wlk_felhunter_slow::HandlePeriodic, EFFECT_0,
+            SPELL_AURA_PERIODIC_DUMMY);
+        AfterEffectRemove += AuraEffectRemoveFn(
+            spell_custom_wlk_felhunter_slow::HandleRemove, EFFECT_0,
+            SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+// ============================================================
+//  900857 Demon Charge: Shockwave (Demonology)
+//  List: "demon charge now stun all enemies within 10y of the target and
+//  deal fire damage based on paragon level. if it kills an enemie,
+//  colldown is reset".
+//  After Demon Charge (54785, the Metamorphosis ability) hits its target:
+//  every enemy within 10 yd of the target takes 666 + 5 x the warlock's
+//  Paragon level Fire damage (helper 900860, one cast per enemy) and every
+//  enemy but the target is stunned for 3 s (900859: the target already
+//  gets the stock 3-s stun 60995, a second one would only hit its
+//  diminishing return). If the damage kills any of them, Demon Charge's
+//  cooldown is reset (at once: the cooldown starts before the hit).
+// ============================================================
+class spell_custom_wlk_demon_charge : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_demon_charge);
+
+    void HandleAfterHit()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* target = GetHitUnit();
+        if (!player || !target || _done || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_WLK_DEMO_CHARGE_PASSIVE))
+            return;
+        _done = true;
+
+        std::list<Unit*> enemies;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(target, player,
+            WLK_DEMON_CHARGE_RADIUS);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(target, enemies, check);
+        Cell::VisitObjects(target, searcher, WLK_DEMON_CHARGE_RADIUS);
+        if (std::find(enemies.begin(), enemies.end(), target) == enemies.end())
+            enemies.push_back(target);
+
+        int32 const damage = ParagonDamage(player);
+        bool killed = false;
+        for (Unit* enemy : enemies)
+        {
+            if (!enemy->IsAlive() || !player->IsValidAttackTarget(enemy))
+                continue;
+
+            if (enemy != target)
+                player->CastSpell(enemy, SPELL_WLK_DEMO_CHARGE_STUN, true);
+
+            int32 points = damage;
+            player->CastCustomSpell(enemy, SPELL_WLK_DEMO_CHARGE_DAMAGE,
+                &points, nullptr, nullptr, true);
+            if (!enemy->IsAlive())
+                killed = true;
+        }
+
+        if (killed)
+            player->RemoveSpellCooldown(SPELL_WLK_DEMON_CHARGE_ID, true);
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_wlk_demon_charge::HandleAfterHit);
+    }
+
+private:
+    bool _done = false;   // one burst per cast
+};
+
+// ============================================================
+//  900881 / 900882 Incinerate: Stoked Soul Fire (Destruction)
+//  List: "if you hit a target affected by shadow immolate with your
+//  incenerate, your next soulfire does +50% damage, stacks 10 times".
+//  Every Incinerate hit (-29722, every rank) on a target that carries the
+//  warlock's Shadow Immolate adds a stack of 900882 (aura 108 +50 %
+//  Soul Fire damage on flags1 0x80, 10 stacks, 30 s). Shadow Immolate is
+//  wave 3: for now HasShadowImmolate() above reads the warlock's Immolate.
+//  The next Soul Fire (-6353) uses every stack up; its damage is fixed at
+//  launch, before the cast ends, so the buff may go right after the cast.
+// ============================================================
+class spell_custom_wlk_incinerate_stoke : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_incinerate_stoke);
+
+    void HandleAfterHit()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* target = GetHitUnit();
+        if (!player || !target || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_WLK_DEST_SOULFIRE_PASSIVE)
+            || !HasShadowImmolate(target, player))
+            return;
+
+        AddBuffStack(player, SPELL_WLK_DEST_SOULFIRE_BUFF);
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_wlk_incinerate_stoke::HandleAfterHit);
+    }
+};
+
+class spell_custom_wlk_soulfire_spend : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_soulfire_spend);
+
+    void HandleAfterCast()
+    {
+        Unit* caster = GetCaster();
+        if (caster && caster->HasAura(SPELL_WLK_DEST_SOULFIRE_BUFF))
+            caster->RemoveAurasDueToSpell(SPELL_WLK_DEST_SOULFIRE_BUFF);
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_wlk_soulfire_spend::HandleAfterCast);
+    }
+};
+
+// ============================================================
 //  WARLOCK PET AURAS (900836, 900839; 2026-10-08: 900834's +100 %
 //  in Metamorphosis, 900846 Imp casting speed, 900848 Voidwalker):
 //  minion auras kept by custom_minion_aura_playerscript
@@ -1106,6 +1393,8 @@ void AddWarlockSpellsScripts()
     RegisterSpellScript(spell_custom_wlk_dot_aoe);
     RegisterSpellScript(spell_custom_wlk_dot_spread);
     RegisterSpellScript(spell_custom_wlk_withering_harvest);
+    RegisterSpellScript(spell_custom_wlk_lifetap_tithe);
+    RegisterSpellScript(spell_custom_wlk_lifetap_dot);
 
     // Warlock Demonology
     new custom_wlk_meta_kill_extend_playerscript();
@@ -1118,10 +1407,14 @@ void AddWarlockSpellsScripts()
     RegisterSpellScript(spell_custom_wlk_fg_unlim);
     RegisterSpellScript(spell_custom_wlk_shadow_cleave);
     RegisterSpellScript(spell_custom_wlk_sacrifice_all);
+    RegisterSpellScript(spell_custom_wlk_felhunter_slow);
+    RegisterSpellScript(spell_custom_wlk_demon_charge);
 
     // Warlock Destruction (900866-900870 are pure spell data)
     RegisterSpellScript(spell_custom_wlk_hellfire_mobile);
     RegisterSpellScript(spell_custom_wlk_hellfire_ticker);
     RegisterSpellScript(spell_custom_wlk_rof_around);
     RegisterSpellScript(spell_custom_wlk_rof_ticker);
+    RegisterSpellScript(spell_custom_wlk_incinerate_stoke);
+    RegisterSpellScript(spell_custom_wlk_soulfire_spend);
 }

@@ -732,6 +732,22 @@
    "icon_spell": 53007
   },
   {
+   "id": 900908,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Mana Burn: Burnt Reserve",
+   "description": "The mana your Mana Burn burns becomes a Holy absorb shield of that size on you and on every party or raid member within 30 yards of you, for 15 sec.",
+   "icon_spell": 8129
+  },
+  {
+   "id": 900910,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Inner Fire: Fifty Stacks",
+   "description": "Your Inner Fire has 50 charges instead of 20 and no longer loses them when you are hit. It loses 1 charge for every spell you cast, and each charge increases your healing done by 1%.",
+   "icon_spell": 48168
+  },
+  {
    "id": 900933,
    "class": "Priest",
    "spec": "Holy",
@@ -796,6 +812,30 @@
    "icon_spell": 48078
   },
   {
+   "id": 900945,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Prayer of Mending: +50% Healing",
+   "description": "Increases the healing of your Prayer of Mending by 50%.",
+   "icon_spell": 48113
+  },
+  {
+   "id": 900946,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Prayer of Mending: Second Jump",
+   "description": "When your Prayer of Mending jumps, it also jumps to a second ally within range who does not carry it yet.",
+   "icon_spell": 48113
+  },
+  {
+   "id": 900947,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Divine Hymn: Waves of Light",
+   "description": "Each tick of your Divine Hymn also sends out a wave of light that deals 666 Holy damage plus 5 per Paragon level to every enemy in combat within 40 yards of you.",
+   "icon_spell": 64843
+  },
+  {
    "id": 900966,
    "class": "Priest",
    "spec": "Shadow",
@@ -857,6 +897,22 @@
    "spec": "Shadow",
    "name": "Mind Sear: +50% Damage",
    "description": "Increases the damage of your Mind Sear by 50%.",
+   "icon_spell": 53023
+  },
+  {
+   "id": 900978,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Mind Flay: Quickened Flay",
+   "description": "Each Mind Flay you finish makes your Mind Flays within the next 10 sec deal 25% more damage and channel 25% faster, stacking up to 2 times.",
+   "icon_spell": 48156
+  },
+  {
+   "id": 900980,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Mind Sear: Three More",
+   "description": "Each tick of your Mind Sear also bursts around up to 3 other enemies within 15 yards of its target, as if three more Mind Sears were cast.",
    "icon_spell": 53023
   },
   {
@@ -1540,6 +1596,14 @@
    "icon_spell": 47857
   },
   {
+   "id": 900809,
+   "class": "Warlock",
+   "spec": "Affliction",
+   "name": "Life Tap: Dark Tithe",
+   "description": "Each Life Tap adds a stack of Dark Tithe for 30 sec, up to 5. Your next Corruption, Curse of Agony, Immolate, Unstable Affliction or Seed of Corruption deals 10% more damage per stack and uses the stacks up.",
+   "icon_spell": 57946
+  },
+  {
    "id": 900833,
    "class": "Warlock",
    "spec": "Demonology",
@@ -1652,6 +1716,22 @@
    "icon_spell": 50581
   },
   {
+   "id": 900855,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Felhunter: Spell Shackles",
+   "description": "While your Felhunter is out, the spells of every enemy within 40 yards of it take 25% longer to cast.",
+   "icon_spell": 19647
+  },
+  {
+   "id": 900857,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Demon Charge: Shockwave",
+   "description": "Your Demon Charge also deals 666 Fire damage plus 5 per Paragon level to every enemy within 10 yards of its target and stuns them for 3 sec. If it kills an enemy, the cooldown of Demon Charge is reset.",
+   "icon_spell": 54785
+  },
+  {
    "id": 900866,
    "class": "Warlock",
    "spec": "Destruction",
@@ -1730,6 +1810,14 @@
    "name": "Immolate: +9 Targets",
    "description": "Your Immolate jumps to up to 9 additional enemies.",
    "icon_spell": 47811
+  },
+  {
+   "id": 900881,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Incinerate: Stoked Soul Fire",
+   "description": "Each Incinerate that hits a target afflicted by your Immolate (later: Shadow Immolate) makes your next Soul Fire deal 50% more damage, stacking up to 10 times.",
+   "icon_spell": 47825
   },
   {
    "id": 901000,
@@ -2090,12 +2178,20 @@
    "aura_description": "Drains health every 1 sec, transferring it to the warlock."
   },
   {
+   "id": 900810,
+   "aura_description": "Damage of your next Corruption, Curse of Agony, Immolate, Unstable Affliction or Seed of Corruption increased by 10% per application."
+  },
+  {
    "id": 900845,
    "aura_description": "Damage done increased by 100%."
   },
   {
    "id": 900847,
    "aura_description": "Casting speed increased by 50%."
+  },
+  {
+   "id": 900856,
+   "aura_description": "Enemy spells within 40 yards take 25% longer to cast."
   },
   {
    "id": 900849,
@@ -2114,6 +2210,18 @@
    "aura_description": "Fire rains around you, hitting all enemies within 8 yards every 2 sec."
   },
   {
+   "id": 900882,
+   "aura_description": "The damage of your next Soul Fire is increased by 50% per application."
+  },
+  {
+   "id": 900909,
+   "aura_description": "Absorbs damage."
+  },
+  {
+   "id": 900911,
+   "aura_description": "Healing done increased by 1% per Inner Fire charge."
+  },
+  {
    "id": 900939,
    "aura_description": "Casting speed, damage done and healing done increased by 50%."
   },
@@ -2124,6 +2232,10 @@
   {
    "id": 900943,
    "aura_description": "Increases the damage of your next Holy Fire by 50% per application."
+  },
+  {
+   "id": 900979,
+   "aura_description": "Your Mind Flay deals 25% more damage and channels 25% faster per application."
   },
   {
    "id": 900973,
