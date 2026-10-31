@@ -135,14 +135,24 @@ wait 1500ms
 expect dr minions 1964 == 3
 expect dr minions 901010 == 0
 
-log Balance - 901010 with the passive the same cast calls three star owls (901010) instead; the treants of the control stay until they run out
+log Balance - 901010 with the passive the same cast calls three star owls (901010) instead (the control's treants are removed first: a Force of Nature summon is refused while the druid has its guardians out, Spell.cpp:6778)
+pick t1 creature:1964 near dr
+do gm target t1
+as gm .npc delete
+pick t2 creature:1964 near dr
+do gm target t2
+as gm .npc delete
+pick t3 creature:1964 near dr
+do gm target t3
+as gm .npc delete
+wait 500ms
+expect dr minions 1964 == 0
 do dr learn 901010
 do gm target dr
 as gm .cooldown
 do dr cast 33831 triggered
 wait 1500ms
 expect dr minions 901010 == 3
-expect dr minions 1964 == 3
 pick ow creature:901010 near dr
 require ow exists
 expect ow aura 901011
@@ -152,12 +162,6 @@ do dr cast 48463 on d1 triggered
 do dr target d1
 waitfor ow casting 48465 timeout 8s
 
-log Balance - 901010 a recast replaces the owls (Force of Nature's minion rule): still three
-do gm target dr
-as gm .cooldown
-do dr cast 33831 triggered
-wait 1500ms
-expect dr minions 901010 == 3
 as gm .unlearn 901010
 
 cleanup

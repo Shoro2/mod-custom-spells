@@ -192,10 +192,13 @@ do gm target dk
 as gm .cooldown
 
 # ---------------------------------------------------------------- Frost: the wyrm
-log Frost - 900345 "consuming Killing Machine or Rime makes your frost wyrm launch a frost breath (1sec aoe cone channel, damage dependent on paragon lvl)": a Frost Wyrm (Raise Dead with 900333) that fights d1; control - a spent Rime without the passive makes no breath
+log Frost - 900345 "consuming Killing Machine or Rime makes your frost wyrm launch a frost breath (1sec aoe cone channel, damage dependent on paragon lvl)": a Frost Wyrm (a normal Raise Dead with Corpse Dust 37201 and 900333) that fights d1; control - a spent Rime without the passive makes no breath
 do dk cast 55095 on d1 triggered
 do dk attack d1
-do dk cast 46584 triggered
+do dk destroy 37201
+as gm .additem 37201 5
+do dk reset
+do dk cast 46584
 wait 1500ms
 pick w creature:900333 near dk
 require w exists
@@ -380,4 +383,5 @@ as gm .unlearn 900333
 as gm .unaura 51124
 as gm .unaura 59052
 as gm .unaura 55095
+do dk destroy 37201
 do dk destroy 38632
