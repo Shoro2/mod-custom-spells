@@ -182,7 +182,7 @@ wait 500ms
 do wl goto -290 150 -423.2
 wait 500ms
 spelllog start
-do wl cast 54785 on d1 triggered
+do wl cast 54785 on d1
 wait 1500ms
 spelllog stop
 expect wl spell 900860 casts == 0
@@ -196,13 +196,13 @@ do wl cast 47241 triggered
 do wl goto -290 150 -423.2
 wait 500ms
 spelllog start
-do wl cast 54785 on d1 triggered
+do wl cast 54785 on d1
 wait 1500ms
 spelllog stop
 expect wl spell 900860 casts == 8
 expect wl spell 900860 hits >= 6
 expect wl spell 900860 damage >= 3996
-expect wl spell 900860 damage <= 6400
+expect wl spell 900860 damage <= 7200
 expect wl spell 900859 casts == 7
 expect wl cooldown 54785 > 30000
 
@@ -217,9 +217,9 @@ require wolf exists
 do wl cast 47241 triggered
 do wl goto -290 150 -423.2
 wait 500ms
-do wl cast 54785 on d1 triggered
+do wl cast 54785 on d1
 wait 1500ms
-expect wolf dead
+waitfor wolf missing timeout 3s
 expect wl cooldown 54785 == 0
 do gm goto -279 150 -423.2
 

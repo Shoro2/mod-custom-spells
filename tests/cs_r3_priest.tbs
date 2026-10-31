@@ -78,9 +78,14 @@ as gm .npc add temp 476
 wait 500ms
 pick mb creature:476 near pr alive
 require mb exists
+do gm target mb
+as gm .aura 9454
+wait 300ms
 do pr reset
 # Mana Burn needs its target in front of the caster (result 134)
 do pr approach mb
+do pr approach mb
+wait 300ms
 do pr cast 8129 on mb triggered
 wait 500ms
 expect pr noaura 900909
@@ -90,6 +95,8 @@ log Discipline - 900908 with the passive the burnt mana becomes a Burnt Reserve 
 do pr learn 900908
 do pr reset
 do pr approach mb
+do pr approach mb
+wait 300ms
 do pr cast 8129 on mb triggered
 wait 500ms
 expect pr aura 900909
@@ -255,6 +262,8 @@ do gm target pr
 as gm .unaura 900979
 do pr reset
 expect pr spellmod 58381 damage 100 == 100
+do pr approach d1
+wait 300ms
 do pr cast 48156 on d1
 wait 3500ms
 expect pr noaura 900979
@@ -262,6 +271,8 @@ expect pr noaura 900979
 log Shadow - 900978 with the passive a finished Mind Flay leaves one stack of Quickened Flay (900979: +25 % damage on the tick spell 58381, the tick period and the channel x0.83 - op 19 and op 1 -17 %), a second makes it two, a third stays at two; 10 s
 do pr learn 900978
 do pr reset
+do pr approach d1
+wait 300ms
 do pr cast 48156 on d1
 wait 3500ms
 expect pr aurastacks 900979 == 1
@@ -270,6 +281,8 @@ expect pr spellmod 48156 19 1000 == 830
 expect pr spellmod 48156 duration 3000 == 2490
 expect pr auramaxduration 900979 == 10000
 wait 1s
+do pr approach d1
+wait 300ms
 do pr cast 48156 on d1
 wait 3s
 expect pr aurastacks 900979 == 2
@@ -277,6 +290,8 @@ expect pr spellmod 58381 damage 100 == 150
 expect pr spellmod 48156 duration 3000 >= 1979
 expect pr spellmod 48156 duration 3000 <= 1981
 wait 1s
+do pr approach d1
+wait 300ms
 do pr cast 48156 on d1
 wait 3s
 expect pr aurastacks 900979 == 2

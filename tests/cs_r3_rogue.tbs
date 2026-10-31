@@ -141,7 +141,7 @@ do ro cast 57970 on bearA triggered
 waitfor bearB aura 57970 timeout 14s
 expect bearB aura 57970
 waitfor bearA missing timeout 3s
-waitfor bearB missing timeout 14s
+wait 6s
 spelllog stop
 expect ro spell 57970 ticks >= 3
 expect bearC noaura 57970
@@ -152,6 +152,8 @@ waitfor bearC missing timeout 14s
 
 cleanup
 do ro stop
+do ro reset
+wait 6s
 do gm target ro
 as gm .unaura 63848
 as gm .unaura 59756

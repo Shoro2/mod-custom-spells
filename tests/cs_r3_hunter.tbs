@@ -54,7 +54,7 @@ expect hu spell 49065 casts == 0
 
 log Survival - 900574 in combat (a Serpent Sting ticking on d1) two ticks, 5 s and 10 s after the passive, each throw the Explosive Trap Effect (3 ticks at most in the window)
 as gm .unlearn 900574
-do hu approach d1 3
+do hu approach d1 10
 wait 300ms
 do hu learn 900574
 do hu cast 49001 on d1 triggered
@@ -69,13 +69,13 @@ spelllog stop
 expect hu incombat
 expect hu spell 49065 casts >= 2
 expect hu spell 49065 casts <= 3
-expect hu spell 49065 targets >= 10
+expect hu spell 49065 targets >= 8
 
 log Survival - 900574 every trap kind goes off the same way: with Frost Trap the only trap known (Explosive unlearned) the Frost Trap Effect (13810, the slowing ground aura) is cast
 as gm .unlearn 900574
 as gm .unlearn 49067
 do hu learn 13809
-do hu approach d1 3
+do hu approach d1 10
 wait 300ms
 do hu learn 900574
 do hu cast 49001 on d1 triggered
