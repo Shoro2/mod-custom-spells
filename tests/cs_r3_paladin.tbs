@@ -69,8 +69,8 @@ spelllog stop
 expect pa spell 900215 casts >= 3
 expect pa spell 900215 maxtargets >= 6
 
-log Holy - 900213 a heal on a unit that stands elsewhere strikes round THAT unit: the director 78 yd north of the ring has no enemy within 10 yd, so the burst is cast (the heal landed) and reaches nobody
-do gm goto -270 228 -422.72
+log Holy - 900213 a heal on a unit that stands elsewhere strikes round THAT unit: the director 30 yd north of the ring's middle (26 yd from the nearest dummy, inside Holy Light's 40 yd - a triggered cast still checks the range: run 1618, result 97 at 78 yd) has no enemy within 10 yd, so the burst is cast (the heal landed) and reaches nobody
+do gm goto -270 180 -422.9
 wait 500ms
 do pa learn 900213
 do pa reset
