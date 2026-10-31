@@ -524,6 +524,22 @@
    "icon_spell": 49067
   },
   {
+   "id": 900574,
+   "class": "Hunter",
+   "spec": "Survival",
+   "name": "Random Traps",
+   "description": "While you are in combat, every 5 sec one of the traps you know (Explosive, Immolation, Freezing, Frost or Snake Trap, your highest rank) goes off at your target, or at your feet without one.",
+   "icon_spell": 49067
+  },
+  {
+   "id": 900575,
+   "class": "Hunter",
+   "spec": "Survival",
+   "name": "Trap Echo",
+   "description": "When one of your traps goes off, there is a 25% chance that a second trap of the same kind goes off at the same spot.",
+   "icon_spell": 49067
+  },
+  {
    "id": 900600,
    "class": "Rogue",
    "spec": "Assassination",
@@ -562,6 +578,14 @@
    "name": "Mutilate: +9 Targets",
    "description": "Your Mutilate also strikes up to 9 other enemies near its target.",
    "icon_spell": 48666
+  },
+  {
+   "id": 900606,
+   "class": "Rogue",
+   "spec": "Assassination",
+   "name": "Hunger for Blood: Contagion",
+   "description": "When you kill an enemy while Hunger for Blood is active, your bleeds and poisons on it jump to the nearest enemy within 10 yards with 50% increased effect. Can jump 5 times in a row.",
+   "icon_spell": 51662
   },
   {
    "id": 900633,
@@ -618,6 +642,14 @@
    "name": "Killing Spree: Fan of Knives",
    "description": "Each strike of your Killing Spree also unleashes a free Fan of Knives that deals 100% more damage.",
    "icon_spell": 51690
+  },
+  {
+   "id": 900643,
+   "class": "Rogue",
+   "spec": "Combat",
+   "name": "Fan of Knives: Serrated Blades",
+   "description": "While you wield a one-hand sword in each hand, every hit of your Fan of Knives also makes the enemy bleed for 100% of that hit's damage over 6 sec.",
+   "icon_spell": 51723
   },
   {
    "id": 900666,
@@ -1380,6 +1412,22 @@
    "icon_spell": 55342
   },
   {
+   "id": 900720,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Blink: Mirror Image",
+   "description": "When you Blink, a Mirror Image appears where you arrive and fights for you for 20 sec.",
+   "icon_spell": 1953
+  },
+  {
+   "id": 900721,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Mirror Images: Strength in Numbers",
+   "description": "Your Mirror Images deal 5% more damage for each Mirror Image alive.",
+   "icon_spell": 55342
+  },
+  {
    "id": 900713,
    "class": "Mage",
    "spec": "Arcane",
@@ -1444,6 +1492,22 @@
    "icon_spell": 57467
   },
   {
+   "id": 900744,
+   "class": "Mage",
+   "spec": "Fire",
+   "name": "Dragon's Breath: Living Bomb",
+   "description": "Enemies hit by your Dragon's Breath also receive your Living Bomb (highest rank you know).",
+   "icon_spell": 31661
+  },
+  {
+   "id": 900745,
+   "class": "Mage",
+   "spec": "Fire",
+   "name": "Molten Armor: Flamestrike",
+   "description": "While Molten Armor is active, your damage has a 5% chance to cast a free Flamestrike on the target. Can occur once every 1 sec.",
+   "icon_spell": 30482
+  },
+  {
    "id": 900766,
    "class": "Mage",
    "spec": "Frost",
@@ -1490,6 +1554,22 @@
    "name": "Comet Shower",
    "description": "Calls down Frost Comets on the target location, striking every enemy within 15 yards of it.",
    "icon_spell": 42940
+  },
+  {
+   "id": 900775,
+   "class": "Mage",
+   "spec": "Frost",
+   "name": "Ice Block: Ice Lance Barrage",
+   "description": "While you are in Ice Block, a free Ice Lance flies at every enemy within 25 yards every 0.5 sec.",
+   "icon_spell": 45438
+  },
+  {
+   "id": 900776,
+   "class": "Mage",
+   "spec": "Frost",
+   "name": "Ice Block: Detonation",
+   "description": "When your Ice Block ends it detonates, dealing Frost damage to all enemies within 10 yards. The damage increases with your Paragon level.",
+   "icon_spell": 45438
   },
   {
    "id": 900800,
@@ -1786,6 +1866,14 @@
    "name": "Lunar Frenzy",
    "description": "In Moonkin Form every killing blow grants Lunar Frenzy for 60 sec: +1% damage and casting speed, stacking up to 100 times. At 100 stacks you cast a free instant Starfire at a random enemy in front of you every 3 sec while in combat.",
    "icon_spell": 24858
+  },
+  {
+   "id": 901008,
+   "class": "Druid",
+   "spec": "Balance",
+   "name": "Wrath: Starfire Surge",
+   "description": "Each Wrath you cast increases the damage of your next Starfire by 10%. Stacks up to 10 times; Starfire uses the stacks up.",
+   "icon_spell": 48465
   },
   {
    "id": 901033,
@@ -2132,6 +2220,22 @@
   {
    "id": 900974,
    "aura_description": "Movement slowed by 50%. Taking Shadow damage every 1 sec."
+  },
+  {
+   "id": 901009,
+   "aura_description": "The damage of your next Starfire is increased by 10% per application."
+  },
+  {
+   "id": 900644,
+   "aura_description": "Bleeding for 100% of the damage of the main-hand Fan of Knives hit over 6 sec."
+  },
+  {
+   "id": 900645,
+   "aura_description": "Bleeding for 100% of the damage of the off-hand Fan of Knives hit over 6 sec."
+  },
+  {
+   "id": 900722,
+   "aura_description": "Damage done increased by 5% per application: one application for each Mirror Image alive."
   }
  ]
 }

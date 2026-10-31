@@ -20,6 +20,7 @@
 #include "GlobalScript.h"
 
 #include <algorithm>
+#include <map>
 #include <unordered_set>
 
 // ============================================================
@@ -53,6 +54,11 @@ namespace
     constexpr uint32 SPELL_ROGUE_KILLING_SPREE_STRIKE  = 57841; // each Killing Spree tick
 
     constexpr float  SPREE_KNIVES_DAMAGE_MULTIPLIER = 2.0f;  // +100 %
+    constexpr uint8  BLOODY_CONTAGION_MAX_JUMPS     = 5;     // per chain
+    constexpr float  BLOODY_CONTAGION_RANGE         = 10.0f; // yd round the dying target
+    constexpr int32  BLOODY_CONTAGION_BONUS_PCT     = 150;   // +50 % effect after a jump
+    constexpr time_t BLOODY_CONTAGION_LINK_SECS     = 120;   // a link of the chain is forgotten after this
+    constexpr int32  FAN_BLEED_TICKS                = 3;     // 6 s, one tick every 2 s
     constexpr uint8  COMBO_FRENZY_POINTS            = 5;
     // Spell::TriggerGlobalCooldown applies GCD modifiers only to spells whose
     // own GCD lies in this range and clamps the result to it
@@ -184,6 +190,183 @@ class spell_custom_rog_poison_nova : public AuraScript
 };
 
 // ============================================================
+//  ROGUE ASSA: 900606 Hunger for Blood: Bloody Contagion
+//  List line: "if you kill the target affected by hunger for blood, it
+//  jumps to the next enemy with 50% increased effect. can jump 5 times".
+//  Operator answer 7 a (2026-10-31): Hunger for Blood is a self buff in
+//  3.3.5, so on a kill WHILE it is active (63848; the cast, 51662, leaves
+//  no aura) every bleed and poison the rogue has on the dying target jumps
+//  to the nearest enemy within 10 yd of it, at +50 % effect, at most 5
+//  jumps per chain.
+//  - Kill proc (spell_proc: PROC_FLAG_KILL 0x2, 100 %). The core runs it
+//    before the victim's auras are removed (Unit::Kill: procs, then
+//    setDeathState), so the dying target still carries them.
+//  - A carried aura is one the rogue cast, harmful, with the bleed
+//    mechanic or the poison dispel type (Rupture, Garrote, the Deadly
+//    Poison DoT, Wound / Crippling / Mind-numbing Poison debuffs, the
+//    Fan of Knives bleeds 900644 / 900645). Each is applied to the new
+//    target as the rogue's own (Unit::AddAura), with the source's stacks
+//    and remaining duration; the damage of a periodic damage effect is the
+//    source's current value times 1.5 (that value already holds the
+//    rogue's power and the stacks); other effects (a slow, a healing
+//    reduction) keep their value.
+//  - The chain count lives per player in a DataMap, keyed by the unit the
+//    aura jumped TO: when that unit dies of the jumped effects the next
+//    jump is the chain's n+1th; a kill of a unit that no jump reached
+//    starts a fresh chain. Links older than 2 min are forgotten.
+// ============================================================
+class BloodyContagionState : public DataMap::Base
+{
+public:
+    struct Link
+    {
+        uint8  Jumps = 0;
+        time_t Stamp = 0;
+    };
+
+    std::map<ObjectGuid, Link> Chain;
+};
+
+namespace
+{
+    bool IsBleedOrPoison(SpellInfo const* info)
+    {
+        return !info->IsPositive()
+            && (info->Dispel == DISPEL_POISON
+                || info->Mechanic == MECHANIC_BLEED
+                || (info->GetAllEffectsMechanicMask() & (1ULL << MECHANIC_BLEED)));
+    }
+
+    // The nearest living enemy of the player within range of a unit
+    Unit* NearestEnemyOf(Player* player, Unit* centre, float range)
+    {
+        std::list<Unit*> nearby;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(centre, player, range);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(centre, nearby, check);
+        Cell::VisitObjects(centre, searcher, range);
+
+        Unit* best = nullptr;
+        float bestDist = range + 1.0f;
+        for (Unit* unit : nearby)
+        {
+            if (unit == centre || !unit->IsAlive() || !player->IsValidAttackTarget(unit)
+                || !centre->IsWithinLOSInMap(unit))
+                continue;
+            float const dist = centre->GetExactDist(unit);
+            if (dist < bestDist)
+            {
+                best = unit;
+                bestDist = dist;
+            }
+        }
+        return best;
+    }
+
+    // One aura of the dying unit, again on the next one
+    void JumpAura(Player* rogue, Aura const* from, Unit* to)
+    {
+        uint8 effMask = 0;
+        for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+            if (from->GetEffect(i))
+                effMask |= uint8(1 << i);
+        if (!effMask)
+            return;
+
+        Aura* copy = rogue->AddAura(from->GetSpellInfo(), effMask, to);
+        if (!copy)
+            return;
+
+        if (from->GetStackAmount() > 1)
+            copy->SetStackAmount(from->GetStackAmount());
+        copy->SetMaxDuration(from->GetMaxDuration());
+        copy->SetDuration(from->GetDuration());
+
+        for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+        {
+            AuraEffect const* source = from->GetEffect(i);
+            AuraEffect* target = copy->GetEffect(i);
+            if (source && target && source->GetAuraType() == SPELL_AURA_PERIODIC_DAMAGE)
+                target->SetAmount(CalculatePct(source->GetAmount(),
+                    BLOODY_CONTAGION_BONUS_PCT));
+        }
+    }
+}
+
+class spell_custom_rog_bloody_contagion : public AuraScript
+{
+    PrepareAuraScript(spell_custom_rog_bloody_contagion);
+
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        Unit* rogue = GetTarget();
+        Unit* victim = eventInfo.GetActionTarget();
+        return g_CustomSpellsEnabled && rogue && victim && victim != rogue
+            && rogue->HasAura(SPELL_ROGUE_HUNGER_FOR_BLOOD_AURA);
+    }
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Player* rogue = GetTarget() ? GetTarget()->ToPlayer() : nullptr;
+        Unit* victim = eventInfo.GetActionTarget();
+        if (!rogue || !victim || !victim->IsInWorld())
+            return;
+
+        BloodyContagionState* state = rogue->CustomData.GetDefault<
+            BloodyContagionState>("mod_custom_spells_bloody_contagion");
+        time_t const now = GameTime::GetGameTime().count();
+        for (auto link = state->Chain.begin(); link != state->Chain.end();)
+        {
+            if (now - link->second.Stamp > BLOODY_CONTAGION_LINK_SECS)
+                link = state->Chain.erase(link);
+            else
+                ++link;
+        }
+
+        uint8 jumps = 0;
+        auto own = state->Chain.find(victim->GetGUID());
+        if (own != state->Chain.end())
+        {
+            jumps = own->second.Jumps;
+            state->Chain.erase(own);
+        }
+        if (jumps >= BLOODY_CONTAGION_MAX_JUMPS)
+            return;
+
+        std::vector<Aura const*> carried;
+        for (auto const& entry : victim->GetOwnedAuras())
+        {
+            Aura const* aura = entry.second;
+            if (aura && aura->GetCasterGUID() == rogue->GetGUID()
+                && IsBleedOrPoison(aura->GetSpellInfo()))
+                carried.push_back(aura);
+        }
+        if (carried.empty())
+            return;
+
+        Unit* next = NearestEnemyOf(rogue, victim, BLOODY_CONTAGION_RANGE);
+        if (!next)
+            return;
+
+        for (Aura const* aura : carried)
+            JumpAura(rogue, aura, next);
+
+        BloodyContagionState::Link& link = state->Chain[next->GetGUID()];
+        link.Jumps = uint8(jumps + 1);
+        link.Stamp = now;
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_rog_bloody_contagion::CheckProc);
+        OnEffectProc += AuraEffectProcFn(spell_custom_rog_bloody_contagion::HandleProc,
+            EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
 //  ROGUE COMBAT: Blade Flurry +9 targets (900636)
 //  Blade Flurry's extra hit is the core's proc 22482 (one other
 //  enemy near the rogue gets the hit's damage). Hooked on 22482:
@@ -289,6 +472,55 @@ class spell_custom_rog_spree_knives_damage : public SpellScript
     void Register() override
     {
         BeforeCast += SpellCastFn(spell_custom_rog_spree_knives_damage::HandleBeforeCast);
+    }
+};
+
+// ============================================================
+//  ROGUE COMBAT: 900643 Fan of Knives: Serrated Blades
+//  List line: "fan of knifes does +100% bonus bleed when using 2 1h swords".
+//  Operator answer 6 a (2026-10-31): with a one-hand sword in each hand,
+//  every Fan of Knives hit also applies a bleed that deals 100 % of that
+//  hit's damage over 6 s (3 ticks, one every 2 s).
+//  Hooked on the main-hand hit (51723) and the off-hand hit (52874, linked
+//  to it by the core): AfterHit runs once per enemy hit, GetHitDamage() is
+//  the hit's damage after its effects. Each hand has its own bleed (900644
+//  / 900645), so the two hits on one enemy do not replace each other. The
+//  bleed carries the bleed mechanic (Hunger for Blood, armor ignored) and
+//  its tick is the hit's damage / 3 (CastCustomSpell, effect 0).
+//  Both weapons must be one-hand swords (item class weapon, subclass 7;
+//  two-hand swords are subclass 8): checked when the hit lands.
+// ============================================================
+class spell_custom_rog_fan_bleed : public SpellScript
+{
+    PrepareSpellScript(spell_custom_rog_fan_bleed);
+
+    static bool IsOneHandSword(Item const* item)
+    {
+        ItemTemplate const* proto = item && !item->IsBroken() ? item->GetTemplate() : nullptr;
+        return proto && proto->Class == ITEM_CLASS_WEAPON
+            && proto->SubClass == ITEM_SUBCLASS_WEAPON_SWORD;
+    }
+
+    void HandleAfterHit()
+    {
+        Player* rogue = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* target = GetHitUnit();
+        int32 const damage = GetHitDamage();
+        if (!rogue || !target || damage <= 0 || !g_CustomSpellsEnabled
+            || !rogue->HasAura(SPELL_ROG_COMBAT_FAN_BLEED_PASSIVE)
+            || !IsOneHandSword(rogue->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND))
+            || !IsOneHandSword(rogue->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND)))
+            return;
+
+        int32 const tick = std::max(1, damage / FAN_BLEED_TICKS);
+        uint32 const bleed = GetSpellInfo()->Id == SPELL_ROGUE_FAN_OF_KNIVES_OFF
+            ? SPELL_ROG_COMBAT_FAN_BLEED_OFF : SPELL_ROG_COMBAT_FAN_BLEED_MAIN;
+        rogue->CastCustomSpell(target, bleed, &tick, nullptr, nullptr, true);
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_rog_fan_bleed::HandleAfterHit);
     }
 };
 
@@ -578,11 +810,13 @@ void AddRogueSpellsScripts()
 {
     // Rogue Assa
     RegisterSpellScript(spell_custom_rog_poison_nova);
+    RegisterSpellScript(spell_custom_rog_bloody_contagion);
 
     // Rogue Combat
     RegisterSpellScript(spell_custom_rog_bf_targets);
     RegisterSpellScript(spell_custom_rog_spree_knives);
     RegisterSpellScript(spell_custom_rog_spree_knives_damage);
+    RegisterSpellScript(spell_custom_rog_fan_bleed);
     AddComboFrenzyRule(SPELL_ROGUE_ADRENALINE_RUSH, SPELL_ROG_COMBAT_AR_PASSIVE,
         SPELL_ROG_COMBAT_AR_SPEED, SPELL_ROG_COMBAT_AR_BURST);
 

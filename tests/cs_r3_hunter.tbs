@@ -1,13 +1,16 @@
 # mod-custom-spells: the Hunter lines of the third concept list
 # (operator 2026-10-31; share-public
 # custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
-# spell modifiers. Every check states the list's line, so a FAIL marks a
+# spell modifiers, wave 2 = procs and stacking buffs (900574 Random Traps,
+# 900575 Trap Echo). Every check states the list's line, so a FAIL marks a
 # defect.
 # Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
 # (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
 # bot stands west of the ring facing it.
 # Spells: Explosive Trap 49067 (effect 49065: a hit and a burn), Immolation
-# Trap 49056 (effect 51740: a burn).
+# Trap 49056 (effect 51740: a burn). Wave 2: Frost Trap 13809 (its effect, the
+# ground aura, is 13810), Serpent Sting 49001 (a DoT keeps the hunter in
+# combat while it ticks).
 name    Custom spells - Hunter third list
 timeout 300s
 
@@ -32,7 +35,152 @@ expect hu spellmod 49065 damage 100 == 150
 expect hu spellmod 49065 dot 100 == 150
 expect hu spellmod 51740 dot 100 == 150
 
+# ---------------------------------------------------------------- wave 2
+log Survival - 900574 "auto cast a random trap every 5 seconds while in combat": Explosive Trap is the only trap the hunter knows (Immolation unlearned), so the trap that goes off is the Explosive Trap Effect 49065 - out of combat nothing goes off in 6 s (the first tick is 5 s after the passive is learned)
+as gm .unlearn 900574
+as gm .unlearn 900575
+as gm .unlearn 49056
+do hu learn 49001
+do hu goto -270 150 -423.2
+wait 500ms
+do hu learn 900574
+spelllog start
+wait 6s
+spelllog stop
+expect hu outofcombat
+expect hu spell 49065 casts == 0
+
+log Survival - 900574 in combat (a Serpent Sting ticking on d1) two ticks, 5 s and 10 s after the passive, each throw the Explosive Trap Effect (3 ticks at most in the window)
+as gm .unlearn 900574
+wait 100ms
+do hu learn 900574
+do hu cast 49001 on d1 triggered
+waitfor hu incombat timeout 3s
+spelllog start
+wait 4s
+do hu cast 49001 on d1 triggered
+wait 4s
+do hu cast 49001 on d1 triggered
+wait 3s
+spelllog stop
+expect hu incombat
+expect hu spell 49065 casts >= 2
+expect hu spell 49065 casts <= 3
+expect hu spell 49065 targets >= 8
+
+log Survival - 900574 every trap kind goes off the same way: with Frost Trap the only trap known (Explosive unlearned) the Frost Trap Effect (13810, the slowing ground aura) is cast
+as gm .unlearn 900574
+as gm .unlearn 49067
+do hu learn 13809
+wait 100ms
+do hu learn 900574
+do hu cast 49001 on d1 triggered
+waitfor hu incombat timeout 3s
+spelllog start
+wait 3s
+do hu cast 49001 on d1 triggered
+wait 3s
+spelllog stop
+expect hu spell 13810 casts >= 1
+as gm .unlearn 900574
+as gm .unlearn 13809
+do hu learn 49067
+
+log Survival - 900575 "when a trap triggers, it has a 25% chance to spawn another trap": 40 Explosive Trap Effects (49065, cast by the hunter itself in the ring's middle - a trap's effect is a triggered cast that raises the trap activation event) - each has a 25 % chance for a second one at the same spot, but a second one never spawns a third: 42 to 80 casts (P(fewer than 2 echoes) below 0.1 %)
+do hu learn 900575
+do hu goto -270 150 -423.2
+wait 500ms
+spelllog start
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+do hu cast 49065 triggered
+wait 120ms
+wait 500ms
+spelllog stop
+expect hu spell 49065 casts >= 42
+expect hu spell 49065 casts <= 80
+as gm .unlearn 900575
+
 cleanup
 do hu stop
 do gm target hu
 as gm .unlearn 900573
+as gm .unlearn 900574
+as gm .unlearn 900575
+as gm .unlearn 13809

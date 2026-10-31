@@ -1,0 +1,162 @@
+# mod-custom-spells: the Rogue lines of the third concept list
+# (operator 2026-10-31; share-public
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 2 = procs and
+# stacking buffs (900606 Hunger for Blood: Bloody Contagion, 900643 Fan of
+# Knives: Serrated Blades with its bleeds 900644 / 900645). Every check states
+# the list's line, so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
+# bot stands west of the ring, the Fan of Knives in the ring's middle (it hits
+# every enemy round the rogue).
+# Gear: Worn Shortsword 25 and Skeleton's Sword 36528 are one-hand swords (item
+# class 2, subclass 7), the Dirk 2139 a dagger; Dual Wield 674 and the sword
+# proficiency 201 are taught first. The equip order puts the first sword in the
+# main hand and the second in the off hand once both hands are empty (destroyed
+# first: every copy in the bags and on the body goes).
+# Hit rolls: Song of Sylvanas 59756 (no miss) and NPC Hit Buffs 62627 (no dodge
+# or parry) on the rogue.
+# Kills: Young Black Bears (1128, level 5, hostile, beasts: no poison immunity)
+# the director spawns on its own spot (.npc add temp: they despawn once dead).
+# The Deadly Poison IX DoT 57970 (a poison: a tick of 74 and more every 3 s,
+# 12 s) kills one by itself within a few ticks, the rogue's own kill, so the
+# Hunger for Blood proc runs.
+# Spells: Fan of Knives 51723 (its off-hand part 52874), Deadly Poison IX DoT
+# 57970, Hunger for Blood self buff 63848 (a GM aura: the cast, 51662, has none).
+name    Custom spells - Rogue third list
+timeout 300s
+
+bot ro rogue slot=4
+
+place 13 -279 150 -423.2 0
+require ro alive
+pick d1 creature:920018 near ro
+require d1 exists
+do gm target ro
+as gm .unlearn 900606
+as gm .unlearn 900643
+as gm .unaura 63848
+do ro learn 51723
+do ro learn 674
+do ro learn 201
+do ro destroy 2139
+do ro destroy 50055
+do ro destroy 25
+do ro destroy 36528
+as gm .additem 25
+as gm .additem 36528
+do ro equip 25
+do ro equip 36528
+require ro worn 25
+require ro worn 36528
+as gm .aura 59756
+as gm .aura 62627
+waitfor ro aura 62627 timeout 2s
+
+# ---------------------------------------------------------------- Combat
+log Combat - control for 900643: with two one-hand swords but without the passive a Fan of Knives (ring's middle, every dummy round the rogue) makes nobody bleed
+do ro goto -270 150 -423.2
+wait 500ms
+spelllog start
+do ro cast 51723 triggered
+wait 1s
+spelllog stop
+expect ro spell 51723 casts >= 1
+expect ro spell 900644 casts == 0
+expect ro spell 900645 casts == 0
+
+log Combat - 900643 "fan of knifes does +100% bonus bleed when using 2 1h swords": with the passive and a one-hand sword in each hand every hit of the Fan of Knives (main hand 51723 and off hand 52874) makes its enemy bleed (900644 / 900645, 3 ticks over 6 s)
+do ro learn 900643
+do ro reset
+wait 300ms
+spelllog start
+do ro cast 51723 triggered
+wait 7s
+spelllog stop
+expect ro spell 51723 casts >= 1
+expect ro spell 900644 casts >= 5
+expect ro spell 900645 casts >= 5
+expect ro spell 900644 ticks >= 12
+expect ro spell 900645 ticks >= 12
+
+log Combat - 900643 with the sword in the off hand gone (a dagger or nothing there) the Fan of Knives does not bleed anybody: only two swords count
+do ro destroy 36528
+wait 7s
+spelllog start
+do ro cast 51723 triggered
+wait 1s
+spelllog stop
+expect ro spell 51723 casts >= 1
+expect ro spell 900644 casts == 0
+expect ro spell 900645 casts == 0
+as gm .unlearn 900643
+
+# ---------------------------------------------------------------- Assassination
+log Assassination - control for 900606: Hunger for Blood active, two bears side by side, the poison kills the first one - without the passive the second one takes no poison
+do ro goto -279 150 -423.2
+wait 500ms
+as gm .aura 63848
+waitfor ro aura 63848 timeout 2s
+as gm .npc add temp 1128
+as gm .npc add temp 1128
+wait 500ms
+pick bearA creature:1128 near gm
+pick bearB creature:1128 near gm fresh
+require bearA exists
+require bearB exists
+do ro approach bearA
+wait 300ms
+do ro cast 57970 on bearA triggered
+waitfor bearA missing timeout 14s
+expect bearB noaura 57970
+do ro approach bearB
+wait 300ms
+do ro cast 57970 on bearB triggered
+waitfor bearB missing timeout 14s
+
+log Assassination - 900606 "if you kill the target affected by hunger for blood, it jumps to the next enemy with 50% increased effect": two bears with the passive - when the poison kills the first one the Deadly Poison jumps to the second (within 10 yd) with +50 % damage, which dies of it too; a third bear 40 yd away gets nothing
+do ro learn 900606
+as gm .aura 63848
+waitfor ro aura 63848 timeout 2s
+as gm .npc add temp 1128
+as gm .npc add temp 1128
+wait 500ms
+pick bearA creature:1128 near gm
+pick bearB creature:1128 near gm fresh
+require bearA exists
+require bearB exists
+do gm goto -279 190 -423.2
+wait 500ms
+as gm .npc add temp 1128
+wait 500ms
+pick bearC creature:1128 near gm fresh
+require bearC exists
+do gm goto -279 150 -423.2
+wait 500ms
+do ro approach bearA
+wait 300ms
+spelllog start
+do ro cast 57970 on bearA triggered
+waitfor bearB aura 57970 timeout 14s
+expect bearB aura 57970
+waitfor bearA missing timeout 3s
+waitfor bearB missing timeout 14s
+spelllog stop
+expect ro spell 57970 ticks >= 3
+expect bearC noaura 57970
+do ro approach bearC
+wait 300ms
+do ro cast 57970 on bearC triggered
+waitfor bearC missing timeout 14s
+
+cleanup
+do ro stop
+do gm target ro
+as gm .unaura 63848
+as gm .unaura 59756
+as gm .unaura 62627
+as gm .unlearn 900606
+as gm .unlearn 900643
+do ro destroy 25
+do ro destroy 36528
+as gm .additem 2139
+do ro equip 2139
