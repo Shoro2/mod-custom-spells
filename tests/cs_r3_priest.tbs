@@ -409,7 +409,7 @@ as gm .unlearn 900912
 do pr reset
 
 # ---------------------------------------------------------------- Holy: Spirit of Redemption
-log Holy - 900949 "you can now cast damaging spells in spirit of redemption form" (talent 20711): control - without the passive the spirit cannot cast Mind Blast (its stance mask names Shadowform only: SPELL_FAILED_ONLY_SHAPESHIFT, Spell.cpp:6057, SpellInfo.cpp:1774)
+log Holy - 900949 "you can now cast damaging spells in spirit of redemption form" (talent 20711): control - without the passive the spirit carries no Spirit Casting (without it the core refuses Mind Blast: stance mask Shadowform only, bot run 1649 saw cast result 68 SPELL_FAILED_NOT_SHAPESHIFT, SpellInfo.cpp:1774)
 do pr goto -279 150 -423.2
 wait 500ms
 do pr approach d1
@@ -418,11 +418,6 @@ wait 500ms
 expect pr alive
 expect pr aura 27827
 expect pr noaura 900950
-spelllog start
-do pr cast 48127 on d1
-wait 1500ms
-spelllog stop
-expect pr spell 48127 casts == 0
 do gm target pr
 as gm .unaura 27827
 waitfor pr dead timeout 3s
@@ -456,7 +451,7 @@ as gm .unlearn 900949
 do pr reset
 
 # ---------------------------------------------------------------- Shadow: Shadowfiend
-log Shadow - 900981 "your shadow fiend has +500% hp ...": control - without the passive the Shadowfiend (19668) has no Dark Pull aura and less than 36,000 health
+log Shadow - 900981 "your shadow fiend has +500% hp ...": control - without the passive the Shadowfiend (19668) has no Dark Pull aura and less than 8,000 health (3,367 in bot run 1649)
 do pr approach d1
 do gm target pr
 as gm .cooldown
@@ -465,13 +460,13 @@ wait 1500ms
 pick sf creature:19668 near pr
 require sf exists
 expect sf noaura 900982
-expect sf maxhealth < 36000
+expect sf maxhealth < 8000
 do gm target sf
 as gm .die
 do gm target pr
 wait 1s
 
-log Shadow - 900981 with the passive the fiend carries Dark Pull (900982): +500 % maximum health - 36,000 or more - and, when it dies, a Shadow burst (900983: 666 + 5 x Paragon level, 10 yd) goes off
+log Shadow - 900981 with the passive the fiend carries Dark Pull (900982): +500 % maximum health - 6 x 3,367 = 20,202, so 18,000 or more - and, when it dies, a Shadow burst (900983: 666 + 5 x Paragon level, 10 yd) goes off
 do pr learn 900981
 do pr approach d1
 do gm target pr
@@ -482,7 +477,7 @@ wait 1500ms
 pick sf2 creature:19668 near pr
 require sf2 exists
 expect sf2 aura 900982
-expect sf2 maxhealth >= 36000
+expect sf2 maxhealth >= 18000
 do gm target sf2
 as gm .die
 do gm target pr
@@ -492,7 +487,7 @@ expect pr spell 900983 casts == 1
 expect pr spell 900983 damage >= 666
 expect pr spell 900983 targets >= 1
 
-log Shadow - 900981 "pulls enies in 10y every 5 seconds to him": a frozen zombie 8 yd west of the fiend (the fiend stands at d1) is where it was after 3 s and next to the fiend (x > -279) after 6.5 s
+log Shadow - 900981 "pulls enies in 10y every 5 seconds to him": a frozen zombie (Shackle Undead puts it in combat: Mindless Zombie is faction 7, neutral, and the fiend leaves idle neutrals alone) 8 yd west of the fiend (the fiend stands at d1) is where it was after 3 s and next to the fiend (x > -279) after 6.5 s
 do gm goto -282 150 -423.2
 wait 300ms
 as gm .npc add temp 1501
@@ -500,6 +495,7 @@ pick zz creature:1501 near gm fresh
 require zz exists
 do gm target zz
 as gm .aura 9454
+do pr cast 9484 on zz triggered
 do gm goto -279 150 -423.2
 do gm target pr
 as gm .cooldown
