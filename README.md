@@ -26,7 +26,7 @@ The module defines new class spell effects and modifiers through `spell_dbc` ove
 - Custom NPCs with their own scripts, e.g. Frost Wyrm (900333), Spirit Wolf (900436), Healing Treant (901066), and a second pet for hunters and warlocks (Beast Companion, 900525) with its own pet bar.
 - Per-class C++ source files (`custom_spells_warrior.cpp`, `..._paladin.cpp`, ...).
 - In-game spell picker (`/spells` or `/cs`) built on AIO: players toggle which custom spells they know; the server validates every request against a per-class whitelist.
-- A weaker recast of your own buff asks first: when a buff of yours on the target (Thorns, a mark, a blessing, a lower rank of the same buff, ...) is stronger than the one you are casting, the cast is held back and a popup asks whether to replace it. Needs the core hook `PlayerScript::OnPlayerCanReplaceStrongerOwnBuff` of the FL AzerothCore fork.
+- A weaker recast of your own buff asks first: when a buff of yours on the target (Thorns, a mark, a blessing, a lower rank of the same buff, ...) is stronger than the one you are casting, the cast is held back and a popup asks whether to replace it. Each player can choose instead that such a cast always replaces, or never does (`.csbuff always | never`, kept per character; Forgotten Land's `/fl` window sends these). Needs the core hook `PlayerScript::OnPlayerCanReplaceStrongerOwnBuff` of the FL AzerothCore fork.
 
 ## Requirements
 
@@ -61,6 +61,7 @@ The module defines new class spell effects and modifiers through `spell_dbc` ove
 - `/spells` or `/cs` (client chat) - opens the spell picker.
 - `.cspet attack | follow | stay | aggressive | defensive | passive | cast <spell> | autocast | status | sync` - controls the hunter/warlock second pet; normally sent by the pet bar, available to players for their own second pet.
 - `.csbuff yes | no` - the buff popup's answers (yes casts the held-back buff again and replaces the old one).
+- `.csbuff ask | always | never` - your choice for a weaker recast of your own buff: ask in the popup (the default), always replace, or never replace (the cast fails with "A more powerful spell is already active"). Kept per character as a player setting (`character_settings`, source `core.fl_buff_replace`); `.csbuff` alone shows it.
 
 ## Adding a new custom spell
 
