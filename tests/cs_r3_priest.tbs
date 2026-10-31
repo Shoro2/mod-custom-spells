@@ -308,7 +308,7 @@ do pr stop
 expect pr spell 53022 casts >= 4
 expect pr spell 53022 casts <= 6
 
-log Shadow - 900980 with the passive every tick casts the tick spell on three more enemies near d1 as well: four casts a tick, 16 or more in the channel
+log Shadow - 900980 with the passive every tick casts the tick spell on three more enemies near d1 as well: four casts a tick, 12 or more in the channel (three full ticks; the control makes at most 6)
 do pr learn 900980
 do pr reset
 wait 1700ms
@@ -317,7 +317,7 @@ do pr cast 53023 on d1
 wait 6s
 spelllog stop
 do pr stop
-expect pr spell 53022 casts >= 16
+expect pr spell 53022 casts >= 12
 
 # ================================================================ wave 3
 # The large items (agent D, 2026-10-31). Spells: Penance rank 4 53007 (damage

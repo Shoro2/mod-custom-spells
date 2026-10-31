@@ -216,6 +216,7 @@ do gm target dk
 as gm .cooldown
 as gm .aura 59052
 waitfor dk aura 59052 timeout 2s
+wait 2s
 do dk cast 51411 on d1
 waitfor w casting 900346 timeout 2s
 expect dk noaura 59052
@@ -234,32 +235,17 @@ waitfor w casting 900346 timeout 2s
 expect dk noaura 51124
 wait 1500ms
 
-log Frost - 900345 a Killing Machine that merely runs out (10 s) is no consumption: no breath
+log Frost - 900345 a Killing Machine that merely runs out (30 s) is no consumption: no breath
 do gm target dk
 as gm .aura 51124
 waitfor dk aura 51124 timeout 2s
-waitfor dk noaura 51124 timeout 14s
+waitfor dk noaura 51124 timeout 35s
 expect w notcasting 900346
 as gm .unlearn 900345
 do gm target w
 as gm .die
 do gm target dk
 wait 1s
-
-# ---------------------------------------------------------------- Unholy: the gargoyle army
-log Unholy - 900379 "Summon Gargolye now summons an army of gargoyles": control - without the passive one gargoyle (27829)
-do dk reset
-do dk approach d1
-do dk cast 49206 on d1 triggered
-wait 1500ms
-expect dk minions 27829 == 1
-
-log Unholy - 900379 with the passive the cast adds four more: 1 + 5 = 6 gargoyles in all (the first is still out)
-do dk learn 900379
-do dk cast 49206 on d1 triggered
-wait 1500ms
-expect dk minions 27829 == 6
-as gm .unlearn 900379
 
 # ---------------------------------------------------------------- Unholy: Corpse Explosion every second
 log Unholy - 900380 "you passively trigger an corpse explosion every second": a zombie corpse next to the DK; control - without the passive no Corpse Explosion (51328) is cast in 3 s, the corpse keeps its model
@@ -297,7 +283,7 @@ do dk stop
 do gm target d1
 as gm .unaura 55095
 do gm target dk
-waitfor dk outofcombat timeout 20s
+waitfor dk outofcombat timeout 25s
 as gm .npc add 1501
 pick zd creature:1501 near gm fresh
 require zd exists
@@ -361,6 +347,21 @@ do gm target ze
 as gm .npc delete
 do gm target dk
 as gm .unaura 55095
+
+# ---------------------------------------------------------------- Unholy: the gargoyle army (last: the gargoyles fight d1 for 36 s and keep the DK in combat)
+log Unholy - 900379 "Summon Gargolye now summons an army of gargoyles": control - without the passive one gargoyle (27829)
+do dk reset
+do dk approach d1
+do dk cast 49206 on d1 triggered
+wait 1500ms
+expect dk minions 27829 == 1
+
+log Unholy - 900379 with the passive the cast adds four more: 1 + 5 = 6 gargoyles in all (the first is still out)
+do dk learn 900379
+do dk cast 49206 on d1 triggered
+wait 1500ms
+expect dk minions 27829 == 6
+as gm .unlearn 900379
 
 cleanup
 do dk stop

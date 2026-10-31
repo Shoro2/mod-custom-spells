@@ -136,15 +136,18 @@ expect dr minions 1964 == 3
 expect dr minions 901010 == 0
 
 log Balance - 901010 with the passive the same cast calls three star owls (901010) instead (the control's treants are removed first: a Force of Nature summon is refused while the druid has its guardians out, Spell.cpp:6778)
-pick t1 creature:1964 near dr
+pick t1 creature:1964 near dr alive
 do gm target t1
 as gm .npc delete
-pick t2 creature:1964 near dr
+wait 1s
+pick t2 creature:1964 near dr alive
 do gm target t2
 as gm .npc delete
-pick t3 creature:1964 near dr
+wait 1s
+pick t3 creature:1964 near dr alive
 do gm target t3
 as gm .npc delete
+wait 1s
 wait 500ms
 expect dr minions 1964 == 0
 do dr learn 901010
