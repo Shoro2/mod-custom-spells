@@ -88,30 +88,7 @@ spelllog start
 do dk reset
 as gm .modify runicpower 100
 do dk cast 49028 on d1
-wait 500ms
-as gm .modify runicpower 100
-do dk cast 49895 on d1
 wait 1600ms
-as gm .modify runicpower 100
-do dk cast 49895 on d1
-wait 1600ms
-as gm .modify runicpower 100
-do dk cast 49895 on d1
-wait 1600ms
-as gm .modify runicpower 100
-do dk cast 49895 on d1
-wait 1600ms
-as gm .modify runicpower 100
-do dk cast 49895 on d1
-wait 1600ms
-as gm .modify runicpower 100
-do dk cast 49895 on d1
-wait 1600ms
-wait 2500ms
-do dk reset
-as gm .modify runicpower 100
-do dk cast 49028 on d1
-wait 500ms
 as gm .modify runicpower 100
 do dk cast 49895 on d1
 wait 1600ms
@@ -134,7 +111,30 @@ wait 2500ms
 do dk reset
 as gm .modify runicpower 100
 do dk cast 49028 on d1
-wait 500ms
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+wait 2500ms
+do dk reset
+as gm .modify runicpower 100
+do dk cast 49028 on d1
+wait 1600ms
 as gm .modify runicpower 100
 do dk cast 49895 on d1
 wait 1600ms
