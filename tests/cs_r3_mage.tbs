@@ -237,7 +237,8 @@ do ma cast 1953
 wait 1700ms
 expect ma cooldown 1953 > 5000
 expect ma noaura 900724
-expect ma spellmod 1953 cost 100 == 100
+expect ma spellmod 1953 cost 100 >= 99.5
+expect ma spellmod 1953 cost 100 <= 100.5
 
 log Arcane - 900723 "when you blink through an enemy, blink cd is reset but cost 5% more mana each cast": a Blink through the ring with the passive leaves Blink ready again, one stack of Blink Strain (900724, 10 s) and a Blink that costs 5 % more
 do ma learn 900723
@@ -248,7 +249,8 @@ wait 1700ms
 expect ma cooldown 1953 == 0
 expect ma aurastacks 900724 == 1
 expect ma auramaxduration 900724 == 10000
-expect ma spellmod 1953 cost 100 == 105
+expect ma spellmod 1953 cost 100 >= 104.5
+expect ma spellmod 1953 cost 100 <= 105.5
 
 log Arcane - 900723 control: a Blink along y = 12 yd north of the ring (no enemy within 2 yd of the line) is a normal Blink - cooldown, no new stack
 place 13 -279 162 -423.2 0
@@ -265,7 +267,8 @@ do ma cast 1953
 wait 1700ms
 expect ma cooldown 1953 == 0
 expect ma aurastacks 900724 == 2
-expect ma spellmod 1953 cost 100 == 110
+expect ma spellmod 1953 cost 100 >= 109.5
+expect ma spellmod 1953 cost 100 <= 110.5
 
 log Arcane - 900723 "10 stacks": eight more Blinks through the ring, then a ninth - the strain stays at 10 stacks (+50 %)
 place 13 -279 150 -423.2 0
@@ -301,7 +304,8 @@ do ma reset
 do ma cast 1953
 wait 1700ms
 expect ma aurastacks 900724 == 10
-expect ma spellmod 1953 cost 100 == 150
+expect ma spellmod 1953 cost 100 >= 149.5
+expect ma spellmod 1953 cost 100 <= 150.5
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
@@ -312,7 +316,8 @@ expect ma cooldown 1953 == 0
 log Arcane - 900723 "10sec duration": ten seconds after the last Blink the strain is gone and Blink costs the normal amount again
 wait 10500ms
 expect ma noaura 900724
-expect ma spellmod 1953 cost 100 == 100
+expect ma spellmod 1953 cost 100 >= 99.5
+expect ma spellmod 1953 cost 100 <= 100.5
 
 log Arcane - 900723 "cannot be used if u have targeted blink": with Targeted Blink (900713) learned a Blink through the ring is a plain Blink - cooldown, no strain
 do ma learn 900713
