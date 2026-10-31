@@ -14,9 +14,9 @@ Per carrier this tool
      stay; floats are written as floats),
   2. appends every server record the carrier lacks except SKIP_IDS (name from
      the server row, every other string empty),
-  3. sets Name, Description and SpellIconID of every picker spell from
-     data/spellbook_enUS.json (icon_spell = the stock spell whose icon the
-     record shows), and the buff tooltip (AuraDescription) of the helper
+  3. sets Name, Description and SpellIconID of every picker spell and of the
+     cursed-item stat passives ("stat_passives") from data/spellbook_enUS.json
+     (icon_spell = the stock spell whose icon the record shows), and the buff tooltip (AuraDescription) of the helper
      buffs listed under its "auras".
 Strings are appended to the string block (an identical existing string is
 reused, so a rerun adds nothing); the old bytes stay as dead data. It refuses
@@ -116,6 +116,24 @@ def load_manifest():
         for key in ("name", "description"):
             if not isinstance(e.get(key), str) or not e[key].strip() or "\0" in e[key]:
                 raise SystemExit("manifest: %d has no usable %s" % (sid, key))
+        out[sid] = e
+    return out
+
+
+def load_stat_passives():
+    """The cursed-item stat passives (900000-900005, mod-paragon-itemgen): records in the
+    server Spell.dbc FILE, not in spell_dbc, so step 1 leaves them alone; only their name,
+    tooltip and icon are set, as for the picker spells (they are neither in the picker
+    nor in the class pool, so they live in their own manifest section)."""
+    m = json.load(open(MANIFEST, encoding="utf-8"))
+    out = {}
+    for e in m.get("stat_passives", []):
+        sid = e["id"]
+        if not ID_LO <= sid <= ID_HI or sid in out:
+            raise SystemExit("manifest stat_passives: bad or duplicate id %r" % sid)
+        for key in ("name", "description"):
+            if not isinstance(e.get(key), str) or not e[key].strip() or "\0" in e[key]:
+                raise SystemExit("manifest stat_passives: %d has no usable %s" % (sid, key))
         out[sid] = e
     return out
 
@@ -393,6 +411,11 @@ def main():
         update_lua(manifest)
         return 0
     init_columns()
+    stats = load_stat_passives()
+    if set(stats) & set(manifest):
+        raise SystemExit("manifest: stat_passives overlap the picker entries")
+    manifest = dict(manifest)
+    manifest.update(stats)
     carriers = CARRIERS
     if args.carrier:
         carriers = [tuple(c.split("=", 1)) for c in args.carrier]

@@ -2883,5 +2883,43 @@
    "id": 900884,
    "aura_description": "Deals Shadow and Fire damage every 3 sec."
   }
+ ],
+ "stat_passives": [
+  {
+   "id": 900000,
+   "name": "Paragon: +20% Strength",
+   "description": "Increases your Strength by 20%.",
+   "icon_spell": 58449
+  },
+  {
+   "id": 900001,
+   "name": "Paragon: +20% Intellect",
+   "description": "Increases your Intellect by 20%.",
+   "icon_spell": 48100
+  },
+  {
+   "id": 900002,
+   "name": "Paragon: +20% Agility",
+   "description": "Increases your Agility by 20%.",
+   "icon_spell": 58451
+  },
+  {
+   "id": 900003,
+   "name": "Paragon: +20% Spirit",
+   "description": "Increases your Spirit by 20%.",
+   "icon_spell": 48104
+  },
+  {
+   "id": 900004,
+   "name": "Paragon: +20% Stamina",
+   "description": "Increases your Stamina by 20%.",
+   "icon_spell": 48102
+  },
+  {
+   "id": 900005,
+   "name": "Paragon: +10% All Stats",
+   "description": "Increases all your attributes by 10%.",
+   "icon_spell": 48469
+  }
  ]
 }
