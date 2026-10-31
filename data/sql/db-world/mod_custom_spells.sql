@@ -185,7 +185,30 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (64843, 'spell_custom_pri_hymn_waves'),
 (900948, 'spell_custom_pri_hymn_wave_filter'),
 (-15407, 'spell_custom_pri_flay_stack'),
-(-48045, 'spell_custom_pri_sear_plus3');
+(-48045, 'spell_custom_pri_sear_plus3'),
+-- third concept list, wave 3 (2026-10-31)
+(51124, 'spell_custom_dkf_wyrm_breath_killing_machine'),
+(59052, 'spell_custom_dkf_wyrm_breath_rime'),
+(49206, 'spell_custom_dku_gargoyle_army'),
+(900380, 'spell_custom_dku_corpse_tick'),
+(-49158, 'spell_custom_dku_corpse_worm'),
+(33831, 'spell_custom_bal_star_owls'),
+(-47758, 'spell_custom_pri_penance_plus4'),
+(-47757, 'spell_custom_pri_penance_plus4'),
+(27827, 'spell_custom_pri_sor_spells'),
+(900982, 'spell_custom_pri_shadowfiend_aura'),
+(-974, 'spell_custom_rst_earth_unlimited'),
+(-331, 'spell_custom_rst_stream_surge'),
+(-8004, 'spell_custom_rst_stream_surge'),
+(-1064, 'spell_custom_rst_stream_surge'),
+(-61295, 'spell_custom_rst_stream_surge'),
+(900266, 'spell_custom_ret_divine_barrage'),
+(900509, 'spell_custom_hunt_switch_places'),
+(900576, 'spell_custom_hunt_trap_grab'),
+(1953, 'spell_custom_mage_blink_through'),
+(-689, 'spell_custom_wlk_drain_plus9'),
+(-686, 'spell_custom_wlk_shadow_bolt_immolate'),
+(-348, 'spell_custom_wlk_immolate_replaces_shadow');
 -- The former "+N targets" C++ AoE hooks (ret_cs_aoe, dkb_hs_aoe, ele_cl_aoe,
 -- rog_ss/hemo_aoe, the six mage nuke hooks, wlk_sb/cb_aoe, bal_mf_aoe) are
 -- gone: with corrected masks the marker passives chain natively via
