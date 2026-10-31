@@ -8,6 +8,12 @@
 # Test ground as cs_deathknight: map 13, the FL dummy arena - eight AoE
 # Training Dummies (920018) on a 4-yd circle around (-270, 150); melee chains
 # stand west of the ring facing it.
+# Wave 2 (procs, 2026-10-31): Blood 900311 "getting hit ... 5% chance to apply
+# frost fever and blood plague to the attacker" and 900312 "Rune tap increases
+# your shadow damage by 50% for 10 seconds" - Rune Tap 48982 (talent), Dark
+# Command 56222 (taunts the zombies onto the DK), Blood Boil 49941 (kills the
+# leftovers), Mindless Zombie 1501 (level 1, hostile; `.npc add temp`, dies
+# from the first disease).
 # Spells: Death Strike 49924 (rank 5), Frost Strike 55268 (rank 6, talent),
 # Scourge Strike 55271 (rank 4, talent; its Shadow part 70890), Death Coil
 # 49895 (rank 5; its damage spell 47632), Death Gate 50977, Greatsword of the
@@ -25,6 +31,8 @@ require d1 exists
 do gm target dk
 as gm .unlearn 900309
 as gm .unlearn 900310
+as gm .unlearn 900311
+as gm .unlearn 900312
 as gm .unlearn 900343
 as gm .unlearn 900344
 as gm .unlearn 900375
@@ -96,11 +104,75 @@ wait 1500ms
 spelllog stop
 expect dk spell 47632 maxtargets >= 6
 
+# ---------------------------------------------------------------- wave 2: Blood
+log Control - without 900312 a Rune Tap gives no Shadow Power
+do dk learn 48982
+do dk reset
+do dk cast 48982 triggered
+wait 500ms
+expect dk noaura 900313
+
+log Blood - 900312 "Rune tap increases your shadow damage by 50% for 10 seconds": the buff 900313 (+50 % Shadow damage done) for 10 s
+do dk learn 900312
+do dk reset
+do dk cast 48982 triggered
+waitfor dk aura 900313 timeout 2s
+expect dk auramaxduration 900313 == 10000
+expect dk auraduration 900313 > 8000
+as gm .unaura 900313
+as gm .unlearn 900312
+
+log Blood - 900311 "getting hit by an enemy has a 5% chance to apply frost fever and blood plague to the attacker" - statistical: eight level-1 zombies taunted onto the DK swing at it for 30 s (about 100 hits: no proc in 100 hits = 0.6 %); the first proc infects the zombie that hit it with both diseases
+do dk learn 900311
+do dk learn 56222
+do dk learn 49941
+do dk goto -279 150 -423.2
+wait 500ms
+as gm .npc add temp 1501
+as gm .npc add temp 1501
+as gm .npc add temp 1501
+as gm .npc add temp 1501
+as gm .npc add temp 1501
+as gm .npc add temp 1501
+as gm .npc add temp 1501
+as gm .npc add temp 1501
+pick z1 creature:1501 near gm fresh
+pick z2 creature:1501 near gm fresh
+pick z3 creature:1501 near gm fresh
+pick z4 creature:1501 near gm fresh
+pick z5 creature:1501 near gm fresh
+pick z6 creature:1501 near gm fresh
+pick z7 creature:1501 near gm fresh
+pick z8 creature:1501 near gm fresh
+require z8 exists
+do dk reset
+spelllog start
+do dk cast 56222 on z1 triggered
+do dk cast 56222 on z2 triggered
+do dk cast 56222 on z3 triggered
+do dk cast 56222 on z4 triggered
+do dk cast 56222 on z5 triggered
+do dk cast 56222 on z6 triggered
+do dk cast 56222 on z7 triggered
+do dk cast 56222 on z8 triggered
+wait 30s
+spelllog stop
+expect dk spell 55095 casts >= 1
+expect dk spell 55078 casts >= 1
+# a Blood Boil (49941, 10 yd, triggered) kills what the diseases left (a level-1 zombie
+# despawns once dead, so no unit is aimed at here)
+do dk cast 49941 triggered
+wait 1s
+do gm target dk
+as gm .unlearn 900311
+
 cleanup
 do dk stop
 do gm target dk
 as gm .unlearn 900309
 as gm .unlearn 900310
+as gm .unlearn 900311
+as gm .unlearn 900312
 as gm .unlearn 900343
 as gm .unlearn 900344
 as gm .unlearn 900375

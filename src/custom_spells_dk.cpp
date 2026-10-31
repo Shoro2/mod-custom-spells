@@ -184,6 +184,96 @@ class spell_custom_dkb_deathcoil_proc : public AuraScript
 };
 
 // ============================================================
+//  SPELL 900311: Getting Hit -> Frost Fever and Blood Plague (AuraScript)
+//  List line (third concept list, 2026-10-31): "getting hit by an enemy
+//  has a 5% chance to apply frost fever and blood plague to the
+//  attacker".
+//  Passive proc aura (spell_proc: every kind of damage taken - melee,
+//  melee abilities, ranged, harmful spells -, 5 %, no cooldown;
+//  triggered enemy hits count too, PROC_ATTR_TRIGGERED_CAN_PROC). The
+//  DK casts Frost Fever (55095) and Blood Plague (55078) at the unit
+//  that hit it, triggered (no cost, no facing rule: Howling Blast's
+//  900337 casts them the same way). Only a living enemy is infected.
+//  Only active when the DK has passive 900311.
+// ============================================================
+class spell_custom_dkb_hit_diseases : public AuraScript
+{
+    PrepareAuraScript(spell_custom_dkb_hit_diseases);
+
+    // eligibility belongs here: the core starts the aura's cooldown before
+    // HandleProc runs
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        if (!g_CustomSpellsEnabled)
+            return false;
+
+        Player* dk = GetTarget()->ToPlayer();
+        Unit* attacker = eventInfo.GetActor();
+        return dk && attacker && attacker != dk && attacker->IsAlive()
+            && dk->IsValidAttackTarget(attacker);
+    }
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Player* dk = GetTarget()->ToPlayer();
+        Unit* attacker = eventInfo.GetActor();
+        if (!dk || !attacker)
+            return;
+
+        dk->CastSpell(attacker, SPELL_DK_FROST_FEVER, true);
+        dk->CastSpell(attacker, SPELL_DK_BLOOD_PLAGUE, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> hit by {}: Frost Fever + Blood Plague on it",
+            dk->GetName(), attacker->GetName());
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_dkb_hit_diseases::CheckProc);
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_dkb_hit_diseases::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  SPELL 900312: Rune Tap -> Shadow damage +50 % for 10 s (SpellScript)
+//  List line: "Rune tap increases your shadow damage by 50% for 10
+//  seconds".
+//  Hooked on Rune Tap (48982). After the cast the DK carries 900313
+//  (SPELL_AURA_MOD_DAMAGE_PERCENT_DONE +50, school mask 32 = Shadow,
+//  10 s; a second Rune Tap refreshes it). Death Coil, Scourge Strike's
+//  Shadow part, Blood Plague and the bursts of the other Shadow
+//  passives all take it - a damage-done aura, not a spell modifier.
+//  Only active when the DK has passive 900312.
+// ============================================================
+class spell_custom_dkb_rune_tap_shadow : public SpellScript
+{
+    PrepareSpellScript(spell_custom_dkb_rune_tap_shadow);
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!player || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_DKB_RUNE_TAP_SHADOW_PASSIVE))
+            return;
+
+        player->CastSpell(player, SPELL_DKB_RUNE_TAP_SHADOW_BUFF, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Rune Tap: Shadow damage +50 % for 10 s",
+            player->GetName());
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_dkb_rune_tap_shadow::HandleAfterCast);
+    }
+};
+
+// ============================================================
 //  SPELL 900333: Replace Ghoul with Frost Wyrm (SpellScript)
 //  Hooked on Raise Dead (46584). After cast, despawns the
 //  ghoul and summons a custom Frost Wyrm (NPC 900333) instead.
@@ -824,6 +914,8 @@ void AddDKSpellsScripts()
     RegisterSpellScript(spell_custom_dkb_3_rune_weapons);
     RegisterSpellScript(spell_custom_dkb_double_cast);
     RegisterSpellScript(spell_custom_dkb_deathcoil_proc);
+    RegisterSpellScript(spell_custom_dkb_hit_diseases);
+    RegisterSpellScript(spell_custom_dkb_rune_tap_shadow);
     new custom_dkb_bloodworm_creature();
     RegisterSpellScript(spell_custom_dkb_bloodworm_fuse);
 

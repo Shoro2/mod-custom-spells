@@ -23,6 +23,69 @@
 // which would otherwise cascade into extra casts and cooldown resets.
 static thread_local bool s_lvbReentry = false;
 
+namespace
+{
+    constexpr int32 PARAGON_DAMAGE_BASE      = 666;
+    constexpr int32 PARAGON_DAMAGE_PER_LEVEL = 5;
+
+    // third concept list 2026-10-31 (wave 2)
+    // 900445 Ghost Wolf: how long after the form ends the next hit still
+    // erupts. A cancelled Ghost Wolf is followed by the spell or swing that
+    // caused the cancel: Lightning Bolt's 2-2.5 s cast and its missile take
+    // up to 3.5 s, so the window is 4 s.
+    constexpr int32 GHOST_ERUPTION_WINDOW_MS = 4000;
+    // 900468: "a random target in range" = a random enemy in combat within
+    // this distance of the shaman (Lightning Bolt's own range)
+    constexpr float HEAL_STRIKE_RANGE        = 30.0f;
+    // family 11 flags of the four hooked heals
+    constexpr uint32 FAMILYFLAG_CHAIN_HEAL   = 0x100;   // flags[0]; Healing Wave 0x40, Lesser Healing Wave 0x80
+    constexpr uint32 FAMILYFLAG2_RIPTIDE     = 0x10;    // flags[2]
+
+    // 666 + 5 x the shaman's Paragon level, the amount of the Nature bursts.
+    int32 ParagonDamage(Player* player)
+    {
+        return PARAGON_DAMAGE_BASE
+            + PARAGON_DAMAGE_PER_LEVEL * int32(GetParagonLevel(player));
+    }
+
+    // The highest rank of a spell chain the player knows (0: none). The
+    // argument is the chain's first rank.
+    uint32 HighestKnownRank(Player* player, uint32 firstRank)
+    {
+        uint32 known = 0;
+        for (uint32 rank = firstRank; rank;
+            rank = sSpellMgr->GetNextSpellInChain(rank))
+            if (player->HasSpell(rank))
+                known = rank;
+        return known;
+    }
+
+    // A random living enemy within `range` of `origin` that is already in
+    // combat (an idle mob is never pulled), that the player may attack and
+    // sees (the priest's and the warlock's pick).
+    Unit* SelectRandomEngagedEnemy(WorldObject* origin, Player* player,
+        float range)
+    {
+        std::list<Unit*> enemies;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(origin, player, range);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(origin, enemies, check);
+        Cell::VisitObjects(origin, searcher, range);
+
+        enemies.remove_if([player](Unit* enemy)
+        {
+            return !enemy->IsAlive() || !enemy->IsInCombat()
+                || !player->IsValidAttackTarget(enemy)
+                || !player->IsWithinLOSInMap(enemy);
+        });
+
+        if (enemies.empty())
+            return nullptr;
+
+        return Acore::Containers::SelectRandomContainerElement(enemies);
+    }
+}
+
 // ============================================================
 //  SPELL 900401: Totems -> Following Creatures (PlayerScript)
 //  When player has 900401, totems follow the player instead
@@ -702,6 +765,285 @@ class spell_custom_ele_ls_chain_lightning : public SpellScript
     }
 };
 
+// ============================================================
+//  SPELL 900445: Ghost Wolf in combat (AuraScript on Ghost Wolf 2645)
+//  List line (third concept list, 2026-10-31): "your movementspeed is
+//  increased by additional 100% for 3 seconds when entering ghost wolf
+//  in combat. also your next hit that makes you exit ghost form, erupts
+//  in lightning dealing aoe damage dependent on your paragon level".
+//  Mechanism:
+//   - When the shaman (passive 900445) turns into Ghost Wolf while in
+//     combat, it gets Storm Rush (900446: +100 % movement speed on top of
+//     the form's +40 %, 3 s - the run speed takes the highest speed aura
+//     (SPELL_AURA_MOD_INCREASE_SPEED), so the aura carries the 140 that
+//     Ghost Wolf and the bonus make together) and the hidden Storm Charge
+//     (900447, no end, one charge). Entering the form out of combat arms
+//     nothing.
+//   - Ghost Wolf has no attack of its own: it ends when the client
+//     cancels the form to cast, or the shaman cancels it. When the form
+//     ends with the charge up, the charge gets a 4-s window instead (a
+//     cancelled form is followed by the cast or swing that caused it; the
+//     window covers a 2.5-s Lightning Bolt and its missile). A death
+//     takes the charge away.
+//   - The window's first hit that deals damage - melee, ability or
+//     spell, triggered strikes included - erupts: see
+//     spell_custom_enh_ghost_charge below. The charge is a spell_proc
+//     aura with one charge, so the core takes it away with that proc.
+// ============================================================
+class spell_custom_enh_ghost_wolf : public AuraScript
+{
+    PrepareAuraScript(spell_custom_enh_ghost_wolf);
+
+    void HandleApply(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        Player* player = GetTarget()->ToPlayer();
+        if (!player || !g_CustomSpellsEnabled || !player->IsInCombat()
+            || !player->HasAura(SPELL_ENH_GHOST_RUSH_PASSIVE))
+            return;
+
+        player->CastSpell(player, SPELL_ENH_GHOST_RUSH_BUFF, true);
+        player->CastSpell(player, SPELL_ENH_GHOST_CHARGE_AURA, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Ghost Wolf in combat: Storm Rush, charge up",
+            player->GetName());
+    }
+
+    void HandleRemove(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        Player* player = GetTarget()->ToPlayer();
+        if (!player)
+            return;
+
+        Aura* charge = player->GetAura(SPELL_ENH_GHOST_CHARGE_AURA);
+        if (!charge)
+            return;
+
+        if (GetTargetApplication()->GetRemoveMode() == AURA_REMOVE_BY_DEATH)
+        {
+            player->RemoveAurasDueToSpell(SPELL_ENH_GHOST_CHARGE_AURA);
+            return;
+        }
+
+        charge->SetMaxDuration(GHOST_ERUPTION_WINDOW_MS);
+        charge->SetDuration(GHOST_ERUPTION_WINDOW_MS);
+    }
+
+    void Register() override
+    {
+        AfterEffectApply += AuraEffectApplyFn(
+            spell_custom_enh_ghost_wolf::HandleApply, EFFECT_0,
+            SPELL_AURA_MOD_SHAPESHIFT, AURA_EFFECT_HANDLE_REAL);
+        AfterEffectRemove += AuraEffectRemoveFn(
+            spell_custom_enh_ghost_wolf::HandleRemove, EFFECT_0,
+            SPELL_AURA_MOD_SHAPESHIFT, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+// ============================================================
+//  SPELL 900447: Storm Charge (AuraScript, the proc side of 900445)
+//  Hidden aura (spell_proc: damage done by melee, melee abilities and
+//  spells, triggered hits included; one charge). Only a hit while the
+//  shaman is NOT in Ghost Wolf form counts - that is the "next hit that
+//  makes you exit ghost form": the charge is consumed by the core when
+//  the proc is taken, and the eruption (900448: Nature, 10 yd, 666 + 5 x
+//  Paragon level) strikes round the hit unit, which is left out (it took
+//  the hit).
+// ============================================================
+class spell_custom_enh_ghost_charge : public AuraScript
+{
+    PrepareAuraScript(spell_custom_enh_ghost_charge);
+
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        if (!g_CustomSpellsEnabled)
+            return false;
+
+        Player* player = GetTarget()->ToPlayer();
+        Unit* victim = eventInfo.GetActionTarget();
+        if (!player || !victim || victim == player || !victim->IsAlive()
+            || player->GetShapeshiftForm() == FORM_GHOSTWOLF)
+            return false;
+
+        SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+        if (spellInfo && spellInfo->Id == SPELL_ENH_GHOST_ERUPTION)
+            return false;
+
+        DamageInfo* damageInfo = eventInfo.GetDamageInfo();
+        return damageInfo && (damageInfo->GetDamage() + damageInfo->GetAbsorb())
+            && player->IsValidAttackTarget(victim);
+    }
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Player* player = GetTarget()->ToPlayer();
+        Unit* victim = eventInfo.GetActionTarget();
+        if (!player || !victim)
+            return;
+
+        CastAnchoredBurst(player, victim, SPELL_ENH_GHOST_ERUPTION,
+            ParagonDamage(player));
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Ghost Wolf eruption round {}",
+            player->GetName(), victim->GetName());
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_enh_ghost_charge::CheckProc);
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_enh_ghost_charge::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  SPELL 900468: Heals launch Lightning Bolt / Chain Lightning / Flame Shock
+//  List line: "Casting Lesser Healing Wave/Healing waves launches a free
+//  Lightning Bolt at a random target in range. Casting Chain Heal
+//  launches a free Chain Lightning at a random target in range. Riptide
+//  applies Flame Shock at a random target in range."
+//  Hooked on Healing Wave (-331), Lesser Healing Wave (-8004), Chain
+//  Heal (-1064) and Riptide (-61295). After the cast the shaman casts
+//  the highest rank it knows of Lightning Bolt (Healing Wave, Lesser
+//  Healing Wave), Chain Lightning (Chain Heal) or Flame Shock (Riptide)
+//  at ONE random enemy that is already in combat, within 30 yd of the
+//  shaman and in its line of sight (a heal never pulls an idle mob),
+//  triggered: free, instant. The strike is not one of the hooked
+//  spells, so it cannot set the next one off.
+//  Only active when the shaman has passive 900468.
+// ============================================================
+class spell_custom_rst_heal_strikes : public SpellScript
+{
+    PrepareSpellScript(spell_custom_rst_heal_strikes);
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!player || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_RST_HEAL_STRIKES_PASSIVE))
+            return;
+
+        SpellInfo const* heal = GetSpellInfo();
+        uint32 firstRank;
+        if (heal->SpellFamilyFlags[2] & FAMILYFLAG2_RIPTIDE)
+            firstRank = SPELL_FLAME_SHOCK_R1;
+        else if (heal->SpellFamilyFlags[0] & FAMILYFLAG_CHAIN_HEAL)
+            firstRank = SPELL_CHAIN_LIGHTNING_R1;
+        else
+            firstRank = SPELL_LIGHTNING_BOLT_R1;
+
+        uint32 const strike = HighestKnownRank(player, firstRank);
+        if (!strike)
+            return;
+
+        if (Unit* enemy = SelectRandomEngagedEnemy(player, player,
+            HEAL_STRIKE_RANGE))
+        {
+            player->CastSpell(enemy, strike, true);
+
+            LOG_INFO("module",
+                "mod-custom-spells: Player {} -> heal {} launches {} at {}",
+                player->GetName(), heal->Id, strike, enemy->GetName());
+        }
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_rst_heal_strikes::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  SPELL 900469: Earth Shield Spikes (AuraScript on Earth Shield, -974)
+//  List line: "earth shield get spikes, damaging the attacker (nature
+//  dmg, scaling with paragon lvl)".
+//  A second script on the Earth Shield aura, beside the core's
+//  spell_sha_earth_shield. It hooks the same proc - the hit on the
+//  shield's holder that makes the shield heal (the core script lets it
+//  through once per 3.5 s) - and adds a spike: the shaman who cast the
+//  shield (passive 900469) strikes the attacker with 900471 (Nature,
+//  666 + 5 x the shaman's Paragon level), triggered. It has NO CheckProc
+//  on purpose: a false from a second script would also cancel the
+//  shield's heal. An attacker that is not the shaman's enemy is spared.
+// ============================================================
+class spell_custom_rst_earth_spikes : public AuraScript
+{
+    PrepareAuraScript(spell_custom_rst_earth_spikes);
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        Player* shaman = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* attacker = eventInfo.GetActor();
+        if (!shaman || !attacker || !g_CustomSpellsEnabled
+            || !shaman->IsAlive() || attacker == GetTarget()
+            || !shaman->HasAura(SPELL_RST_EARTH_SPIKES_PASSIVE)
+            || !attacker->IsAlive() || !shaman->IsValidAttackTarget(attacker))
+            return;
+
+        int32 damage = ParagonDamage(shaman);
+        shaman->CastCustomSpell(attacker, SPELL_RST_EARTH_SPIKES_DAMAGE, &damage,
+            nullptr, nullptr, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Earth Shield spikes {} dmg on {}",
+            shaman->GetName(), damage, attacker->GetName());
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_rst_earth_spikes::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// ============================================================
+//  SPELL 900470: Direct heals add an Earth Shield charge (SpellScript)
+//  List line: "Your direct heal spells increase the stacks of your
+//  shields on the target by 1".
+//  Hooked on the same four direct heals as 900468 (Healing Wave, Lesser
+//  Healing Wave, Chain Heal, Riptide's direct heal). Each unit the heal
+//  lands on that carries THIS shaman's Earth Shield gets one more charge
+//  on it, capped at the shield's own maximum (Aura::ModCharges - the
+//  operator's default of 2026-10-31; the maximum includes Improved Earth
+//  Shield). Healing Stream and the shield's own heal are not direct
+//  heals and add nothing.
+//  Only active when the shaman has passive 900470.
+// ============================================================
+class spell_custom_rst_shield_stacks : public SpellScript
+{
+    PrepareSpellScript(spell_custom_rst_shield_stacks);
+
+    void HandleAfterHit()
+    {
+        Player* shaman = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* target = GetHitUnit();
+        if (!shaman || !target || !g_CustomSpellsEnabled
+            || !shaman->HasAura(SPELL_RST_SHIELD_STACKS_PASSIVE))
+            return;
+
+        Aura* shield = target->GetAuraOfRankedSpell(SPELL_EARTH_SHIELD_R1,
+            shaman->GetGUID());
+        if (!shield || !shield->IsUsingCharges())
+            return;
+
+        shield->ModCharges(1);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Earth Shield on {}: {} charges",
+            shaman->GetName(), target->GetName(), shield->GetCharges());
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_rst_shield_stacks::HandleAfterHit);
+    }
+};
+
 void AddShamanSpellsScripts()
 {
     // Shaman Elemental
@@ -721,6 +1063,11 @@ void AddShamanSpellsScripts()
     RegisterSpellScript(spell_custom_enh_wolf_summon);
     RegisterSpellScript(spell_custom_enh_wolf_haste);
     new custom_enh_summon_melee_unitscript();
+    RegisterSpellScript(spell_custom_enh_ghost_wolf);
+    RegisterSpellScript(spell_custom_enh_ghost_charge);
 
     // Shaman Resto: 900467 Mana Regen is shared, custom_spells_global.cpp
+    RegisterSpellScript(spell_custom_rst_heal_strikes);
+    RegisterSpellScript(spell_custom_rst_earth_spikes);
+    RegisterSpellScript(spell_custom_rst_shield_stacks);
 }

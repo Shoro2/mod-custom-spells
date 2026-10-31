@@ -6,6 +6,17 @@
 # Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
 # (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
 # bot stands west of the ring facing it.
+# Wave 2 (procs, 2026-10-31): Enhancement 900445 "movementspeed ... additional
+# 100% for 3 seconds when entering ghost wolf in combat. also your next hit that
+# makes you exit ghost form, erupts in lightning" and Restoration 900468 (heals
+# launch Lightning Bolt / Chain Lightning / Flame Shock), 900469 (Earth Shield
+# spikes), 900470 (direct heals add an Earth Shield charge). Ghost Wolf 2645 is
+# put on by the director (`.aura 2645`): the spell is outdoors-only, the aura is
+# the same; Healing Wave 49273, Lesser Healing Wave 49276, Chain Heal 55459,
+# Riptide 61301 (talent), Lightning Bolt 49238, Chain Lightning 49271, Flame
+# Shock 49233, Earth Shield 49284 (rank 5, 6 charges, talent), Combat Tester
+# 11080 (level 60, hostile, 305,200 health, melee only, fights only when
+# attacked) 75 yd north of the ring for the fights that hit the shaman.
 # Spells: Stormstrike 17364 (talent; debuff cast, its weapon strikes 32175 /
 # 32176), Lava Lash 60103 (talent, needs an off-hand weapon). Modifier checks
 # only: the chains work as Obliterate's and Mutilate's hand strikes do.
@@ -23,6 +34,10 @@ as gm .unlearn 900441
 as gm .unlearn 900442
 as gm .unlearn 900443
 as gm .unlearn 900444
+as gm .unlearn 900445
+as gm .unlearn 900468
+as gm .unlearn 900469
+as gm .unlearn 900470
 do sh learn 17364
 do sh learn 60103
 
@@ -45,6 +60,219 @@ do sh learn 900444
 expect sh spellmod 60103 damage 100 == 150
 expect sh spellmod 60103 jumptargets 0 == 10
 
+# ---------------------------------------------------------------- wave 2: Enhancement
+log Enhancement - 900445 control: without the passive Ghost Wolf in combat gives no Storm Rush and no charge
+do sh learn 2645
+do sh learn 49238
+do sh reset
+do sh cast 49238 on d1 triggered
+wait 400ms
+do sh cast 49238 on d1 triggered
+wait 600ms
+expect sh incombat
+as gm .aura 2645
+waitfor sh aura 2645 timeout 3s
+wait 300ms
+expect sh noaura 900446
+expect sh noaura 900447
+as gm .unaura 2645
+waitfor sh noaura 2645 timeout 3s
+
+log Enhancement - 900445 "movementspeed is increased by additional 100% for 3 seconds when entering ghost wolf in combat": in combat the form brings Storm Rush (900446, 3 s) and the hidden Storm Charge (900447)
+do sh learn 900445
+do sh reset
+do sh cast 49238 on d1 triggered
+wait 400ms
+do sh cast 49238 on d1 triggered
+wait 600ms
+expect sh incombat
+as gm .aura 2645
+waitfor sh aura 2645 timeout 3s
+waitfor sh aura 900446 timeout 2s
+expect sh auramaxduration 900446 == 3000
+expect sh aura 900447
+
+log Enhancement - 900445 "also your next hit that makes you exit ghost form, erupts in lightning dealing aoe damage": leaving the form puts the charge on a 4-s window (not before), the next hit erupts (900448, Nature, 10 yd round the hit dummy) and takes the charge
+expect sh auramaxduration 900447 == -1
+as gm .unaura 2645
+waitfor sh noaura 2645 timeout 3s
+wait 300ms
+expect sh aura 900447
+expect sh auramaxduration 900447 == 4000
+spelllog start
+do sh cast 49238 on d1 triggered
+wait 300ms
+do sh cast 49238 on d1 triggered
+wait 300ms
+do sh cast 49238 on d1 triggered
+wait 300ms
+do sh cast 49238 on d1 triggered
+wait 2s
+spelllog stop
+expect sh spell 900448 casts == 1
+expect sh spell 900448 maxtargets >= 6
+expect sh noaura 900447
+
+log Enhancement - 900445 the eruption is for the hit of the window only: a second hit does nothing
+spelllog start
+do sh cast 49238 on d1 triggered
+wait 1500ms
+spelllog stop
+expect sh spell 900448 casts == 0
+
+log Enhancement - 900445 the window is 4 s: a hit after it erupts nothing (the charge has run out)
+do sh reset
+do sh cast 49238 on d1 triggered
+wait 400ms
+do sh cast 49238 on d1 triggered
+wait 600ms
+as gm .aura 2645
+waitfor sh aura 2645 timeout 3s
+expect sh aura 900447
+as gm .unaura 2645
+waitfor sh noaura 2645 timeout 3s
+wait 4500ms
+expect sh noaura 900447
+do sh cast 49238 on d1 triggered
+wait 800ms
+spelllog start
+do sh cast 49238 on d1 triggered
+wait 1500ms
+spelllog stop
+expect sh spell 900448 casts == 0
+
+log Enhancement - 900445 Ghost Wolf out of combat arms nothing
+do sh reset
+as gm .aura 2645
+waitfor sh aura 2645 timeout 3s
+wait 300ms
+expect sh outofcombat
+expect sh noaura 900446
+expect sh noaura 900447
+as gm .unaura 2645
+waitfor sh noaura 2645 timeout 3s
+as gm .unlearn 900445
+
+# ---------------------------------------------------------------- wave 2: Restoration
+log Restoration - control: without 900468 a Healing Wave casts no Lightning Bolt (the dummies kept in combat by a triggered Lightning Bolt)
+do sh learn 49273
+do sh learn 49276
+do sh learn 55459
+do sh learn 61301
+do sh learn 49271
+do sh learn 49233
+do sh learn 49284
+do sh reset
+do sh cast 49238 on d1 triggered
+wait 1s
+spelllog start
+do sh cast 49273 on sh triggered
+wait 1200ms
+spelllog stop
+expect sh spell 49273 casts >= 1
+expect sh spell 49238 casts == 0
+
+log Restoration - 900468 "Casting Lesser Healing Wave/Healing waves launches a free Lightning Bolt at a random target in range": a Healing Wave and a Lesser Healing Wave each launch one Lightning Bolt (49238) at an enemy in combat
+do sh learn 900468
+do sh cast 49238 on d1 triggered
+wait 1s
+spelllog start
+do sh cast 49273 on sh triggered
+wait 1200ms
+spelllog stop
+expect sh spell 49238 casts == 1
+do sh cast 49238 on d1 triggered
+wait 1s
+spelllog start
+do sh cast 49276 on sh triggered
+wait 1200ms
+spelllog stop
+expect sh spell 49238 casts == 1
+
+log Restoration - 900468 "Casting Chain Heal launches a free Chain Lightning at a random target in range": a Chain Heal launches one Chain Lightning (49271)
+do sh cast 49238 on d1 triggered
+wait 1s
+spelllog start
+do sh cast 55459 on sh triggered
+wait 1200ms
+spelllog stop
+expect sh spell 55459 casts >= 1
+expect sh spell 49271 casts == 1
+
+log Restoration - 900468 an idle enemy is never pulled: with every dummy out of combat (five seconds without a hit) a Healing Wave launches nothing
+do sh reset
+wait 6s
+spelllog start
+do sh cast 49273 on sh triggered
+wait 1200ms
+spelllog stop
+expect sh spell 49273 casts >= 1
+expect sh spell 49238 casts == 0
+log Restoration - 900468 "Riptide applies Flame Shock at a random target in range": a Riptide applies one Flame Shock (49233) to an enemy in combat
+do sh cast 49238 on d1 triggered
+wait 1s
+spelllog start
+do sh cast 61301 on sh triggered
+wait 1200ms
+spelllog stop
+expect sh spell 61301 casts >= 1
+expect sh spell 49233 casts == 1
+
+as gm .unlearn 900468
+
+log Restoration - 900469 / 900470 the Combat Tester (11080) 75 yd north of the ring hits a shaman who carries an Earth Shield; phase A is the control (neither passive): the shield heals, no spike, and a Healing Wave on the shield's holder leaves its charges as they are
+do sh goto -270 228 -422.72
+do gm goto -270 230 -422.72
+wait 500ms
+as gm .npc add temp 11080
+do gm goto -270 150 -423.2
+wait 300ms
+pick ct creature:11080 near sh
+require ct exists
+do sh approach ct 3
+do sh reset
+do sh cast 49284 on sh triggered
+waitfor sh aura 49284 timeout 3s
+expect sh auracharges 49284 == 6
+spelllog start
+do sh cast 49238 on ct triggered
+waitfor ct victim sh timeout 5s
+waitfor sh auracharges 49284 <= 5 timeout 12s
+do sh cast 49273 on sh triggered
+wait 300ms
+expect sh auracharges 49284 == 5
+wait 4s
+spelllog stop
+expect sh spell 379 heal > 0
+expect sh spell 900471 casts == 0
+
+log Restoration - 900470 "Your direct heal spells increase the stacks of your shields on the target by 1" (capped at the shield's own maximum): the shield recast to 6 charges, the first proc takes one (5), a Healing Wave brings it back to 6; a Healing Wave at 6 stays at 6
+do sh learn 900470
+do sh cast 49284 on sh triggered
+wait 300ms
+expect sh auracharges 49284 == 6
+do sh learn 900469
+spelllog start
+waitfor sh auracharges 49284 <= 5 timeout 12s
+do sh cast 49273 on sh triggered
+wait 300ms
+expect sh auracharges 49284 == 6
+do sh cast 49273 on sh triggered
+wait 300ms
+expect sh auracharges 49284 == 6
+
+log Restoration - 900469 "earth shield get spikes, damaging the attacker (nature dmg, scaling with paragon lvl)": the shield's proc that heals also strikes the Combat Tester with 900471 (Nature, 666 + 5 x Paragon level)
+wait 4s
+spelllog stop
+expect sh spell 900471 hits >= 1
+expect sh spell 900471 damage >= 500
+do gm target ct
+as gm .die
+do gm target sh
+as gm .unaura 49284
+as gm .unlearn 900469
+as gm .unlearn 900470
+
 cleanup
 do sh stop
 do gm target sh
@@ -52,3 +280,7 @@ as gm .unlearn 900441
 as gm .unlearn 900442
 as gm .unlearn 900443
 as gm .unlearn 900444
+as gm .unlearn 900445
+as gm .unlearn 900468
+as gm .unlearn 900469
+as gm .unlearn 900470

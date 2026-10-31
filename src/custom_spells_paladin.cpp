@@ -24,6 +24,37 @@
 // this guard the two scripts re-trigger each other without bound (stack overflow).
 static thread_local bool s_hsBothReentry = false;
 
+namespace
+{
+    constexpr int32 PARAGON_DAMAGE_BASE      = 666;
+    constexpr int32 PARAGON_DAMAGE_PER_LEVEL = 5;
+    // third concept list 2026-10-31 (wave 2): the wave of light 900242 may
+    // strike round the same stunned target once a second
+    constexpr uint64 STUN_WAVE_TARGET_CD_MS  = 1000;
+
+    // 666 + 5 x the paladin's Paragon level, the amount of the Holy bursts.
+    int32 ParagonDamage(Player* player)
+    {
+        return PARAGON_DAMAGE_BASE
+            + PARAGON_DAMAGE_PER_LEVEL * int32(GetParagonLevel(player));
+    }
+
+    // Is the unit under a Hammer of Justice (any paladin's, any rank)? The
+    // stun is told from the Seal of Justice stun (flags[0] 0x200) and
+    // Repentance (0x4) by the paladin family flag 0x800.
+    bool HasHammerOfJustice(Unit const* unit)
+    {
+        for (AuraEffect const* effect : unit->GetAuraEffectsByType(SPELL_AURA_MOD_STUN))
+        {
+            SpellInfo const* info = effect->GetSpellInfo();
+            if (info->SpellFamilyName == SPELLFAMILY_PALADIN
+                && (info->SpellFamilyFlags[0] & SPELLFAMILYFLAG_HAMMER_OF_JUSTICE))
+                return true;
+        }
+        return false;
+    }
+}
+
 // ============================================================
 //  SPELL 900200: Holy Shock AoE Damage (SpellScript)
 //  Hooked on Holy Shock damage spells (48824 etc.).
@@ -248,6 +279,185 @@ class spell_custom_holy_hs_both_heal : public SpellScript
     }
 };
 
+// ============================================================
+//  SPELL 900213: Enlightened Heals (SpellScript, Holy)
+//  List line (third concept list, 2026-10-31): "Casting a holy heal
+//  spell enlightens the area around the target, dealing damage scaling
+//  with your paragon level".
+//  Hooked on the paladin's direct Holy heals: Holy Light (all ranks via
+//  -635), Flash of Light (-19750) and the Holy Shock heal (-25914; the
+//  cast spell is only a dummy that routes to it). After a heal lands, the
+//  helper 900215 (Holy, 10 yd, 666 + 5 x Paragon level) strikes every
+//  enemy round the healed unit - a friendly unit, so the burst needs no
+//  anchor exclusion. One heal, one burst: no internal cooldown is
+//  needed, the fastest trigger is Flash of Light's global cooldown, and
+//  the burst itself is damage, so it cannot set the next one off.
+//  Only active when the paladin has passive 900213.
+// ============================================================
+class spell_custom_holy_enlighten : public SpellScript
+{
+    PrepareSpellScript(spell_custom_holy_enlighten);
+
+    void HandleAfterHit()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* target = GetHitUnit();
+        if (!player || !target || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_HOLY_ENLIGHTEN_PASSIVE))
+            return;
+
+        int32 damage = ParagonDamage(player);
+        player->CastCustomSpell(target, SPELL_HOLY_ENLIGHTEN_BURST, &damage,
+            nullptr, nullptr, true);
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Enlightened heal burst {} dmg round {}",
+            player->GetName(), damage, target->GetName());
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_holy_enlighten::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900214: Holy Shock on a Hammer of Justice target (SpellScript)
+//  List line: "Casting Holy Shock on a target affected by Hammer of
+//  Justice, Light erupts and deals damage depending on paragon level in
+//  aoe".
+//  Hooked on the Holy Shock damage spells (-25912, beside the other
+//  Holy Shock scripts). When the shock hits an enemy that stands under a
+//  Hammer of Justice (told by the paladin family flag, any paladin's),
+//  the helper 900216 (Holy, 10 yd, 666 + 5 x Paragon level) erupts
+//  round it, the shocked unit itself left out (it took the shock).
+//  Only active when the paladin has passive 900214.
+// ============================================================
+class spell_custom_holy_hoj_erupt : public SpellScript
+{
+    PrepareSpellScript(spell_custom_holy_hoj_erupt);
+
+    void HandleAfterHit()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* target = GetHitUnit();
+        if (!player || !target || !target->IsAlive() || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_HOLY_HOJ_ERUPT_PASSIVE))
+            return;
+
+        if (!player->IsValidAttackTarget(target) || !HasHammerOfJustice(target))
+            return;
+
+        CastAnchoredBurst(player, target, SPELL_HOLY_HOJ_ERUPT_BURST,
+            ParagonDamage(player));
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Holy Shock erupts round {} (Hammer of Justice)",
+            player->GetName(), target->GetName());
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_custom_holy_hoj_erupt::HandleAfterHit);
+    }
+};
+
+// ============================================================
+//  SPELL 900242: Wave of Light on a stunned target (AuraScript, Prot)
+//  List line: "Hitting a stunned target launches a wave of light
+//  dealing damage around it scaling with paragon lvl (1sec cd per
+//  target)".
+//  Passive proc aura (spell_proc: damage done by melee, melee
+//  abilities and spells, triggered hits too (PROC_ATTR_TRIGGERED_CAN_PROC:
+//  Judgement's damage and Avenger's Shield's are triggered casts),
+//  100 %, no aura cooldown): a hit that deals damage to an enemy
+//  carrying a stun aura (SPELL_AURA_MOD_STUN: Hammer of Justice, a
+//  stunning trap, a warrior's Shockwave ...) sends the helper 900243
+//  (Holy, 10 yd, 666 + 5 x Paragon level) round it, the hit unit
+//  itself left out. The cooldown is per stunned target, 1 s, kept on
+//  the paladin in the DataMap (the 900172 pattern); the wave's own
+//  damage never sets another wave off.
+// ============================================================
+class StunWaveCd : public DataMap::Base
+{
+public:
+    std::unordered_map<ObjectGuid, uint64> NextAllowedMs;
+};
+
+class spell_custom_pprot_stun_wave : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pprot_stun_wave);
+
+    // the stun and the cooldown are eligibility: here, not in HandleProc
+    // (the core starts the aura's own cooldown before HandleProc runs)
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        if (!g_CustomSpellsEnabled)
+            return false;
+
+        Player* player = GetTarget()->ToPlayer();
+        Unit* target = eventInfo.GetActionTarget();
+        if (!player || !target || target == player || !target->IsAlive())
+            return false;
+
+        SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+        if (spellInfo && spellInfo->Id == SPELL_PPROT_STUN_WAVE_BURST)
+            return false;
+
+        DamageInfo* damageInfo = eventInfo.GetDamageInfo();
+        if (!damageInfo || !(damageInfo->GetDamage() + damageInfo->GetAbsorb()))
+            return false;
+
+        if (!player->IsValidAttackTarget(target)
+            || !target->HasAuraType(SPELL_AURA_MOD_STUN))
+            return false;
+
+        StunWaveCd* cd = player->CustomData.GetDefault<StunWaveCd>(
+            "mod_custom_spells_stun_wave");
+        auto it = cd->NextAllowedMs.find(target->GetGUID());
+        uint64 const now = static_cast<uint64>(GameTime::GetGameTimeMS().count());
+        return it == cd->NextAllowedMs.end() || now >= it->second;
+    }
+
+    void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+    {
+        PreventDefaultAction();
+
+        Player* player = GetTarget()->ToPlayer();
+        Unit* target = eventInfo.GetActionTarget();
+        if (!player || !target)
+            return;
+
+        uint64 const now = static_cast<uint64>(GameTime::GetGameTimeMS().count());
+        StunWaveCd* cd = player->CustomData.GetDefault<StunWaveCd>(
+            "mod_custom_spells_stun_wave");
+
+        // drop expired per-target cooldowns before adding the new one
+        for (auto iter = cd->NextAllowedMs.begin();
+            iter != cd->NextAllowedMs.end();)
+        {
+            if (iter->second <= now)
+                iter = cd->NextAllowedMs.erase(iter);
+            else
+                ++iter;
+        }
+        cd->NextAllowedMs[target->GetGUID()] = now + STUN_WAVE_TARGET_CD_MS;
+
+        CastAnchoredBurst(player, target, SPELL_PPROT_STUN_WAVE_BURST,
+            ParagonDamage(player));
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Wave of Light round stunned {}",
+            player->GetName(), target->GetName());
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_custom_pprot_stun_wave::CheckProc);
+        OnEffectProc += AuraEffectProcFn(
+            spell_custom_pprot_stun_wave::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
 
 // ============================================================
 //  SPELL 900239: Avenger's Shield Leaves Consecration
@@ -648,10 +858,13 @@ void AddPaladinSpellsScripts()
     RegisterSpellScript(spell_custom_holy_hs_aoe_heal);
     RegisterSpellScript(spell_custom_holy_hs_both_dmg);
     RegisterSpellScript(spell_custom_holy_hs_both_heal);
+    RegisterSpellScript(spell_custom_holy_enlighten);
+    RegisterSpellScript(spell_custom_holy_hoj_erupt);
 
     // Paladin Prot
     RegisterSpellScript(spell_custom_pprot_as_consec);
     RegisterSpellScript(spell_custom_pprot_judge_as);
+    RegisterSpellScript(spell_custom_pprot_stun_wave);
 
     // Shared: Consecration follows the caster (Holy/Prot/Ret markers)
     RegisterSpellScript(spell_custom_consec_around);

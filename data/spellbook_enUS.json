@@ -260,6 +260,22 @@
    "icon_spell": 48819
   },
   {
+   "id": 900213,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Enlightened Heals",
+   "description": "Your Holy Light, Flash of Light and Holy Shock heals enlighten the area around their target, dealing 666 Holy damage plus 5 per Paragon level to every enemy within 10 yards of it.",
+   "icon_spell": 635
+  },
+  {
+   "id": 900214,
+   "class": "Paladin",
+   "spec": "Holy",
+   "name": "Holy Shock: Light Erupts",
+   "description": "When your Holy Shock damages an enemy that is under the effect of Hammer of Justice, Light erupts around it, dealing 666 Holy damage plus 5 per Paragon level to every other enemy within 10 yards.",
+   "icon_spell": 20473
+  },
+  {
    "id": 900234,
    "class": "Paladin",
    "spec": "Protection",
@@ -322,6 +338,14 @@
    "name": "Judgement: -2 sec Cooldown",
    "description": "Reduces the cooldown of your Judgements by 2 sec.",
    "icon_spell": 20271
+  },
+  {
+   "id": 900242,
+   "class": "Paladin",
+   "spec": "Protection",
+   "name": "Wave of Light",
+   "description": "Hitting a stunned enemy launches a wave of light that deals 666 Holy damage plus 5 per Paragon level to every other enemy within 10 yards of it. Can occur once every sec per target.",
+   "icon_spell": 853
   },
   {
    "id": 900268,
@@ -924,6 +948,22 @@
    "icon_spell": 49924
   },
   {
+   "id": 900311,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Plague Retaliation",
+   "description": "Each time an enemy hits you, there is a 5% chance that it is infected with your Frost Fever and Blood Plague.",
+   "icon_spell": 55095
+  },
+  {
+   "id": 900312,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Rune Tap: Shadow Power",
+   "description": "Your Rune Tap increases your Shadow damage by 50% for 10 sec.",
+   "icon_spell": 48982
+  },
+  {
    "id": 900333,
    "class": "Death Knight",
    "spec": "Frost",
@@ -1260,6 +1300,14 @@
    "icon_spell": 60103
   },
   {
+   "id": 900445,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Ghost Wolf: Storm Rush",
+   "description": "Turning into Ghost Wolf in combat increases your movement speed by an additional 100% for 3 sec. After the form ends, your next damaging hit within 4 sec erupts in lightning, dealing 666 Nature damage plus 5 per Paragon level to every other enemy within 10 yards of the target.",
+   "icon_spell": 2645
+  },
+  {
    "id": 900466,
    "class": "Shaman",
    "spec": "Restoration",
@@ -1274,6 +1322,30 @@
    "name": "Deep Reserves",
    "description": "Your mana regeneration is increased by 2% for every 1% of mana you are missing.",
    "icon_spell": 16190
+  },
+  {
+   "id": 900468,
+   "class": "Shaman",
+   "spec": "Restoration",
+   "name": "Healing Lightning",
+   "description": "Your Healing Wave and Lesser Healing Wave also cast a free Lightning Bolt, your Chain Heal a free Chain Lightning, and your Riptide a Flame Shock, at a random enemy in combat within 30 yards.",
+   "icon_spell": 49238
+  },
+  {
+   "id": 900469,
+   "class": "Shaman",
+   "spec": "Restoration",
+   "name": "Earth Shield: Spikes",
+   "description": "Your Earth Shield strikes back: whenever a hit on its holder makes the shield heal, the attacker takes 666 Nature damage plus 5 per Paragon level.",
+   "icon_spell": 974
+  },
+  {
+   "id": 900470,
+   "class": "Shaman",
+   "spec": "Restoration",
+   "name": "Earth Shield: Charging Heals",
+   "description": "Your direct heals - Healing Wave, Lesser Healing Wave, Chain Heal and Riptide - add 1 charge to your Earth Shield on each target they heal, up to the shield's maximum.",
+   "icon_spell": 974
   },
   {
    "id": 900700,
@@ -2018,6 +2090,10 @@
    "aura_description": "Increases the damage of your next Exorcism by 50% per application."
   },
   {
+   "id": 900313,
+   "aura_description": "Shadow damage increased by 50%."
+  },
+  {
    "id": 900339,
    "aura_description": "30% of the damage you deal heals you."
   },
@@ -2040,6 +2116,10 @@
   {
    "id": 900439,
    "aura_description": "Your summons deal damage to all enemies near their target with each attack."
+  },
+  {
+   "id": 900446,
+   "aura_description": "Movement speed increased by 100% on top of Ghost Wolf."
   },
   {
    "id": 900712,

@@ -104,6 +104,11 @@ enum CustomSpellIds
     SPELL_HOLY_CONSEC_HEAL_HELPER       = 900210,
     SPELL_CONSEC_MOBILE_AURA            = 900211, // shared by 900205/900234/900268
     SPELL_CONSEC_MOBILE_HEAL_AURA       = 900212, // heal ticker for 900204
+    // third concept list 2026-10-31, wave 2
+    SPELL_HOLY_ENLIGHTEN_PASSIVE        = 900213, // a Holy heal enlightens the area round its target
+    SPELL_HOLY_HOJ_ERUPT_PASSIVE        = 900214, // Holy Shock on a Hammer of Justice target erupts
+    SPELL_HOLY_ENLIGHTEN_BURST          = 900215, // Holy AoE, Paragon damage
+    SPELL_HOLY_HOJ_ERUPT_BURST          = 900216, // Holy AoE, Paragon damage
 
     // ---- Paladin Prot (900234-900267) ----
     SPELL_PPROT_CONSEC_AROUND_PASSIVE   = 900234,
@@ -114,6 +119,9 @@ enum CustomSpellIds
     SPELL_PPROT_AS_CONSEC_PASSIVE       = 900239,
     SPELL_PPROT_JUDGE_AS_PASSIVE        = 900240,
     SPELL_PPROT_JUDGE_CD_PASSIVE        = 900241,
+    // third concept list 2026-10-31, wave 2
+    SPELL_PPROT_STUN_WAVE_PASSIVE       = 900242, // hitting a stunned target: a wave of light
+    SPELL_PPROT_STUN_WAVE_BURST         = 900243, // Holy AoE, Paragon damage
 
     // ---- Paladin Ret (900268-900299) ----
     SPELL_RET_CONSEC_AROUND_PASSIVE     = 900268,
@@ -138,6 +146,10 @@ enum CustomSpellIds
     SPELL_DKB_BLOODWORM_FUSE            = 900308, // on the worm, ends before it
     SPELL_DKB_DS_DMG_PASSIVE            = 900309, // third list 2026-10-31, DBC only
     SPELL_DKB_DS_AOE_PASSIVE            = 900310, // third list 2026-10-31, DBC only
+    // third concept list 2026-10-31, wave 2
+    SPELL_DKB_HIT_DISEASES_PASSIVE      = 900311, // 5 % when hit: both diseases on the attacker
+    SPELL_DKB_RUNE_TAP_SHADOW_PASSIVE   = 900312, // Rune Tap: +50 % Shadow damage, 10 s
+    SPELL_DKB_RUNE_TAP_SHADOW_BUFF      = 900313,
 
     // ---- DK Frost (900333-900365) ----
     SPELL_DKF_FROST_WYRM_PASSIVE        = 900333,
@@ -201,10 +213,20 @@ enum CustomSpellIds
     SPELL_ENH_STS_AOE_PASSIVE           = 900442, // third list 2026-10-31, DBC only
     SPELL_ENH_LL_DMG_PASSIVE            = 900443, // third list 2026-10-31, DBC only
     SPELL_ENH_LL_AOE_PASSIVE            = 900444, // third list 2026-10-31, DBC only
+    // third concept list 2026-10-31, wave 2: Ghost Wolf
+    SPELL_ENH_GHOST_RUSH_PASSIVE        = 900445, // Ghost Wolf in combat: speed, then an eruption
+    SPELL_ENH_GHOST_RUSH_BUFF           = 900446, // +100 % speed on top of Ghost Wolf, 3 s
+    SPELL_ENH_GHOST_CHARGE_AURA         = 900447, // hidden: the next hit after the form erupts
+    SPELL_ENH_GHOST_ERUPTION            = 900448, // Nature AoE, Paragon damage
 
     // ---- Shaman Resto (900466-900499) ----
     SPELL_RST_TOTEM_FOLLOW_PASSIVE      = 900466,
     SPELL_RST_MANA_REGEN_PASSIVE        = 900467,
+    // third concept list 2026-10-31, wave 2
+    SPELL_RST_HEAL_STRIKES_PASSIVE      = 900468, // heals launch Lightning Bolt / Chain Lightning / Flame Shock
+    SPELL_RST_EARTH_SPIKES_PASSIVE      = 900469, // Earth Shield spikes
+    SPELL_RST_SHIELD_STACKS_PASSIVE     = 900470, // direct heals add an Earth Shield charge
+    SPELL_RST_EARTH_SPIKES_DAMAGE       = 900471, // Nature damage, Paragon damage
 
     // ---- Hunter Shared (900500-900501, 900506) ----
     SPELL_HUNT_ARROWS_PASSIVE           = 900500,
@@ -414,6 +436,7 @@ constexpr int32  DKB_DOUBLE_CAST_CHANCE    = 25;    // 900301, % per mirrored ac
 constexpr float  DKB_BLOODWORM_SCALE       = 1.5f;  // 900306, worms 50 % bigger
 constexpr uint32 SPELL_DK_DND_DAMAGE        = 52212; // Death and Decay tick
 constexpr uint32 SPELL_DK_LICHBORNE         = 49039;
+constexpr uint32 SPELL_DK_RUNE_TAP          = 48982;  // wave 2: 900312 hooks it
 constexpr uint32 SPELL_DK_DND_VISUAL        = 49938; // DnD rank 4: ground visual
 constexpr uint32 NPC_DK_FROST_WYRM          = 900333; // Custom Frost Wyrm creature
 constexpr uint32 SPELL_FROST_BREATH         = 900368; // Frost Wyrm cone breath
@@ -422,6 +445,10 @@ constexpr uint32 SPELL_FROST_BREATH         = 900368; // Frost Wyrm cone breath
 constexpr uint32 SPELL_CHAIN_LIGHTNING_R4   = 49271;  // Highest rank CL
 constexpr uint32 SPELL_LAVA_BURST_R1        = 51505;  // LvB rank 1 (rank 2: 60043)
 constexpr uint32 SPELL_FLAME_SHOCK_R9       = 49233;  // Highest rank Flame Shock
+constexpr uint32 SPELL_LIGHTNING_BOLT_R1    = 403;    // first rank of the chain (wave 2)
+constexpr uint32 SPELL_FLAME_SHOCK_R1       = 8050;   // first rank of the chain (wave 2)
+constexpr uint32 SPELL_EARTH_SHIELD_R1      = 974;    // first rank of the chain (wave 2)
+constexpr uint32 SPELL_GHOST_WOLF           = 2645;
 constexpr uint32 SPELL_ELEMENTAL_FOCUS      = 16164;  // Clearcasting buff
 constexpr uint32 SPELL_OVERLOAD_LB          = 45284;  // Lightning Overload (LB)
 constexpr uint32 SPELL_OVERLOAD_CL          = 45297;  // Lightning Overload (CL)
@@ -510,6 +537,10 @@ constexpr uint32 SPELL_AVENGERS_SHIELD_R3   = 48827;
 // Every Judgement damage spell (54158, Righteousness 20187, Vengeance 31804,
 // Corruption 53733 ...) carries this paladin family flag in word 0
 constexpr uint32 SPELLFAMILYFLAG_JUDGEMENT  = 0x800000;
+// Hammer of Justice: every rank carries paladin family flags[0] 0x800 and a
+// stun aura (853, 5588, 5589, 10308). Seal of Justice's stun is 0x200,
+// Repentance 0x4.
+constexpr uint32 SPELLFAMILYFLAG_HAMMER_OF_JUSTICE = 0x800;
 // Divine Storm
 constexpr uint32 SPELL_DIVINE_STORM        = 53385;
 constexpr uint32 SPELL_MAGE_BLINK          = 1953;

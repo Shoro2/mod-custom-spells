@@ -1,0 +1,191 @@
+# mod-custom-spells: the Paladin lines of the third concept list
+# (operator 2026-10-31; share-public
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 2 = procs.
+# Every check states the list's line, so a FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018: take 0 damage, never die, the combat log still reads the full
+# amount) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
+# paladin stands in the ring's middle for the bursts (every dummy within 10 yd
+# of it and of d1). A burst check reads `maxtargets` (the units one cast
+# selected, misses included): the bot has no spell hit.
+# Spells: Holy Light 48782 (rank 13, chain 635), Flash of Light 48785 (rank 9,
+# chain 19750), Holy Shock 48825 (cast; its heal 48821 / damage 48823, chains
+# 25914 / 25912), Hammer of Justice 10308 (rank 4, stun, family flag 0x800).
+# The training dummies may be immune to the real Hammer of Justice stun, so the
+# stun is put on by the director: `.aura 10308` (the aura of the real spell,
+# applied at the unit's next update - wait for it).
+# Triggered casts (`triggered`) run the SpellScripts of the cast spell; the
+# damage-done proc of 900242 (Holy Shock's damage is a triggered cast of the
+# dummy cast, PROC_ATTR_TRIGGERED_CAN_PROC) is checked with the same casts.
+name    Custom spells - Paladin third list
+timeout 300s
+
+bot pa paladin slot=4
+
+place 13 -270 150 -423.2 0
+require pa alive
+pick d1 creature:920018 near pa
+require d1 exists
+do gm target pa
+as gm .unlearn 900213
+as gm .unlearn 900214
+as gm .unlearn 900242
+do pa learn 48782
+do pa learn 48785
+do pa learn 48825
+do pa learn 10308
+do pa goto -270 150 -423.2
+wait 500ms
+
+# ---------------------------------------------------------------- Holy
+log Control - without the passives no burst comes: a Holy Light, a Flash of Light and a Holy Shock heal on the paladin
+do pa reset
+as gm .damage 3000
+spelllog start
+do pa cast 48782 on pa triggered
+wait 800ms
+do pa cast 48785 on pa triggered
+wait 800ms
+do pa cast 48825 on pa triggered
+wait 1500ms
+spelllog stop
+expect pa spell 48782 casts >= 1
+expect pa spell 48785 casts >= 1
+expect pa spell 48821 hits >= 1
+expect pa spell 900215 casts == 0
+
+log Holy - 900213 "Casting a holy heal spell enlightens the area around the target, dealing damage scaling with your paragon level": a Holy Light, a Flash of Light and a Holy Shock heal each strike every dummy within 10 yd of the healed paladin (900215, Holy, 666 + 5 x Paragon level)
+do pa learn 900213
+do pa reset
+as gm .damage 3000
+spelllog start
+do pa cast 48782 on pa triggered
+wait 800ms
+do pa cast 48785 on pa triggered
+wait 800ms
+do pa cast 48825 on pa triggered
+wait 1500ms
+spelllog stop
+expect pa spell 900215 casts >= 3
+expect pa spell 900215 maxtargets >= 6
+
+log Holy - 900213 a heal on a unit that stands elsewhere strikes round THAT unit: the director 78 yd north of the ring has no enemy within 10 yd, so the burst is cast (the heal landed) and reaches nobody
+do gm goto -270 228 -422.72
+wait 500ms
+do pa learn 900213
+do pa reset
+spelllog start
+do pa cast 48782 on gm triggered
+wait 1500ms
+spelllog stop
+expect pa spell 900215 casts >= 1
+expect pa spell 900215 maxtargets <= 1
+do gm goto -270 150 -423.2
+wait 500ms
+as gm .unlearn 900213
+
+log Control - Holy Shock on a target that is not under Hammer of Justice: no eruption (three tries: a miss is legal)
+do pa reset
+spelllog start
+do pa cast 48825 on d1 triggered
+wait 500ms
+do pa cast 48825 on d1 triggered
+wait 500ms
+do pa cast 48825 on d1 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 48823 hits >= 1
+expect pa spell 900216 casts == 0
+
+log Holy - 900214 "Casting Holy Shock on a target affected by Hammer of Justice, Light erupts and deals damage depending on paragon level in aoe": d1 under Hammer of Justice (10308), a damaging Holy Shock erupts round it (900216, anchor left out)
+do pa learn 900214
+do gm target d1
+as gm .aura 10308
+waitfor d1 aura 10308 timeout 3s
+do gm target pa
+do pa reset
+spelllog start
+do pa cast 48825 on d1 triggered
+wait 500ms
+do pa cast 48825 on d1 triggered
+wait 500ms
+do pa cast 48825 on d1 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 48823 hits >= 1
+expect pa spell 900216 casts >= 1
+expect pa spell 900216 maxtargets >= 6
+do gm target d1
+as gm .unaura 10308
+do gm target pa
+as gm .unlearn 900214
+
+# ---------------------------------------------------------------- Protection
+log Control - a Holy Shock on a dummy that is NOT stunned: no wave
+do pa learn 900242
+do pa reset
+spelllog start
+do pa cast 48825 on d1 triggered
+wait 500ms
+do pa cast 48825 on d1 triggered
+wait 500ms
+do pa cast 48825 on d1 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 48823 hits >= 1
+expect pa spell 900243 casts == 0
+
+log Protection - 900242 "Hitting a stunned target launches a wave of light dealing damage around it scaling with paragon lvl (1sec cd per target)": d1 stunned, four Holy Shocks 200 ms apart (inside one second): at least one hits, the wave (900243, Holy, 10 yd) strikes the dummies round d1 ONCE
+do gm target d1
+as gm .aura 10308
+waitfor d1 aura 10308 timeout 3s
+do gm target pa
+do pa reset
+spelllog start
+do pa cast 48825 on d1 triggered
+wait 200ms
+do pa cast 48825 on d1 triggered
+wait 200ms
+do pa cast 48825 on d1 triggered
+wait 200ms
+do pa cast 48825 on d1 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 48823 hits >= 1
+expect pa spell 900243 casts == 1
+expect pa spell 900243 maxtargets >= 6
+
+log Protection - 900242 the cooldown is per target, 1 s: two groups of four Holy Shocks (250 ms apart, 1.5 s between the groups) strike twice, once for each group (d1's stun refreshed first: it lasts 6 s)
+do gm target d1
+as gm .aura 10308
+waitfor d1 aura 10308 timeout 3s
+do gm target pa
+do pa reset
+spelllog start
+do pa cast 48825 on d1 triggered
+wait 250ms
+do pa cast 48825 on d1 triggered
+wait 250ms
+do pa cast 48825 on d1 triggered
+wait 250ms
+do pa cast 48825 on d1 triggered
+wait 1500ms
+do pa cast 48825 on d1 triggered
+wait 250ms
+do pa cast 48825 on d1 triggered
+wait 250ms
+do pa cast 48825 on d1 triggered
+wait 250ms
+do pa cast 48825 on d1 triggered
+wait 1500ms
+spelllog stop
+expect pa spell 900243 casts == 2
+
+cleanup
+do pa stop
+do gm target d1
+as gm .unaura 10308
+do gm target pa
+as gm .unlearn 900213
+as gm .unlearn 900214
+as gm .unlearn 900242
