@@ -4,8 +4,13 @@
 # stacking buffs (900720 Blink: Mirror Image, 900721 Mirror Images: Strength in
 # Numbers with its aura 900722, 900744 Dragon's Breath: Living Bomb, 900745
 # Molten Armor: Flamestrike, 900775 Ice Block: Ice Lance Barrage, 900776 Ice
-# Block: Detonation with the helpers 900777 / 900778). Every check states the
-# list's line, so a FAIL marks a defect.
+# Block: Detonation with the helpers 900777 / 900778) and wave 3 (the last
+# block: 900723 Blink: Through the Enemy with its stacking cost debuff 900724;
+# Blink is a 20-yd leap in the facing direction, `place` with orientation 0
+# faces east, so the leap runs along the mage's y through the ring's dummies,
+# or - 12 yd north of the ring - through nothing; `reset` refills the mana and
+# clears the cooldowns, the auras stay). Every check states the list's line,
+# so a FAIL marks a defect.
 # Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
 # (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. Slot 4
 # belongs to the cs_* scenarios; the cleanup unlearns every custom spell again.
@@ -15,7 +20,7 @@
 # 42921 (22 % of 3268 base mana = 718, 8 yd round the mage: the ring's every
 # dummy), Flamestrike 42926 (rank 9), Ice Block 45438, Ice Lance 42914 (rank 3).
 name    Custom spells - Mage third list
-timeout 300s
+timeout 420s
 
 bot ma mage slot=4
 
@@ -32,6 +37,7 @@ as gm .unlearn 900715
 as gm .unlearn 900716
 as gm .unlearn 900720
 as gm .unlearn 900721
+as gm .unlearn 900723
 as gm .unlearn 900744
 as gm .unlearn 900745
 as gm .unlearn 900775
@@ -43,6 +49,7 @@ as gm .unlearn 901104
 as gm .unlearn 901111
 as gm .unaura 43046
 as gm .unaura 45438
+as gm .unaura 900724
 do ma learn 1953
 do ma learn 55342
 do ma learn 42950
@@ -221,6 +228,102 @@ expect ma spell 900778 targets >= 7
 as gm .unlearn 900775
 as gm .unlearn 900776
 
+# ---------------------------------------------------------------- wave 3: Blink through the enemy
+log Arcane - control for 900723: a Blink along y = the mage's y through the ring (dummies within 2 yd of the line) without the passive goes on its cooldown (15 s) and leaves no strain
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+expect ma cooldown 1953 > 5000
+expect ma noaura 900724
+expect ma spellmod 1953 cost 100 == 100
+
+log Arcane - 900723 "when you blink through an enemy, blink cd is reset but cost 5% more mana each cast": a Blink through the ring with the passive leaves Blink ready again, one stack of Blink Strain (900724, 10 s) and a Blink that costs 5 % more
+do ma learn 900723
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+expect ma cooldown 1953 == 0
+expect ma aurastacks 900724 == 1
+expect ma auramaxduration 900724 == 10000
+expect ma spellmod 1953 cost 100 == 105
+
+log Arcane - 900723 control: a Blink along y = 12 yd north of the ring (no enemy within 2 yd of the line) is a normal Blink - cooldown, no new stack
+place 13 -279 162 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+expect ma cooldown 1953 > 5000
+expect ma aurastacks 900724 == 1
+
+log Arcane - 900723 a second Blink through the ring: ready again at once, two stacks, +10 %
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+expect ma cooldown 1953 == 0
+expect ma aurastacks 900724 == 2
+expect ma spellmod 1953 cost 100 == 110
+
+log Arcane - 900723 "10 stacks": eight more Blinks through the ring, then a ninth - the strain stays at 10 stacks (+50 %)
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+expect ma aurastacks 900724 == 10
+expect ma spellmod 1953 cost 100 == 150
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+expect ma aurastacks 900724 == 10
+expect ma cooldown 1953 == 0
+
+log Arcane - 900723 "10sec duration": ten seconds after the last Blink the strain is gone and Blink costs the normal amount again
+wait 10500ms
+expect ma noaura 900724
+expect ma spellmod 1953 cost 100 == 100
+
+log Arcane - 900723 "cannot be used if u have targeted blink": with Targeted Blink (900713) learned a Blink through the ring is a plain Blink - cooldown, no strain
+do ma learn 900713
+place 13 -279 150 -423.2 0
+do ma reset
+do ma cast 1953
+wait 800ms
+expect ma cooldown 1953 > 5000
+expect ma noaura 900724
+as gm .unlearn 900713
+as gm .unlearn 900723
+
 cleanup
 do ma stop
 do gm target ma
@@ -228,8 +331,11 @@ as gm .unaura 43046
 as gm .unaura 45438
 as gm .unaura 59756
 as gm .unaura 900722
+as gm .unaura 900724
+as gm .unlearn 900713
 as gm .unlearn 900720
 as gm .unlearn 900721
+as gm .unlearn 900723
 as gm .unlearn 900744
 as gm .unlearn 900745
 as gm .unlearn 900775

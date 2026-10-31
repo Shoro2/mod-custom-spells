@@ -86,6 +86,7 @@ local CLASS_SPELLS = {
 		{ 900272, "Crusader Strike: +50% Damage", "Retribution" },
 		{ 900273, "Crusader Strike: +9 Targets", "Retribution" },
 		{ 900274, "Exorcism Power", "Retribution" },
+		{ 900266, "Divine Barrage", "Retribution" },
 	},
 	[3] = { -- Hunter
 		{ 900500, "Recovered Arrows", "Shared" },
@@ -95,6 +96,7 @@ local CLASS_SPELLS = {
 		{ 900504, "Pet: Beast Cleave", "Beast Mastery" },
 		{ 900507, "Pet: +100% Health", "Beast Mastery" },
 		{ 900525, "Second Pet", "Beast Mastery" },
+		{ 900509, "Switch Places", "Beast Mastery" },
 		{ 900533, "Auto Shot: Ricochet", "Marksmanship" },
 		{ 900534, "Barrage", "Marksmanship" },
 		{ 900537, "Multi-Shot: Serpent Sting", "Marksmanship" },
@@ -108,6 +110,7 @@ local CLASS_SPELLS = {
 		{ 900573, "Traps: +50% Damage", "Survival" },
 		{ 900574, "Random Traps", "Survival" },
 		{ 900575, "Trap Echo", "Survival" },
+		{ 900576, "Trap Grab", "Survival" },
 	},
 	[4] = { -- Rogue
 		{ 900600, "Energy: +50% Regeneration", "Assassination" },
@@ -252,6 +255,7 @@ local CLASS_SPELLS = {
 		{ 900713, "Targeted Blink", "Arcane" },
 		{ 900720, "Blink: Mirror Image", "Arcane" },
 		{ 900721, "Mirror Images: Strength in Numbers", "Arcane" },
+		{ 900723, "Blink: Through the Enemy", "Arcane" },
 		{ 900733, "Fireball: +50% Damage", "Fire" },
 		{ 900734, "Fireball: +9 Targets", "Fire" },
 		{ 900735, "Pyroblast: +9 Targets", "Fire" },
@@ -278,6 +282,7 @@ local CLASS_SPELLS = {
 		{ 900807, "Curse of Agony: +50% Damage", "Affliction" },
 		{ 900808, "Drain Life: +50% Damage", "Affliction" },
 		{ 900809, "Life Tap: Dark Tithe", "Affliction" },
+		{ 900811, "Drain Life: +9 Targets", "Affliction" },
 		{ 900833, "Metamorphosis: Feast", "Demonology" },
 		{ 900834, "Metamorphosis: Fel Vigor", "Demonology" },
 		{ 900835, "Lesser Demons", "Demonology" },
@@ -305,6 +310,7 @@ local CLASS_SPELLS = {
 		{ 900879, "Soul Fire: +9 Targets", "Destruction" },
 		{ 900880, "Immolate: +9 Targets", "Destruction" },
 		{ 900881, "Incinerate: Stoked Soul Fire", "Destruction" },
+		{ 900883, "Shadow Bolt: Shadow Immolate", "Destruction" },
 	},
 	[11] = { -- Druid
 		{ 901000, "Moonfire: +9 Targets", "Balance" },

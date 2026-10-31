@@ -128,6 +128,8 @@ namespace
 
     constexpr float TRAP_REACH         = 40.0f;  // the target a trap is thrown at
     constexpr float TRAP_FEET_RADIUS   = 8.0f;   // a trap at the hunter's feet needs an enemy this close
+    constexpr size_t TRAP_GRAB_MAX     = 10;     // 900576: traps pulled in one cast
+    constexpr float SWITCH_PLACES_RANGE = 40.0f; // 900509: the pet must be this close
 
     // The effect spell of the highest rank of a trap kind the hunter knows
     // (0 = the hunter knows none)
@@ -895,6 +897,168 @@ class spell_custom_hunt_surv_blade_and_shot : public AuraScript
 };
 
 // ============================================================
+//  HUNTER BM: 900509 Switch Places (active, third list wave 3)
+//  List: "switch position with our pet and enraging both of you for 10
+//  seconds for +30% damage. 60 seconds cooldown."
+//  An ability the hunter learns in the /spells picker (not a cursed-item
+//  passive), self-cast, instant, 60 s cooldown (spell data). It needs the
+//  hunter's pet alive, within 40 yd and in line of sight (CheckCast, so a
+//  refused cast costs no cooldown). The cast then swaps the two positions
+//  with two near teleports - the hunter's (Unit::NearTeleportTo, the leap
+//  Blink uses) and the pet's (a creature teleport: the pet's movement is
+//  re-initialised and it follows its master again from the new spot) - and
+//  puts the "enrage" 900510 on both: aura 79, +30 % damage done, 10 s.
+//  The second pet of 900525 is a plain guardian and is not switched.
+// ============================================================
+class spell_custom_hunt_switch_places : public SpellScript
+{
+    PrepareSpellScript(spell_custom_hunt_switch_places);
+
+    SpellCastResult CheckCast()
+    {
+        Player* hunter = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!hunter)
+            return SPELL_FAILED_BAD_TARGETS;
+
+        Pet* pet = hunter->GetPet();
+        if (!pet || !pet->IsAlive() || !pet->IsInWorld())
+            return SPELL_FAILED_NO_PET;
+        if (!hunter->IsWithinDistInMap(pet, SWITCH_PLACES_RANGE))
+            return SPELL_FAILED_OUT_OF_RANGE;
+        if (!hunter->IsWithinLOSInMap(pet))
+            return SPELL_FAILED_LINE_OF_SIGHT;
+
+        return SPELL_CAST_OK;
+    }
+
+    void HandleAfterCast()
+    {
+        Player* hunter = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!hunter || !g_CustomSpellsEnabled || !hunter->IsAlive())
+            return;
+
+        Pet* pet = hunter->GetPet();
+        if (!pet || !pet->IsAlive() || !pet->IsInWorld())
+            return;
+
+        Position const hunterSpot = hunter->GetPosition();
+        Position const petSpot = pet->GetPosition();
+
+        hunter->NearTeleportTo(petSpot.GetPositionX(), petSpot.GetPositionY(),
+            petSpot.GetPositionZ(), hunter->GetOrientation(), true);
+        pet->NearTeleportTo(hunterSpot.GetPositionX(), hunterSpot.GetPositionY(),
+            hunterSpot.GetPositionZ(), pet->GetOrientation());
+
+        hunter->AddAura(SPELL_HUNT_BM_SWITCH_BUFF, hunter);
+        pet->AddAura(SPELL_HUNT_BM_SWITCH_BUFF, pet);
+    }
+
+    void Register() override
+    {
+        OnCheckCast += SpellCheckCastFn(spell_custom_hunt_switch_places::CheckCast);
+        AfterCast += SpellCastFn(spell_custom_hunt_switch_places::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  HUNTER SURV: 900576 Trap Grab (active, third list wave 3)
+//  List: "trap grab: pulls together all traps within 40y range and throws
+//  them at the target".
+//  An ability the hunter learns in the /spells picker (not a cursed-item
+//  passive): instant, an enemy target within 40 yd in line of sight, 30 s
+//  cooldown (my choice: the cooldown of the traps themselves), a small mana
+//  cost. The cast refuses (CheckCast, no cooldown) when no trap of the
+//  hunter's own lies within 40 yd of him. Otherwise every such trap game
+//  object (GAMEOBJECT_TYPE_TRAP, owned by the hunter, armed or not) is
+//  removed from the world - "pulled together" - and its effect spell (the
+//  trap template's own, GameObjectTemplate::trap.spellId) goes off at the
+//  target's spot exactly as a placed trap fires (LaunchTrapEffect: a world
+//  trigger casts it for the hunter), so 900573 (+50 %) and 900575 (Trap
+//  Echo) apply. At most 10 traps a cast.
+// ============================================================
+namespace
+{
+    struct GrabbedTrap
+    {
+        GameObject* object;
+        uint32 effectSpell;
+    };
+
+    // The hunter's own trap game objects within reach
+    void CollectOwnTraps(Player* hunter, std::vector<GrabbedTrap>& traps)
+    {
+        std::list<GameObject*> found;
+        Acore::GameObjectInRangeCheck check(hunter->GetPositionX(),
+            hunter->GetPositionY(), hunter->GetPositionZ(), TRAP_REACH);
+        Acore::GameObjectListSearcher<Acore::GameObjectInRangeCheck>
+            searcher(hunter, found, check);
+        Cell::VisitObjects(hunter, searcher, TRAP_REACH);
+
+        for (GameObject* object : found)
+        {
+            if (!object->IsInWorld() || object->GetGoType() != GAMEOBJECT_TYPE_TRAP
+                || object->GetOwnerGUID() != hunter->GetGUID())
+                continue;
+
+            GameObjectTemplate const* info = object->GetGOInfo();
+            if (!info || !info->trap.spellId
+                || !sSpellMgr->GetSpellInfo(info->trap.spellId))
+                continue;
+
+            traps.push_back({ object, info->trap.spellId });
+            if (traps.size() >= TRAP_GRAB_MAX)
+                return;
+        }
+    }
+}
+
+class spell_custom_hunt_trap_grab : public SpellScript
+{
+    PrepareSpellScript(spell_custom_hunt_trap_grab);
+
+    SpellCastResult CheckCast()
+    {
+        Player* hunter = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!hunter)
+            return SPELL_FAILED_BAD_TARGETS;
+
+        std::vector<GrabbedTrap> traps;
+        CollectOwnTraps(hunter, traps);
+        return traps.empty() ? SPELL_FAILED_NO_VALID_TARGETS : SPELL_CAST_OK;
+    }
+
+    void HandleDummy(SpellEffIndex /*effIndex*/)
+    {
+        Player* hunter = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* target = GetHitUnit();
+        if (!hunter || !target || !g_CustomSpellsEnabled || !target->IsAlive())
+            return;
+
+        std::vector<GrabbedTrap> traps;
+        CollectOwnTraps(hunter, traps);
+
+        // read everything from the objects first: removing one invalidates it
+        std::vector<uint32> effects;
+        for (GrabbedTrap const& trap : traps)
+            effects.push_back(trap.effectSpell);
+        for (GrabbedTrap const& trap : traps)
+            hunter->RemoveGameObject(trap.object, true);
+
+        for (uint32 effectSpell : effects)
+            if (SpellInfo const* effect = sSpellMgr->GetSpellInfo(effectSpell))
+                LaunchTrapEffect(hunter, effect, target, target->GetPositionX(),
+                    target->GetPositionY(), target->GetPositionZ(), nullptr);
+    }
+
+    void Register() override
+    {
+        OnCheckCast += SpellCheckCastFn(spell_custom_hunt_trap_grab::CheckCast);
+        OnEffectHitTarget += SpellEffectFn(spell_custom_hunt_trap_grab::HandleDummy,
+            EFFECT_0, SPELL_EFFECT_DUMMY);
+    }
+};
+
+// ============================================================
 //  HUNTER: DBC-only passives of the revision (spellmods in
 //  mod_custom_spells_d_hunter_druid_rogue.sql):
 //  900538 / 900539 Chimera Shot +9 targets (jump targets 10) / +50 %,
@@ -914,6 +1078,7 @@ void AddHunterSpellsScripts()
     // Hunter BM (pet damage/speed: shared minion auras; pet health:
     // spell_pet_auras)
     new custom_hunter_pet_aoe_unitscript();
+    RegisterSpellScript(spell_custom_hunt_switch_places);
 
     // Hunter MM
     RegisterSpellScript(spell_custom_hunt_autoshot_bounce);
@@ -927,4 +1092,5 @@ void AddHunterSpellsScripts()
     RegisterSpellScript(spell_custom_hunt_surv_auto_trap);
     RegisterSpellScript(spell_custom_hunt_surv_trap_echo);
     RegisterSpellScript(spell_custom_hunt_surv_blade_and_shot);
+    RegisterSpellScript(spell_custom_hunt_trap_grab);
 }

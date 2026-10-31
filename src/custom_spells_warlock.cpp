@@ -1102,16 +1102,14 @@ namespace
     constexpr float WLK_DEMON_CHARGE_RADIUS   = 10.0f;
     constexpr uint32 SPELL_WLK_DEMON_CHARGE_ID = 54785; // Demon Charge (Metamorphosis)
 
-    // "if you hit a target affected by shadow immolate": Shadow Immolate is
-    // wave 3 and does not exist yet, so for now the warlock's own Immolate
-    // stands in for it. Wave 3 switches THIS function (and nothing else) to
-    // the Shadow Immolate aura - the Incinerate hook below only asks it.
+    // "if you hit a target affected by shadow immolate": the warlock's own
+    // Shadow Immolate (900884, made by spell_custom_wlk_shadow_bolt_immolate
+    // in wave 3) on the target. Wave 2 read the plain Immolate here until
+    // Shadow Immolate existed; this function is the only place that asks.
     bool HasShadowImmolate(Unit* target, Unit* warlock)
     {
         return target && warlock
-            && target->GetAuraEffect(SPELL_AURA_PERIODIC_DAMAGE,
-                SPELLFAMILY_WARLOCK, SPELLFAMILYFLAG_WARLOCK_IMMOLATE, 0, 0,
-                warlock->GetGUID()) != nullptr;
+            && target->HasAura(SPELL_WLK_DEST_SHADOW_IMMOLATE, warlock->GetGUID());
     }
 
     // One stack on a buff of the warlock: a new aura at 1, else +1 (a stack
@@ -1338,8 +1336,8 @@ private:
 //  incenerate, your next soulfire does +50% damage, stacks 10 times".
 //  Every Incinerate hit (-29722, every rank) on a target that carries the
 //  warlock's Shadow Immolate adds a stack of 900882 (aura 108 +50 %
-//  Soul Fire damage on flags1 0x80, 10 stacks, 30 s). Shadow Immolate is
-//  wave 3: for now HasShadowImmolate() above reads the warlock's Immolate.
+//  Soul Fire damage on flags1 0x80, 10 stacks, 30 s). Since wave 3
+//  HasShadowImmolate() above reads the real Shadow Immolate (900884).
 //  The next Soul Fire (-6353) uses every stack up; its damage is fixed at
 //  launch, before the cast ends, so the buff may go right after the cast.
 // ============================================================
@@ -1383,6 +1381,259 @@ class spell_custom_wlk_soulfire_spend : public SpellScript
 };
 
 // ============================================================
+//  THIRD CONCEPT LIST, WAVE 3 (2026-10-31): Drain Life +9, Shadow Immolate
+// ============================================================
+namespace
+{
+    constexpr float  DRAIN_EXTRA_RANGE      = 15.0f; // round the channel target
+    constexpr uint32 DRAIN_EXTRA_TARGETS    = 9;     // "drain life +9 targets"
+    constexpr int32  SHADOW_BOLT_IMMOLATE_PCT = 15;  // "15% more damage of your shadow bolt"
+
+    // The warlock's own plain Immolate DoT on a target (not Shadow Immolate):
+    // told by the warlock family flag, as the core's Conflagrate and
+    // Incinerate code finds it (SpellEffects.cpp, SPELLFAMILY_WARLOCK).
+    AuraEffect* FindPlainImmolate(Unit* target, Unit* warlock)
+    {
+        for (AuraEffect* effect : target->GetAuraEffectsByType(SPELL_AURA_PERIODIC_DAMAGE))
+        {
+            SpellInfo const* info = effect->GetSpellInfo();
+            if (effect->GetCasterGUID() == warlock->GetGUID()
+                && info->SpellFamilyName == SPELLFAMILY_WARLOCK
+                && (info->SpellFamilyFlags[0] & SPELLFAMILYFLAG_WARLOCK_IMMOLATE)
+                && info->Id != SPELL_WLK_DEST_SHADOW_IMMOLATE)
+                return effect;
+        }
+        return nullptr;
+    }
+
+    // Immolate or Shadow Immolate of this warlock on the target
+    bool HasAnyImmolate(Unit* target, Unit* warlock)
+    {
+        return target->HasAura(SPELL_WLK_DEST_SHADOW_IMMOLATE, warlock->GetGUID())
+            || FindPlainImmolate(target, warlock) != nullptr;
+    }
+
+    // One tick of a leech aura on a unit that is not the aura's own target:
+    // AuraEffect::HandlePeriodicHealthLeechAuraTick (SpellAuraEffects.cpp
+    // ~6666) with the aura effect's own amount, crit chance and heal ratio -
+    // the damage, the combat log line and the heal to the caster are those
+    // of the real tick. Armor does not apply (Shadow); the real tick's
+    // procs and resilience are left out.
+    void DrainCopyTick(AuraEffect const* aurEff, Player* warlock, Unit* target)
+    {
+        SpellInfo const* info = aurEff->GetSpellInfo();
+        if (!target->IsAlive() || target->IsImmunedToDamage(warlock, info))
+            return;
+
+        uint8 const stacks = aurEff->GetBase()->GetStackAmount();
+        uint32 damage = uint32(std::max(aurEff->GetAmount(), 0));
+        damage = target->SpellDamageBonusTaken(warlock, info, damage, DOT, stacks);
+
+        bool const crit = roll_chance_f(aurEff->GetCritChance());
+        if (crit)
+            damage = Unit::SpellCriticalDamageBonus(warlock, info, damage, target);
+
+        DamageInfo dmgInfo(warlock, target, damage, info, info->GetSchoolMask(), DOT);
+        Unit::CalcAbsorbResist(dmgInfo, false, aurEff->GetCasterLevel());
+        uint32 const absorb = dmgInfo.GetAbsorb();
+        uint32 const resist = dmgInfo.GetResist();
+        // a leech cannot credit overkill
+        dmgInfo.LimitDamage(target->GetHealth());
+        damage = dmgInfo.GetDamage();
+
+        warlock->SendSpellNonMeleeDamageLog(target, info, damage,
+            info->GetSchoolMask(), absorb, resist, false, 0, crit);
+
+        CleanDamage cleanDamage(0, 0, BASE_ATTACK, MELEE_HIT_NORMAL);
+        uint32 const dealt = Unit::DealDamage(warlock, target, damage,
+            &cleanDamage, DOT, info->GetSchoolMask(), info, false);
+
+        if (!warlock->IsAlive())
+            return;
+
+        float const gain = info->Effects[aurEff->GetEffIndex()].CalcValueMultiplier(warlock);
+        uint32 heal = uint32(warlock->SpellHealingBonusDone(warlock, info,
+            uint32(dealt * gain), DOT, aurEff->GetEffIndex(), 0.0f, stacks));
+        heal = uint32(warlock->SpellHealingBonusTaken(warlock, info, heal, DOT, stacks));
+        HealInfo healInfo(warlock, warlock, heal, info, info->GetSchoolMask());
+        warlock->HealBySpell(healInfo);
+    }
+
+    // Turns the warlock's plain Immolate on the target into Shadow Immolate:
+    // the aura is replaced by 900884 with twice the per-tick amount, the
+    // remaining duration and the tick rhythm of the old one. Both carry the
+    // warlock family flag 0x4, so the core's aura state AURA_STATE_CONFLAGRATE
+    // (SpellInfo::LoadAuraState), Conflagrate's search for the DoT, Incinerate's
+    // +25 % and Fire and Brimstone (Unit::SpellDamageBonusDone) find it as
+    // before. Conflagrate reads the aura's amount, duration and amplitude,
+    // so it deals twice the damage on Shadow Immolate.
+    void TurnImmolateIntoShadow(Player* warlock, Unit* target)
+    {
+        AuraEffect* plain = FindPlainImmolate(target, warlock);
+        if (!plain)
+            return;
+
+        Aura* oldAura = plain->GetBase();
+        int32 const amount      = plain->GetAmount();
+        int32 const duration    = oldAura->GetDuration();
+        int32 const maxDuration = oldAura->GetMaxDuration();
+        int32 const timer       = plain->GetPeriodicTimer();
+
+        // the new DoT first: when the target resists the application the
+        // Immolate stays as it is
+        Aura* shadow = warlock->AddAura(SPELL_WLK_DEST_SHADOW_IMMOLATE, target);
+        if (!shadow)
+            return;
+
+        if (AuraEffect* shadowEffect = shadow->GetEffect(EFFECT_0))
+        {
+            // SetAmount also stops the aura from being recalculated, so the
+            // doubled value stays
+            shadowEffect->SetAmount(amount * 2);
+            shadowEffect->SetPeriodicTimer(timer);
+        }
+        shadow->SetMaxDuration(maxDuration);
+        shadow->SetDuration(duration);
+
+        target->RemoveOwnedAura(oldAura, AURA_REMOVE_BY_DEFAULT);
+    }
+}
+
+// ============================================================
+//  900811 Drain Life: +9 Targets (Affliction)
+//  List: "drain life +9 targets". A channel has one target in the core, so
+//  the extra drains are script-driven copies of the real ticks (the pattern
+//  of Mind Sear +3, 900980): every tick of the real channel (the leech aura
+//  on the channel target, -689 every rank) also drains up to 9 other enemies
+//  within 15 yd of the channel target, the nearest first. Each copy is a full
+//  tick of the same aura (DrainCopyTick: its amount, crit chance, combat log
+//  line and a heal of the same size to the warlock), so 900808 (+50 %), spell
+//  power and the rank are in it without further code. Breaking the channel
+//  ends the copies at once - they only ever follow the real tick.
+// ============================================================
+class spell_custom_wlk_drain_plus9 : public AuraScript
+{
+    PrepareAuraScript(spell_custom_wlk_drain_plus9);
+
+    void HandlePeriodic(AuraEffect const* aurEff)
+    {
+        Unit* casterUnit = GetCaster();
+        Player* warlock = casterUnit ? casterUnit->ToPlayer() : nullptr;
+        Unit* anchor = GetTarget();
+        if (!warlock || !anchor || !g_CustomSpellsEnabled || !warlock->IsAlive()
+            || !warlock->HasAura(SPELL_WLK_AFFL_DRAIN_PLUS9_PASSIVE))
+            return;
+
+        std::list<Unit*> enemies;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(anchor, warlock,
+            DRAIN_EXTRA_RANGE);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(anchor, enemies, check);
+        Cell::VisitObjects(anchor, searcher, DRAIN_EXTRA_RANGE);
+
+        enemies.remove_if([warlock, anchor](Unit* enemy)
+        {
+            return enemy == anchor || !enemy->IsAlive()
+                || !warlock->IsValidAttackTarget(enemy);
+        });
+        enemies.sort([anchor](Unit* a, Unit* b)
+        {
+            return anchor->GetDistance(a) < anchor->GetDistance(b);
+        });
+
+        uint32 count = 0;
+        for (Unit* enemy : enemies)
+        {
+            if (count++ >= DRAIN_EXTRA_TARGETS)
+                break;
+
+            DrainCopyTick(aurEff, warlock, enemy);
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_wlk_drain_plus9::HandlePeriodic, EFFECT_0,
+            SPELL_AURA_PERIODIC_LEECH);
+    }
+};
+
+// ============================================================
+//  900883 / 900884 Shadow Bolt: Shadow Immolate (Destruction)
+//  List: "targets affected by immolate receive 15% more damage of your
+//  shadow bolt. when hit by shadow bolt the dot transforms in shadow
+//  immolate (double damage, shadowfire damage)".
+//  Shadow Bolt (-686, every rank) with the marker 900883 on a target that
+//  carries the warlock's Immolate or Shadow Immolate: its damage is raised
+//  by 15 % (OnHit, before the damage is dealt), and after the hit a plain
+//  Immolate turns into Shadow Immolate (TurnImmolateIntoShadow above):
+//  900884, twice Immolate's tick, school mask 0x24 (Shadow + Fire), the
+//  remaining duration and tick rhythm kept. A Shadow Immolate that is
+//  already there stays as it is (and takes the 15 % too).
+// ============================================================
+class spell_custom_wlk_shadow_bolt_immolate : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_shadow_bolt_immolate);
+
+    bool Applies(Player*& warlock, Unit*& target)
+    {
+        warlock = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        target = GetHitUnit();
+        return warlock && target && g_CustomSpellsEnabled
+            && warlock->HasAura(SPELL_WLK_DEST_SHADOW_IMMOLATE_PASSIVE);
+    }
+
+    void HandleOnHit()
+    {
+        Player* warlock;
+        Unit* target;
+        if (!Applies(warlock, target) || !HasAnyImmolate(target, warlock))
+            return;
+
+        SetHitDamage(GetHitDamage() * (100 + SHADOW_BOLT_IMMOLATE_PCT) / 100);
+    }
+
+    void HandleAfterHit()
+    {
+        Player* warlock;
+        Unit* target;
+        if (!Applies(warlock, target) || !target->IsAlive())
+            return;
+
+        TurnImmolateIntoShadow(warlock, target);
+    }
+
+    void Register() override
+    {
+        OnHit += SpellHitFn(spell_custom_wlk_shadow_bolt_immolate::HandleOnHit);
+        AfterHit += SpellHitFn(spell_custom_wlk_shadow_bolt_immolate::HandleAfterHit);
+    }
+};
+
+// A new Immolate (-348) on a target that carries this warlock's Shadow
+// Immolate replaces it: the two are different spells, so without this they
+// would tick side by side.
+class spell_custom_wlk_immolate_replaces_shadow : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_immolate_replaces_shadow);
+
+    void HandleOnHit()
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetHitUnit();
+        if (caster && target)
+            target->RemoveAurasDueToSpell(SPELL_WLK_DEST_SHADOW_IMMOLATE,
+                caster->GetGUID());
+    }
+
+    void Register() override
+    {
+        OnHit += SpellHitFn(spell_custom_wlk_immolate_replaces_shadow::HandleOnHit);
+    }
+};
+
+// ============================================================
 //  WARLOCK PET AURAS (900836, 900839; 2026-10-08: 900834's +100 %
 //  in Metamorphosis, 900846 Imp casting speed, 900848 Voidwalker):
 //  minion auras kept by custom_minion_aura_playerscript
@@ -1398,6 +1649,7 @@ void AddWarlockSpellsScripts()
     RegisterSpellScript(spell_custom_wlk_withering_harvest);
     RegisterSpellScript(spell_custom_wlk_lifetap_tithe);
     RegisterSpellScript(spell_custom_wlk_lifetap_dot);
+    RegisterSpellScript(spell_custom_wlk_drain_plus9);
 
     // Warlock Demonology
     new custom_wlk_meta_kill_extend_playerscript();
@@ -1420,4 +1672,6 @@ void AddWarlockSpellsScripts()
     RegisterSpellScript(spell_custom_wlk_rof_ticker);
     RegisterSpellScript(spell_custom_wlk_incinerate_stoke);
     RegisterSpellScript(spell_custom_wlk_soulfire_spend);
+    RegisterSpellScript(spell_custom_wlk_shadow_bolt_immolate);
+    RegisterSpellScript(spell_custom_wlk_immolate_replaces_shadow);
 }

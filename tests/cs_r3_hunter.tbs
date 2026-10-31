@@ -2,8 +2,9 @@
 # (operator 2026-10-31; share-public
 # custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
 # spell modifiers, wave 2 = procs and stacking buffs (900574 Random Traps,
-# 900575 Trap Echo). Every check states the list's line, so a FAIL marks a
-# defect.
+# 900575 Trap Echo), wave 3 = the two actives 900509 Switch Places (900510 the
+# enrage) and 900576 Trap Grab. Every check states the list's line, so a FAIL
+# marks a defect.
 # Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
 # (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
 # bot stands west of the ring facing it.
@@ -13,6 +14,13 @@
 # combat while it ticks; Serpent Sting needs the target in front, so the hunter
 # `approach`es d1 first - standing 3 yd west of d1 an Explosive Trap still
 # reaches the ring's dummies, at least 5 of the 8 per cast).
+# Wave 3: Call Pet 883 / Dismiss Pet 2641 are not needed - `tame` gives the
+# hunter a Snow Tracker Wolf (1138), the pet that Switch Places swaps with. The
+# swap is checked by positions: the hunter near-teleports 25 yd away from its
+# pet and casts at once, so the pet is still where it stood (it runs at about
+# 8 yd/s); the two then stand at each other's spots, within a few yards. Trap
+# Grab: a Frost Trap 13809 (game object 164639, effect 13810) and an Explosive
+# Trap 49067 (game object 189322, effect 49065) laid 21 yd west of d1.
 name    Custom spells - Hunter third list
 timeout 300s
 
@@ -181,6 +189,61 @@ expect hu spell 49065 casts >= 42
 expect hu spell 49065 casts <= 80
 as gm .unlearn 900575
 
+# ---------------------------------------------------------------- wave 3
+log BM - 900509 setup: the hunter gets its Snow Tracker Wolf and stands 15 yd west of d1
+do hu learn 900509
+do hu tame 1138
+waitfor hu pet timeout 5s
+do hu goto -288.9 150 -423.2
+wait 2s
+pick pt creature:1138 near hu
+require pt exists
+
+log BM - 900509 "switch position with our pet and enraging both of you for 10 seconds for +30% damage. 60 seconds cooldown.": the hunter jumps 25 yd away from the pet and casts Switch Places at once - afterwards the hunter stands where the pet stood (west) and the pet where the hunter stood (north-east), both carry Switched Fury (900510, 10 s), the cooldown is 60 s
+do hu goto -270 170 -423.2
+do hu cast 900509
+wait 200ms
+expect hu near -288.9 150 -423.2 7
+expect pt near -270 170 -423.2 9
+expect hu aura 900510
+expect pt aura 900510
+expect hu auramaxduration 900510 == 10000
+expect hu cooldown 900509 > 50000
+
+log BM - 900509 ten seconds later the enrage is gone from both
+wait 10500ms
+expect hu noaura 900510
+expect pt noaura 900510
+do hu goto -288.9 150 -423.2
+wait 1s
+
+log Survival - 900576 "trap grab: pulls together all traps within 40y range and throws them at the target": a Frost Trap and an Explosive Trap laid at the hunter's feet 21 yd west of d1 - both trap objects stand, then Trap Grab at d1 removes them both and sets off both effects at d1: the Explosive Trap Effect (49065) reaches the ring (6 dummies or more), the Frost Trap Effect (13810) is cast, one cast of Trap Grab, a 30 s cooldown
+do hu learn 13809
+do hu learn 49067
+do hu learn 900576
+do hu goto -295 150 -423.2
+wait 500ms
+do hu reset
+do hu cast 13809 triggered
+wait 300ms
+do hu cast 49067 triggered
+wait 500ms
+expect gameobject:164639 exists
+expect gameobject:189322 exists
+spelllog start
+do hu cast 900576 on d1
+wait 1500ms
+spelllog stop
+expect hu spell 900576 casts == 1
+expect gameobject:164639 missing
+expect gameobject:189322 missing
+expect hu spell 13810 casts >= 1
+expect hu spell 49065 casts >= 1
+expect hu spell 49065 targets >= 6
+expect hu cooldown 900576 > 20000
+as gm .unlearn 900576
+as gm .unlearn 900509
+
 cleanup
 do hu stop
 do gm target hu
@@ -188,3 +251,6 @@ as gm .unlearn 900573
 as gm .unlearn 900574
 as gm .unlearn 900575
 as gm .unlearn 13809
+as gm .unlearn 900509
+as gm .unlearn 900576
+as gm .unaura 900510
