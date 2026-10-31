@@ -10,7 +10,9 @@
 # Spells: Explosive Trap 49067 (effect 49065: a hit and a burn), Immolation
 # Trap 49056 (effect 51740: a burn). Wave 2: Frost Trap 13809 (its effect, the
 # ground aura, is 13810), Serpent Sting 49001 (a DoT keeps the hunter in
-# combat while it ticks).
+# combat while it ticks; Serpent Sting needs the target in front, so the hunter
+# `approach`es d1 first - standing 3 yd west of d1 an Explosive Trap still
+# reaches the ring's dummies, at least 5 of the 8 per cast).
 name    Custom spells - Hunter third list
 timeout 300s
 
@@ -52,7 +54,8 @@ expect hu spell 49065 casts == 0
 
 log Survival - 900574 in combat (a Serpent Sting ticking on d1) two ticks, 5 s and 10 s after the passive, each throw the Explosive Trap Effect (3 ticks at most in the window)
 as gm .unlearn 900574
-wait 100ms
+do hu approach d1 3
+wait 300ms
 do hu learn 900574
 do hu cast 49001 on d1 triggered
 waitfor hu incombat timeout 3s
@@ -66,13 +69,14 @@ spelllog stop
 expect hu incombat
 expect hu spell 49065 casts >= 2
 expect hu spell 49065 casts <= 3
-expect hu spell 49065 targets >= 8
+expect hu spell 49065 targets >= 10
 
 log Survival - 900574 every trap kind goes off the same way: with Frost Trap the only trap known (Explosive unlearned) the Frost Trap Effect (13810, the slowing ground aura) is cast
 as gm .unlearn 900574
 as gm .unlearn 49067
 do hu learn 13809
-wait 100ms
+do hu approach d1 3
+wait 300ms
 do hu learn 900574
 do hu cast 49001 on d1 triggered
 waitfor hu incombat timeout 3s
