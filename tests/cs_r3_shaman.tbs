@@ -20,10 +20,24 @@
 # Spells: Stormstrike 17364 (talent; debuff cast, its weapon strikes 32175 /
 # 32176), Lava Lash 60103 (talent, needs an off-hand weapon). Modifier checks
 # only: the chains work as Obliterate's and Mutilate's hand strikes do.
+# Wave 3 (large items, 2026-10-31): 900401 / 900433 / 900466 "Totems replaced by
+# creatures that follow/fight" (each totem keeps its effect and gets a spirit
+# creature: Flame 900419 / Stone 900420 / Tide 900421 / Wind 900422, the
+# totem hidden while its spirit lives), 900472 "You can now use earth shield on
+# unlimited targets", 900473 "if you direct heal your healing stream totem, your
+# heal also applies with 75% to near allies. also increases healing stream
+# totems healing by 25% for 30 seconds. stacks 10 times." Totems: Strength of
+# Earth 58643 (earth slot, totem 31129), Searing Totem 58704 (fire slot, attack
+# 58702), Fire Elemental Totem 2894 (gets no spirit), Wrath of Air Totem 3738 (air
+# slot), Healing Stream Totem rank 9 58757 (water slot; the aura family mask
+# 0x2000 spells 5672 .. 58765), Totemic Recall 36936. `al` (a warrior bot) and
+# the director are the other two members of the group; the splash and the Earth
+# Shield checks need them.
 name    Custom spells - Shaman third list
-timeout 300s
+timeout 480s
 
 bot sh shaman slot=4
+bot al warrior
 
 place 13 -279 150 -423.2 0
 require sh alive
@@ -38,6 +52,13 @@ as gm .unlearn 900445
 as gm .unlearn 900468
 as gm .unlearn 900469
 as gm .unlearn 900470
+as gm .unlearn 900472
+as gm .unlearn 900473
+as gm .unlearn 900401
+as gm .unlearn 900433
+as gm .unlearn 900466
+as gm .unlearn 900402
+as gm .unlearn 900435
 do sh learn 17364
 do sh learn 60103
 
@@ -273,6 +294,205 @@ as gm .unaura 49284
 as gm .unlearn 900469
 as gm .unlearn 900470
 
+# ---------------------------------------------------------------- wave 3: Shaman large items
+log Wave 3 setup - back on the ring, the totems of the earlier checks recalled
+do sh goto -279 150 -423.2
+wait 500ms
+do sh reset
+do sh cast 36936 triggered
+wait 1s
+require al alive
+
+log Elemental - 900401 "Totems replaced by creatures that follow/fight" (control): without a totem passive a Strength of Earth Totem stands alone - no spirit
+do sh cast 58643 triggered
+wait 2s
+pick tot creature:31129 near sh
+require tot exists
+expect sh minions 900420 == 0
+
+log Elemental - 900401 with the passive the totem is joined within a second by a Stone Spirit (900420, the earth slot); exactly one, and a totem that replaces it brings no second one
+do sh learn 900401
+waitfor sh minions 900420 == 1 timeout 4s
+pick sp creature:900420 near sh
+require sp exists
+expect sp alive
+expect sp noaura 901109
+do sh cast 58643 triggered
+wait 2s
+expect sh minions 900420 == 1
+
+log Elemental - 900401 the spirit follows the shaman (20 yd away, 3.5 s) and so does the totem it stands for
+pick tot creature:31129 near sh
+pick sp creature:900420 near sh
+do sh goto -299 150 -423.2
+wait 3500ms
+expect sp near -299 150 -423.2 8
+expect tot near -299 150 -423.2 8
+
+log Elemental - 900401 the spirit fights the shaman's target: the shaman melees the dummy and the spirit takes it up
+do sh goto -279 150 -423.2
+wait 2s
+do sh approach d1
+do sh attack d1
+waitfor sp victim d1 timeout 8s
+do sh stop
+
+log Elemental - 900401 the totem keeps its effect while hidden: a Searing Totem (fire slot, Flame Spirit 900419) still shoots the dummy the shaman attacks
+do sh cast 58704 triggered
+waitfor sh minions 900419 == 1 timeout 4s
+do sh attack d1
+spelllog start
+waitfor sh spell 58702 hits >= 2 timeout 25s
+spelllog stop
+do sh stop
+expect sh spell 58702 hits >= 2
+expect sh minions 900420 == 1
+
+log Enhancement - 900435 a totem spirit is a summon of the shaman: with Empowered Summons it carries the +50 % damage aura (901109)
+do sh learn 900435
+wait 1500ms
+pick sp creature:900420 near sh
+expect sp aura 901109
+as gm .unlearn 900435
+
+log Elemental - 900402 compatibility: the Fire Elemental Totem gets no spirit (its elemental is the creature), the elemental still becomes Ragnaros with twice the health, and the Flame Spirit of the Searing Totem it replaced is gone
+do sh learn 900402
+do sh cast 2894 triggered
+wait 2500ms
+pick fe creature:15438 near sh
+require fe exists
+expect fe maxhealth >= 16000
+expect sh minions 900419 == 0
+as gm .unlearn 900402
+
+log Elemental - 900401 the spirit lives with its totem: Totemic Recall takes both
+do sh cast 36936 triggered
+waitfor sh minions 900420 == 0 timeout 4s
+expect sh minions 900420 == 0
+expect sh minions 900419 == 0
+
+log Elemental - 900401 killing the spirit does not take the totem: the totem stays, a new spirit comes after 15 s
+do sh cast 58643 triggered
+waitfor sh minions 900420 == 1 timeout 4s
+pick tot creature:31129 near sh
+pick sp creature:900420 near sh
+require sp exists
+do gm target sp
+as gm .die
+waitfor sh minions 900420 == 0 timeout 4s
+expect tot alive
+waitfor sh minions 900420 == 1 timeout 25s
+
+log Elemental - 900401 unlearning the passive takes the spirit away and leaves the totem
+as gm .unlearn 900401
+waitfor sh minions 900420 == 0 timeout 4s
+expect tot alive
+do sh cast 36936 triggered
+wait 1s
+
+log Enhancement - 900433 and Restoration - 900466 raise the same spirits (the Wind Spirit 900422 of an air totem: Wrath of Air Totem 3738)
+do sh learn 900433
+do sh cast 3738 triggered
+waitfor sh minions 900422 == 1 timeout 4s
+as gm .unlearn 900433
+waitfor sh minions 900422 == 0 timeout 4s
+do sh learn 900466
+do sh cast 3738 triggered
+waitfor sh minions 900422 == 1 timeout 4s
+do sh cast 36936 triggered
+waitfor sh minions 900422 == 0 timeout 4s
+
+# ---------------------------------------------------------------- Earth Shield unlimited
+log Restoration - 900472 control: Earth Shield on the director, the warrior bot and the shaman in turn stays on the last one only (the single-target rule)
+as gm .unlearn 900472
+do sh cast 49284 on gm triggered
+wait 300ms
+do sh cast 49284 on al triggered
+wait 300ms
+do sh cast 49284 on sh triggered
+wait 500ms
+expect gm noaura 49284
+expect al noaura 49284
+expect sh aura 49284
+
+log Restoration - 900472 "You can now use earth shield on unlimited targets": with the passive the same three casts leave the shield on all three
+do sh learn 900472
+do sh cast 49284 on gm triggered
+wait 300ms
+do sh cast 49284 on al triggered
+wait 300ms
+do sh cast 49284 on sh triggered
+wait 500ms
+expect gm aura 49284
+expect al aura 49284
+expect sh aura 49284
+
+log Restoration - 900472 each kept shield is a working shield (6 charges) and a fourth cast on the first target only refreshes it - the other two stay
+expect gm auracharges 49284 == 6
+do sh cast 49284 on gm triggered
+wait 500ms
+expect gm aura 49284
+expect al aura 49284
+expect sh aura 49284
+as gm .unlearn 900472
+
+# ---------------------------------------------------------------- Healing Stream surge
+log Restoration - 900473 setup: Healing Stream Totem (water slot) and its Tide Spirit (900421) under 900466
+do sh learn 900466
+do sh cast 58757 triggered
+waitfor sh minions 900421 == 1 timeout 4s
+pick hb creature:900421 near sh
+require hb exists
+expect sh spellmod 58765 damage 100 == 100
+
+log Restoration - 900473 control: without the passive a Healing Wave on the spirit splashes nothing and gives no stack
+do gm target sh
+as gm .damage 6000
+spelllog start
+do sh cast 49273 on hb triggered
+wait 500ms
+spelllog stop
+expect sh spell 900474 hits == 0
+expect sh noaura 900475
+
+log Restoration - 900473 "if you direct heal your healing stream totem, your heal also applies with 75% to near allies": a Healing Wave on the spirit heals the damaged shaman (and the group within 10 yd) through the splash 900474
+do sh learn 900473
+do gm target sh
+as gm .damage 6000
+spelllog start
+do sh cast 49273 on hb triggered
+wait 500ms
+spelllog stop
+expect sh spell 900474 hits >= 1
+expect sh spell 900474 heal > 0
+
+log Restoration - 900473 "also increases healing stream totems healing by 25% for 30 seconds. stacks 10 times": one stack (+25 % on the Healing Stream auras, 30 s), then three
+expect sh aurastacks 900475 == 1
+expect sh auramaxduration 900475 == 30000
+expect sh spellmod 58765 damage 100 == 125
+do sh cast 49273 on hb triggered
+wait 300ms
+do sh cast 49273 on hb triggered
+wait 300ms
+expect sh aurastacks 900475 == 3
+expect sh spellmod 58765 damage 100 == 175
+expect sh spellmod 5672 damage 100 == 175
+
+log Restoration - 900473 only the Healing Stream spirit counts: a Healing Wave on the shaman himself adds no stack
+do sh cast 49273 on sh triggered
+wait 300ms
+expect sh aurastacks 900475 == 3
+
+log Restoration - 900473 the stacks ride on a Chain Heal on the spirit as well (a direct heal)
+do sh cast 55459 on hb triggered
+wait 300ms
+expect sh aurastacks 900475 == 4
+do sh cast 36936 triggered
+waitfor sh minions 900421 == 0 timeout 4s
+as gm .unlearn 900473
+as gm .unlearn 900466
+as gm .unaura 49284
+
 cleanup
 do sh stop
 do gm target sh
@@ -284,3 +504,11 @@ as gm .unlearn 900445
 as gm .unlearn 900468
 as gm .unlearn 900469
 as gm .unlearn 900470
+as gm .unlearn 900472
+as gm .unlearn 900473
+as gm .unlearn 900401
+as gm .unlearn 900433
+as gm .unlearn 900466
+as gm .unlearn 900402
+as gm .unlearn 900435
+do sh cast 36936 triggered

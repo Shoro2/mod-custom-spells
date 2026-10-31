@@ -1279,8 +1279,8 @@
    "id": 900401,
    "class": "Shaman",
    "spec": "Elemental",
-   "name": "Totems Follow You",
-   "description": "Your totems follow you instead of staying where you placed them.",
+   "name": "Totem Spirits",
+   "description": "Each of your totems is joined by a spirit of its element: it follows you and fights your target, while the totem keeps its effect, hidden, and stays by your side. Fire and Earth Elemental Totems keep their elementals.",
    "icon_spell": 2894
   },
   {
@@ -1367,8 +1367,8 @@
    "id": 900433,
    "class": "Shaman",
    "spec": "Enhancement",
-   "name": "Totems Follow You",
-   "description": "Your totems follow you instead of staying where you placed them.",
+   "name": "Totem Spirits",
+   "description": "Each of your totems is joined by a spirit of its element: it follows you and fights your target, while the totem keeps its effect, hidden, and stays by your side. Fire and Earth Elemental Totems keep their elementals.",
    "icon_spell": 2894
   },
   {
@@ -1455,8 +1455,8 @@
    "id": 900466,
    "class": "Shaman",
    "spec": "Restoration",
-   "name": "Totems Follow You",
-   "description": "Your totems follow you instead of staying where you placed them.",
+   "name": "Totem Spirits",
+   "description": "Each of your totems is joined by a spirit of its element: it follows you and fights your target, while the totem keeps its effect, hidden, and stays by your side. Fire and Earth Elemental Totems keep their elementals.",
    "icon_spell": 2894
   },
   {
@@ -1490,6 +1490,22 @@
    "name": "Earth Shield: Charging Heals",
    "description": "Your direct heals - Healing Wave, Lesser Healing Wave, Chain Heal and Riptide - add 1 charge to your Earth Shield on each target they heal, up to the shield's maximum.",
    "icon_spell": 974
+  },
+  {
+   "id": 900472,
+   "class": "Shaman",
+   "spec": "Restoration",
+   "name": "Earth Shield: Unlimited Targets",
+   "description": "Your Earth Shield no longer disappears from its earlier target when you cast it on another: you can keep it on any number of allies.",
+   "icon_spell": 974
+  },
+  {
+   "id": 900473,
+   "class": "Shaman",
+   "spec": "Restoration",
+   "name": "Healing Stream: Surge",
+   "description": "When you heal the spirit of your Healing Stream Totem with Healing Wave, Lesser Healing Wave, Chain Heal or Riptide, allies in your group within 10 yards of it receive 75% of that heal, and your Healing Stream Totem heals for 25% more for 30 seconds. Stacks up to 10 times.",
+   "icon_spell": 5394
   },
   {
    "id": 900700,
@@ -2496,6 +2512,10 @@
   {
    "id": 900950,
    "aura_description": "You can cast damaging spells while you are the Spirit of Redemption."
+  },
+  {
+   "id": 900475,
+   "aura_description": "Your Healing Stream Totem heals for 25% more per application."
   }
  ]
 }

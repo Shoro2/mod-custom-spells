@@ -235,6 +235,11 @@ enum CustomSpellIds
     SPELL_RST_EARTH_SPIKES_PASSIVE      = 900469, // Earth Shield spikes
     SPELL_RST_SHIELD_STACKS_PASSIVE     = 900470, // direct heals add an Earth Shield charge
     SPELL_RST_EARTH_SPIKES_DAMAGE       = 900471, // Nature damage, Paragon damage
+    // third concept list 2026-10-31, wave 3
+    SPELL_RST_EARTH_UNLIMITED_PASSIVE   = 900472, // Earth Shield on unlimited targets
+    SPELL_RST_STREAM_SURGE_PASSIVE      = 900473, // a direct heal on the Healing Stream body splashes and stacks
+    SPELL_RST_STREAM_SPLASH             = 900474, // the 75 % splash heal (combat log id)
+    SPELL_RST_STREAM_SURGE_BUFF         = 900475, // +25 % Healing Stream healing per stack, 10 stacks, 30 s
 
     // ---- Hunter Shared (900500-900501, 900506) ----
     SPELL_HUNT_ARROWS_PASSIVE           = 900500,
@@ -528,6 +533,14 @@ constexpr uint32 SPELL_MAELSTROM_WEAPON     = 53817;  // Maelstrom Weapon buff
 constexpr uint32 SPELL_FERAL_SPIRIT         = 51533;  // Summon Spirit Wolves
 constexpr uint32 NPC_SPIRIT_WOLF            = 29264;  // Spirit Wolf NPC
 constexpr uint32 NPC_CUSTOM_WOLF            = 900436; // Custom summoned wolf
+// Wave 3 (third list): the creature bodies of the totems (900401 / 900433 /
+// 900466). Entries 900419-900422 come from the free ids of the Elemental
+// block; they have no spell row - the passives summon them from C++.
+constexpr uint32 NPC_TOTEM_BODY_FIRE        = 900419;
+constexpr uint32 NPC_TOTEM_BODY_EARTH       = 900420;
+constexpr uint32 NPC_TOTEM_BODY_WATER       = 900421;
+constexpr uint32 NPC_TOTEM_BODY_AIR         = 900422;
+constexpr uint32 SPELL_HEALING_STREAM_TOTEM_R1 = 5394; // first rank of the chain
 // SummonProperties.dbc 61: category ally, type guardian, no slot. The proc
 // wolf and the Healing Treant are summoned with it: a bare SummonCreature
 // with a copied faction is no guardian (no UNIT_FLAG_PLAYER_CONTROLLED), and
