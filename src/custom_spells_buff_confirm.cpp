@@ -29,6 +29,11 @@
 // without an answer drop the question. A cast with an item (a scroll, a quest item) is never asked about - the recast
 // could not use the item again - so it replaces as before.
 //    CustomSpells.BuffReplaceConfirm.Enable = 0: never ask, always replace
+//
+// Each player picks how this goes for him (the /fl hub's Settings, or `.csbuff ask|always|never`), kept per character
+// in character_settings, source "core.fl_buff_replace" (a "core." source is saved even with EnablePlayerSettings = 0),
+// index 0: 0 = ask (the default, no row needed), 1 = always replace without asking, 2 = never replace (the cast is
+// refused with the stock "A more powerful spell is already active").
 #include "custom_spells_common.h"
 #include "Chat.h"
 #include "CommandScript.h"
@@ -43,6 +48,23 @@ namespace
     constexpr char const* BUFF_CONFIRM_PREFIX = "CSBC";
     constexpr char const* BUFF_CONFIRM_KEY = "CustomSpellsBuffConfirm";
     constexpr uint32 BUFF_CONFIRM_TIMEOUT_MS = 30 * IN_MILLISECONDS;
+
+    constexpr char const* BUFF_REPLACE_SETTING = "core.fl_buff_replace";
+
+    enum BuffReplaceMode : uint32
+    {
+        BUFF_REPLACE_ASK    = 0,
+        BUFF_REPLACE_ALWAYS = 1,
+        BUFF_REPLACE_NEVER  = 2,
+    };
+
+    BuffReplaceMode GetBuffReplaceMode(Player const* player)
+    {
+        PlayerSettingVector const* values = player->FindPlayerSettings(BUFF_REPLACE_SETTING);
+        if (!values || values->empty() || (*values)[0].value > BUFF_REPLACE_NEVER)
+            return BUFF_REPLACE_ASK;
+        return BuffReplaceMode((*values)[0].value);
+    }
 
     class BuffConfirmState : public DataMap::Base
     {
@@ -100,6 +122,18 @@ public:
         if (!sConfigMgr->GetOption<bool>("CustomSpells.BuffReplaceConfirm.Enable", true) || spell->m_CastItem)
             return true;
 
+        switch (GetBuffReplaceMode(player))
+        {
+            case BUFF_REPLACE_ALWAYS:
+                return true;
+            case BUFF_REPLACE_NEVER:
+                // the core refuses silently (SPELL_FAILED_DONT_REPORT): the stock red line tells him why
+                Spell::SendCastResult(player, spell->GetSpellInfo(), spell->m_cast_count, SPELL_FAILED_AURA_BOUNCED);
+                return false;
+            default:
+                break;
+        }
+
         uint32 const spellId = spell->GetSpellInfo()->Id;
         BuffConfirmState* state = player->CustomData.GetDefault<BuffConfirmState>(BUFF_CONFIRM_KEY);
         if (state->Confirmed && state->SpellId == spellId && state->Target == target->GetGUID() && state->Open())
@@ -123,7 +157,9 @@ public:
 };
 
 // ============================================================
-//  .csbuff yes|no   the popup's answer
+//  .csbuff yes|no               the popup's answer
+//  .csbuff ask|always|never     the player's choice (the /fl hub's Settings buttons send these)
+//  .csbuff                      shows the choice
 // ============================================================
 class custom_buff_confirm_commandscript : public CommandScript
 {
@@ -134,8 +170,12 @@ public:
     {
         static ChatCommandTable buffConfirmTable =
         {
-            { "yes", HandleYes, SEC_PLAYER, Console::No },
-            { "no",  HandleNo,  SEC_PLAYER, Console::No },
+            { "yes",    HandleYes,    SEC_PLAYER, Console::No },
+            { "no",     HandleNo,     SEC_PLAYER, Console::No },
+            { "ask",    HandleAsk,    SEC_PLAYER, Console::No },
+            { "always", HandleAlways, SEC_PLAYER, Console::No },
+            { "never",  HandleNever,  SEC_PLAYER, Console::No },
+            { "",       HandleShow,   SEC_PLAYER, Console::No },
         };
 
         static ChatCommandTable commandTable =
@@ -179,6 +219,50 @@ public:
         if (Player* player = handler->GetPlayer())
             if (BuffConfirmState* state = player->CustomData.Get<BuffConfirmState>(BUFF_CONFIRM_KEY))
                 state->Clear();
+        return true;
+    }
+
+    static void SendMode(ChatHandler* handler, Player* player)
+    {
+        switch (GetBuffReplaceMode(player))
+        {
+            case BUFF_REPLACE_ALWAYS:
+                handler->SendSysMessage("A weaker recast of your own buff always replaces the stronger one.");
+                break;
+            case BUFF_REPLACE_NEVER:
+                handler->SendSysMessage("A weaker recast of your own buff never replaces the stronger one.");
+                break;
+            default:
+                handler->SendSysMessage("A weaker recast of your own buff asks first before it replaces the stronger one.");
+                break;
+        }
+    }
+
+    static bool SetMode(ChatHandler* handler, BuffReplaceMode mode)
+    {
+        Player* player = handler->GetPlayer();
+        if (!player)
+            return false;
+
+        player->UpdatePlayerSetting(BUFF_REPLACE_SETTING, 0, mode);
+        // a question still open is answered by the new choice: drop it
+        if (BuffConfirmState* state = player->CustomData.Get<BuffConfirmState>(BUFF_CONFIRM_KEY))
+            state->Clear();
+        SendMode(handler, player);
+        return true;
+    }
+
+    static bool HandleAsk(ChatHandler* handler) { return SetMode(handler, BUFF_REPLACE_ASK); }
+    static bool HandleAlways(ChatHandler* handler) { return SetMode(handler, BUFF_REPLACE_ALWAYS); }
+    static bool HandleNever(ChatHandler* handler) { return SetMode(handler, BUFF_REPLACE_NEVER); }
+
+    static bool HandleShow(ChatHandler* handler)
+    {
+        Player* player = handler->GetPlayer();
+        if (!player)
+            return false;
+
+        SendMode(handler, player);
         return true;
     }
 };

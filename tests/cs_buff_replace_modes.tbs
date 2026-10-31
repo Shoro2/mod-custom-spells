@@ -1,0 +1,67 @@
+# mod-custom-spells: the player's choice for a weaker recast of his own buff (the /fl hub's Settings,
+# Chris 2026-10-31), `.csbuff ask|always|never`, kept per character. Thorns ranks: 53307 (rank 8) is
+# stronger than 26992 (rank 7). Ask = refused silently (result 27) and asked; always = replaced at once;
+# never = refused with the stock "A more powerful spell is already active" (result 9), nothing asked.
+name    Custom spells - weaker own buff recast: ask, always, never, kept over a relog
+timeout 90s
+
+bot dr druid
+
+place 13 -279 150 -423.2 0
+require dr alive
+do dr learn 53307
+do dr learn 26992
+do gm target dr
+as gm .unaura 53307
+as gm .unaura 26992
+
+# ask (the default)
+as dr .csbuff ask
+expect output has "asks first"
+do dr clientcast 53307 on dr
+wait 2s
+expect dr aura 53307
+do dr clientcast 26992 on dr
+expect output has "result 27"
+expect output lacks "result 9"
+wait 2s
+expect dr aura 53307
+expect dr noaura 26992
+as dr .csbuff no
+
+# always: the weaker rank replaces at once
+as dr .csbuff always
+expect output has "always replaces"
+do dr clientcast 26992 on dr
+wait 2s
+expect dr aura 26992
+expect dr noaura 53307
+
+# the stronger rank back (a stronger recast never asks)
+do dr clientcast 53307 on dr
+wait 2s
+expect dr aura 53307
+expect dr noaura 26992
+
+# never: refused with the stock line, nothing to confirm
+as dr .csbuff never
+expect output has "never replaces"
+do dr clientcast 26992 on dr
+expect output has "result 9"
+wait 2s
+expect dr aura 53307
+expect dr noaura 26992
+as dr .csbuff yes
+expect output has "There is no buff to replace."
+
+# the choice survives a relog
+do dr relog
+waitfor dr exists timeout 20s
+as dr .csbuff
+expect output has "never replaces"
+
+cleanup
+as dr .csbuff ask
+do gm target dr
+as gm .unaura 53307
+as gm .unaura 26992

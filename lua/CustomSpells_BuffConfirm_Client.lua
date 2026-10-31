@@ -4,7 +4,8 @@
 -- than the one already on the target, and asks here by an addon whisper from the player to himself, prefix CSBC:
 --   Q;spell id;spell name;target name;the active buff's amount;this cast's amount
 -- Yes runs `.csbuff yes` (the server casts the spell again, allowed this time), No runs `.csbuff no`; the server drops
--- an unanswered question after 30 s.
+-- an unanswered question after 30 s. The player's choice in the /fl hub's Settings (`.csbuff ask|always|never`) decides
+-- whether the server asks at all.
 
 local AIO = AIO or require("AIO")
 if AIO.AddAddon() then
@@ -40,7 +41,7 @@ listener:SetScript("OnEvent", function(self, event, prefix, message, channel, se
 	if kind ~= "Q" or not spellName then
 		return
 	end
-	local text = string.format("Your active %s on %s is stronger (%s) than this cast would be (%s).\n\nReplace it anyway?",
+	local text = string.format("Your active %s on %s is stronger (%s) than this cast would be (%s).\n\nReplace it anyway?\n\n|cff9d9d9dAsk, always or never: /fl, Settings|r",
 		spellName, target or "?", active or "?", new or "?")
 	StaticPopup_Show("CUSTOMSPELLS_BUFF_REPLACE", text)
 end)
