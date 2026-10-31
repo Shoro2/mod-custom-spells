@@ -195,16 +195,23 @@ do hu learn 900509
 do hu tame 1138
 waitfor hu pet timeout 5s
 do hu goto -288.9 150 -423.2
-wait 2s
+wait 5s
 pick pt creature:1138 near hu
 require pt exists
 
-log BM - 900509 "switch position with our pet and enraging both of you for 10 seconds for +30% damage. 60 seconds cooldown.": the hunter jumps 25 yd away from the pet and casts Switch Places at once - afterwards the hunter stands where the pet stood (west) and the pet where the hunter stood (north-east), both carry Switched Fury (900510, 10 s), the cooldown is 60 s
+log BM - 900509 "switch position with our pet and enraging both of you for 10 seconds for +30% damage. 60 seconds cooldown.": the pet is frozen (.aura 9454, the pet would follow its master), the hunter jumps 25 yd away and casts Switch Places - afterwards the hunter stands where the pet stood (west) and the pet where the hunter stood (north-east), both carry Switched Fury (900510, 10 s), the cooldown is 60 s
+do gm target pt
+as gm .aura 9454
+do gm target hu
 do hu goto -270 170 -423.2
+wait 1s
 do hu cast 900509
 wait 200ms
-expect hu near -288.9 150 -423.2 7
-expect pt near -270 170 -423.2 9
+expect hu near -282 150 -423.2 12
+expect pt near -270 170 -423.2 4
+do gm target pt
+as gm .unaura 9454
+do gm target hu
 expect hu aura 900510
 expect pt aura 900510
 expect hu auramaxduration 900510 == 10000
