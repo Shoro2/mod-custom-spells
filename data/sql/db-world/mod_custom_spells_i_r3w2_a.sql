@@ -85,5 +85,5 @@ INSERT INTO `spell_dbc` (`ID`, `Attributes`, `CastingTimeIndex`, `DurationIndex`
 DELETE FROM `spell_proc` WHERE `SpellId` IN (900242, 900311, 900447);
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
 (900242, 0, 0, 0, 0, 0, 0x10014, 1, 2, 0, 0x2, 0, 0, 100, 0, 0),
-(900311, 0, 0, 0, 0, 0, 0x222A8, 1, 2, 0, 0x2, 0, 0, 5, 0, 0),
+(900311, 0, 0, 0, 0, 0, 0x222A8, 1, 0, 0, 0x2, 0, 0, 5, 0, 0),
 (900447, 0, 0, 0, 0, 0, 0x10014, 1, 2, 0, 0x2, 0, 0, 100, 0, 1);
