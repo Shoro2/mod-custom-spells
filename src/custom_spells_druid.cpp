@@ -956,14 +956,17 @@ struct npc_custom_star_owl : public ScriptedAI
             }
         }
 
-        if (!UpdateVictim())
+        // the victim AttackStartCaster set, not UpdateVictim(): a guardian
+        // caster fighting a target without a threat list (the training
+        // dummies, bot run 1670) is never "engaged" and would never cast
+        Unit* victim = me->GetVictim();
+        if (!victim || !victim->IsAlive() || !me->IsValidAttackTarget(victim))
             return;
 
         if (me->HasUnitState(UNIT_STATE_CASTING))
             return;
 
-        Unit* victim = me->GetVictim();
-        if (victim && me->IsWithinLOSInMap(victim)
+        if (me->IsWithinLOSInMap(victim)
             && me->IsWithinDistInMap(victim, STAR_OWL_CAST_RANGE))
             me->CastSpell(victim, SPELL_STARFIRE_R10,
                 TriggerCastFlags(TRIGGERED_IGNORE_POWER_AND_REAGENT_COST));
