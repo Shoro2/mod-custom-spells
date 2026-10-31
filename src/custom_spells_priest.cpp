@@ -1272,6 +1272,17 @@ class spell_custom_pri_pom_second_jump : public AuraScript
         if (!second)
             return;
 
+        // Prayer of Mending is a single-target aura (SPELL_ATTR5_LIMIT_N):
+        // making the second one would remove the one the core just made. Let
+        // the earlier ones of this priest go untracked first - they live on
+        // and jump on their own, only a later NEW cast of the priest ends
+        // the tracked one.
+        for (Player* ally : PriestAndGroup(priest))
+            if (ally != holder)
+                if (Aura* earlier = ally->GetAura(GetId(), priest->GetGUID()))
+                    if (earlier->IsSingleTarget())
+                        earlier->UnregisterSingleTarget();
+
         int32 value = aurEff->GetAmount();
         holder->CastSpell(second, SPELL_PRI_POM_VISUAL, true);
         holder->CastCustomSpell(second, GetId(), &value, nullptr, nullptr,

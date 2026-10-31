@@ -1235,8 +1235,11 @@ class spell_custom_wlk_felhunter_slow : public AuraScript
 
         std::vector<Unit*> felhunters;
         CollectFelhunters(warlock, felhunters);
+        // an area aura is OWNED by the Felhunter and applied to the enemies
+        // only (the owner is no target of an enemy-area effect): HasAura() and
+        // RemoveAurasDueToSpell() on the Felhunter see nothing of it
         for (Unit* felhunter : felhunters)
-            if (!felhunter->HasAura(SPELL_WLK_DEMO_FELHUNTER_SLOW_AURA))
+            if (!felhunter->GetOwnedAura(SPELL_WLK_DEMO_FELHUNTER_SLOW_AURA))
                 felhunter->AddAura(SPELL_WLK_DEMO_FELHUNTER_SLOW_AURA, felhunter);
     }
 
@@ -1250,7 +1253,7 @@ class spell_custom_wlk_felhunter_slow : public AuraScript
         std::vector<Unit*> felhunters;
         CollectFelhunters(warlock, felhunters);
         for (Unit* felhunter : felhunters)
-            felhunter->RemoveAurasDueToSpell(SPELL_WLK_DEMO_FELHUNTER_SLOW_AURA);
+            felhunter->RemoveOwnedAura(SPELL_WLK_DEMO_FELHUNTER_SLOW_AURA);
     }
 
     void Register() override

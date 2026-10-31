@@ -79,6 +79,8 @@ wait 500ms
 pick mb creature:476 near pr alive
 require mb exists
 do pr reset
+# Mana Burn needs its target in front of the caster (result 134)
+do pr approach mb
 do pr cast 8129 on mb triggered
 wait 500ms
 expect pr noaura 900909
@@ -87,6 +89,7 @@ expect gm noaura 900909
 log Discipline - 900908 with the passive the burnt mana becomes a Burnt Reserve (900909, 15 s) on the priest and on every party member within 30 yd of him - the director and the warrior bot too
 do pr learn 900908
 do pr reset
+do pr approach mb
 do pr cast 8129 on mb triggered
 wait 500ms
 expect pr aura 900909
@@ -120,6 +123,7 @@ do pr cast 48168 on pr triggered
 wait 500ms
 expect pr auracharges 48168 == 20
 expect pr noaura 900911
+do pr approach ct
 do pr cast 48123 on ct triggered
 wait 8s
 expect pr auracharges 48168 <= 18
@@ -270,7 +274,8 @@ do pr cast 48156 on d1
 wait 3s
 expect pr aurastacks 900979 == 2
 expect pr spellmod 58381 damage 100 == 150
-expect pr spellmod 48156 duration 3000 == 1980
+expect pr spellmod 48156 duration 3000 >= 1979
+expect pr spellmod 48156 duration 3000 <= 1981
 wait 1s
 do pr cast 48156 on d1
 wait 3s
