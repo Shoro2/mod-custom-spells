@@ -12,6 +12,10 @@
 local AIO = AIO or require("AIO")
 if AIO.AddAddon() then return end
 
+-- FLUI (fl-lua-scripts AIO_UI/, the Forgotten Land window kit) draws the
+-- window and its buttons in the player's theme.
+local FLUI = assert(FLUI, "the spell picker needs AIO_UI/FLUI_Client.lua loaded first")
+
 if not CustomSpells_ClientHandlers then
 	CustomSpells_ClientHandlers = {}
 end
@@ -37,31 +41,12 @@ local HEADER_HEIGHT = 24
 local LIST_BOTTOM = 48
 local GM_ROW_HEIGHT = 28
 
-local mainFrame = CreateFrame("Frame", "CustomSpellsFrame", UIParent)
-mainFrame:SetSize(380, 480)
-mainFrame:SetPoint("CENTER")
-mainFrame:SetBackdrop({
-	bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-	edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-	tile = true, tileSize = 32, edgeSize = 32,
-	insets = { left = 8, right = 8, top = 8, bottom = 8 },
+-- Movable, Escape closes, no saved position (as before)
+local mainFrame = FLUI.Window("CustomSpellsFrame", {
+	width = 380, height = 484, point = { "CENTER" },
+	title = "Forgotten Spells", icon = "Interface\\Icons\\INV_Misc_Book_09",
+	savePosition = false,
 })
-mainFrame:SetMovable(true)
-mainFrame:EnableMouse(true)
-mainFrame:RegisterForDrag("LeftButton")
-mainFrame:SetScript("OnDragStart", mainFrame.StartMoving)
-mainFrame:SetScript("OnDragStop", mainFrame.StopMovingOrSizing)
-mainFrame:SetFrameStrata("DIALOG")
-mainFrame:Hide()
-
-tinsert(UISpecialFrames, "CustomSpellsFrame")
-
-local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-title:SetPoint("TOP", 0, -14)
-title:SetText("Forgotten Spells")
-
-local closeBtn = CreateFrame("Button", nil, mainFrame, "UIPanelCloseButton")
-closeBtn:SetPoint("TOPRIGHT", -6, -6)
 
 -- ============================================================
 -- Scrollable list
@@ -69,7 +54,7 @@ closeBtn:SetPoint("TOPRIGHT", -6, -6)
 
 local scrollFrame = CreateFrame("ScrollFrame", "CustomSpellsScroll", mainFrame,
 	"UIPanelScrollFrameTemplate")
-scrollFrame:SetPoint("TOPLEFT", 16, -40)
+scrollFrame:SetPoint("TOPLEFT", 16, -(FLUI.HEADER + 4))
 scrollFrame:SetPoint("BOTTOMRIGHT", -36, LIST_BOTTOM)
 
 local content = CreateFrame("Frame", nil, scrollFrame)
@@ -188,18 +173,14 @@ end
 -- Bottom buttons
 -- ============================================================
 
-local learnAllBtn = CreateFrame("Button", nil, mainFrame, "UIPanelButtonTemplate")
-learnAllBtn:SetSize(120, 24)
+local learnAllBtn = FLUI.Button(mainFrame, "Learn All", 120, 24)
 learnAllBtn:SetPoint("BOTTOMLEFT", 16, 16)
-learnAllBtn:SetText("Learn All")
 learnAllBtn:SetScript("OnClick", function()
 	AIO.Handle("CustomSpells", "SetAll", 1)
 end)
 
-local forgetAllBtn = CreateFrame("Button", nil, mainFrame, "UIPanelButtonTemplate")
-forgetAllBtn:SetSize(120, 24)
-forgetAllBtn:SetPoint("BOTTOMRIGHT", -30, 16)
-forgetAllBtn:SetText("Forget All")
+local forgetAllBtn = FLUI.Button(mainFrame, "Forget All", 120, 24)
+forgetAllBtn:SetPoint("BOTTOMRIGHT", -30, 16) -- left of the size grip's corner
 forgetAllBtn:SetScript("OnClick", function()
 	AIO.Handle("CustomSpells", "SetAll", 0)
 end)
@@ -208,11 +189,8 @@ end)
 -- charge (mod-forgotten-talents' .forgotten learnall). It has a row of its
 -- own above Learn All / Forget All and is shown only while the server's
 -- State says GM; the server checks the rank again on every click.
-local learnTalentsBtn = CreateFrame("Button", nil, mainFrame,
-	"UIPanelButtonTemplate")
-learnTalentsBtn:SetSize(160, 24)
+local learnTalentsBtn = FLUI.Button(mainFrame, "Learn all Talents", 160, 24)
 learnTalentsBtn:SetPoint("BOTTOM", 0, 16 + GM_ROW_HEIGHT)
-learnTalentsBtn:SetText("Learn all Talents")
 learnTalentsBtn:SetScript("OnClick", function()
 	AIO.Handle("CustomSpells", "LearnAllTalents")
 end)

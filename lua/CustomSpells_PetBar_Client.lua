@@ -44,16 +44,12 @@ local POWER_COLORS = {
 -- Frame
 -- ============================================================
 
-local frame = CreateFrame("Frame", "CustomSpellsPetBarFrame", UIParent)
+-- FLUI (fl-lua-scripts AIO_UI/, the Forgotten Land window kit) draws the bar's
+-- box in the player's theme (a HUD box: no title, no close button, no grip).
+local FLUI = assert(FLUI, "the second pet bar needs AIO_UI/FLUI_Client.lua loaded first")
+local frame = FLUI.Hud("CustomSpellsPetBarFrame")
 frame:SetSize(2 * MARGIN + 10 * BUTTON_SIZE + 9 * BUTTON_GAP, 82)
 frame:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 240)
-frame:SetBackdrop({
-	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-	tile = true, tileSize = 16, edgeSize = 16,
-	insets = { left = 4, right = 4, top = 4, bottom = 4 },
-})
-frame:SetBackdropColor(0, 0, 0, 0.8)
 frame:SetMovable(true)
 frame:EnableMouse(true)
 frame:SetClampedToScreen(true)
