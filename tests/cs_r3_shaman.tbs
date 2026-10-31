@@ -295,7 +295,16 @@ as gm .unlearn 900469
 as gm .unlearn 900470
 
 # ---------------------------------------------------------------- wave 3: Shaman large items
-log Wave 3 setup - back on the ring, the totems of the earlier checks recalled
+log Wave 3 setup - the four totem tools (earth 5175, fire 5176, water 5177, air 5178: a totem cast without them fails with result 130), back on the ring, the totems of the earlier checks recalled
+do gm target sh
+do sh destroy 5175
+do sh destroy 5176
+do sh destroy 5177
+do sh destroy 5178
+as gm .additem 5175
+as gm .additem 5176
+as gm .additem 5177
+as gm .additem 5178
 do sh goto -279 150 -423.2
 wait 500ms
 do sh reset
