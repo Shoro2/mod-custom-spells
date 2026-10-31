@@ -851,6 +851,48 @@ class spell_custom_ret_exorcism_consume : public SpellScript
     }
 };
 
+// ============================================================
+//  SPELL 900266: Divine Barrage (AuraScript, Retribution active)
+//  List: "Divine Barrage: cast a divine storm every 0.5 sec for 4 seconds
+//  dealing bonus damage scaling with your paragon lvl. 60sec cd, channels
+//  (like bladestorm just ds instead of ww)".
+//  An ability the paladin learns in the /spells picker (not a cursed-item
+//  passive). Like Bladestorm it is an aura, not a channel: 900266 puts a
+//  4-s periodic dummy on the paladin (a self buff, 0.5-s period, 60-s
+//  cooldown on the spell), and the paladin may move and act freely while it
+//  runs - the client's movement gate for channels never applies. Every tick
+//  casts a real Divine Storm (53385) at the paladin as a triggered spell
+//  (no cooldown, no cost; it needs the melee weapon like the real one and
+//  carries every Divine Storm passive: +6 targets 900270, +50 % 900271) and
+//  a Holy burst 900277 on every enemy within 8 yd, 666 + 5 x the paladin's
+//  Paragon level. 8 ticks = 8 storms.
+// ============================================================
+class spell_custom_ret_divine_barrage : public AuraScript
+{
+    PrepareAuraScript(spell_custom_ret_divine_barrage);
+
+    void HandlePeriodic(AuraEffect const* aurEff)
+    {
+        Player* paladin = GetTarget() ? GetTarget()->ToPlayer() : nullptr;
+        if (!paladin || !paladin->IsAlive() || !g_CustomSpellsEnabled
+            || paladin->HasUnitState(UNIT_STATE_STUNNED))
+            return;
+
+        paladin->CastSpell(paladin, SPELL_DIVINE_STORM, true);
+
+        int32 damage = ParagonDamage(paladin);
+        paladin->CastCustomSpell(paladin, SPELL_RET_BARRAGE_STRIKE, &damage,
+            nullptr, nullptr, true, nullptr, aurEff);
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_ret_divine_barrage::HandlePeriodic, EFFECT_0,
+            SPELL_AURA_PERIODIC_DUMMY);
+    }
+};
+
 void AddPaladinSpellsScripts()
 {
     // Paladin Holy
@@ -874,4 +916,5 @@ void AddPaladinSpellsScripts()
     // Paladin Ret
     RegisterSpellScript(spell_custom_ret_exorcism_proc);
     RegisterSpellScript(spell_custom_ret_exorcism_consume);
+    RegisterSpellScript(spell_custom_ret_divine_barrage);
 }

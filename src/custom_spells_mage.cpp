@@ -30,6 +30,8 @@ namespace
     constexpr uint8  IMAGE_POWER_MAX_STACKS = 30;    // the aura's CumulativeAura
     constexpr float  BLOCK_LANCE_RANGE      = 25.0f; // "every enemy in 25y range"
     constexpr uint32 BLOCK_LANCE_MAX_TARGETS = 40;   // a tick never casts more than this many lances
+    constexpr float  BLINK_THROUGH_WIDTH    = 2.0f;  // "through an enemy": within 2 yd of the line (wave 3)
+    constexpr float  BLINK_THROUGH_HEIGHT   = 4.0f;  // ... and no more than 4 yd above or below it
 
     // "damage scales with the Paragon level": 666 + 5 x the true level, as
     // the DK concept spells (Bloodworm Burst 900307, Frozen Strike 900342)
@@ -297,6 +299,122 @@ class spell_custom_mage_blink_image : public SpellScript
     {
         AfterCast += SpellCastFn(spell_custom_mage_blink_image::HandleAfterCast);
     }
+};
+
+// ============================================================
+//  MAGE ARCANE: 900723 Blink: Through the Enemy (third list, wave 3)
+//  List: "when you blink through an enemy, blink cd is reset but cost 5%
+//  more mana each cast (10sec duration, 10 stacks). cannot be used if u
+//  have targeted blink from above".
+//  Blink (1953, bound beside 900709's and 900720's scripts): the script
+//  notes where the mage stands before the leap (BeforeCast) and reads the
+//  arrival after it. The leap is a near teleport (Spell::EffectLeap ->
+//  NearTeleportTo), which stores its destination in Player::GetTeleportDest
+//  at once (Player::TeleportTo, Player.cpp ~1535-1580: the position moves
+//  now or, when the cast runs inside the unit's update, at the end of it).
+//  If a living enemy stood within 2 yd of the straight line from the start
+//  to the arrival, the mage "blinked through" it: Blink's cooldown is reset
+//  (SendSpellCooldown runs before the effects, so the removal after the cast
+//  sticks) and one stack of 900724 is added - aura 108 SPELLMOD_COST (14)
+//  +5 % per stack on Blink (family flags0 0x10000), 10 stacks, 10 s,
+//  every new stack refreshes the time.
+//  "Cannot be used if you have Targeted Blink": a mage who knows 900713 -
+//  or has the marker of the older 900709 (Blink to the target), which
+//  replaces the leap's destination - gets nothing from this passive.
+// ============================================================
+class spell_custom_mage_blink_through : public SpellScript
+{
+    PrepareSpellScript(spell_custom_mage_blink_through);
+
+    void HandleBeforeCast()
+    {
+        if (Unit* caster = GetCaster())
+        {
+            _start = caster->GetPosition();
+            _haveStart = true;
+        }
+    }
+
+    void HandleAfterCast()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!player || !_haveStart || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_MAGE_ARC_BLINK_THROUGH_PASSIVE)
+            || player->HasSpell(SPELL_MAGE_ARC_TARGETED_BLINK)
+            || player->HasAura(SPELL_MAGE_ARC_BLINK_PASSIVE))
+            return;
+
+        // the arrival: the pending near teleport's destination (the position
+        // itself may already have moved there)
+        if (!player->IsBeingTeleportedNear())
+            return;
+        Position const arrival(player->GetTeleportDest());
+
+        float const length = _start.GetExactDist2d(&arrival);
+        if (length < 1.0f)
+            return;
+
+        // every enemy that could be within 2 yd of the line lies within
+        // line length + 2 yd of the mage, wherever the position stands now
+        float const reach = length + BLINK_THROUGH_WIDTH + 1.0f;
+        std::list<Unit*> enemies;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player, reach);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(player, enemies, check);
+        Cell::VisitObjects(player, searcher, reach);
+
+        bool through = false;
+        for (Unit* enemy : enemies)
+        {
+            if (!enemy->IsAlive() || !player->IsValidAttackTarget(enemy))
+                continue;
+            if (DistanceToLine(enemy, arrival) <= BLINK_THROUGH_WIDTH)
+            {
+                through = true;
+                break;
+            }
+        }
+        if (!through)
+            return;
+
+        player->RemoveSpellCooldown(SPELL_BLINK, true);
+        if (Aura* strain = player->GetAura(SPELL_MAGE_ARC_BLINK_STRAIN))
+            strain->ModStackAmount(1);
+        else
+            player->AddAura(SPELL_MAGE_ARC_BLINK_STRAIN, player);
+    }
+
+    // The distance of a unit from the segment start -> arrival in the ground
+    // plane; "far away" when it is more than 4 yd above or below the line
+    // at that point (another floor).
+    float DistanceToLine(Unit* unit, Position const& arrival) const
+    {
+        float const ax = _start.GetPositionX(), ay = _start.GetPositionY();
+        float const dx = arrival.GetPositionX() - ax;
+        float const dy = arrival.GetPositionY() - ay;
+        float const lengthSq = dx * dx + dy * dy;
+        float t = ((unit->GetPositionX() - ax) * dx + (unit->GetPositionY() - ay) * dy) / lengthSq;
+        t = std::max(0.0f, std::min(1.0f, t));
+        float const px = ax + t * dx;
+        float const py = ay + t * dy;
+        float const pz = _start.GetPositionZ()
+            + t * (arrival.GetPositionZ() - _start.GetPositionZ());
+        if (std::fabs(unit->GetPositionZ() - pz) > BLINK_THROUGH_HEIGHT)
+            return 1000.0f;
+        float const ex = unit->GetPositionX() - px;
+        float const ey = unit->GetPositionY() - py;
+        return std::sqrt(ex * ex + ey * ey);
+    }
+
+    void Register() override
+    {
+        BeforeCast += SpellCastFn(spell_custom_mage_blink_through::HandleBeforeCast);
+        AfterCast += SpellCastFn(spell_custom_mage_blink_through::HandleAfterCast);
+    }
+
+private:
+    Position _start;
+    bool _haveStart = false;
 };
 
 // ============================================================
@@ -925,6 +1043,7 @@ void AddMageSpellsScripts()
     RegisterSpellScript(spell_custom_mage_mirror_shield);
     RegisterSpellScript(spell_custom_mage_mirror_splash);
     RegisterSpellScript(spell_custom_mage_blink_image);
+    RegisterSpellScript(spell_custom_mage_blink_through);
     new custom_mage_image_power_playerscript();
 
     // Mage Fire

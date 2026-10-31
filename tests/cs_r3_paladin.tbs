@@ -1,6 +1,7 @@
 # mod-custom-spells: the Paladin lines of the third concept list
 # (operator 2026-10-31; share-public
-# custom-spells/records/2026-10-31-third-concept-list.md), wave 2 = procs.
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 2 = procs,
+# wave 3 = the active 900266 Divine Barrage (900277 its burst).
 # Every check states the list's line, so a FAIL marks a defect.
 # Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
 # (920018: take 0 damage, never die, the combat log still reads the full
@@ -17,6 +18,12 @@
 # Triggered casts (`triggered`) run the SpellScripts of the cast spell; the
 # damage-done proc of 900242 (Holy Shock's damage is a triggered cast of the
 # dummy cast, PROC_ATTR_TRIGGERED_CAN_PROC) is checked with the same casts.
+# Divine Barrage 900266: Divine Storm 53385 needs a melee weapon (Gargoyle's
+# Mace 36500, as cs_paladin) and is cast as a triggered spell every 0.5 s for
+# 4 s (8 times), plus the Holy burst 900277 (666 + 5 x the Paragon level, which
+# is 0 for the bot) on every dummy of the ring (the paladin stands in its
+# middle; the burst cannot miss). NPC Hit Buffs 62627 (no crits, no misses of
+# the weapon roll) as cs_paladin's Divine Storm check.
 name    Custom spells - Paladin third list
 timeout 300s
 
@@ -30,6 +37,7 @@ do gm target pa
 as gm .unlearn 900213
 as gm .unlearn 900214
 as gm .unlearn 900242
+as gm .unlearn 900266
 do pa learn 48782
 do pa learn 48785
 do pa learn 48825
@@ -181,6 +189,51 @@ wait 1500ms
 spelllog stop
 expect pa spell 900243 casts == 2
 
+# ---------------------------------------------------------------- Retribution (wave 3)
+log Retribution - control for 900266: the paladin does not know Divine Barrage - nothing casts a Divine Storm
+as gm .additem 36500
+do pa equip 36500
+as gm .aura 62627
+waitfor pa aura 62627 timeout 2s
+do pa goto -270 150 -423.2
+wait 500ms
+do pa reset
+spelllog start
+wait 2s
+spelllog stop
+expect pa spell 53385 casts == 0
+
+log Retribution - 900266 "Divine Barrage: cast a divine storm every 0.5 sec for 4 seconds dealing bonus damage scaling with your paragon lvl. 60sec cd, channels (like bladestorm...)": one cast of the active; over 5 s the paladin casts Divine Storm 7 to 9 times (8 ticks of 0.5 s) and every tick a Holy burst (900277) strikes all 8 dummies; the paladin WALKS 2 yd after one second and the storms go on; the triggered storms start no Divine Storm cooldown; Divine Barrage itself has its 60 s cooldown
+do pa learn 900266
+do pa reset
+spelllog start
+do pa cast 900266
+wait 1s
+do pa walk -272 150 -423.2
+wait 4s
+spelllog stop
+expect pa spell 900266 casts == 1
+expect pa spell 53385 casts >= 7
+expect pa spell 53385 casts <= 9
+expect pa spell 900277 casts >= 7
+expect pa spell 900277 casts <= 9
+expect pa spell 900277 maxtargets >= 8
+expect pa spell 900277 hits >= 56
+expect pa spell 900277 damage >= 30000
+expect pa cooldown 53385 == 0
+expect pa cooldown 900266 > 45000
+
+log Retribution - 900266 the barrage ends after 4 s: 2 s later no more storms, the aura is gone
+expect pa noaura 900266
+do pa goto -270 150 -423.2
+spelllog start
+wait 2s
+spelllog stop
+expect pa spell 53385 casts == 0
+
+as gm .unaura 62627
+as gm .unlearn 900266
+
 cleanup
 do pa stop
 do gm target d1
@@ -189,3 +242,6 @@ do gm target pa
 as gm .unlearn 900213
 as gm .unlearn 900214
 as gm .unlearn 900242
+as gm .unlearn 900266
+as gm .unaura 62627
+as gm .unaura 900266

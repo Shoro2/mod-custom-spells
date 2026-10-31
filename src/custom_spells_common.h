@@ -133,6 +133,9 @@ enum CustomSpellIds
     SPELL_RET_EXORCISM_PROC_PASSIVE     = 900274,
     SPELL_RET_EXORCISM_BUFF             = 900275,
     SPELL_RET_CS_AOE_HELPER             = 900276,
+    // third concept list 2026-10-31, wave 3 (active, picker only, not in the cursed-item pool)
+    SPELL_RET_DIVINE_BARRAGE            = 900266, // a Divine Storm every 0.5 s for 4 s, 60 s cooldown
+    SPELL_RET_BARRAGE_STRIKE            = 900277, // Holy AoE, Paragon damage, one per Divine Storm
 
     // ---- DK Blood (900300-900332) ----
     SPELL_DKB_3_RUNE_WEAPONS_PASSIVE    = 900300, // two weapons since 2026-10-31
@@ -238,6 +241,9 @@ enum CustomSpellIds
     SPELL_HUNT_BM_PET_SPEED_PASSIVE     = 900503,
     SPELL_HUNT_BM_PET_AOE_PASSIVE       = 900504,
     SPELL_HUNT_BM_PET_AOE_HELPER        = 900505,
+    // third concept list 2026-10-31, wave 3 (active, picker only, not in the cursed-item pool)
+    SPELL_HUNT_BM_SWITCH                = 900509, // switch places with the pet, both enraged, 60 s cooldown
+    SPELL_HUNT_BM_SWITCH_BUFF           = 900510, // +30 % damage done, 10 s, on the hunter and the pet
 
     // ---- Hunter MM (900533-900565) ----
     SPELL_HUNT_MM_AUTOSHOT_BOUNCE       = 900533,
@@ -250,6 +256,8 @@ enum CustomSpellIds
     SPELL_SURV_TRAP_DMG_PASSIVE         = 900573, // third list 2026-10-31, DBC only
     SPELL_SURV_AUTO_TRAP_PASSIVE        = 900574, // third list wave 2: a random trap every 5 s in combat
     SPELL_SURV_TRAP_ECHO_PASSIVE        = 900575, // third list wave 2: 25 % for a second trap
+    // third concept list 2026-10-31, wave 3 (active, picker only, not in the cursed-item pool)
+    SPELL_SURV_TRAP_GRAB                = 900576, // every own trap within 40 yd goes off at the target, 30 s cooldown
 
     // ---- Rogue Assa (900600-900632) ----
     SPELL_ROG_ASSA_ENERGY_REGEN         = 900600,
@@ -300,6 +308,8 @@ enum CustomSpellIds
     SPELL_MAGE_ARC_BLINK_IMAGE_PASSIVE = 900720, // third list wave 2: a Mirror Image where you arrive
     SPELL_MAGE_ARC_IMAGE_POWER_PASSIVE = 900721, // third list wave 2: +5 % image damage per image
     SPELL_MAGE_ARC_IMAGE_POWER_AURA    = 900722, // on each image, stacks = images alive
+    SPELL_MAGE_ARC_BLINK_THROUGH_PASSIVE = 900723, // third list wave 3: blinking through an enemy resets Blink
+    SPELL_MAGE_ARC_BLINK_STRAIN        = 900724, // +5 % Blink mana cost per stack, 10 stacks, 10 s
 
     // ---- Mage Fire (900733-900765) ----
     SPELL_MAGE_FIRE_FB_DMG_PASSIVE     = 900733,
@@ -341,6 +351,8 @@ enum CustomSpellIds
     // third list wave 2 (2026-10-31): Life Tap feeds the next DoT
     SPELL_WLK_AFFL_LIFETAP_PASSIVE      = 900809,
     SPELL_WLK_AFFL_LIFETAP_BUFF         = 900810, // +10 % DoT damage / stack, 5 stacks, 30 s
+    // third list wave 3 (2026-10-31)
+    SPELL_WLK_AFFL_DRAIN_PLUS9_PASSIVE  = 900811, // Drain Life also drains up to 9 other enemies
 
     // ---- Warlock Demonology (900833-900865) ----
     SPELL_WLK_DEMO_META_KILL_EXT       = 900833,
@@ -377,6 +389,9 @@ enum CustomSpellIds
     // third list wave 2 (2026-10-31): Incinerate on Immolate feeds Soul Fire
     SPELL_WLK_DEST_SOULFIRE_PASSIVE     = 900881,
     SPELL_WLK_DEST_SOULFIRE_BUFF        = 900882, // +50 % Soul Fire damage / stack, 10 stacks
+    // third list wave 3 (2026-10-31): Shadow Immolate
+    SPELL_WLK_DEST_SHADOW_IMMOLATE_PASSIVE = 900883, // Shadow Bolt: +15 % on Immolate, turns it into Shadow Immolate
+    SPELL_WLK_DEST_SHADOW_IMMOLATE      = 900884, // the DoT: twice Immolate's tick, Shadow + Fire
 
     // ---- Priest Discipline (900900-900932) ----
     SPELL_PRI_DISC_SHIELD_EXPLODE      = 900900,

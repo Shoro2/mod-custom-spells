@@ -404,6 +404,14 @@
    "icon_spell": 48801
   },
   {
+   "id": 900266,
+   "class": "Paladin",
+   "spec": "Retribution",
+   "name": "Divine Barrage",
+   "description": "Unleashes a Divine Storm every 0.5 sec for 4 sec while you move and fight freely. Each storm also deals Holy damage to all enemies within 8 yards, scaling with your Paragon level. 60 sec cooldown.",
+   "icon_spell": 53385
+  },
+  {
    "id": 900500,
    "class": "Hunter",
    "spec": "Shared",
@@ -458,6 +466,14 @@
    "name": "Second Pet",
    "description": "While your pet is out, a copy of it fights at your side: same look, level, abilities and talents. It has a control bar of its own; if it dies, it returns 10 sec after you leave combat.",
    "icon_spell": 883
+  },
+  {
+   "id": 900509,
+   "class": "Hunter",
+   "spec": "Beast Mastery",
+   "name": "Switch Places",
+   "description": "Instantly switches places with your pet. For 10 sec you and your pet deal 30% more damage. 60 sec cooldown.",
+   "icon_spell": 19574
   },
   {
    "id": 900533,
@@ -561,6 +577,14 @@
    "spec": "Survival",
    "name": "Trap Echo",
    "description": "When one of your traps goes off, there is a 25% chance that a second trap of the same kind goes off at the same spot.",
+   "icon_spell": 49067
+  },
+  {
+   "id": 900576,
+   "class": "Hunter",
+   "spec": "Survival",
+   "name": "Trap Grab",
+   "description": "Pulls together every trap of yours within 40 yards and sets them all off at the target. 30 sec cooldown.",
    "icon_spell": 49067
   },
   {
@@ -1556,6 +1580,14 @@
    "icon_spell": 55342
   },
   {
+   "id": 900723,
+   "class": "Mage",
+   "spec": "Arcane",
+   "name": "Blink: Through the Enemy",
+   "description": "When you Blink through an enemy, the cooldown of Blink is reset, but each such Blink costs 5% more mana for 10 sec, up to 10 times. Does not work while you know Targeted Blink.",
+   "icon_spell": 1953
+  },
+  {
    "id": 900713,
    "class": "Mage",
    "spec": "Arcane",
@@ -1754,6 +1786,14 @@
    "name": "Life Tap: Dark Tithe",
    "description": "Each Life Tap adds a stack of Dark Tithe for 30 sec, up to 5. Your next Corruption, Curse of Agony, Immolate, Unstable Affliction or Seed of Corruption deals 10% more damage per stack and uses the stacks up.",
    "icon_spell": 57946
+  },
+  {
+   "id": 900811,
+   "class": "Warlock",
+   "spec": "Affliction",
+   "name": "Drain Life: +9 Targets",
+   "description": "Each tick of your Drain Life also drains up to 9 other enemies near its target, healing you for every one.",
+   "icon_spell": 47857
   },
   {
    "id": 900833,
@@ -1968,8 +2008,16 @@
    "class": "Warlock",
    "spec": "Destruction",
    "name": "Incinerate: Stoked Soul Fire",
-   "description": "Each Incinerate that hits a target afflicted by your Immolate (later: Shadow Immolate) makes your next Soul Fire deal 50% more damage, stacking up to 10 times.",
+   "description": "Each Incinerate that hits a target afflicted by your Shadow Immolate makes your next Soul Fire deal 50% more damage, stacking up to 10 times.",
    "icon_spell": 47825
+  },
+  {
+   "id": 900883,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Shadow Bolt: Shadow Immolate",
+   "description": "Your Shadow Bolt deals 15% more damage to targets afflicted by your Immolate, and turns the Immolate into Shadow Immolate: twice the damage, dealt as Shadow and Fire, with the time that was left.",
+   "icon_spell": 47809
   },
   {
    "id": 901000,
@@ -2428,6 +2476,22 @@
   {
    "id": 900722,
    "aura_description": "Damage done increased by 5% per application: one application for each Mirror Image alive."
+  },
+  {
+   "id": 900266,
+   "aura_description": "Casting a Divine Storm every 0.5 sec."
+  },
+  {
+   "id": 900510,
+   "aura_description": "Damage done increased by 30%."
+  },
+  {
+   "id": 900724,
+   "aura_description": "The mana cost of Blink is increased by 5% per application."
+  },
+  {
+   "id": 900884,
+   "aura_description": "Deals Shadow and Fire damage every 3 sec."
   }
  ]
 }

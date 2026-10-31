@@ -2,14 +2,21 @@
 # (operator 2026-10-31; share-public
 # custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
 # spell modifiers and Shadow Cleave, wave 2 (the end of the file) = procs and
-# stacking buffs. Every check states the list's line, so a
+# stacking buffs, wave 3 = Drain Life +9 targets (900811) and Shadow Immolate
+# (900883 / 900884), which also changes the Incinerate check of 900881: only a
+# real Shadow Immolate counts now. Every check states the list's line, so a
 # FAIL marks a defect.
 # Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
 # (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
 # warlock stands west of the ring facing it.
 # Spells: Curse of Agony 47864, Drain Life 47857, Soul Fire 47825, Immolate
 # 47811, Metamorphosis 47241 (talent) and its Shadow Cleave 50581 (no family
-# flags: the two Shadow Cleave passives are C++).
+# flags: the two Shadow Cleave passives are C++). Wave 3: Shadow Bolt 47809,
+# Incinerate 47838, Conflagrate 17962 (it needs the aura state AURA_STATE_
+# CONFLAGRATE on the target and consumes Immolate or Shadow Immolate). A bot
+# without gear has no spell power: Immolate rank 11 ticks 157 every 3 s, so
+# Shadow Immolate ticks 314. Shadow Bolt can miss (a dummy is a level-83 target),
+# so the transformation is tried with up to four bolts (P(all miss) < 0.1 %).
 name    Custom spells - Warlock third list
 timeout 360s
 
@@ -31,6 +38,8 @@ as gm .unlearn 900809
 as gm .unlearn 900855
 as gm .unlearn 900857
 as gm .unlearn 900881
+as gm .unlearn 900811
+as gm .unlearn 900883
 as gm .unaura 900810
 as gm .unaura 900882
 as gm .unaura 47241
@@ -224,10 +233,51 @@ expect wl cooldown 54785 == 0
 do gm goto -279 150 -423.2
 
 # ---------------------------------------------------------------- Destruction
-log Destruction - 900881 CONCEPT "if you hit a target affected by shadow immolate with your incenerate, your next soulfire does +50% damage, stacks 10 times" (Shadow Immolate is wave 3: the warlock's Immolate stands in): control - Incinerate on a dummy without Immolate gives no stack
+log Affliction - control for 900811: a Drain Life channel on d1 (6 s, the real ticks log as hits) drains d1 and heals the warlock - two units at most
+do wl goto -279 150 -423.2
+wait 500ms
+do wl approach d1
+do wl reset
+spelllog start
+do wl cast 47857 on d1
+wait 6s
+spelllog stop
+do wl stop
+expect wl spell 47857 targets <= 2
+expect wl spell 47857 hits <= 12
+
+log Affliction - 900811 "drain life +9 targets": with the passive every tick of the channel also drains the other seven dummies of the ring (up to 9 within 15 yd of d1): 8 dummies and the warlock are hit and healed over the channel, 8 hits a tick over 5 ticks
+do wl learn 900811
+do wl reset
+wait 1700ms
+spelllog start
+do wl cast 47857 on d1
+wait 6s
+spelllog stop
+do wl stop
+expect wl spell 47857 targets >= 8
+expect wl spell 47857 hits >= 30
+
+log Affliction - 900811 breaking the channel ends the extra drains: a channel stopped after 2 s, then 3 s later no new hit
+do wl reset
+wait 1700ms
+do wl cast 47857 on d1
+wait 2s
+do wl stop
+wait 300ms
+spelllog start
+wait 3s
+spelllog stop
+expect wl spell 47857 hits == 0
+as gm .unlearn 900811
+
+# ---------------------------------------------------------------- Destruction
+log Destruction - 900881 CONCEPT "if you hit a target affected by shadow immolate with your incenerate, your next soulfire does +50% damage, stacks 10 times": control - Incinerate on a dummy without Immolate gives no stack
 do wl learn 47838
 do wl learn 47811
 do wl learn 47825
+do wl learn 47809
+do wl learn 17962
 do wl learn 900881
 do wl goto -279 150 -423.2
 wait 500ms
@@ -236,16 +286,44 @@ do gm target wl
 as gm .unaura 900882
 do gm target d1
 as gm .unaura 47811
+as gm .unaura 900884
 wait 300ms
 do wl reset
 do wl cast 47838 on d1 triggered
 wait 1500ms
 expect wl noaura 900882
 
-log Destruction - 900881 with Immolate on the dummy every Incinerate hit adds a stack of Stoked Flames (900882, +50 % Soul Fire damage each): two hits = 2 stacks, the Soul Fire modifier reads 100 + 50 (900878, learned above) + 2 x 50
+log Destruction - 900881 control: a plain Immolate on the dummy is no Shadow Immolate (900883 not learned yet) - Incinerate gives no stack
 do wl cast 47811 on d1 triggered
 wait 800ms
 expect d1 aura 47811
+do wl cast 47838 on d1 triggered
+wait 1500ms
+expect wl noaura 900882
+
+log Destruction - 900883 control: without the passive a Shadow Bolt leaves Immolate as it is
+do wl cast 47809 on d1 triggered
+wait 1200ms
+expect d1 aura 47811
+expect d1 noaura 900884
+
+log Destruction - 900883 "when hit by shadow bolt the dot transforms in shadow immolate": with the passive a Shadow Bolt that hits (up to four tries, a miss is legal) turns Immolate into Shadow Immolate (900884): Immolate gone, and the time that was left kept (the Immolate was cast about 8 s earlier: between 3 and 11 s of its 15 left, not a fresh 15)
+do wl learn 900883
+do wl cast 47809 on d1 triggered
+wait 1200ms
+do wl cast 47809 on d1 triggered
+wait 1200ms
+do wl cast 47809 on d1 triggered
+wait 1200ms
+do wl cast 47809 on d1 triggered
+wait 1200ms
+expect d1 aura 900884
+expect d1 noaura 47811
+expect d1 auramaxduration 900884 <= 15000
+expect d1 auraduration 900884 > 3000
+expect d1 auraduration 900884 < 11000
+
+log Destruction - 900881 with Shadow Immolate on the dummy every Incinerate hit adds a stack of Stoked Flames (900882, +50 % Soul Fire damage each): two hits = 2 stacks, the Soul Fire modifier reads 100 + 50 (900878, learned above) + 2 x 50
 do wl cast 47838 on d1 triggered
 wait 1500ms
 do wl cast 47838 on d1 triggered
@@ -259,6 +337,37 @@ do wl cast 47825 on d1 triggered
 wait 700ms
 expect wl noaura 900882
 expect wl spellmod 47825 damage 100 == 150
+
+log Destruction - 900883 a new Immolate on the dummy replaces Shadow Immolate (two DoTs of the family would tick side by side): Immolate back, Shadow Immolate gone
+do wl cast 47811 on d1 triggered
+wait 800ms
+expect d1 aura 47811
+expect d1 noaura 900884
+
+log Destruction - 900883 "double damage, shadowfire damage": Immolate turned into Shadow Immolate again (up to four bolts), then 6.4 s of ticks (every 3 s: 2 or 3 of them) - a bot without spell power: 314 a tick where Immolate does 157, so 500 or more in all (an undoubled DoT: 314 to 471)
+do wl cast 47809 on d1 triggered
+wait 1200ms
+do wl cast 47809 on d1 triggered
+wait 1200ms
+do wl cast 47809 on d1 triggered
+wait 1200ms
+do wl cast 47809 on d1 triggered
+wait 1200ms
+expect d1 aura 900884
+spelllog start
+wait 6400ms
+spelllog stop
+expect wl spell 900884 ticks >= 2
+expect wl spell 900884 damage >= 500
+
+log Destruction - 900883 "the dot transforms ... the replacement must keep Immolate's aura state": Conflagrate (it needs AURA_STATE_CONFLAGRATE on the target and consumes Immolate or Shadow Immolate) works on the Shadow Immolate and eats it
+do wl reset
+spelllog start
+do wl cast 17962 on d1 triggered
+wait 800ms
+spelllog stop
+expect wl spell 17962 casts >= 1
+expect d1 noaura 900884
 
 cleanup
 do wl stop
@@ -276,5 +385,11 @@ as gm .unlearn 900809
 as gm .unlearn 900855
 as gm .unlearn 900857
 as gm .unlearn 900881
+as gm .unlearn 900811
+as gm .unlearn 900883
 as gm .unaura 900810
 as gm .unaura 900882
+do gm target d1
+as gm .unaura 900884
+as gm .unaura 47811
+do gm target wl
