@@ -393,6 +393,7 @@ expect tot alive
 waitfor sh minions 900420 == 1 timeout 25s
 
 log Elemental - 900401 unlearning the passive takes the spirit away and leaves the totem
+do gm target sh
 as gm .unlearn 900401
 waitfor sh minions 900420 == 0 timeout 4s
 expect tot alive
@@ -403,6 +404,7 @@ log Enhancement - 900433 and Restoration - 900466 raise the same spirits (the Wi
 do sh learn 900433
 do sh cast 3738 triggered
 waitfor sh minions 900422 == 1 timeout 4s
+do gm target sh
 as gm .unlearn 900433
 waitfor sh minions 900422 == 0 timeout 4s
 do sh learn 900466
@@ -413,6 +415,7 @@ waitfor sh minions 900422 == 0 timeout 4s
 
 # ---------------------------------------------------------------- Earth Shield unlimited
 log Restoration - 900472 control: Earth Shield on the director, the warrior bot and the shaman in turn stays on the last one only (the single-target rule)
+do gm target sh
 as gm .unlearn 900472
 do sh cast 49284 on gm triggered
 wait 300ms
@@ -443,6 +446,7 @@ wait 500ms
 expect gm aura 49284
 expect al aura 49284
 expect sh aura 49284
+do gm target sh
 as gm .unlearn 900472
 
 # ---------------------------------------------------------------- Healing Stream surge
@@ -454,9 +458,9 @@ pick hb creature:900421 near sh
 require hb exists
 expect sh spellmod 58765 damage 100 == 100
 
-log Restoration - 900473 control: without the passive a Healing Wave on the spirit splashes nothing and gives no stack
+log Restoration - 900473 control: without the passive a Healing Wave on the spirit splashes nothing and gives no stack (the shaman has 8119 health: 4000 down here, 3000 more below)
 do gm target sh
-as gm .damage 6000
+as gm .damage 4000
 spelllog start
 do sh cast 49273 on hb triggered
 wait 500ms
@@ -467,7 +471,7 @@ expect sh noaura 900475
 log Restoration - 900473 "if you direct heal your healing stream totem, your heal also applies with 75% to near allies": a Healing Wave on the spirit heals the damaged shaman (and the group within 10 yd) through the splash 900474
 do sh learn 900473
 do gm target sh
-as gm .damage 6000
+as gm .damage 3000
 spelllog start
 do sh cast 49273 on hb triggered
 wait 500ms
@@ -498,7 +502,9 @@ wait 300ms
 expect sh aurastacks 900475 == 4
 do sh cast 36936 triggered
 waitfor sh minions 900421 == 0 timeout 4s
+do gm target sh
 as gm .unlearn 900473
+do gm target sh
 as gm .unlearn 900466
 as gm .unaura 49284
 
@@ -513,10 +519,15 @@ as gm .unlearn 900445
 as gm .unlearn 900468
 as gm .unlearn 900469
 as gm .unlearn 900470
+do gm target sh
 as gm .unlearn 900472
+do gm target sh
 as gm .unlearn 900473
+do gm target sh
 as gm .unlearn 900401
+do gm target sh
 as gm .unlearn 900433
+do gm target sh
 as gm .unlearn 900466
 as gm .unlearn 900402
 as gm .unlearn 900435
