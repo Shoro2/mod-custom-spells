@@ -856,6 +856,191 @@ public:
 //  in custom_spells_rogue.cpp, registered below.
 // ============================================================
 
+// ============================================================
+//  THIRD CONCEPT LIST, WAVE 3 (2026-10-31): the Balance druid's star owls
+//  Plan: share-public custom-spells/records/2026-10-31-third-concept-list.md
+// ============================================================
+
+// ============================================================
+//  901010 / 901011 Balance: star owls instead of treants
+//  List: "your treants are replaced with star owls fighting for you casting
+//  starfires".
+//  Force of Nature (33831) summons three treants: effect 0 is
+//  SPELL_EFFECT_SUMMON, MiscValue 1964 (the treant), BasePoints 3 (the count,
+//  Spell::EffectSummonType: numSummons = damage for the summon properties 1562),
+//  SummonProperties 1562 (category PET, guardian: Spell::SummonGuardian, the
+//  owner's pet scaling, 30 s from the spell's DurationIndex 9). The effect
+//  reads its creature entry as `m_spellValue->MiscVal[effIndex]` when that is
+//  set, else the DBC MiscValue (SpellEffects.cpp:2917-2920). This script runs
+//  before the effects (Spell::cast calls the BeforeCast handlers first,
+//  Spell.cpp:4042) and sets that override to 901010 for a druid with the
+//  passive: everything else about the summon is the stock one - three guardians,
+//  30 s, a recast replaces the old ones (RemoveAllMinionsByEntry), the owners
+//  minion hooks of the other passives (custom_spells_global.cpp) see them as
+//  minions. Without the passive the treants come as before.
+//  The star owl (NPC 901010, a moonkin model) is a caster: it takes the druid's
+//  selection (else his victim, else the nearest enemy already in combat) and
+//  casts the real Starfire (rank 10, 48465, 30 yd) at it, free of mana. Its
+//  damage scales with the druid's spell power: 901011 (aura 13, all magic
+//  schools) on the owl carries the druid's current spell power, refreshed every
+//  2 s, and Starfire's own spell power coefficient does the rest; the druid's
+//  Starfire spell modifiers (Balance talents) reach the owl as they reach any
+//  guardian's spells.
+// ============================================================
+class spell_custom_bal_star_owls : public SpellScript
+{
+    PrepareSpellScript(spell_custom_bal_star_owls);
+
+    void HandleBeforeCast()
+    {
+        Player* druid = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!druid || !g_CustomSpellsEnabled
+            || !druid->HasAura(SPELL_BAL_STAR_OWLS_PASSIVE))
+            return;
+
+        GetSpell()->SetSpellValue(SPELLVALUE_MISCVALUE0, int32(NPC_BAL_STAR_OWL));
+    }
+
+    void Register() override
+    {
+        BeforeCast += SpellCastFn(spell_custom_bal_star_owls::HandleBeforeCast);
+    }
+};
+
+// NPC 901010: casts Starfire at what the druid fights, keeps the druid's
+// spell power on itself
+struct npc_custom_star_owl : public ScriptedAI
+{
+    npc_custom_star_owl(Creature* creature) : ScriptedAI(creature) { }
+
+    void InitializeAI() override
+    {
+        ScriptedAI::InitializeAI();
+        me->SetReactState(REACT_AGGRESSIVE);
+    }
+
+    void IsSummonedBy(WorldObject* summoner) override
+    {
+        if (Unit* owner = summoner ? summoner->ToUnit() : nullptr)
+        {
+            SyncSpellPower(owner);
+            ChooseTarget(owner);
+        }
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        _powerMs += diff;
+        _selectionMs += diff;
+
+        Unit* owner = me->GetOwner();
+        if (owner && _powerMs >= 2000)
+        {
+            _powerMs = 0;
+            SyncSpellPower(owner);
+        }
+
+        if (owner && _selectionMs >= 1000)
+        {
+            _selectionMs = 0;
+            Unit* victim = me->GetVictim();
+            if (!victim || !victim->IsAlive() || !me->IsValidAttackTarget(victim))
+            {
+                if (!ChooseTarget(owner))
+                {
+                    me->CombatStop(true);
+                    me->GetMotionMaster()->Clear(false);
+                    me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST,
+                        me->GetFollowAngle());
+                }
+            }
+        }
+
+        if (!UpdateVictim())
+            return;
+
+        if (me->HasUnitState(UNIT_STATE_CASTING))
+            return;
+
+        Unit* victim = me->GetVictim();
+        if (victim && me->IsWithinLOSInMap(victim)
+            && me->IsWithinDistInMap(victim, STAR_OWL_CAST_RANGE))
+            me->CastSpell(victim, SPELL_STARFIRE_R10,
+                TriggerCastFlags(TRIGGERED_IGNORE_POWER_AND_REAGENT_COST));
+    }
+
+private:
+    static constexpr float STAR_OWL_CAST_RANGE = 28.0f;   // Starfire reaches 30 yd
+
+    // 901011: the druid's current spell power as +damage done on the owl
+    void SyncSpellPower(Unit* owner)
+    {
+        int32 power = int32(owner->SpellBaseDamageBonusDone(
+            SpellSchoolMask(SPELL_SCHOOL_MASK_ARCANE | SPELL_SCHOOL_MASK_NATURE)));
+        if (power < 0)
+            power = 0;
+
+        if (Aura* aura = me->GetAura(SPELL_BAL_STAR_OWL_POWER))
+        {
+            if (AuraEffect* effect = aura->GetEffect(EFFECT_0))
+                if (effect->GetAmount() != power)
+                    effect->ChangeAmount(power);
+        }
+        else
+            me->CastCustomSpell(me, SPELL_BAL_STAR_OWL_POWER, &power, nullptr,
+                nullptr, true);
+    }
+
+    // the druid's selection, else his victim, else the nearest enemy that is
+    // already in combat within 30 yd of him; true when it set a target
+    bool ChooseTarget(Unit* owner)
+    {
+        Unit* target = nullptr;
+        if (Player* player = owner->ToPlayer())
+            if (Unit* selection = player->GetSelectedUnit())
+                if (selection->IsAlive() && me->IsValidAttackTarget(selection))
+                    target = selection;
+
+        if (!target)
+            if (Unit* victim = owner->GetVictim())
+                if (victim->IsAlive() && me->IsValidAttackTarget(victim))
+                    target = victim;
+
+        if (!target)
+        {
+            std::list<Unit*> enemies;
+            Acore::AnyUnfriendlyUnitInObjectRangeCheck check(owner, owner, 30.0f);
+            Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+                searcher(owner, enemies, check);
+            Cell::VisitObjects(owner, searcher, 30.0f);
+
+            float best = 0.0f;
+            for (Unit* enemy : enemies)
+            {
+                if (!enemy->IsAlive() || !enemy->IsInCombat()
+                    || !me->IsValidAttackTarget(enemy))
+                    continue;
+                float const dist = me->GetDistance(enemy);
+                if (!target || dist < best)
+                {
+                    target = enemy;
+                    best = dist;
+                }
+            }
+        }
+
+        if (!target)
+            return false;
+
+        me->GetMotionMaster()->Clear(false);
+        AttackStartCaster(target, STAR_OWL_CAST_RANGE);
+        return true;
+    }
+
+    uint32 _powerMs = 0;
+    uint32 _selectionMs = 1000;
+};
+
 void AddDruidSpellsScripts()
 {
     // Druid Balance
@@ -866,6 +1051,8 @@ void AddDruidSpellsScripts()
     RegisterSpellScript(spell_custom_bal_lunar_frenzy_volley);
     RegisterSpellScript(spell_custom_bal_wrath_stack);
     RegisterSpellScript(spell_custom_bal_starfire_consume);
+    RegisterSpellScript(spell_custom_bal_star_owls);
+    RegisterCreatureAI(npc_custom_star_owl);
 
     // Druid Feral
     RegisterSpellScript(spell_custom_feral_bear_swipe_bleed);

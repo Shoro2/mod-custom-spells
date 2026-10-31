@@ -113,6 +113,53 @@ expect dr noaura 901009
 expect dr spellmod 48465 damage 100 == 100
 as gm .unlearn 901008
 
+# ================================================================ wave 3
+# The large item (agent D, 2026-10-31). Spells: Force of Nature 33831 (summons
+# three treants, NPC 1964, 30 s; with 901010 three star owls, NPC 901010),
+# Moonfire rank 14 48463 (keeps the druid in combat on d1), Starfire rank 10 48465
+# (what the owls cast).
+as gm .unlearn 901010
+as gm .unaura 768
+as gm .unaura 9634
+do dr learn 33831
+do dr goto -279 150 -423.2
+wait 500ms
+do dr approach d1
+do dr reset
+do gm target dr
+as gm .cooldown
+
+log Balance - 901010 "your treants are replaced with star owls fighting for you casting starfires": control - without the passive Force of Nature calls three treants (1964) and no owl
+do dr cast 33831 triggered
+wait 1500ms
+expect dr minions 1964 == 3
+expect dr minions 901010 == 0
+
+log Balance - 901010 with the passive the same cast calls three star owls (901010) instead; the treants of the control stay until they run out
+do dr learn 901010
+do gm target dr
+as gm .cooldown
+do dr cast 33831 triggered
+wait 1500ms
+expect dr minions 901010 == 3
+expect dr minions 1964 == 3
+pick ow creature:901010 near dr
+require ow exists
+expect ow aura 901011
+
+log Balance - 901010 the owls cast Starfire (48465) at the druid's target: d1 in combat, selected - an owl is casting Starfire within 8 s
+do dr cast 48463 on d1 triggered
+do dr target d1
+waitfor ow casting 48465 timeout 8s
+
+log Balance - 901010 a recast replaces the owls (Force of Nature's minion rule): still three
+do gm target dr
+as gm .cooldown
+do dr cast 33831 triggered
+wait 1500ms
+expect dr minions 901010 == 3
+as gm .unlearn 901010
+
 cleanup
 do dr stop
 do gm target dr
@@ -127,3 +174,5 @@ as gm .unlearn 901059
 as gm .unlearn 901060
 as gm .unlearn 901008
 as gm .unaura 901009
+as gm .unlearn 901010
+as gm .unlearn 33831

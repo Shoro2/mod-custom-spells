@@ -804,6 +804,14 @@
    "icon_spell": 48168
   },
   {
+   "id": 900912,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Penance: Four More",
+   "description": "Each tick of your Penance also strikes or heals up to 4 more targets within 15 yards of its target: other enemies for a damaging Penance, the most injured party members for a healing Penance.",
+   "icon_spell": 47540
+  },
+  {
    "id": 900933,
    "class": "Priest",
    "spec": "Holy",
@@ -892,6 +900,14 @@
    "icon_spell": 64843
   },
   {
+   "id": 900949,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Spirit of Redemption: Spirit Casting",
+   "description": "Requires the Spirit of Redemption talent. While you are in the Spirit of Redemption form you can also cast damaging spells.",
+   "icon_spell": 20711
+  },
+  {
    "id": 900966,
    "class": "Priest",
    "spec": "Shadow",
@@ -970,6 +986,14 @@
    "name": "Mind Sear: Three More",
    "description": "Each tick of your Mind Sear also bursts around up to 3 other enemies within 15 yards of its target, as if three more Mind Sears were cast.",
    "icon_spell": 53023
+  },
+  {
+   "id": 900981,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Shadowfiend: Dark Pull",
+   "description": "Your Shadowfiend has 500% more health and pulls the enemies within 10 yards of it to itself every 5 sec. When it dies or expires it explodes, dealing 666 Shadow damage plus 5 per Paragon level to all enemies within 10 yards.",
+   "icon_spell": 34433
   },
   {
    "id": 900300,
@@ -1124,6 +1148,14 @@
    "icon_spell": 55268
   },
   {
+   "id": 900345,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Frost Wyrm: Frozen Breath",
+   "description": "Requires the Frost Wyrm. When Killing Machine or Rime is used up, your Frost Wyrm breathes Frost in a cone for 1 sec, dealing 666 Frost damage plus 5 per Paragon level to every enemy in front of it.",
+   "icon_spell": 51124
+  },
+  {
    "id": 900366,
    "class": "Death Knight",
    "spec": "Unholy",
@@ -1186,6 +1218,30 @@
    "name": "Death Coil: +9 Targets",
    "description": "The damage of your Death Coil jumps to up to 9 additional enemies.",
    "icon_spell": 49895
+  },
+  {
+   "id": 900379,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Summon Gargoyle: Army",
+   "description": "Summon Gargoyle calls an army of 5 gargoyles instead of one.",
+   "icon_spell": 49206
+  },
+  {
+   "id": 900380,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Corpse Explosion: Corpse Blast",
+   "description": "Requires Corpse Explosion. While you are in combat, a Corpse Explosion goes off every 1 sec on the nearest corpse within 30 yards, without costing runic power.",
+   "icon_spell": 49158
+  },
+  {
+   "id": 900381,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Corpse Explosion: Corpse Worms",
+   "description": "Each Corpse Explosion raises a corpse worm from the corpse. It fights for you for 30 sec and explodes when it dies or expires, dealing 666 Shadow damage plus 5 per Paragon level to all enemies within 10 yards. At most 10 worms at a time.",
+   "icon_spell": 49158
   },
   {
    "id": 900400,
@@ -2036,6 +2092,14 @@
    "icon_spell": 48465
   },
   {
+   "id": 901010,
+   "class": "Druid",
+   "spec": "Balance",
+   "name": "Force of Nature: Star Owls",
+   "description": "Force of Nature calls three star owls instead of treants. They fight for you for 30 sec, casting Starfire at your target; their damage grows with your spell power.",
+   "icon_spell": 33831
+  },
+  {
    "id": 901033,
    "class": "Druid",
    "spec": "Feral",
@@ -2428,6 +2492,10 @@
   {
    "id": 900722,
    "aura_description": "Damage done increased by 5% per application: one application for each Mirror Image alive."
+  },
+  {
+   "id": 900950,
+   "aura_description": "You can cast damaging spells while you are the Spirit of Redemption."
   }
  ]
 }

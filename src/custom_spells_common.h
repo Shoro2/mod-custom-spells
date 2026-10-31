@@ -164,6 +164,9 @@ enum CustomSpellIds
     SPELL_DKF_FROZEN_STRIKE_DAMAGE      = 900342,
     SPELL_DKF_FS_DMG_PASSIVE            = 900343, // third list 2026-10-31, DBC only
     SPELL_DKF_FS_AOE_PASSIVE            = 900344, // third list 2026-10-31, DBC only
+    // third concept list 2026-10-31, wave 3
+    SPELL_DKF_WYRM_BREATH_PASSIVE       = 900345, // Killing Machine / Rime consumed: the wyrm breathes
+    SPELL_DKF_WYRM_BREATH               = 900346, // the wyrm's 1-s Frost cone channel, Paragon damage
 
     // ---- DK Unholy (900366-900399) ----
     SPELL_DKU_DOT_AOE_PASSIVE           = 900366,
@@ -178,6 +181,11 @@ enum CustomSpellIds
     SPELL_DKU_SS_AOE_PASSIVE            = 900376, // third list 2026-10-31, DBC only
     SPELL_DKU_DC_DMG_PASSIVE            = 900377, // third list 2026-10-31, DBC only
     SPELL_DKU_DC_AOE_PASSIVE            = 900378, // third list 2026-10-31, DBC only
+    // third concept list 2026-10-31, wave 3
+    SPELL_DKU_GARGOYLE_ARMY_PASSIVE     = 900379, // Summon Gargoyle summons an army
+    SPELL_DKU_CORPSE_TICK_PASSIVE       = 900380, // a Corpse Explosion every second in combat (1-s periodic dummy)
+    SPELL_DKU_CORPSE_WORM_PASSIVE       = 900381, // Corpse Explosion summons a corpse worm (NPC 900381)
+    SPELL_DKU_CORPSE_WORM_BURST         = 900382, // the worm's explosion: Shadow, 10 yd, Paragon damage
 
     // ---- Shaman Ele (900400-900432) ----
     SPELL_ELE_CL_AOE_PASSIVE            = 900400,
@@ -389,6 +397,8 @@ enum CustomSpellIds
     SPELL_PRI_DISC_MANABURN_SHIELD      = 900909, // the absorb aura
     SPELL_PRI_DISC_INNERFIRE_PASSIVE    = 900910, // 50 charges, lost per cast
     SPELL_PRI_DISC_INNERFIRE_HEAL       = 900911, // +1 % healing done per charge
+    // third concept list 2026-10-31, wave 3
+    SPELL_PRI_DISC_PENANCE_PLUS4_PASSIVE = 900912, // each Penance tick also hits up to 4 more
 
     // ---- Priest Holy (900933-900965) ----
     SPELL_PRI_HOLY_HEAL_FIRE           = 900933,
@@ -399,6 +409,9 @@ enum CustomSpellIds
     SPELL_PRI_HOLY_POM_JUMP_PASSIVE     = 900946, // jumps to a second ally
     SPELL_PRI_HOLY_HYMN_PASSIVE         = 900947, // Divine Hymn waves of light
     SPELL_PRI_HOLY_HYMN_WAVE            = 900948, // the Holy damage helper
+    // third concept list 2026-10-31, wave 3
+    SPELL_PRI_HOLY_SOR_SPELLS_PASSIVE   = 900949, // damaging spells in Spirit of Redemption
+    SPELL_PRI_HOLY_SOR_SPELLS_AURA      = 900950, // aura 275 for the priest's spells, while in the spirit form
 
     // ---- Priest Shadow (900966-900999) ----
     SPELL_PRI_SHADOW_DOT_AOE           = 900966,
@@ -409,6 +422,10 @@ enum CustomSpellIds
     SPELL_PRI_SHADOW_FLAY_PASSIVE       = 900978, // Mind Flay quickens the next Mind Flay
     SPELL_PRI_SHADOW_FLAY_BUFF          = 900979, // +25 % damage and speed / stack, 2 stacks
     SPELL_PRI_SHADOW_SEAR_PLUS3_PASSIVE = 900980, // three more Mind Sear ticks
+    // third concept list 2026-10-31, wave 3
+    SPELL_PRI_SHADOW_FIEND_PASSIVE      = 900981, // a stronger Shadowfiend
+    SPELL_PRI_SHADOW_FIEND_AURA         = 900982, // on the fiend: +500 % health, pull every 5 s, fuse
+    SPELL_PRI_SHADOW_FIEND_BURST        = 900983, // the fiend's explosion: Shadow, 10 yd, Paragon damage
 
     // ---- Druid Balance (901000-901032) ----
     SPELL_BAL_MF_AOE_PASSIVE            = 901000,
@@ -419,6 +436,9 @@ enum CustomSpellIds
     SPELL_BAL_SF_STACKS_PASSIVE         = 901005,
     SPELL_BAL_WRATH_SURGE_PASSIVE       = 901008, // third list wave 2: Wrath builds up Starfire
     SPELL_BAL_WRATH_SURGE_BUFF          = 901009, // +10 % Starfire damage per stack, 10 stacks
+    // third concept list 2026-10-31, wave 3
+    SPELL_BAL_STAR_OWLS_PASSIVE         = 901010, // Force of Nature summons star owls (NPC 901010)
+    SPELL_BAL_STAR_OWL_POWER            = 901011, // on each owl: the druid's spell power
 
     // ---- Druid Feral Tank (901033-901048) ----
     SPELL_FERAL_BEAR_SWIPE_BLEED        = 901033,
@@ -483,6 +503,12 @@ constexpr uint32 SPELL_DK_RUNE_TAP          = 48982;  // wave 2: 900312 hooks it
 constexpr uint32 SPELL_DK_DND_VISUAL        = 49938; // DnD rank 4: ground visual
 constexpr uint32 NPC_DK_FROST_WYRM          = 900333; // Custom Frost Wyrm creature
 constexpr uint32 SPELL_FROST_BREATH         = 900368; // Frost Wyrm cone breath
+constexpr uint32 SPELL_DK_KILLING_MACHINE   = 51124;  // wave 3: 900345 hooks its consumption
+constexpr uint32 SPELL_DK_FREEZING_FOG      = 59052;  // wave 3: Rime's buff, same
+constexpr uint32 SPELL_DK_SUMMON_GARGOYLE   = 49206;  // wave 3: 900379
+constexpr uint32 NPC_DK_EBON_GARGOYLE       = 27829;  // wave 3: the stock gargoyle (PetDefines.h calls it NPC_EBON_GARGOYLE)
+constexpr uint32 SPELL_DK_CORPSE_EXPLOSION_R1 = 49158; // wave 3: first rank of the chain (5 ranks)
+constexpr uint32 NPC_DKU_CORPSE_WORM        = 900381; // wave 3: custom corpse worm (the number of the spell that summons it)
 
 // ---- Shaman constants ----
 constexpr uint32 SPELL_CHAIN_LIGHTNING_R4   = 49271;  // Highest rank CL
@@ -537,6 +563,8 @@ constexpr uint32 SPELLFAMILYFLAG_THORNS    = 0x100;  // Thorns, druid flags0
 constexpr uint32 SPELL_FORCE_OF_NATURE     = 33831;  // Force of Nature (summon treants)
 constexpr uint32 NPC_TREANT_ENTRY           = 1964;   // Treant NPC entry (avoids PetDefines.h conflict)
 constexpr uint32 NPC_CUSTOM_TREANT         = 901066; // Custom Treant NPC entry
+constexpr uint32 NPC_BAL_STAR_OWL          = 901010; // wave 3: custom star owl (the number of the spell that summons it)
+constexpr uint32 SPELL_STARFIRE_R10        = 48465;  // wave 3: the star owls' Starfire (highest rank)
 constexpr uint32 SPELLFAMILY_DRUID_ID      = 7;
 // Moonfire SpellFamilyFlags[0] = 0x2 (verify!)
 // Starfall SpellFamilyFlags[0] = 0x100 (verify!)
@@ -667,6 +695,9 @@ constexpr uint32 SPELLFAMILY_PRIEST_ID     = 6;
 constexpr uint32 SPELL_PRI_INNER_FIRE_R1   = 588;    // first rank of Inner Fire
 constexpr uint32 SPELLFAMILYFLAG_PRIEST_INNER_FIRE = 0x2; // Inner Fire, priest flags0
 constexpr uint32 SPELL_PRI_POM_VISUAL      = 41637;  // Prayer of Mending jump visual
+constexpr uint32 SPELL_PRI_SHADOWFIEND     = 34433;  // wave 3: Shadowfiend (summons NPC 19668)
+constexpr uint32 NPC_PRI_SHADOWFIEND       = 19668;  // wave 3
+constexpr uint32 SPELL_PRI_SPIRIT_REDEMPTION_FORM = 27827; // wave 3: the spirit form (shapeshift 32)
 // PW:Shield SpellFamilyFlags[0] = 0x1 (verify!)
 // Holy Fire SpellFamilyFlags[0] = 0x8000 (verify!)
 

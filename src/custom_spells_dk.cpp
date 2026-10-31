@@ -907,6 +907,441 @@ class spell_custom_dku_dnd_mobile : public AuraScript
 };
 
 // ============================================================
+//  THIRD CONCEPT LIST, WAVE 3 (2026-10-31): the large Death Knight items
+//  Plan: share-public custom-spells/records/2026-10-31-third-concept-list.md
+// ============================================================
+namespace
+{
+    constexpr uint32 DKU_GARGOYLE_ARMY_SIZE      = 5;       // 900379, the operator's default
+    constexpr float  DKU_CORPSE_SEARCH_RANGE     = 30.0f;   // Corpse Explosion's own range (SpellRange 4)
+    constexpr uint32 DKU_CORPSE_WORM_LIFETIME_MS = 30000;   // 900381 "fighting for you for 30 sec"
+    constexpr uint32 DKU_CORPSE_WORM_LIMIT       = 10;      // alive at a time, per Death Knight
+    constexpr float  DKU_CORPSE_WORM_TARGET_RANGE = 25.0f;  // a worm looks for enemies this near its master
+
+    int32 DkParagonDamage(Player* dk)
+    {
+        return 666 + 5 * int32(GetParagonLevel(dk));
+    }
+
+    // The highest rank of a spell chain the player knows (0 = none)
+    uint32 DkHighestKnownRank(Player* player, uint32 firstRank)
+    {
+        uint32 known = 0;
+        for (uint32 rank = firstRank; rank; rank = sSpellMgr->GetNextSpellInChain(rank))
+            if (player->HasSpell(rank))
+                known = rank;
+        return known;
+    }
+}
+
+// ============================================================
+//  900345 / 900346 Frost: the wyrm breathes on Killing Machine and Rime
+//  List: "consuming Killing Machine or Rime makes your frost wyrm launch a
+//  frost breath (1sec aoe cone channel, damage dependent on paragon lvl)".
+//  Killing Machine (51124) is a one-charge aura (SpellInfoCorrections.cpp:330
+//  sets ProcCharges 1) that the core spends with the next Icy Touch, Frost
+//  Strike or Howling Blast; Rime's Freezing Fog (59052) is a one-charge spell
+//  modifier spent by the next Howling Blast (Player::RemoveSpellMods ->
+//  DropModCharge -> Aura::DropCharge). A spent charge removes the aura with
+//  AURA_REMOVE_BY_DEFAULT (Unit.h "scripted remove"); a timed-out buff ends
+//  with AURA_REMOVE_BY_EXPIRE, a death with AURA_REMOVE_BY_DEATH, so only
+//  AURA_REMOVE_BY_DEFAULT is a consumption. (A GM .unaura removes with the
+//  same mode and counts too.)
+//  With the passive 900345 the DK's Frost Wyrm (NPC 900333, a plain
+//  TempSummon owned by the DK) that has a victim interrupts what it casts,
+//  turns to the victim and casts 900346 at it: a Frost cone (TargetA 24,
+//  20 yd), 1-s channel, 666 + 5 x the DK's Paragon level. No wyrm, or one
+//  without a victim: nothing happens.
+// ============================================================
+namespace
+{
+    void WyrmBreathOnConsume(Unit* owner, AuraRemoveMode mode)
+    {
+        Player* dk = owner ? owner->ToPlayer() : nullptr;
+        if (mode != AURA_REMOVE_BY_DEFAULT || !dk || !dk->IsAlive()
+            || !g_CustomSpellsEnabled
+            || !dk->HasAura(SPELL_DKF_WYRM_BREATH_PASSIVE))
+            return;
+
+        std::list<Creature*> wyrms;
+        dk->GetCreatureListWithEntryInGrid(wyrms, NPC_DK_FROST_WYRM, 100.0f);
+        for (Creature* wyrm : wyrms)
+        {
+            if (!wyrm->IsAlive() || wyrm->GetOwnerGUID() != dk->GetGUID())
+                continue;
+
+            Unit* victim = wyrm->GetVictim();
+            if (!victim || !victim->IsAlive() || !wyrm->IsValidAttackTarget(victim))
+                continue;
+
+            wyrm->InterruptNonMeleeSpells(false);
+            wyrm->SetFacingToObject(victim);
+            int32 damage = DkParagonDamage(dk);
+            wyrm->CastCustomSpell(victim, SPELL_DKF_WYRM_BREATH, &damage,
+                nullptr, nullptr, true);
+
+            LOG_INFO("module",
+                "mod-custom-spells: Player {} -> a spent Killing Machine / Rime: the Frost Wyrm breathes on {}",
+                dk->GetName(), victim->GetName());
+        }
+    }
+}
+
+class spell_custom_dkf_wyrm_breath_killing_machine : public AuraScript
+{
+    PrepareAuraScript(spell_custom_dkf_wyrm_breath_killing_machine);
+
+    void HandleRemove(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        WyrmBreathOnConsume(GetTarget(),
+            GetTargetApplication()->GetRemoveMode());
+    }
+
+    void Register() override
+    {
+        AfterEffectRemove += AuraEffectRemoveFn(
+            spell_custom_dkf_wyrm_breath_killing_machine::HandleRemove, EFFECT_0,
+            SPELL_AURA_ADD_FLAT_MODIFIER, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+class spell_custom_dkf_wyrm_breath_rime : public AuraScript
+{
+    PrepareAuraScript(spell_custom_dkf_wyrm_breath_rime);
+
+    void HandleRemove(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        WyrmBreathOnConsume(GetTarget(),
+            GetTargetApplication()->GetRemoveMode());
+    }
+
+    void Register() override
+    {
+        AfterEffectRemove += AuraEffectRemoveFn(
+            spell_custom_dkf_wyrm_breath_rime::HandleRemove, EFFECT_0,
+            SPELL_AURA_ADD_PCT_MODIFIER, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+// ============================================================
+//  900379 Unholy: an army of gargoyles
+//  List: "Summon Gargolye now summons an army of gargoyles" (operator
+//  default: 5 in all).
+//  Hooked on Summon Gargoyle (49206). After the real cast the Death Knight
+//  casts the same spell four more times, triggered: each one is a full
+//  stock cast (the gargoyle 27829 with the summon properties 209, the
+//  marker aura on the enemy that its AI looks for, the runic-power feed
+//  61777), so every copy has the stock AI, the stock lifetime and
+//  Guardian::InitStatsForLevel's gargoyle scaling (Pet.cpp). A triggered
+//  cast sets no cooldown, the real cast's 3 min stands. The gargoyles
+//  after the first find no marker aura left on the enemy (the first one's
+//  AI takes it, pet_dk.cpp UpdateAI) and take the Death Knight's selected
+//  target instead (MySelectNextTarget). One cast = DKU_GARGOYLE_ARMY_SIZE
+//  gargoyles; the cooldown bounds the number alive.
+// ============================================================
+class spell_custom_dku_gargoyle_army : public SpellScript
+{
+    PrepareSpellScript(spell_custom_dku_gargoyle_army);
+
+    void HandleAfterCast()
+    {
+        Player* dk = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!dk || !g_CustomSpellsEnabled
+            || !dk->HasAura(SPELL_DKU_GARGOYLE_ARMY_PASSIVE))
+            return;
+
+        Unit* target = GetExplTargetUnit();
+        if (!target)
+            target = dk->GetVictim();
+        if (!target)
+            return;
+
+        // each triggered re-cast would run this handler again
+        static thread_local bool reentry = false;
+        if (reentry)
+            return;
+        reentry = true;
+        for (uint32 i = 1; i < DKU_GARGOYLE_ARMY_SIZE; ++i)
+            dk->CastSpell(target, SPELL_DK_SUMMON_GARGOYLE, true);
+        reentry = false;
+
+        LOG_INFO("module",
+            "mod-custom-spells: Player {} -> Summon Gargoyle: an army of {}",
+            dk->GetName(), DKU_GARGOYLE_ARMY_SIZE);
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_custom_dku_gargoyle_army::HandleAfterCast);
+    }
+};
+
+// ============================================================
+//  900380 Unholy: a Corpse Explosion every second, passively
+//  List: "you passively trigger an corpse explosion every second".
+//  The marker is a 1-s periodic dummy aura. Each second, in combat and
+//  with Corpse Explosion known (the Unholy talent, -49158), the DK casts
+//  the highest known rank, triggered (no runic power, no cooldown), on the
+//  nearest usable corpse within the spell's 30 yd: a dead creature that
+//  is not mechanical or elemental and still wears its own model - what
+//  the core's own CorpseExplosionCheck (spell_dk.cpp) accepts - in line of
+//  sight. No corpse, no cast. The explosion is the stock spell
+//  (spell_dk_corpse_explosion): it damages enemies round the corpse and
+//  changes the corpse's model, so one corpse is used once.
+// ============================================================
+class spell_custom_dku_corpse_tick : public AuraScript
+{
+    PrepareAuraScript(spell_custom_dku_corpse_tick);
+
+    void HandlePeriodic(AuraEffect const* /*aurEff*/)
+    {
+        Player* dk = GetTarget()->ToPlayer();
+        if (!dk || !dk->IsAlive() || !dk->IsInCombat() || !g_CustomSpellsEnabled)
+            return;
+
+        uint32 const rank = DkHighestKnownRank(dk, SPELL_DK_CORPSE_EXPLOSION_R1);
+        if (!rank)
+            return;
+
+        std::list<Unit*> dead;
+        Acore::AnyDeadUnitCheck check;
+        Acore::UnitListSearcher<Acore::AnyDeadUnitCheck> searcher(dk, dead, check);
+        Cell::VisitObjects(dk, searcher, DKU_CORPSE_SEARCH_RANGE);
+
+        Unit* nearest = nullptr;
+        float nearestDist = 0.0f;
+        for (Unit* corpse : dead)
+        {
+            if (!corpse->IsCreature() || corpse->IsAlive()
+                || (corpse->GetCreatureTypeMask() & CREATURE_TYPEMASK_MECHANICAL_OR_ELEMENTAL)
+                || corpse->GetDisplayId() != corpse->GetNativeDisplayId()
+                || !dk->IsWithinLOSInMap(corpse))
+                continue;
+
+            float const dist = dk->GetDistance(corpse);
+            if (dist > DKU_CORPSE_SEARCH_RANGE)
+                continue;
+            if (!nearest || dist < nearestDist)
+            {
+                nearest = corpse;
+                nearestDist = dist;
+            }
+        }
+
+        if (nearest)
+            dk->CastSpell(nearest, rank, true);
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_dku_corpse_tick::HandlePeriodic, EFFECT_0,
+            SPELL_AURA_PERIODIC_DUMMY);
+    }
+};
+
+// ============================================================
+//  900381 / 900382 Unholy: Corpse Explosion summons a corpse worm
+//  List: "corpse explosion summons a corpse worm, fighting for you for 30
+//  sec. when it dies it explodes (like bloodworms but damage)".
+//  Hooked on Corpse Explosion (-49158, beside the core's own script): the
+//  stock spell has two dummy effects and exactly one of them hits the
+//  corpse (effect 0 an explicit target, effect 1 the corpse picked in the
+//  area - spell_dk_corpse_explosion's target hooks). When the hit unit is
+//  a corpse (not a living ghoul, which explodes itself), a corpse worm
+//  (NPC 900381) rises at the corpse's spot as the DK's guardian (summon
+//  properties 61: guardian, pet scaling). The DK's own casts and the
+//  900380 ticker both end here. At most DKU_CORPSE_WORM_LIMIT (10) worms
+//  of one DK are alive at a time; further explosions raise none.
+//  The worm (npc_custom_corpse_worm) fights the DK's target for 30 s; on
+//  its death or when the 30 s run out it explodes with 900382 - Shadow,
+//  10 yd, 666 + 5 x the DK's Paragon level - the Bloodworm Burst pattern
+//  (900307). A worm that is unsummoned any other way stays quiet.
+// ============================================================
+class spell_custom_dku_corpse_worm : public SpellScript
+{
+    PrepareSpellScript(spell_custom_dku_corpse_worm);
+
+    void HandleHit(SpellEffIndex /*effIndex*/)
+    {
+        Player* dk = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        Unit* corpse = GetHitUnit();
+        if (!dk || !corpse || corpse->IsAlive() || !g_CustomSpellsEnabled
+            || !dk->HasAura(SPELL_DKU_CORPSE_WORM_PASSIVE))
+            return;
+
+        std::list<Creature*> worms;
+        dk->GetCreatureListWithEntryInGrid(worms, NPC_DKU_CORPSE_WORM, 150.0f);
+        uint32 mine = 0;
+        for (Creature* worm : worms)
+            if (worm->IsAlive() && worm->GetCreatorGUID() == dk->GetGUID())
+                ++mine;
+        if (mine >= DKU_CORPSE_WORM_LIMIT)
+            return;
+
+        // 1 s longer than the worm's own clock: the AI ends it, this only
+        // catches a worm whose AI never ran
+        TempSummon* worm = dk->SummonCreature(NPC_DKU_CORPSE_WORM, *corpse,
+            TEMPSUMMON_TIMED_DESPAWN, DKU_CORPSE_WORM_LIFETIME_MS + 1000, 0,
+            sSummonPropertiesStore.LookupEntry(SUMMON_PROPERTIES_PROC_GUARDIAN));
+        if (!worm)
+            return;
+
+        worm->SetOwnerGUID(dk->GetGUID());
+        worm->SetCreatorGUID(dk->GetGUID());
+        worm->SetFaction(dk->GetFaction());
+        worm->SetUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED);
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(
+            spell_custom_dku_corpse_worm::HandleHit, EFFECT_0, SPELL_EFFECT_DUMMY);
+        OnEffectHitTarget += SpellEffectFn(
+            spell_custom_dku_corpse_worm::HandleHit, EFFECT_1, SPELL_EFFECT_DUMMY);
+    }
+};
+
+// NPC 900381: follows its master, fights what the master fights (the
+// master's selection, his victim, else the nearest enemy that is already
+// in combat), 30 s, explodes on death and at the end of the 30 s.
+struct npc_custom_corpse_worm : public ScriptedAI
+{
+    npc_custom_corpse_worm(Creature* creature) : ScriptedAI(creature) { }
+
+    void InitializeAI() override
+    {
+        ScriptedAI::InitializeAI();
+        me->SetReactState(REACT_AGGRESSIVE);
+    }
+
+    void IsSummonedBy(WorldObject* summoner) override
+    {
+        if (summoner && summoner->ToUnit())
+            ChooseTarget(summoner->ToUnit());
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        if (_lifeMs <= diff)
+        {
+            Explode();
+            me->DespawnOrUnsummon();
+            return;
+        }
+        _lifeMs -= diff;
+
+        _selectionMs += diff;
+        if (_selectionMs >= 1000)
+        {
+            _selectionMs = 0;
+            if (Unit* owner = me->GetOwner())
+            {
+                Unit* victim = me->GetVictim();
+                if (!victim || !victim->IsAlive())
+                {
+                    if (!ChooseTarget(owner))
+                    {
+                        me->CombatStop(true);
+                        me->GetMotionMaster()->Clear(false);
+                        me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST,
+                            me->GetFollowAngle());
+                    }
+                }
+            }
+        }
+
+        if (!UpdateVictim())
+            return;
+
+        DoMeleeAttackIfReady();
+    }
+
+    void JustDied(Unit* /*killer*/) override
+    {
+        Explode();
+        if (TempSummon* summon = me->ToTempSummon())
+            summon->UnSummon();
+    }
+
+private:
+    // true when it set a target
+    bool ChooseTarget(Unit* owner)
+    {
+        Unit* target = nullptr;
+        if (Player* player = owner->ToPlayer())
+            if (Unit* selection = player->GetSelectedUnit())
+                if (selection->IsAlive() && me->IsValidAttackTarget(selection))
+                    target = selection;
+
+        if (!target)
+            if (Unit* victim = owner->GetVictim())
+                if (victim->IsAlive() && me->IsValidAttackTarget(victim))
+                    target = victim;
+
+        if (!target)
+        {
+            std::list<Unit*> enemies;
+            Acore::AnyUnfriendlyUnitInObjectRangeCheck check(owner, owner,
+                DKU_CORPSE_WORM_TARGET_RANGE);
+            Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+                searcher(owner, enemies, check);
+            Cell::VisitObjects(owner, searcher, DKU_CORPSE_WORM_TARGET_RANGE);
+
+            float best = 0.0f;
+            for (Unit* enemy : enemies)
+            {
+                if (!enemy->IsAlive() || !enemy->IsInCombat()
+                    || !me->IsValidAttackTarget(enemy))
+                    continue;
+                float const dist = me->GetDistance(enemy);
+                if (!target || dist < best)
+                {
+                    target = enemy;
+                    best = dist;
+                }
+            }
+        }
+
+        if (!target)
+            return false;
+
+        me->GetMotionMaster()->Clear(false);
+        AttackStart(target);
+        return true;
+    }
+
+    // the Bloodworm Burst pattern (900308's fuse): aimed at the worm's
+    // spot, the DK's spell, 666 + 5 x Paragon level
+    void Explode()
+    {
+        if (_exploded)
+            return;
+        _exploded = true;
+
+        Player* owner = me->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!owner || !owner->IsInMap(me) || !g_CustomSpellsEnabled)
+            return;
+
+        SpellInfo const* burst = sSpellMgr->GetSpellInfo(SPELL_DKU_CORPSE_WORM_BURST);
+        if (!burst)
+            return;
+
+        SpellCastTargets targets;
+        targets.SetDst(*me);
+        CustomSpellValues values;
+        values.AddSpellMod(SPELLVALUE_BASE_POINT0, DkParagonDamage(owner));
+        owner->CastSpell(targets, burst, &values, TRIGGERED_FULL_MASK);
+    }
+
+    uint32 _lifeMs = DKU_CORPSE_WORM_LIFETIME_MS;
+    uint32 _selectionMs = 0;
+    bool _exploded = false;
+};
+
+// ============================================================
 
 void AddDKSpellsScripts()
 {
@@ -934,4 +1369,12 @@ void AddDKSpellsScripts()
     new custom_dku_ghoul_cleave_unitscript();
     RegisterSpellScript(spell_custom_dku_dnd_around);
     RegisterSpellScript(spell_custom_dku_dnd_mobile);
+
+    // third concept list, wave 3
+    RegisterSpellScript(spell_custom_dkf_wyrm_breath_killing_machine);
+    RegisterSpellScript(spell_custom_dkf_wyrm_breath_rime);
+    RegisterSpellScript(spell_custom_dku_gargoyle_army);
+    RegisterSpellScript(spell_custom_dku_corpse_tick);
+    RegisterSpellScript(spell_custom_dku_corpse_worm);
+    RegisterCreatureAI(npc_custom_corpse_worm);
 }

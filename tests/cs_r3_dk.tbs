@@ -19,7 +19,7 @@
 # 49895 (rank 5; its damage spell 47632), Death Gate 50977, Greatsword of the
 # Ebon Blade 38632.
 name    Custom spells - Death Knight third list
-timeout 300s
+timeout 480s
 
 bot dk deathknight slot=4
 
@@ -166,6 +166,199 @@ wait 1s
 do gm target dk
 as gm .unlearn 900311
 
+# ================================================================ wave 3
+# The large items (agent D, 2026-10-31). Spells: Raise Dead 46584 (triggered: no
+# Corpse Dust), Howling Blast rank 4 51411 (Rime 59052 makes it free), Frost
+# Strike rank 6 55268 (Killing Machine 51124), Frost Fever 55095 (keeps the DK in
+# combat on d1), Summon Gargoyle 49206 (gargoyle 27829), Corpse Explosion rank 5
+# 51328, Mindless Zombie 1501 (level 1, hostile; a permanent spawn - `.npc add
+# temp` leaves no corpse - removed again with `.npc delete` in the cleanup),
+# Corpse Worm 900381 and its burst 900382, the wyrm's breath 900346 (a 1-s
+# channel the wyrm casts).
+as gm .unlearn 900345
+as gm .unlearn 900379
+as gm .unlearn 900380
+as gm .unlearn 900381
+do dk learn 46584
+do dk learn 51411
+do dk learn 49206
+do dk learn 51328
+do dk learn 900333
+do dk goto -279 150 -423.2
+wait 500ms
+do dk approach d1
+do dk reset
+do gm target dk
+as gm .cooldown
+
+# ---------------------------------------------------------------- Frost: the wyrm
+log Frost - 900345 "consuming Killing Machine or Rime makes your frost wyrm launch a frost breath (1sec aoe cone channel, damage dependent on paragon lvl)": a Frost Wyrm (Raise Dead with 900333) that fights d1; control - a spent Rime without the passive makes no breath
+do dk cast 55095 on d1 triggered
+do dk attack d1
+do dk cast 46584 triggered
+wait 1500ms
+pick w creature:900333 near dk
+require w exists
+waitfor w victim d1 timeout 5s
+as gm .aura 59052
+waitfor dk aura 59052 timeout 2s
+do dk cast 51411 on d1
+wait 600ms
+expect dk noaura 59052
+expect w notcasting 900346
+
+log Frost - 900345 Rime spent by a Howling Blast: the wyrm turns to d1 and channels Frozen Breath (900346)
+do dk learn 900345
+do gm target dk
+as gm .cooldown
+as gm .aura 59052
+waitfor dk aura 59052 timeout 2s
+do dk cast 51411 on d1
+waitfor w casting 900346 timeout 2s
+expect dk noaura 59052
+
+log Frost - 900345 Killing Machine spent by a Frost Strike: the same breath (1-s channel: it is over after 1.5 s)
+wait 2500ms
+expect w notcasting 900346
+do gm target dk
+as gm .modify runicpower 1000
+as gm .aura 51124
+waitfor dk aura 51124 timeout 2s
+do dk approach d1
+wait 300ms
+do dk cast 55268 on d1
+waitfor w casting 900346 timeout 2s
+expect dk noaura 51124
+wait 1500ms
+
+log Frost - 900345 a Killing Machine that merely runs out (10 s) is no consumption: no breath
+do gm target dk
+as gm .aura 51124
+waitfor dk aura 51124 timeout 2s
+waitfor dk noaura 51124 timeout 14s
+expect w notcasting 900346
+as gm .unlearn 900345
+do gm target w
+as gm .die
+do gm target dk
+wait 1s
+
+# ---------------------------------------------------------------- Unholy: the gargoyle army
+log Unholy - 900379 "Summon Gargolye now summons an army of gargoyles": control - without the passive one gargoyle (27829)
+do dk reset
+do dk approach d1
+do dk cast 49206 on d1 triggered
+wait 1500ms
+expect dk minions 27829 == 1
+
+log Unholy - 900379 with the passive the cast adds four more: 1 + 5 = 6 gargoyles in all (the first is still out)
+do dk learn 900379
+do dk cast 49206 on d1 triggered
+wait 1500ms
+expect dk minions 27829 == 6
+as gm .unlearn 900379
+
+# ---------------------------------------------------------------- Unholy: Corpse Explosion every second
+log Unholy - 900380 "you passively trigger an corpse explosion every second": a zombie corpse next to the DK; control - without the passive no Corpse Explosion (51328) is cast in 3 s, the corpse keeps its model
+do dk goto -279 150 -423.2
+wait 500ms
+as gm .npc add 1501
+pick zc creature:1501 near gm fresh
+require zc exists
+do gm target zc
+as gm .die
+do gm target dk
+do dk cast 55095 on d1 triggered
+waitfor dk incombat timeout 3s
+spelllog start
+wait 3s
+spelllog stop
+expect zc dead
+expect dk spell 51328 casts == 0
+
+log Unholy - 900380 with the passive, in combat, the highest known Corpse Explosion (51328) goes off on the corpse within a second or two
+do dk learn 900380
+do dk cast 55095 on d1 triggered
+spelllog start
+waitfor dk spell 51328 casts >= 1 timeout 6s
+wait 300ms
+spelllog stop
+expect dk spell 51328 casts >= 1
+do gm target zc
+as gm .npc delete
+do gm target dk
+
+log Unholy - 900380 out of combat nothing is cast: with the DoT gone and the DK out of combat, a second corpse stays whole (no cast in 4 s)
+as gm .unaura 55095
+do dk stop
+do gm target d1
+as gm .unaura 55095
+do gm target dk
+waitfor dk outofcombat timeout 20s
+as gm .npc add 1501
+pick zd creature:1501 near gm fresh
+require zd exists
+do gm target zd
+as gm .die
+do gm target dk
+spelllog start
+wait 4s
+spelllog stop
+expect dk spell 51328 casts == 0
+do gm target zd
+as gm .npc delete
+do gm target dk
+
+# ---------------------------------------------------------------- Unholy: the corpse worm
+log Unholy - 900381 "corpse explosion summons a corpse worm, fighting for you for 30 sec": control - the explosion of a corpse (in combat again) raises no worm without the passive
+as gm .npc add 1501
+pick zf creature:1501 near gm fresh
+require zf exists
+do gm target zf
+as gm .die
+do gm target dk
+do dk cast 55095 on d1 triggered
+spelllog start
+waitfor dk spell 51328 casts >= 1 timeout 6s
+wait 500ms
+spelllog stop
+expect dk minions 900381 == 0
+do gm target zf
+as gm .npc delete
+do gm target dk
+
+log Unholy - 900381 with the passive each Corpse Explosion raises a corpse worm (NPC 900381): a third corpse, exploded by the ticker, leaves a worm that fights for the DK
+as gm .npc add 1501
+pick ze creature:1501 near gm fresh
+require ze exists
+do gm target ze
+as gm .die
+do gm target dk
+do dk learn 900381
+do dk cast 55095 on d1 triggered
+waitfor dk minions 900381 >= 1 timeout 8s
+pick wm creature:900381 near dk
+require wm exists
+expect wm alive
+
+log Unholy - 900381 "when it dies it explodes (like bloodworms but damage)": the worm's death sets off the burst 900382 (Shadow, 10 yd, at least 666 per hit) and the worm is gone
+do dk cast 55095 on d1 triggered
+spelllog start
+do gm target wm
+as gm .die
+do gm target dk
+wait 1500ms
+spelllog stop
+expect dk spell 900382 casts == 1
+expect dk spell 900382 damage >= 666
+expect dk minions 900381 == 0
+as gm .unlearn 900380
+as gm .unlearn 900381
+do gm target ze
+as gm .npc delete
+do gm target dk
+as gm .unaura 55095
+
 cleanup
 do dk stop
 do gm target dk
@@ -179,4 +372,12 @@ as gm .unlearn 900375
 as gm .unlearn 900376
 as gm .unlearn 900377
 as gm .unlearn 900378
+as gm .unlearn 900345
+as gm .unlearn 900379
+as gm .unlearn 900380
+as gm .unlearn 900381
+as gm .unlearn 900333
+as gm .unaura 51124
+as gm .unaura 59052
+as gm .unaura 55095
 do dk destroy 38632

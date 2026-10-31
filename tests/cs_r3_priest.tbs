@@ -9,7 +9,7 @@
 # Spells: Penance 53007 (talent; heal ticks 52985, damage ticks 52998),
 # Holy Nova 48078 (heal 48076), Mind Sear 53023 (tick 53022).
 name    Custom spells - Priest third list
-timeout 360s
+timeout 540s
 
 bot pr priest slot=4
 bot ally warrior
@@ -319,6 +319,214 @@ spelllog stop
 do pr stop
 expect pr spell 53022 casts >= 16
 
+# ================================================================ wave 3
+# The large items (agent D, 2026-10-31). Spells: Penance rank 4 53007 (damage
+# channel 53003 with the tick 53000; heal channel 52988 with the tick 52985),
+# Spirit of Redemption talent 20711 (form 27827), Smite 48123, Mind Blast 48127
+# (a Shadow spell with a Shadowform stance mask: the core refuses it in the spirit
+# form), Shadowfiend 34433 (NPC 19668), Mindless Zombie 1501 (level 1, hostile),
+# Freeze 9454 (the zombie stays where it is). The AoE Training Dummies take no
+# damage and never die, the combat log still reads the full amount.
+as gm .unlearn 900912
+as gm .unlearn 900949
+as gm .unlearn 900981
+do pr learn 53007
+do pr learn 48123
+do pr learn 48127
+do pr learn 34433
+do pr learn 20711
+do pr goto -279 150 -423.2
+wait 500ms
+do pr approach d1
+do pr reset
+do gm target pr
+as gm .cooldown
+
+# ---------------------------------------------------------------- Discipline: Penance +4
+log Discipline - 900912 "penance +4 targets" (script-driven copies of each tick): control - a Penance on d1 ticks the damage spell (53000) two or three times, on d1 alone
+do pr reset
+do gm target pr
+as gm .cooldown
+spelllog start
+do pr approach d1
+wait 300ms
+do pr cast 53007 on d1
+wait 3s
+spelllog stop
+expect pr spell 53000 casts >= 2
+expect pr spell 53000 casts <= 3
+expect pr spell 53000 targets == 1
+
+log Discipline - 900912 with the passive every tick also strikes up to four more enemies near d1 (the ring of dummies): five distinct targets, at least 10 tick casts
+do pr learn 900912
+do pr reset
+do gm target pr
+as gm .cooldown
+spelllog start
+do pr approach d1
+wait 300ms
+do pr cast 53007 on d1
+wait 3s
+spelllog stop
+expect pr spell 53000 targets >= 5
+expect pr spell 53000 casts >= 10
+do pr stop
+
+log Discipline - 900912 a healing Penance (heal tick 52985) on the injured ally also heals the other injured player of the party near it (the priest): control - the ally alone without the passive
+as gm .unlearn 900912
+do pr reset
+do gm target pr
+as gm .cooldown
+do gm target ally
+as gm .damage 6000
+do gm target pr
+as gm .damage 6000
+do pr approach ally
+spelllog start
+do pr cast 53007 on ally
+wait 3s
+spelllog stop
+expect pr spell 52985 targets == 1
+do pr stop
+
+log Discipline - 900912 with the passive the same Penance heals two distinct players (the ally and the priest)
+do pr learn 900912
+do pr reset
+do gm target pr
+as gm .cooldown
+do gm target ally
+as gm .damage 6000
+do gm target pr
+as gm .damage 6000
+do pr approach ally
+spelllog start
+do pr cast 53007 on ally
+wait 3s
+spelllog stop
+expect pr spell 52985 targets >= 2
+do pr stop
+as gm .unlearn 900912
+do pr reset
+
+# ---------------------------------------------------------------- Holy: Spirit of Redemption
+log Holy - 900949 "you can now cast damaging spells in spirit of redemption form" (talent 20711): control - without the passive the spirit cannot cast Mind Blast (its stance mask names Shadowform only: SPELL_FAILED_ONLY_SHAPESHIFT, Spell.cpp:6057, SpellInfo.cpp:1774)
+do pr goto -279 150 -423.2
+wait 500ms
+do pr approach d1
+do pr die
+wait 500ms
+expect pr alive
+expect pr aura 27827
+expect pr noaura 900950
+spelllog start
+do pr cast 48127 on d1
+wait 1500ms
+spelllog stop
+expect pr spell 48127 casts == 0
+do gm target pr
+as gm .unaura 27827
+waitfor pr dead timeout 3s
+do pr revive
+waitfor pr alive timeout 3s
+do pr reset
+
+log Holy - 900949 with the passive the spirit form carries Spirit Casting (900950, aura 275 for the priest's spells) and Mind Blast and Smite go off (the server half; the client needs the 900950 client record - wave 4)
+do pr learn 900949
+do pr approach d1
+do pr die
+wait 500ms
+expect pr alive
+expect pr aura 27827
+expect pr aura 900950
+spelllog start
+do pr cast 48127 on d1
+wait 1800ms
+do pr cast 48123 on d1
+wait 3s
+spelllog stop
+expect pr spell 48127 casts >= 1
+expect pr spell 48123 casts >= 1
+do gm target pr
+as gm .unaura 27827
+waitfor pr dead timeout 3s
+do pr revive
+waitfor pr alive timeout 3s
+expect pr noaura 900950
+as gm .unlearn 900949
+do pr reset
+
+# ---------------------------------------------------------------- Shadow: Shadowfiend
+log Shadow - 900981 "your shadow fiend has +500% hp ...": control - without the passive the Shadowfiend (19668) has no Dark Pull aura and less than 36,000 health
+do pr approach d1
+do gm target pr
+as gm .cooldown
+do pr cast 34433 on d1 triggered
+wait 1500ms
+pick sf creature:19668 near pr
+require sf exists
+expect sf noaura 900982
+expect sf maxhealth < 36000
+do gm target sf
+as gm .die
+do gm target pr
+wait 1s
+
+log Shadow - 900981 with the passive the fiend carries Dark Pull (900982): +500 % maximum health - 36,000 or more - and, when it dies, a Shadow burst (900983: 666 + 5 x Paragon level, 10 yd) goes off
+do pr learn 900981
+do pr approach d1
+do gm target pr
+as gm .cooldown
+spelllog start
+do pr cast 34433 on d1 triggered
+wait 1500ms
+pick sf2 creature:19668 near pr
+require sf2 exists
+expect sf2 aura 900982
+expect sf2 maxhealth >= 36000
+do gm target sf2
+as gm .die
+do gm target pr
+wait 1500ms
+spelllog stop
+expect pr spell 900983 casts == 1
+expect pr spell 900983 damage >= 666
+expect pr spell 900983 targets >= 1
+
+log Shadow - 900981 "pulls enies in 10y every 5 seconds to him": a frozen zombie 8 yd west of the fiend (the fiend stands at d1) is where it was after 3 s and next to the fiend (x > -279) after 6.5 s
+do gm goto -282 150 -423.2
+wait 300ms
+as gm .npc add temp 1501
+pick zz creature:1501 near gm fresh
+require zz exists
+do gm target zz
+as gm .aura 9454
+do gm goto -279 150 -423.2
+do gm target pr
+as gm .cooldown
+do pr cast 34433 on d1 triggered
+wait 3s
+do gm target zz
+as gm .gps
+expect output value X: < -280
+wait 3500ms
+as gm .gps
+expect output value X: > -279
+do gm target pr
+
+log Shadow - 900981 "when it dies it explodes": the fiend that runs out its 15 s (summoned just now, the zombie gone) ends with the burst too - once
+do gm target zz
+as gm .npc delete
+do gm target pr
+do pr approach d1
+as gm .cooldown
+spelllog start
+do pr cast 34433 on d1 triggered
+wait 16s
+spelllog stop
+expect pr spell 900983 casts == 1
+expect pr minions 19668 == 0
+as gm .unlearn 900981
+
 cleanup
 do pr stop
 do gm target pr
@@ -337,3 +545,8 @@ as gm .unaura 900911
 as gm .unaura 900979
 as gm .unaura 48168
 as gm .unaura 48111
+as gm .unlearn 900912
+as gm .unlearn 900949
+as gm .unlearn 900981
+as gm .unlearn 20711
+as gm .unaura 900950

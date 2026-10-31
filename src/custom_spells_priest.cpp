@@ -18,6 +18,7 @@
 #include "custom_spells_common.h"
 #include "Containers.h"
 #include "TemporarySummon.h"
+#include "AllCreatureScript.h"
 
 // ============================================================
 //  Concept revision of 2026-10-08 (share-public custom-spells/09):
@@ -1482,6 +1483,310 @@ class spell_custom_pri_sear_plus3 : public AuraScript
     }
 };
 
+// ============================================================
+//  THIRD CONCEPT LIST, WAVE 3 (2026-10-31): the large Priest items
+//  Plan: share-public custom-spells/records/2026-10-31-third-concept-list.md
+// ============================================================
+namespace
+{
+    constexpr uint32 PENANCE_EXTRA_TARGETS      = 4;       // 900912 "penance +4 targets"
+    constexpr float  PENANCE_EXTRA_RANGE        = 15.0f;   // round the channel's target
+    constexpr float  SHADOWFIEND_PULL_RANGE     = 10.0f;   // 900981 "pulls enemies within 10y"
+    constexpr float  SHADOWFIEND_PULL_MIN_DIST  = 3.5f;    // nearer than this: already there
+    constexpr uint32 SHADOWFIEND_FALLBACK_MS    = 14700;   // fuse when the summon's clock is unknown (15 s - 0.3 s)
+    constexpr uint32 SPELL_PRI_DEATH_GRIP_JUMP  = 49575;   // only read: the grip effect's immunity (SPELL_EFFECT_JUMP)
+}
+
+// ============================================================
+//  900912 Discipline: Penance +4 targets
+//  List: "penance +4 targets" - script-driven copies of the ticks, not real
+//  channels (plan section 5, engine risk 3; the 900980 Mind Sear +3 pattern).
+//  Penance (47540 and ranks) is a dummy that casts the channel (47758 damage /
+//  47757 heal and ranks, spell_pri_penance): effect 0 an aura on the target,
+//  effect 1 a periodic trigger aura on the PRIEST (TargetA 1) that casts the
+//  tick spell (47666 / 47750 and ranks) every second at the channel target
+//  (TARGET_UNIT_CHANNEL_TARGET). This hook is on that periodic effect. With
+//  the passive, each tick of the real channel also casts the same tick spell,
+//  triggered, at up to four more units near the channel target: other
+//  enemies within 15 yd (damage Penance, nearest first) or other injured
+//  players of the priest's group within 15 yd (healing Penance, lowest health
+//  percentage first). A tick spell whose target is the channel target takes
+//  its target from the cast's channel data, not from the unit target
+//  (Spell::SelectImplicitChannelTargets, Spell.cpp), so each copy is cast
+//  with SpellCastTargets that carry the extra unit as BOTH the unit target and
+//  the channel object (SpellCastTargets::SetObjectTargetChannel).
+// ============================================================
+class spell_custom_pri_penance_plus4 : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pri_penance_plus4);
+
+    void HandlePeriodic(AuraEffect const* aurEff)
+    {
+        Unit* casterUnit = GetCaster();
+        Player* priest = casterUnit ? casterUnit->ToPlayer() : nullptr;
+        if (!priest || !g_CustomSpellsEnabled
+            || !priest->HasAura(SPELL_PRI_DISC_PENANCE_PLUS4_PASSIVE))
+            return;
+
+        Unit* anchor = ObjectAccessor::GetUnit(*priest,
+            priest->GetGuidValue(UNIT_FIELD_CHANNEL_OBJECT));
+        if (!anchor)
+            return;
+
+        SpellInfo const* tick = sSpellMgr->GetSpellInfo(
+            aurEff->GetSpellInfo()->Effects[aurEff->GetEffIndex()].TriggerSpell);
+        if (!tick)
+            return;
+
+        std::vector<Unit*> extras;
+        if (priest->IsFriendlyTo(anchor))
+        {
+            for (Player* ally : PriestAndGroup(priest))
+                if (ally != anchor && ally->IsAlive() && !ally->IsFullHealth()
+                    && ally->IsInMap(anchor)
+                    && anchor->IsWithinDistInMap(ally, PENANCE_EXTRA_RANGE)
+                    && priest->IsWithinLOSInMap(ally))
+                    extras.push_back(ally);
+            std::sort(extras.begin(), extras.end(), [](Unit* a, Unit* b)
+            {
+                return a->GetHealthPct() < b->GetHealthPct();
+            });
+        }
+        else
+        {
+            std::list<Unit*> enemies;
+            Acore::AnyUnfriendlyUnitInObjectRangeCheck check(anchor, priest,
+                PENANCE_EXTRA_RANGE);
+            Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+                searcher(anchor, enemies, check);
+            Cell::VisitObjects(anchor, searcher, PENANCE_EXTRA_RANGE);
+
+            for (Unit* enemy : enemies)
+                if (enemy != anchor && enemy->IsAlive()
+                    && priest->IsValidAttackTarget(enemy)
+                    && priest->IsWithinLOSInMap(enemy))
+                    extras.push_back(enemy);
+            std::sort(extras.begin(), extras.end(), [anchor](Unit* a, Unit* b)
+            {
+                return anchor->GetDistance(a) < anchor->GetDistance(b);
+            });
+        }
+
+        if (extras.size() > PENANCE_EXTRA_TARGETS)
+            extras.resize(PENANCE_EXTRA_TARGETS);
+
+        CustomSpellValues values;    // none: the tick's own values
+        for (Unit* extra : extras)
+        {
+            SpellCastTargets targets;
+            targets.SetUnitTarget(extra);
+            targets.SetObjectTargetChannel(extra->GetGUID());
+            priest->CastSpell(targets, tick, &values, TRIGGERED_FULL_MASK);
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_pri_penance_plus4::HandlePeriodic, EFFECT_1,
+            SPELL_AURA_PERIODIC_TRIGGER_SPELL);
+    }
+};
+
+// ============================================================
+//  900949 / 900950 Holy: damaging spells in Spirit of Redemption
+//  List: "you can now cast damaging spells in spirit of redemption form".
+//  WHAT BLOCKS THEM (checked in the sources, 2026-10-31):
+//  SERVER - Spell::CheckCast (Spell.cpp:6029-6060) asks
+//  SpellInfo::CheckShapeshift (SpellInfo.cpp:1741) for the caster's form.
+//  The spirit form (shapeshift 32, SpellShapeshiftForm.dbc flags1 0x4100 -
+//  no SHAPESHIFT_FLAG_STANCE) counts as a shape "acting as shifted": a spell
+//  with a stance requirement (Spell.dbc Stances != 0) that does not name
+//  form 32 fails with SPELL_FAILED_ONLY_SHAPESHIFT (SpellInfo.cpp:1774).
+//  Every heal names form 32 (Stances 0x80000000); the Shadow damage spells
+//  (Mind Blast, Shadow Word: Pain / Death, Mind Flay, Vampiric Touch,
+//  Devouring Plague, Mind Sear, Shadowfiend) name Shadowform only and fail
+//  there; Smite, Holy Fire, Penance and Holy Nova carry no stance and pass
+//  the server. Nothing else in the core stops the spirit from casting: only
+//  melee is refused (Unit.cpp:7546, "Unit with SPELL_AURA_SPIRIT_OF_REDEMPTION
+//  can not attack").
+//  CLIENT - the 3.3.5a client refuses before it sends anything:
+//  CGUnit_C::CheckShapeshiftRules (wowdecomp Unit_C.cpp:17385, called from
+//  Spell_C.cpp:7706 and Unit_C.cpp:16089) fails a spell in a form without
+//  SHAPESHIFT_FLAG_STANCE when the spell has Attributes bit 0x10000 (every
+//  damage spell and most others) or a stance mask that does not name the
+//  form - unless the unit carries an aura type 275 (SPELL_AURA_MOD_IGNORE_
+//  SHAPESHIFT) whose class mask overlaps the spell's (AffectedByAura(275,
+//  spell) -> SpellRec::IsAffectedBy: same class set, mask & mask != 0 - an
+//  EMPTY mask matches nothing on the client). The server honours the very
+//  same aura (Spell.cpp:6035-6044: checkForm = false for a spell that
+//  IsAffectedOnSpell).
+//  SO ONE MECHANISM SERVES BOTH HALVES: 900950 is an aura 275 with the
+//  priest class set and a class mask of all ones in the three words. The
+//  priest carries it only while he is the Spirit of Redemption (this script
+//  adds it when 27827 lands and removes it when 27827 ends), so Shadowform
+//  keeps its holy-spell lockout and nothing changes outside the spirit form.
+//  Server half: complete with the SQL rows. Client half: needs the client
+//  spell record of 900950 (aura 275, class set 6, masks 0xFFFFFFFF x3) from
+//  wave 4's client_spell_sync - without it the client still refuses and only
+//  the server half works (a spell cast by .cast or a bot goes through).
+// ============================================================
+class spell_custom_pri_sor_spells : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pri_sor_spells);
+
+    void HandleApply(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        Player* priest = GetTarget()->ToPlayer();
+        if (!priest || !g_CustomSpellsEnabled
+            || !priest->HasAura(SPELL_PRI_HOLY_SOR_SPELLS_PASSIVE))
+            return;
+
+        priest->AddAura(SPELL_PRI_HOLY_SOR_SPELLS_AURA, priest);
+    }
+
+    void HandleRemove(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        GetTarget()->RemoveAurasDueToSpell(SPELL_PRI_HOLY_SOR_SPELLS_AURA);
+    }
+
+    void Register() override
+    {
+        AfterEffectApply += AuraEffectApplyFn(
+            spell_custom_pri_sor_spells::HandleApply, EFFECT_2,
+            SPELL_AURA_MOD_SHAPESHIFT, AURA_EFFECT_HANDLE_REAL);
+        AfterEffectRemove += AuraEffectRemoveFn(
+            spell_custom_pri_sor_spells::HandleRemove, EFFECT_2,
+            SPELL_AURA_MOD_SHAPESHIFT, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+// ============================================================
+//  900981 / 900982 / 900983 Shadow: a stronger Shadowfiend
+//  List: "your shadow fiend has +500% hp and pulls enies in 10y every 5
+//  seconds to him. when it dies it explodes and deals shadown damage aoe
+//  based on paragon level".
+//  The Shadowfiend (spell 34433) summons NPC 19668 as the priest's guardian
+//  (summon properties 1561, 15 s). When it enters the world (the bloodworm
+//  hook's pattern: OnCreatureAddWorld, the owner already set by
+//  TempSummon::InitStats) of a priest with the passive 900981 it gets the
+//  hidden aura 900982 (not passive, so the core removes it with
+//  AURA_REMOVE_BY_DEATH when the fiend dies, Unit.cpp:5808):
+//  - effect 0: aura 133, +500 % maximum health, the current health keeps its
+//    percentage (AuraEffect::HandleAuraModIncreaseHealthPercent);
+//  - effect 1: a 5-s periodic dummy: every enemy of the priest within 10 yd
+//    of the fiend that is more than 3.5 yd away jumps next to the fiend
+//    (MotionMaster::MoveJump, the Death Grip's move) - hostile units and
+//    units in combat; one that is immune to the grip effect stays;
+//  - the aura's duration is set to the summon's remaining clock minus 0.3 s,
+//    so it ends just before the fiend despawns. Its end by expiry or by the
+//    fiend's death sets off 900983 (Shadow, 10 yd round the fiend, 666 + 5 x
+//    the priest's Paragon level, the priest's spell). Any other removal (the
+//    priest dismisses or loses the fiend, unsummon) stays quiet.
+// ============================================================
+class custom_pri_shadowfiend_creature : public AllCreatureScript
+{
+public:
+    custom_pri_shadowfiend_creature()
+        : AllCreatureScript("custom_pri_shadowfiend_creature") { }
+
+    void OnCreatureAddWorld(Creature* creature) override
+    {
+        if (creature->GetEntry() != NPC_PRI_SHADOWFIEND || !g_CustomSpellsEnabled)
+            return;
+
+        Player* priest = creature->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!priest || !priest->HasAura(SPELL_PRI_SHADOW_FIEND_PASSIVE)
+            || creature->HasAura(SPELL_PRI_SHADOW_FIEND_AURA))
+            return;
+
+        Aura* fiend = creature->AddAura(SPELL_PRI_SHADOW_FIEND_AURA, creature);
+        if (!fiend)
+            return;
+
+        uint32 left = SHADOWFIEND_FALLBACK_MS + 300;
+        if (TempSummon* summon = creature->ToTempSummon())
+            if (summon->GetTimer() > 1000)
+                left = summon->GetTimer();
+        fiend->SetMaxDuration(int32(left - 300));
+        fiend->SetDuration(int32(left - 300));
+    }
+};
+
+class spell_custom_pri_shadowfiend_aura : public AuraScript
+{
+    PrepareAuraScript(spell_custom_pri_shadowfiend_aura);
+
+    void HandlePeriodic(AuraEffect const* /*aurEff*/)
+    {
+        Unit* fiend = GetTarget();
+        Player* priest = fiend->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!fiend->IsAlive() || !priest || !priest->IsInMap(fiend)
+            || !g_CustomSpellsEnabled)
+            return;
+
+        SpellInfo const* grip = sSpellMgr->GetSpellInfo(SPELL_PRI_DEATH_GRIP_JUMP);
+
+        std::list<Unit*> enemies;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(fiend, priest,
+            SHADOWFIEND_PULL_RANGE);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(fiend, enemies, check);
+        Cell::VisitObjects(fiend, searcher, SHADOWFIEND_PULL_RANGE);
+
+        for (Unit* enemy : enemies)
+        {
+            if (!enemy->IsAlive() || !priest->IsValidAttackTarget(enemy)
+                || (!enemy->IsInCombat() && !priest->IsHostileTo(enemy))
+                || fiend->GetDistance(enemy) <= SHADOWFIEND_PULL_MIN_DIST
+                || (grip && enemy->IsImmunedToSpellEffect(grip, EFFECT_0)))
+                continue;
+
+            Position const spot = fiend->GetNearPosition(2.0f,
+                fiend->GetRelativeAngle(enemy));
+            enemy->GetMotionMaster()->MoveJump(spot.GetPositionX(),
+                spot.GetPositionY(), spot.GetPositionZ(), 25.0f, 7.0f);
+        }
+    }
+
+    void HandleRemove(AuraEffect const* /*aurEff*/,
+        AuraEffectHandleModes /*mode*/)
+    {
+        AuraRemoveMode const mode = GetTargetApplication()->GetRemoveMode();
+        if (mode != AURA_REMOVE_BY_EXPIRE && mode != AURA_REMOVE_BY_DEATH)
+            return;
+
+        Unit* fiend = GetTarget();
+        Player* priest = fiend->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!priest || !priest->IsInMap(fiend) || !g_CustomSpellsEnabled
+            || !priest->HasAura(SPELL_PRI_SHADOW_FIEND_PASSIVE))
+            return;
+
+        SpellInfo const* burst = sSpellMgr->GetSpellInfo(SPELL_PRI_SHADOW_FIEND_BURST);
+        if (!burst)
+            return;
+
+        // the fiend may already be dead: aim at its spot, not at the unit
+        SpellCastTargets targets;
+        targets.SetDst(*fiend);
+        CustomSpellValues values;
+        values.AddSpellMod(SPELLVALUE_BASE_POINT0, ParagonDamage(priest));
+        priest->CastSpell(targets, burst, &values, TRIGGERED_FULL_MASK);
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(
+            spell_custom_pri_shadowfiend_aura::HandlePeriodic, EFFECT_1,
+            SPELL_AURA_PERIODIC_DUMMY);
+        AfterEffectRemove += AuraEffectRemoveFn(
+            spell_custom_pri_shadowfiend_aura::HandleRemove, EFFECT_1,
+            SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
 void AddPriestSpellsScripts()
 {
     // Priest Discipline
@@ -1491,6 +1796,7 @@ void AddPriestSpellsScripts()
     RegisterSpellScript(spell_custom_pri_manaburn_shield);
     RegisterSpellScript(spell_custom_pri_inner_fire);
     RegisterSpellScript(spell_custom_pri_inner_fire_cast);
+    RegisterSpellScript(spell_custom_pri_penance_plus4);
 
     // Priest Holy
     RegisterSpellScript(spell_custom_pri_heal_fire);
@@ -1503,6 +1809,7 @@ void AddPriestSpellsScripts()
     RegisterSpellScript(spell_custom_pri_pom_second_jump);
     RegisterSpellScript(spell_custom_pri_hymn_waves);
     RegisterSpellScript(spell_custom_pri_hymn_wave_filter);
+    RegisterSpellScript(spell_custom_pri_sor_spells);
 
     // Priest Shadow
     RegisterSpellScript(spell_custom_pri_dot_aoe);
@@ -1512,4 +1819,6 @@ void AddPriestSpellsScripts()
     RegisterCreatureAI(npc_custom_lesser_tentacle);
     RegisterSpellScript(spell_custom_pri_flay_stack);
     RegisterSpellScript(spell_custom_pri_sear_plus3);
+    new custom_pri_shadowfiend_creature();
+    RegisterSpellScript(spell_custom_pri_shadowfiend_aura);
 }
