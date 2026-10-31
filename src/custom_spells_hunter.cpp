@@ -941,7 +941,10 @@ class spell_custom_hunt_switch_places : public SpellScript
         if (!pet || !pet->IsAlive() || !pet->IsInWorld())
             return;
 
-        Position const hunterSpot = hunter->GetPosition();
+        // a near teleport that is still pending (the position moves when it is
+        // acknowledged) counts: the hunter stands at its destination
+        Position const hunterSpot = hunter->IsBeingTeleportedNear()
+            ? Position(hunter->GetTeleportDest()) : hunter->GetPosition();
         Position const petSpot = pet->GetPosition();
 
         hunter->NearTeleportTo(petSpot.GetPositionX(), petSpot.GetPositionY(),

@@ -228,12 +228,13 @@ expect ma spell 900778 targets >= 7
 as gm .unlearn 900775
 as gm .unlearn 900776
 
+# a Blink starts the 1.5-s global cooldown, which `reset` does not clear: every cast is followed by 1.7 s
 # ---------------------------------------------------------------- wave 3: Blink through the enemy
 log Arcane - control for 900723: a Blink along y = the mage's y through the ring (dummies within 2 yd of the line) without the passive goes on its cooldown (15 s) and leaves no strain
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 expect ma cooldown 1953 > 5000
 expect ma noaura 900724
 expect ma spellmod 1953 cost 100 == 100
@@ -243,7 +244,7 @@ do ma learn 900723
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 expect ma cooldown 1953 == 0
 expect ma aurastacks 900724 == 1
 expect ma auramaxduration 900724 == 10000
@@ -253,7 +254,7 @@ log Arcane - 900723 control: a Blink along y = 12 yd north of the ring (no enemy
 place 13 -279 162 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 expect ma cooldown 1953 > 5000
 expect ma aurastacks 900724 == 1
 
@@ -261,7 +262,7 @@ log Arcane - 900723 a second Blink through the ring: ready again at once, two st
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 expect ma cooldown 1953 == 0
 expect ma aurastacks 900724 == 2
 expect ma spellmod 1953 cost 100 == 110
@@ -270,41 +271,41 @@ log Arcane - 900723 "10 stacks": eight more Blinks through the ring, then a nint
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 expect ma aurastacks 900724 == 10
 expect ma spellmod 1953 cost 100 == 150
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 expect ma aurastacks 900724 == 10
 expect ma cooldown 1953 == 0
 
@@ -318,7 +319,7 @@ do ma learn 900713
 place 13 -279 150 -423.2 0
 do ma reset
 do ma cast 1953
-wait 800ms
+wait 1700ms
 expect ma cooldown 1953 > 5000
 expect ma noaura 900724
 as gm .unlearn 900713
