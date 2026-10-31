@@ -1,0 +1,79 @@
+# mod-custom-spells: the Druid lines of the third concept list
+# (operator 2026-10-31; share-public
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
+# spell modifiers. Every check states the list's line, so a FAIL marks a
+# defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
+# bot stands west of the ring facing it.
+# Spells: Dire Bear Form 9634, Maul 48480 (rank 10), Cat Form 768, Claw
+# 48570 (rank 8), Shred 48572 (rank 9; from behind, Frontal Assault 901053
+# lifts that).
+name    Custom spells - Druid third list
+timeout 300s
+
+bot dr druid slot=4
+
+place 13 -279 150 -423.2 0
+require dr alive
+pick d1 creature:920018 near dr
+require d1 exists
+do gm target dr
+as gm .unlearn 901042
+as gm .unlearn 901043
+as gm .unlearn 901057
+as gm .unlearn 901058
+as gm .unlearn 901059
+as gm .unlearn 901060
+do dr learn 9634
+do dr learn 48480
+do dr learn 768
+do dr learn 48570
+do dr learn 48572
+
+as gm .aura 59756
+as gm .aura 62627
+waitfor dr aura 62627 timeout 2s
+
+log Control - without the passives nothing is modified
+expect dr spellmod 48480 damage 100 == 100
+expect dr spellmod 48570 jumptargets 0 == 0
+
+log Feral tank - 901042 "maul +50% dmg", 901043 "maul +9 targets" (= 10)
+do dr learn 901042
+do dr learn 901043
+expect dr spellmod 48480 damage 100 == 150
+expect dr spellmod 48480 jumptargets 0 == 10
+
+log Feral dps - 901057 "claw +50% dmg", 901058 "claw +9 targets" (= 10): a Claw in Cat Form chains to the ring in front
+do dr learn 901057
+do dr learn 901058
+expect dr spellmod 48570 damage 100 == 150
+expect dr spellmod 48570 jumptargets 0 == 10
+do dr cast 768 triggered
+do dr approach d1
+wait 1s
+spelllog start
+do dr cast 48570 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dr spell 48570 maxtargets >= 6
+
+log Feral dps - 901059 "shred +50% dmg", 901060 "shred +9 targets" (= 10)
+do dr learn 901059
+do dr learn 901060
+expect dr spellmod 48572 damage 100 == 150
+expect dr spellmod 48572 jumptargets 0 == 10
+
+cleanup
+do dr stop
+do gm target dr
+as gm .unaura 768
+as gm .unaura 59756
+as gm .unaura 62627
+as gm .unlearn 901042
+as gm .unlearn 901043
+as gm .unlearn 901057
+as gm .unlearn 901058
+as gm .unlearn 901059
+as gm .unlearn 901060

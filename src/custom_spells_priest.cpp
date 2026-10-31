@@ -252,8 +252,9 @@ class spell_custom_pri_weakened_soul_cd : public AuraScript
 // ============================================================
 //  900904: Atonement (2026-10-08)
 //  Concept: "heals the lowest % health ally in 30y range by 10% of
-//  your damage". Proc aura (spell_proc: melee, ranged, spell and
-//  periodic damage done, triggered damage included): 10 % of each hit
+//  your damage"; the third list (2026-10-31) says "of your holy
+//  damage". Proc aura (spell_proc: melee, ranged, spell and periodic
+//  damage done, triggered damage included, Holy school only): 10 % of each hit
 //  (after absorbs) heals the injured player of the priest's group -
 //  the priest included - with the lowest health percentage within
 //  30 yd of the priest. Logged under 900904, no healing bonuses on

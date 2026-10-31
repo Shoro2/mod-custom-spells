@@ -20,9 +20,10 @@
 #include "DynamicObject.h"
 
 // ============================================================
-//  SPELL 900300: 3 Rune Weapons (SpellScript)
+//  SPELL 900300: Two Rune Weapons (SpellScript)
 //  Hooked on Dancing Rune Weapon (49028). After cast,
-//  summons 2 additional rune weapon creatures.
+//  summons 1 additional rune weapon creature (two in all; the
+//  third concept list of 2026-10-31 asks for 2, it was 3).
 //  Only active when player has passive 900300.
 // ============================================================
 class spell_custom_dkb_3_rune_weapons : public SpellScript
@@ -45,19 +46,18 @@ class spell_custom_dkb_3_rune_weapons : public SpellScript
         if (!g_CustomSpellsEnabled)
             return;
 
-        // Summon 2 extra rune weapons by re-casting the summon effect (triggered).
+        // Summon 1 extra rune weapon by re-casting the summon effect (triggered).
         // Re-entrancy guard: each triggered re-cast of Dancing Rune Weapon would
         // otherwise re-enter this AfterCast handler and recurse without bound.
         static thread_local bool reentry = false;
         if (reentry)
             return;
         reentry = true;
-        for (int i = 0; i < 2; ++i)
-            player->CastSpell(player, SPELL_DANCING_RUNE_WEAPON, true);
+        player->CastSpell(player, SPELL_DANCING_RUNE_WEAPON, true);
         reentry = false;
 
         LOG_INFO("module",
-            "mod-custom-spells: Player {} -> 3 Rune Weapons summoned",
+            "mod-custom-spells: Player {} -> 2 Rune Weapons summoned",
             player->GetName());
     }
 
@@ -69,8 +69,9 @@ class spell_custom_dkb_3_rune_weapons : public SpellScript
 
 // ============================================================
 //  SPELL 900301: Rune Weapon Double Casts (AuraScript)
-//  Hooked on Dancing Rune Weapon aura (49028). Overrides
-//  the proc to cast each spell twice instead of once.
+//  Hooked on Dancing Rune Weapon aura (49028). Each mirrored
+//  attack or spell has a 25 % chance to be mirrored a second time
+//  (third concept list 2026-10-31; it was every time).
 //  Only active when player has passive 900301.
 // ============================================================
 class spell_custom_dkb_double_cast : public AuraScript
@@ -94,7 +95,7 @@ class spell_custom_dkb_double_cast : public AuraScript
         if (!pl->HasAura(SPELL_DKB_DOUBLE_CAST_PASSIVE))
             return;
 
-        if (!g_CustomSpellsEnabled)
+        if (!g_CustomSpellsEnabled || !roll_chance_i(DKB_DOUBLE_CAST_CHANCE))
             return;
 
         // Find the rune weapon
@@ -426,8 +427,10 @@ class spell_custom_dku_dot_aoe : public AuraScript
         if (!target || !target->IsAlive())
             return;
 
-        // Cast Shadow AoE helper at target
-        CastAnchoredBurst(player, target, SPELL_DKU_SHADOW_AOE_HELPER);
+        // Shadow AoE centred on the DoT target: 666 + 5 x Paragon level
+        // (third concept list 2026-10-31, as the warlock's and priest's)
+        CastAnchoredBurst(player, target, SPELL_DKU_SHADOW_AOE_HELPER,
+            int32(666 + 5 * GetParagonLevel(player)));
 
         LOG_INFO("module",
             "mod-custom-spells: Player {} -> DoT proc Shadow AoE on {}",
@@ -442,8 +445,8 @@ class spell_custom_dku_dot_aoe : public AuraScript
 
 // ============================================================
 //  DK BLOOD: 900306 Bloodworm Burst
-//  Concept: blood worms explode on death and deal 666 + 5 x Paragon
-//  level damage to all enemies within 10 yd. A worm (28017, summon
+//  Concept: blood worms are 50 % bigger and explode on death, dealing
+//  666 + 5 x Paragon level damage to all enemies within 10 yd. A worm (28017, summon
 //  50452, 20 s) of a marked DK gets the fuse 900308 when it enters
 //  the world; the fuse lasts 19 s, so it ends before the summon
 //  despawns. Its end - expiry or the worm's death - sets off the
@@ -466,6 +469,7 @@ public:
             return;
 
         creature->AddAura(SPELL_DKB_BLOODWORM_FUSE, creature);
+        creature->SetObjectScale(creature->GetObjectScale() * DKB_BLOODWORM_SCALE);
     }
 };
 
@@ -509,9 +513,10 @@ class spell_custom_dkb_bloodworm_fuse : public AuraScript
 };
 
 // ============================================================
-//  DK FROST: 900337 Howling Blast applies Frost Fever
+//  DK FROST: 900337 Howling Blast applies Frost Fever and Blood Plague
 //  Hooked on Howling Blast (all ranks via -49184): every enemy the
-//  blast damages gets the DK's Frost Fever (55095).
+//  blast damages gets the DK's Frost Fever (55095) and Blood Plague
+//  (55078; added by the third concept list, 2026-10-31).
 // ============================================================
 class spell_custom_dkf_hb_frost_fever : public SpellScript
 {
@@ -529,6 +534,7 @@ class spell_custom_dkf_hb_frost_fever : public SpellScript
             return;
 
         player->CastSpell(target, SPELL_DK_FROST_FEVER, true);
+        player->CastSpell(target, SPELL_DK_BLOOD_PLAGUE, true);
     }
 
     void Register() override

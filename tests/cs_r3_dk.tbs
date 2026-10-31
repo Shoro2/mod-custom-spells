@@ -1,0 +1,110 @@
+# mod-custom-spells: the Death Knight lines of the third concept list
+# (operator 2026-10-31; share-public
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
+# spell modifiers. Every check states the list's line, so a FAIL marks a
+# defect. (The changed spells 900300, 900301, 900304, 900306, 900337 and
+# 900366 are checked where their old checks were: cs_deathknight and
+# cs_concept_dk.)
+# Test ground as cs_deathknight: map 13, the FL dummy arena - eight AoE
+# Training Dummies (920018) on a 4-yd circle around (-270, 150); melee chains
+# stand west of the ring facing it.
+# Spells: Death Strike 49924 (rank 5), Frost Strike 55268 (rank 6, talent),
+# Scourge Strike 55271 (rank 4, talent; its Shadow part 70890), Death Coil
+# 49895 (rank 5; its damage spell 47632), Death Gate 50977, Greatsword of the
+# Ebon Blade 38632.
+name    Custom spells - Death Knight third list
+timeout 300s
+
+bot dk deathknight slot=4
+
+do dk learn 50977
+place 13 -279 150 -423.2 0
+require dk alive
+pick d1 creature:920018 near dk
+require d1 exists
+do gm target dk
+as gm .unlearn 900309
+as gm .unlearn 900310
+as gm .unlearn 900343
+as gm .unlearn 900344
+as gm .unlearn 900375
+as gm .unlearn 900376
+as gm .unlearn 900377
+as gm .unlearn 900378
+do dk learn 49924
+do dk learn 55268
+do dk learn 55271
+do dk learn 49895
+do dk destroy 38632
+as gm .additem 38632
+do dk equip 38632
+do dk approach d1
+wait 1s
+
+log Control - without the passives the four strikes are unmodified
+expect dk spellmod 49924 damage 100 == 100
+expect dk spellmod 49924 jumptargets 0 == 0
+expect dk spellmod 47632 jumptargets 0 == 0
+
+# ---------------------------------------------------------------- Blood
+log Blood - 900309 "Death Strike damage" (+50 %), 900310 "Death Strike targets" (+9 = 10, a melee chain in front of you)
+do dk learn 900309
+do dk learn 900310
+expect dk spellmod 49924 damage 100 == 150
+expect dk spellmod 49924 jumptargets 0 == 10
+spelllog start
+do dk cast 49924 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dk spell 49924 maxtargets >= 6
+
+# ---------------------------------------------------------------- Frost
+log Frost - 900343 "frost strike damage" (+50 %), 900344 "frost strike targets" (+9 = 10)
+do dk learn 900343
+do dk learn 900344
+as gm .modify runicpower 100
+expect dk spellmod 55268 damage 100 == 150
+expect dk spellmod 55268 jumptargets 0 == 10
+spelllog start
+do dk cast 55268 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dk spell 55268 maxtargets >= 6
+
+# ---------------------------------------------------------------- Unholy
+log Unholy - 900375 "Scourge Strike damage" (+50 %), 900376 "Scourge Strike targets" (+9 = 10)
+do dk learn 900375
+do dk learn 900376
+expect dk spellmod 55271 damage 100 == 150
+expect dk spellmod 55271 jumptargets 0 == 10
+spelllog start
+do dk cast 55271 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dk spell 55271 maxtargets >= 6
+
+log Unholy - 900377 "Death Coil damage" (+50 %), 900378 "Death Coil targets" (+9 = 10): both sit on the damage spell 47632, never on the cast 49895 (its core script heals friends it reaches)
+do dk learn 900377
+do dk learn 900378
+expect dk spellmod 47632 damage 100 == 150
+expect dk spellmod 47632 jumptargets 0 == 10
+expect dk spellmod 49895 jumptargets 0 == 0
+as gm .modify runicpower 100
+spelllog start
+do dk cast 49895 on d1 triggered
+wait 1500ms
+spelllog stop
+expect dk spell 47632 maxtargets >= 6
+
+cleanup
+do dk stop
+do gm target dk
+as gm .unlearn 900309
+as gm .unlearn 900310
+as gm .unlearn 900343
+as gm .unlearn 900344
+as gm .unlearn 900375
+as gm .unlearn 900376
+as gm .unlearn 900377
+as gm .unlearn 900378
+do dk destroy 38632

@@ -1,0 +1,38 @@
+# mod-custom-spells: the Hunter lines of the third concept list
+# (operator 2026-10-31; share-public
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
+# spell modifiers. Every check states the list's line, so a FAIL marks a
+# defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
+# bot stands west of the ring facing it.
+# Spells: Explosive Trap 49067 (effect 49065: a hit and a burn), Immolation
+# Trap 49056 (effect 51740: a burn).
+name    Custom spells - Hunter third list
+timeout 300s
+
+bot hu hunter slot=4
+
+place 13 -279 150 -423.2 0
+require hu alive
+pick d1 creature:920018 near hu
+require d1 exists
+do gm target hu
+as gm .unlearn 900573
+do hu learn 49067
+do hu learn 49056
+
+log Control - without the passive the traps are unmodified
+expect hu spellmod 49065 damage 100 == 100
+expect hu spellmod 51740 dot 100 == 100
+
+log Survival - 900573 "traps +50% damage": Explosive Trap's hit and burn, Immolation Trap's burn
+do hu learn 900573
+expect hu spellmod 49065 damage 100 == 150
+expect hu spellmod 49065 dot 100 == 150
+expect hu spellmod 51740 dot 100 == 150
+
+cleanup
+do hu stop
+do gm target hu
+as gm .unlearn 900573

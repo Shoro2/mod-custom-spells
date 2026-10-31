@@ -60,6 +60,7 @@ namespace
     constexpr float HARVEST_DRAIN_RANGE             = 30.0f;
     constexpr float FELHUNTER_AOE_RADIUS            = 10.0f;
     constexpr float ROF_VISUAL_RADIUS               = 8.0f;
+    constexpr float WLK_SHADOW_CLEAVE_RANGE         = 8.0f;  // 900853
     constexpr int32 ROF_VISUAL_MS                   = 2100;
 
     int32 ParagonDamage(Player* player)
@@ -817,6 +818,60 @@ private:
 };
 
 // ============================================================
+//  900853 / 900854: Shadow Cleave unlimited targets / +50 % damage
+//  (third concept list 2026-10-31). Hooked on Shadow Cleave (50581),
+//  the Metamorphosis melee strike. It carries no family flags, so no
+//  spell modifier can reach it: 900853 widens its 3-target chain to
+//  every enemy in front of the warlock within 8 yd (each one a real
+//  hit of the spell), 900854 raises every hit by 50 %.
+// ============================================================
+class spell_custom_wlk_shadow_cleave : public SpellScript
+{
+    PrepareSpellScript(spell_custom_wlk_shadow_cleave);
+
+    void WidenTargets(std::list<WorldObject*>& targets)
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!player || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_WLK_DEMO_SC_UNLIM_TARGETS))
+            return;
+
+        std::list<Unit*> enemies;
+        Acore::AnyUnfriendlyUnitInObjectRangeCheck check(player, player,
+            WLK_SHADOW_CLEAVE_RANGE);
+        Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck>
+            searcher(player, enemies, check);
+        Cell::VisitObjects(player, searcher, WLK_SHADOW_CLEAVE_RANGE);
+
+        for (Unit* enemy : enemies)
+        {
+            if (!player->isInFront(enemy) || !player->IsValidAttackTarget(enemy))
+                continue;
+            if (std::find(targets.begin(), targets.end(), enemy) == targets.end())
+                targets.push_back(enemy);
+        }
+    }
+
+    void HandleOnHit()
+    {
+        Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
+        if (!player || !g_CustomSpellsEnabled
+            || !player->HasAura(SPELL_WLK_DEMO_SC_DMG))
+            return;
+
+        SetHitDamage(GetHitDamage() * 3 / 2);
+    }
+
+    void Register() override
+    {
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(
+            spell_custom_wlk_shadow_cleave::WidenTargets,
+            EFFECT_0, TARGET_UNIT_TARGET_ENEMY);
+        OnHit += SpellHitFn(spell_custom_wlk_shadow_cleave::HandleOnHit);
+    }
+};
+
+// ============================================================
 //  900840: Sacrificing pet grants ALL pet bonuses
 //  Hooked on Demonic Sacrifice (18788). After cast, apply all
 //  sacrifice buffs regardless of which pet was sacrificed.
@@ -1061,6 +1116,7 @@ void AddWarlockSpellsScripts()
     RegisterSpellScript(spell_custom_wlk_mass_seduction);
     RegisterSpellScript(spell_custom_wlk_felhunter_aoe);
     RegisterSpellScript(spell_custom_wlk_fg_unlim);
+    RegisterSpellScript(spell_custom_wlk_shadow_cleave);
     RegisterSpellScript(spell_custom_wlk_sacrifice_all);
 
     // Warlock Destruction (900866-900870 are pure spell data)

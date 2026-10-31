@@ -1,0 +1,54 @@
+# mod-custom-spells: the Shaman lines of the third concept list
+# (operator 2026-10-31; share-public
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
+# spell modifiers. Every check states the list's line, so a FAIL marks a
+# defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
+# bot stands west of the ring facing it.
+# Spells: Stormstrike 17364 (talent; debuff cast, its weapon strikes 32175 /
+# 32176), Lava Lash 60103 (talent, needs an off-hand weapon). Modifier checks
+# only: the chains work as Obliterate's and Mutilate's hand strikes do.
+name    Custom spells - Shaman third list
+timeout 300s
+
+bot sh shaman slot=4
+
+place 13 -279 150 -423.2 0
+require sh alive
+pick d1 creature:920018 near sh
+require d1 exists
+do gm target sh
+as gm .unlearn 900441
+as gm .unlearn 900442
+as gm .unlearn 900443
+as gm .unlearn 900444
+do sh learn 17364
+do sh learn 60103
+
+log Control - without the passives nothing is modified
+expect sh spellmod 32175 damage 100 == 100
+expect sh spellmod 60103 jumptargets 0 == 0
+
+log Enhancement - 900441 "Storm Strike damage" (+50 %), 900442 "Storm Strike targets" (+9 = 10) on both weapon strikes; the debuff cast stays single-target
+do sh learn 900441
+do sh learn 900442
+expect sh spellmod 32175 damage 100 == 150
+expect sh spellmod 32176 damage 100 == 150
+expect sh spellmod 32175 jumptargets 0 == 10
+expect sh spellmod 32176 jumptargets 0 == 10
+expect sh spellmod 17364 jumptargets 0 == 0
+
+log Enhancement - 900443 "Lava Lash damage" (+50 %), 900444 "Lava Lash targets" (+9 = 10)
+do sh learn 900443
+do sh learn 900444
+expect sh spellmod 60103 damage 100 == 150
+expect sh spellmod 60103 jumptargets 0 == 10
+
+cleanup
+do sh stop
+do gm target sh
+as gm .unlearn 900441
+as gm .unlearn 900442
+as gm .unlearn 900443
+as gm .unlearn 900444

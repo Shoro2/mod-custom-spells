@@ -168,7 +168,7 @@
    "class": "Warrior",
    "spec": "Protection",
    "name": "Thunder Clap: Rend and Sunder",
-   "description": "Your Thunder Clap applies Rend and 5 applications of Sunder Armor to every enemy it hits.",
+   "description": "Your Thunder Clap applies Rend and one application of Sunder Armor to every enemy it hits.",
    "icon_spell": 47502
   },
   {
@@ -516,6 +516,14 @@
    "icon_spell": 48996
   },
   {
+   "id": 900573,
+   "class": "Hunter",
+   "spec": "Survival",
+   "name": "Traps: +50% Damage",
+   "description": "Increases the damage of your Explosive Trap and Immolation Trap, their burn included, by 50%.",
+   "icon_spell": 49067
+  },
+  {
    "id": 900600,
    "class": "Rogue",
    "spec": "Assassination",
@@ -696,7 +704,7 @@
    "class": "Priest",
    "spec": "Discipline",
    "name": "Atonement",
-   "description": "10% of all damage you deal heals the injured party or raid member with the lowest health percentage within 30 yards of you, yourself included.",
+   "description": "10% of all Holy damage you deal heals the injured party or raid member with the lowest health percentage within 30 yards of you, yourself included.",
    "icon_spell": 53007
   },
   {
@@ -714,6 +722,14 @@
    "name": "Smite: +50% Damage",
    "description": "Increases the damage of your Smite by 50%.",
    "icon_spell": 48123
+  },
+  {
+   "id": 900907,
+   "class": "Priest",
+   "spec": "Discipline",
+   "name": "Penance: +50% Healing",
+   "description": "Increases the healing of your Penance by 50%.",
+   "icon_spell": 53007
   },
   {
    "id": 900933,
@@ -769,6 +785,14 @@
    "spec": "Holy",
    "name": "Holy Nova: Kindled Fire",
    "description": "Casting Holy Nova increases the damage of your next Holy Fire by 50%. Stacks up to 10 times.",
+   "icon_spell": 48078
+  },
+  {
+   "id": 900944,
+   "class": "Priest",
+   "spec": "Holy",
+   "name": "Holy Nova: +50% Damage and Healing",
+   "description": "Increases the damage and healing of your Holy Nova by 50%.",
    "icon_spell": 48078
   },
   {
@@ -828,11 +852,19 @@
    "icon_spell": 34433
   },
   {
+   "id": 900977,
+   "class": "Priest",
+   "spec": "Shadow",
+   "name": "Mind Sear: +50% Damage",
+   "description": "Increases the damage of your Mind Sear by 50%.",
+   "icon_spell": 53023
+  },
+  {
    "id": 900300,
    "class": "Death Knight",
    "spec": "Blood",
-   "name": "Dancing Rune Weapon: Three Blades",
-   "description": "Dancing Rune Weapon summons three rune weapons instead of one.",
+   "name": "Dancing Rune Weapon: Two Blades",
+   "description": "Dancing Rune Weapon summons two rune weapons instead of one.",
    "icon_spell": 49028
   },
   {
@@ -840,7 +872,7 @@
    "class": "Death Knight",
    "spec": "Blood",
    "name": "Dancing Rune Weapon: Double Cast",
-   "description": "Your rune weapons mirror each of your attacks and spells twice instead of once.",
+   "description": "Each attack and spell your rune weapon mirrors has a 25% chance to be mirrored a second time.",
    "icon_spell": 49028
   },
   {
@@ -864,7 +896,7 @@
    "class": "Death Knight",
    "spec": "Blood",
    "name": "Death Coil Strikes",
-   "description": "Your melee attacks and abilities have a 15% chance to cast a free Death Coil at your target. Can occur once every 3 sec.",
+   "description": "Your damage - melee, spells and damage over time - has a 5% chance to cast a free Death Coil at the target. The free Death Coil cannot trigger itself.",
    "icon_spell": 47541
   },
   {
@@ -872,8 +904,24 @@
    "class": "Death Knight",
    "spec": "Blood",
    "name": "Bloodworm Burst",
-   "description": "When one of your Bloodworms dies or expires, it explodes, dealing 666 Shadow damage plus 5 per Paragon level to all enemies within 10 yards.",
+   "description": "Your Bloodworms are 50% bigger. When one of them dies or expires, it explodes, dealing 666 Shadow damage plus 5 per Paragon level to all enemies within 10 yards.",
    "icon_spell": 49027
+  },
+  {
+   "id": 900309,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Death Strike: +50% Damage",
+   "description": "Increases the damage of your Death Strike by 50%.",
+   "icon_spell": 49924
+  },
+  {
+   "id": 900310,
+   "class": "Death Knight",
+   "spec": "Blood",
+   "name": "Death Strike: +9 Targets",
+   "description": "Your Death Strike also strikes up to 9 additional enemies.",
+   "icon_spell": 49924
   },
   {
    "id": 900333,
@@ -911,8 +959,8 @@
    "id": 900337,
    "class": "Death Knight",
    "spec": "Frost",
-   "name": "Howling Blast: Frost Fever",
-   "description": "Your Howling Blast infects every enemy it hits with Frost Fever.",
+   "name": "Howling Blast: Diseases",
+   "description": "Your Howling Blast infects every enemy it hits with Frost Fever and Blood Plague.",
    "icon_spell": 49184
   },
   {
@@ -932,11 +980,27 @@
    "icon_spell": 55610
   },
   {
+   "id": 900343,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Frost Strike: +50% Damage",
+   "description": "Increases the damage of your Frost Strike by 50%.",
+   "icon_spell": 55268
+  },
+  {
+   "id": 900344,
+   "class": "Death Knight",
+   "spec": "Frost",
+   "name": "Frost Strike: +9 Targets",
+   "description": "Your Frost Strike also strikes up to 9 additional enemies.",
+   "icon_spell": 55268
+  },
+  {
    "id": 900366,
    "class": "Death Knight",
    "spec": "Unholy",
    "name": "Plague Eruption",
-   "description": "Your damage-over-time effects have a 20% chance on each tick to erupt, dealing Shadow damage to all other enemies within 10 yards of the target. Can occur once every 2 sec.",
+   "description": "Your damage-over-time effects have a 20% chance on each tick to erupt, dealing 666 Shadow damage plus 5 per Paragon level to all other enemies within 10 yards of the target. Can occur once every 2 sec.",
    "icon_spell": 49194
   },
   {
@@ -962,6 +1026,38 @@
    "name": "Death and Decay: Around You",
    "description": "Your Death and Decay follows you, damaging enemies within 10 yards of your current position.",
    "icon_spell": 49938
+  },
+  {
+   "id": 900375,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Scourge Strike: +50% Damage",
+   "description": "Increases the damage of your Scourge Strike by 50%.",
+   "icon_spell": 55271
+  },
+  {
+   "id": 900376,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Scourge Strike: +9 Targets",
+   "description": "Your Scourge Strike also strikes up to 9 additional enemies.",
+   "icon_spell": 55271
+  },
+  {
+   "id": 900377,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Death Coil: +50% Damage",
+   "description": "Increases the damage of your Death Coil by 50%.",
+   "icon_spell": 49895
+  },
+  {
+   "id": 900378,
+   "class": "Death Knight",
+   "spec": "Unholy",
+   "name": "Death Coil: +9 Targets",
+   "description": "The damage of your Death Coil jumps to up to 9 additional enemies.",
+   "icon_spell": 49895
   },
   {
    "id": 900400,
@@ -1130,6 +1226,38 @@
    "name": "Spirit Wolves: Chain Lightning",
    "description": "Each melee hit of your Spirit Wolves has a 5% chance to cast Chain Lightning at their target.",
    "icon_spell": 51533
+  },
+  {
+   "id": 900441,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Stormstrike: +50% Damage",
+   "description": "Increases the damage of your Stormstrike by 50%.",
+   "icon_spell": 17364
+  },
+  {
+   "id": 900442,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Stormstrike: +9 Targets",
+   "description": "Both weapon strikes of your Stormstrike also hit up to 9 additional enemies.",
+   "icon_spell": 17364
+  },
+  {
+   "id": 900443,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Lava Lash: +50% Damage",
+   "description": "Increases the damage of your Lava Lash by 50%.",
+   "icon_spell": 60103
+  },
+  {
+   "id": 900444,
+   "class": "Shaman",
+   "spec": "Enhancement",
+   "name": "Lava Lash: +9 Targets",
+   "description": "Your Lava Lash also strikes up to 9 additional enemies.",
+   "icon_spell": 60103
   },
   {
    "id": 900466,
@@ -1396,6 +1524,22 @@
    "icon_spell": 47857
   },
   {
+   "id": 900807,
+   "class": "Warlock",
+   "spec": "Affliction",
+   "name": "Curse of Agony: +50% Damage",
+   "description": "Increases the damage of your Curse of Agony by 50%.",
+   "icon_spell": 47864
+  },
+  {
+   "id": 900808,
+   "class": "Warlock",
+   "spec": "Affliction",
+   "name": "Drain Life: +50% Damage",
+   "description": "Increases the damage of your Drain Life by 50%.",
+   "icon_spell": 47857
+  },
+  {
    "id": 900833,
    "class": "Warlock",
    "spec": "Demonology",
@@ -1492,6 +1636,22 @@
    "icon_spell": 18708
   },
   {
+   "id": 900853,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Shadow Cleave: Unlimited Targets",
+   "description": "Your Shadow Cleave in Metamorphosis strikes every enemy in front of you within 8 yards instead of only 3.",
+   "icon_spell": 50581
+  },
+  {
+   "id": 900854,
+   "class": "Warlock",
+   "spec": "Demonology",
+   "name": "Shadow Cleave: +50% Damage",
+   "description": "Increases the damage of your Shadow Cleave in Metamorphosis by 50%.",
+   "icon_spell": 50581
+  },
+  {
    "id": 900866,
    "class": "Warlock",
    "spec": "Destruction",
@@ -1546,6 +1706,30 @@
    "name": "Rain of Fire: Around You",
    "description": "Your Rain of Fire is no longer channeled: wherever you aim it, it falls around you for its full duration, hitting all enemies within 8 yards of you every 2 sec, and you can move and cast other spells meanwhile.",
    "icon_spell": 47820
+  },
+  {
+   "id": 900878,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Soul Fire: +50% Damage",
+   "description": "Increases the damage of your Soul Fire by 50%.",
+   "icon_spell": 47825
+  },
+  {
+   "id": 900879,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Soul Fire: +9 Targets",
+   "description": "Your Soul Fire jumps to up to 9 additional enemies.",
+   "icon_spell": 47825
+  },
+  {
+   "id": 900880,
+   "class": "Warlock",
+   "spec": "Destruction",
+   "name": "Immolate: +9 Targets",
+   "description": "Your Immolate jumps to up to 9 additional enemies.",
+   "icon_spell": 47811
   },
   {
    "id": 901000,
@@ -1682,6 +1866,54 @@
    "name": "Berserk: Unleashed",
    "description": "While Berserk is active your movement speed is increased by 100%, and every finisher you use with 5 combo points unleashes a blow that deals Physical damage to all enemies within 8 yards. The damage increases with your Paragon level.",
    "icon_spell": 50334
+  },
+  {
+   "id": 901042,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Maul: +50% Damage",
+   "description": "Increases the damage of your Maul by 50%.",
+   "icon_spell": 48480
+  },
+  {
+   "id": 901043,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Maul: +9 Targets",
+   "description": "Your Maul also strikes up to 9 additional enemies.",
+   "icon_spell": 48480
+  },
+  {
+   "id": 901057,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Claw: +50% Damage",
+   "description": "Increases the damage of your Claw by 50%.",
+   "icon_spell": 48570
+  },
+  {
+   "id": 901058,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Claw: +9 Targets",
+   "description": "Your Claw also strikes up to 9 additional enemies.",
+   "icon_spell": 48570
+  },
+  {
+   "id": 901059,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Shred: +50% Damage",
+   "description": "Increases the damage of your Shred by 50%.",
+   "icon_spell": 48572
+  },
+  {
+   "id": 901060,
+   "class": "Druid",
+   "spec": "Feral",
+   "name": "Shred: +9 Targets",
+   "description": "Your Shred also strikes up to 9 additional enemies.",
+   "icon_spell": 48572
   },
   {
    "id": 901066,

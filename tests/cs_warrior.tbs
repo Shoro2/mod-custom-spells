@@ -284,11 +284,21 @@ wait 1500ms
 spelllog stop
 expect wa spell 57823 targets >= 7
 
-log Protection - 900170 Thunder Clap applies Rend and 5 Sunder Armor to EVERY enemy hit (behind you too)
+log Protection - 900170 Thunder Clap applies Rend and 1 Sunder Armor (third list 2026-10-31; was 5) to EVERY enemy hit (behind you too); each further clap adds one
 do wa learn 900170
 do wa cast 47502 triggered
 wait 1s
 expect d1 aura 47465
+expect d1 aurastacks 58567 == 1
+do wa cast 47502 triggered
+wait 300ms
+expect d1 aurastacks 58567 == 2
+do wa cast 47502 triggered
+wait 300ms
+do wa cast 47502 triggered
+wait 300ms
+do wa cast 47502 triggered
+wait 300ms
 expect d1 aurastacks 58567 == 5
 spelllog start
 wait 3500ms

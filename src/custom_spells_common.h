@@ -127,7 +127,7 @@ enum CustomSpellIds
     SPELL_RET_CS_AOE_HELPER             = 900276,
 
     // ---- DK Blood (900300-900332) ----
-    SPELL_DKB_3_RUNE_WEAPONS_PASSIVE    = 900300,
+    SPELL_DKB_3_RUNE_WEAPONS_PASSIVE    = 900300, // two weapons since 2026-10-31
     SPELL_DKB_DOUBLE_CAST_PASSIVE       = 900301,
     SPELL_DKB_HS_DMG_PASSIVE            = 900302,
     SPELL_DKB_HS_AOE_PASSIVE            = 900303,
@@ -136,6 +136,8 @@ enum CustomSpellIds
     SPELL_DKB_BLOODWORM_BURST_PASSIVE   = 900306,
     SPELL_DKB_BLOODWORM_BURST_DAMAGE    = 900307,
     SPELL_DKB_BLOODWORM_FUSE            = 900308, // on the worm, ends before it
+    SPELL_DKB_DS_DMG_PASSIVE            = 900309, // third list 2026-10-31, DBC only
+    SPELL_DKB_DS_AOE_PASSIVE            = 900310, // third list 2026-10-31, DBC only
 
     // ---- DK Frost (900333-900365) ----
     SPELL_DKF_FROST_WYRM_PASSIVE        = 900333,
@@ -148,6 +150,8 @@ enum CustomSpellIds
     SPELL_DKF_FROZEN_STRIKES_PASSIVE    = 900340,
     SPELL_DKF_FROZEN_STRIKES_AURA       = 900341, // on Improved Icy Talons targets
     SPELL_DKF_FROZEN_STRIKE_DAMAGE      = 900342,
+    SPELL_DKF_FS_DMG_PASSIVE            = 900343, // third list 2026-10-31, DBC only
+    SPELL_DKF_FS_AOE_PASSIVE            = 900344, // third list 2026-10-31, DBC only
 
     // ---- DK Unholy (900366-900399) ----
     SPELL_DKU_DOT_AOE_PASSIVE           = 900366,
@@ -158,6 +162,10 @@ enum CustomSpellIds
     SPELL_DKU_RISEN_ARMY_SUMMON         = 900372,
     SPELL_DKU_DND_AROUND_PASSIVE        = 900373,
     SPELL_DKU_DND_MOBILE_AURA           = 900374,
+    SPELL_DKU_SS_DMG_PASSIVE            = 900375, // third list 2026-10-31, DBC only
+    SPELL_DKU_SS_AOE_PASSIVE            = 900376, // third list 2026-10-31, DBC only
+    SPELL_DKU_DC_DMG_PASSIVE            = 900377, // third list 2026-10-31, DBC only
+    SPELL_DKU_DC_AOE_PASSIVE            = 900378, // third list 2026-10-31, DBC only
 
     // ---- Shaman Ele (900400-900432) ----
     SPELL_ELE_CL_AOE_PASSIVE            = 900400,
@@ -189,6 +197,10 @@ enum CustomSpellIds
     SPELL_ENH_WOLF_HASTE_PASSIVE        = 900437,
     SPELL_ENH_WOLF_CL_PASSIVE           = 900438,
     SPELL_ENH_WOLF_AOE_HELPER           = 900440,
+    SPELL_ENH_STS_DMG_PASSIVE           = 900441, // third list 2026-10-31, DBC only
+    SPELL_ENH_STS_AOE_PASSIVE           = 900442, // third list 2026-10-31, DBC only
+    SPELL_ENH_LL_DMG_PASSIVE            = 900443, // third list 2026-10-31, DBC only
+    SPELL_ENH_LL_AOE_PASSIVE            = 900444, // third list 2026-10-31, DBC only
 
     // ---- Shaman Resto (900466-900499) ----
     SPELL_RST_TOTEM_FOLLOW_PASSIVE      = 900466,
@@ -213,6 +225,7 @@ enum CustomSpellIds
 
     // ---- Hunter Surv (900566-900599) ----
     SPELL_HUNT_SURV_TRAP_PROC_PASSIVE   = 900566,
+    SPELL_SURV_TRAP_DMG_PASSIVE         = 900573, // third list 2026-10-31, DBC only
 
     // ---- Rogue Assa (900600-900632) ----
     SPELL_ROG_ASSA_ENERGY_REGEN         = 900600,
@@ -286,6 +299,8 @@ enum CustomSpellIds
     SPELL_WLK_AFFL_CORR_DMG_PASSIVE    = 900801,
     SPELL_WLK_AFFL_DOT_SPREAD_PASSIVE  = 900802,
     SPELL_WLK_AFFL_DOT_AOE_HELPER      = 900803,
+    SPELL_WLK_AFFL_COA_DMG_PASSIVE      = 900807, // third list 2026-10-31, DBC only
+    SPELL_WLK_AFFL_DL_DMG_PASSIVE       = 900808, // third list 2026-10-31, DBC only
 
     // ---- Warlock Demonology (900833-900865) ----
     SPELL_WLK_DEMO_META_KILL_EXT       = 900833,
@@ -298,6 +313,9 @@ enum CustomSpellIds
     SPELL_WLK_DEMO_SACRIFICE_ALL       = 900840,
     SPELL_WLK_DEMO_IMP_FB_HELPER       = 900841,
     SPELL_WLK_DEMO_FG_CLEAVE_HELPER    = 900844,
+    // third concept list 2026-10-31: Shadow Cleave (50581, Metamorphosis)
+    SPELL_WLK_DEMO_SC_UNLIM_TARGETS    = 900853,
+    SPELL_WLK_DEMO_SC_DMG              = 900854,
 
     // ---- Warlock Destruction (900866-900899) ----
     SPELL_WLK_DEST_SB_AOE              = 900866,
@@ -307,21 +325,27 @@ enum CustomSpellIds
     SPELL_WLK_DEST_CB_AOE              = 900870,
     SPELL_WLK_DEST_SB_HELPER           = 900871,
     SPELL_WLK_DEST_CB_HELPER           = 900872,
+    SPELL_WLK_DEST_SF_DMG               = 900878, // third list 2026-10-31, DBC only
+    SPELL_WLK_DEST_SF_AOE               = 900879, // third list 2026-10-31, DBC only
+    SPELL_WLK_DEST_IMMO_AOE             = 900880, // third list 2026-10-31, DBC only
 
     // ---- Priest Discipline (900900-900932) ----
     SPELL_PRI_DISC_SHIELD_EXPLODE      = 900900,
     SPELL_PRI_DISC_SHIELD_DMG          = 900901,
     SPELL_PRI_DISC_WEAKENED_SOUL_CD    = 900902,
     SPELL_PRI_DISC_EXPLODE_HELPER      = 900903,
+    SPELL_PRI_DISC_PENANCE_HEAL         = 900907, // third list 2026-10-31, DBC only
 
     // ---- Priest Holy (900933-900965) ----
     SPELL_PRI_HOLY_HEAL_FIRE           = 900933,
     SPELL_PRI_HOLY_FIRE_HELPER         = 900934, // Holy Fire without facing
+    SPELL_PRI_HOLY_NOVA_DMG             = 900944, // third list 2026-10-31, DBC only
 
     // ---- Priest Shadow (900966-900999) ----
     SPELL_PRI_SHADOW_DOT_AOE           = 900966,
     SPELL_PRI_SHADOW_DOT_SPREAD        = 900967,
     SPELL_PRI_SHADOW_AOE_HELPER        = 900968,
+    SPELL_PRI_SHADOW_SEAR_DMG           = 900977, // third list 2026-10-31, DBC only
 
     // ---- Druid Balance (901000-901032) ----
     SPELL_BAL_MF_AOE_PASSIVE            = 901000,
@@ -335,11 +359,17 @@ enum CustomSpellIds
     SPELL_FERAL_BEAR_SWIPE_BLEED        = 901033,
     SPELL_FERAL_BEAR_SWIPE_BLEED_DOT    = 901034,
     SPELL_FERAL_BEAR_MAUL_BLEED_PASSIVE = 901035,
+    SPELL_FERAL_BEAR_MAUL_DMG           = 901042, // third list 2026-10-31, DBC only
+    SPELL_FERAL_BEAR_MAUL_AOE           = 901043, // third list 2026-10-31, DBC only
 
     // ---- Druid Feral DPS (901049-901065) ----
     SPELL_FERAL_CAT_SWIPE_BLEED         = 901049,
     SPELL_FERAL_CAT_SWIPE_BLEED_DOT     = 901050,
     SPELL_FERAL_CAT_ENERGY_REGEN        = 901051,
+    SPELL_FERAL_CAT_CLAW_DMG            = 901057, // third list 2026-10-31, DBC only
+    SPELL_FERAL_CAT_CLAW_AOE            = 901058, // third list 2026-10-31, DBC only
+    SPELL_FERAL_CAT_SHRED_DMG           = 901059, // third list 2026-10-31, DBC only
+    SPELL_FERAL_CAT_SHRED_AOE           = 901060, // third list 2026-10-31, DBC only
 
     // ---- Druid Resto (901066-901099) ----
     SPELL_DRST_HOT_TREANT_PASSIVE       = 901066,
@@ -379,6 +409,9 @@ constexpr uint32 NPC_DK_GHOUL               = 26125;
 constexpr uint32 NPC_DK_ARMY_GHOUL          = 24207; // Army of the Dead ghoul
 constexpr uint32 NPC_DK_BLOODWORM           = 28017;
 constexpr uint32 SPELL_DK_FROST_FEVER       = 55095;
+constexpr uint32 SPELL_DK_BLOOD_PLAGUE      = 55078;
+constexpr int32  DKB_DOUBLE_CAST_CHANCE    = 25;    // 900301, % per mirrored action
+constexpr float  DKB_BLOODWORM_SCALE       = 1.5f;  // 900306, worms 50 % bigger
 constexpr uint32 SPELL_DK_DND_DAMAGE        = 52212; // Death and Decay tick
 constexpr uint32 SPELL_DK_LICHBORNE         = 49039;
 constexpr uint32 SPELL_DK_DND_VISUAL        = 49938; // DnD rank 4: ground visual

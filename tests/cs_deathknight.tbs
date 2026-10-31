@@ -67,12 +67,12 @@ wait 1s
 expect dk spellmod 55262 damage 100 == 100
 
 # ---------------------------------------------------------------- Blood
-log Blood - 900300 Dancing Rune Weapon summons 3 rune weapons instead of 1 (normal cast, 60 runic power)
+log Blood - 900300 "You have 2 rune weapons now" (third list 2026-10-31; was 3): Dancing Rune Weapon summons 2 rune weapons (normal cast, 60 runic power)
 do dk learn 900300
 as gm .modify runicpower 100
 do dk cast 49028 on d1
 wait 500ms
-expect dk minions 27893 == 3
+expect dk minions 27893 == 2
 
 log Blood - 900301 the rune weapon copies each of your attacks twice: a normal Icy Touch (single target; Virulence for spell hit) = 1 + 1 copy natively, 1 + 2 copies with the passive (the copies come per enemy hit, so a chaining Heart Strike would count its targets)
 wait 1100ms
@@ -81,13 +81,82 @@ do dk cast 49909 on d1
 wait 1s
 spelllog stop
 expect dk spell 49909 casts == 2
+log Blood - 900301 "Rune weapon has a chance of 25% to double cast" (third list 2026-10-31; was every time) - statistical: 18 normal Death Coils in three rune-weapon windows; each gives the DK's damage spell 47632 + 1 native copy, the passive adds a second copy 25 % of the time (expected 40.5; none in 18 = 0.6 %, the old "always" = 54)
+wait 12s
 do dk learn 900301
-wait 600ms
 spelllog start
-do dk cast 49909 on d1
-wait 1s
+do dk reset
+as gm .modify runicpower 100
+do dk cast 49028 on d1
+wait 500ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+wait 2500ms
+do dk reset
+as gm .modify runicpower 100
+do dk cast 49028 on d1
+wait 500ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+wait 2500ms
+do dk reset
+as gm .modify runicpower 100
+do dk cast 49028 on d1
+wait 500ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+as gm .modify runicpower 100
+do dk cast 49895 on d1
+wait 1600ms
+wait 2500ms
 spelllog stop
-expect dk spell 49909 casts == 3
+expect dk spell 47632 casts >= 37
+expect dk spell 47632 casts <= 48
 as gm .unlearn 900300
 as gm .unlearn 900301
 
@@ -104,17 +173,19 @@ expect dk spell 55262 maxtargets >= 6
 as gm .unlearn 900302
 as gm .unlearn 900303
 
-log Blood - 900304 melee hits have a 15 % chance (3 s ICD) to cast a free Death Coil (47632) on the target - statistical, auto attack up to 60 s under Heroism (+30 % haste)
+log Blood - 900304 "Dealing damage has a 5% chance to cast death coil (cant trigger itself)" (third list 2026-10-31; was melee 15 %, 3 s) - disease ticks count: Icy Touch and Plague Strike on d1, Pestilence spreads both to the ring (16 diseases, about 5 ticks a second), a free Death Coil (47632) within 30 s - statistical
 do dk learn 900304
-as gm .aura 32182
+do dk reset
+do dk cast 49909 on d1 triggered
+do dk cast 49921 on d1 triggered
+wait 300ms
+do dk cast 50842 on d1 triggered
+wait 300ms
 spelllog start
-do dk attack d1
-waitfor dk spell 47632 casts >= 1 timeout 60s
-do dk stop
+waitfor dk spell 47632 casts >= 1 timeout 30s
 wait 1s
 spelllog stop
 expect dk spell 47632 hits >= 1
-as gm .unaura 32182
 as gm .unlearn 900304
 
 # ---------------------------------------------------------------- Unholy
@@ -132,6 +203,8 @@ waitfor dk spell 900367 casts >= 1 timeout 12s
 wait 500ms
 spelllog stop
 expect dk spell 900367 targets >= 5
+log Unholy - 900366 the eruption deals 666 + 5 x Paragon level Shadow damage (third list 2026-10-31; was a fixed 601-750): at least 666 per hit before resistances, the dummies log the full amount
+expect dk spell 900367 damage >= 666
 as gm .unlearn 900366
 
 # ---------------------------------------------------------------- Frost

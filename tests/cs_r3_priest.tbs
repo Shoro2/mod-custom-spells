@@ -1,0 +1,51 @@
+# mod-custom-spells: the Priest lines of the third concept list
+# (operator 2026-10-31; share-public
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
+# spell modifiers. Every check states the list's line, so a FAIL marks a
+# defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
+# bot stands west of the ring facing it.
+# Spells: Penance 53007 (talent; heal ticks 52985, damage ticks 52998),
+# Holy Nova 48078 (heal 48076), Mind Sear 53023 (tick 53022).
+name    Custom spells - Priest third list
+timeout 300s
+
+bot pr priest slot=4
+
+place 13 -279 150 -423.2 0
+require pr alive
+pick d1 creature:920018 near pr
+require d1 exists
+do gm target pr
+as gm .unlearn 900907
+as gm .unlearn 900944
+as gm .unlearn 900977
+do pr learn 53007
+do pr learn 48078
+do pr learn 53023
+
+log Control - without the passives nothing is modified
+expect pr spellmod 52985 damage 100 == 100
+expect pr spellmod 48078 damage 100 == 100
+
+log Discipline - 900907 "penance +50% healing": the heal ticks only, the damage ticks stay
+do pr learn 900907
+expect pr spellmod 52985 damage 100 == 150
+expect pr spellmod 52998 damage 100 == 100
+
+log Holy - 900944 "holy nova damage/heal +50%": both parts
+do pr learn 900944
+expect pr spellmod 48078 damage 100 == 150
+expect pr spellmod 48076 damage 100 == 150
+
+log Shadow - 900977 "mind sear +50% dmg": the damage tick (a direct damage spell)
+do pr learn 900977
+expect pr spellmod 53022 damage 100 == 150
+
+cleanup
+do pr stop
+do gm target pr
+as gm .unlearn 900907
+as gm .unlearn 900944
+as gm .unlearn 900977

@@ -242,7 +242,7 @@ class spell_custom_prot_revenge_aoe : public SpellScript
 // ============================================================
 //  SPELL 900170: Thunderclap â†’ Rend + 5Ã— Sunder Armor
 //  Hooked on Thunderclap (47502). After hitting each target,
-//  applies Rend and 5 stacks of Sunder Armor.
+//  applies Rend and 1 stack of Sunder Armor (5 until 2026-10-31).
 //  Only active when player has passive aura 900170.
 // ============================================================
 class spell_custom_prot_tc_rend_sunder : public SpellScript
@@ -271,11 +271,12 @@ class spell_custom_prot_tc_rend_sunder : public SpellScript
         // warrior, while Thunder Clap hits all around (2026-10-08 bot run:
         // only the enemies in front got them)
         caster->AddAura(SPELL_REND_R10, target);
-        if (Aura* sunder = caster->AddAura(SPELL_SUNDER_ARMOR, target))
-            sunder->SetStackAmount(5);
+        // one application of Sunder Armor per Thunder Clap (third concept
+        // list 2026-10-31; it was 5): AddAura on an existing Sunder adds a stack
+        caster->AddAura(SPELL_SUNDER_ARMOR, target);
 
         LOG_INFO("module",
-            "mod-custom-spells: Player {} -> TC applied Rend + 5x Sunder on {}",
+            "mod-custom-spells: Player {} -> TC applied Rend + Sunder on {}",
             player->GetName(), target->GetName());
     }
 

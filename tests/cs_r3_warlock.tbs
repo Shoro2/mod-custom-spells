@@ -1,0 +1,104 @@
+# mod-custom-spells: the Warlock lines of the third concept list
+# (operator 2026-10-31; share-public
+# custom-spells/records/2026-10-31-third-concept-list.md), wave 1 = the
+# spell modifiers and Shadow Cleave. Every check states the list's line, so a
+# FAIL marks a defect.
+# Test ground: map 13, the FL dummy arena - eight AoE Training Dummies
+# (920018) on a 4-yd circle around (-270, 150); d1 = the west-most one. The
+# warlock stands west of the ring facing it.
+# Spells: Curse of Agony 47864, Drain Life 47857, Soul Fire 47825, Immolate
+# 47811, Metamorphosis 47241 (talent) and its Shadow Cleave 50581 (no family
+# flags: the two Shadow Cleave passives are C++).
+name    Custom spells - Warlock third list
+timeout 300s
+
+bot wl warlock slot=4
+
+place 13 -279 150 -423.2 0
+require wl alive
+pick d1 creature:920018 near wl
+require d1 exists
+do gm target wl
+as gm .unlearn 900807
+as gm .unlearn 900808
+as gm .unlearn 900853
+as gm .unlearn 900854
+as gm .unlearn 900878
+as gm .unlearn 900879
+as gm .unlearn 900880
+as gm .unaura 47241
+do wl learn 47864
+do wl learn 47857
+do wl learn 47825
+do wl learn 47811
+do wl learn 47241
+as gm .aura 59756
+waitfor wl aura 59756 timeout 2s
+
+log Control - without the passives nothing is modified
+expect wl spellmod 47864 dot 100 == 100
+expect wl spellmod 47811 jumptargets 0 == 0
+
+# ---------------------------------------------------------------- Affliction
+log Affliction - 900807 "curse of agony +50% dmg" (its ticks), 900808 "drain life +50% damage" (its ticks)
+do wl learn 900807
+do wl learn 900808
+expect wl spellmod 47864 dot 100 == 150
+expect wl spellmod 47857 dot 100 == 150
+
+# ---------------------------------------------------------------- Destruction
+log Destruction - 900878 "soulfire +50% dmg", 900879 "soulfire +9 targets" (= 10)
+do wl learn 900878
+do wl learn 900879
+expect wl spellmod 47825 damage 100 == 150
+expect wl spellmod 47825 jumptargets 0 == 10
+spelllog start
+do wl cast 47825 on d1 triggered
+wait 2500ms
+spelllog stop
+expect wl spell 47825 maxtargets >= 6
+
+log Destruction - 900880 "immolate +9 targets" (= 10): the hit and the burn land on every chain target
+do wl learn 900880
+expect wl spellmod 47811 jumptargets 0 == 10
+spelllog start
+do wl cast 47811 on d1 triggered
+wait 2500ms
+spelllog stop
+expect wl spell 47811 maxtargets >= 6
+expect d1 aura 47811
+
+# ---------------------------------------------------------------- Demonology
+log Demonology - Shadow Cleave control: in Metamorphosis it hits 3 enemies (its own chain)
+do wl approach d1
+do wl cast 47241 triggered
+wait 500ms
+spelllog start
+do wl cast 50581 on d1 triggered
+wait 1s
+spelllog stop
+expect wl spell 50581 targets <= 3
+
+log Demonology - 900853 "shadow cleave unlimited targets": every enemy in front within 8 yd
+do wl learn 900853
+do wl learn 900854
+do wl reset
+wait 300ms
+spelllog start
+do wl cast 50581 on d1 triggered
+wait 1s
+spelllog stop
+expect wl spell 50581 targets >= 5
+
+cleanup
+do wl stop
+do gm target wl
+as gm .unaura 47241
+as gm .unaura 59756
+as gm .unlearn 900807
+as gm .unlearn 900808
+as gm .unlearn 900853
+as gm .unlearn 900854
+as gm .unlearn 900878
+as gm .unlearn 900879
+as gm .unlearn 900880

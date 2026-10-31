@@ -210,11 +210,12 @@ INSERT INTO `spell_dbc` (`ID`, `DispelType`, `Attributes`, `AttributesEx3`, `Cas
 -- cooldown (was 20 %, 3 s). 900904 Atonement: melee 0x4, melee abilities 0x10,
 -- ranged/wand 0x40, ranged abilities 0x100, no-class spells 0x1000, spells
 -- 0x10000, ticks 0x40000; damage, hit phase; triggered damage counts too
--- (PROC_ATTR_TRIGGERED_CAN_PROC 0x2). 900938 Spirit of Redemption: Guardian: PROC_FLAG_DEATH 0x01000000 (runs
+-- (PROC_ATTR_TRIGGERED_CAN_PROC 0x2); Holy damage only (SchoolMask 2, third
+-- concept list 2026-10-31: "10% of your holy damage"). 900938 Spirit of Redemption: Guardian: PROC_FLAG_DEATH 0x01000000 (runs
 -- in Unit::Kill before Spirit of Redemption's CombatStop).
 DELETE FROM `spell_proc` WHERE `SpellId` IN (900904, 900933, 900938, 900966, 900967);
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900904, 0, 0, 0, 0, 0, 0x51154, 1, 2, 0, 0x2, 0, 0, 100, 0, 0),
+(900904, 2, 0, 0, 0, 0, 0x51154, 1, 2, 0, 0x2, 0, 0, 100, 0, 0),
 (900933, 0, 6, 0, 0, 0, 0x4000, 2, 2, 0, 0, 0, 0, 50, 0, 0),
 (900938, 0, 0, 0, 0, 0, 0x01000000, 0, 0, 0, 0, 0, 0, 100, 0, 0),
 (900966, 0, 6, 0, 0, 0, 0x40000, 1, 2, 0, 0, 0, 0, 20, 2000, 0),

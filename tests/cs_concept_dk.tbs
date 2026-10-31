@@ -57,7 +57,7 @@ wait 1500ms
 spelllog stop
 expect dk spell 51425 maxtargets >= 6
 
-log Frost - 900336 Howling Blast +50 %, 900337 every enemy it hits gets Frost Fever (55095)
+log Frost - 900336 Howling Blast +50 %, 900337 every enemy it hits gets Frost Fever (55095) and Blood Plague (55078; third list 2026-10-31)
 do dk learn 900336
 do dk learn 900337
 expect dk spellmod 51411 damage 100 == 150
@@ -68,6 +68,8 @@ spelllog stop
 expect dk spell 51411 targets >= 7
 expect dk spell 55095 casts >= 7
 expect d1 aura 55095
+expect dk spell 55078 casts >= 7
+expect d1 aura 55078
 
 log Frost - 900338 Lichborne also heals you for 30 % of the damage you deal (900339 while Lichborne lasts)
 do dk learn 900338

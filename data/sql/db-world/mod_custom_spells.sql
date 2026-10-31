@@ -54,6 +54,7 @@ INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (900802, 'spell_custom_wlk_dot_spread'),
 (-3110, 'spell_custom_wlk_imp_fb_aoe'),
 (47994, 'spell_custom_wlk_fg_unlim'),
+(50581, 'spell_custom_wlk_shadow_cleave'),
 (18788, 'spell_custom_wlk_sacrifice_all'),
 (-17, 'spell_custom_pri_shield_explode'),
 (6788, 'spell_custom_pri_weakened_soul_cd'),

@@ -1,7 +1,12 @@
--- DK Blood: Death Coil proc 900304
+-- DK Blood: Death Coil proc 900304. Third concept list 2026-10-31: "dealing
+-- damage has a 5% chance to cast death coil (cant trigger itself)" - melee
+-- 0x4, melee abilities 0x10, harmful spells 0x10000, periodic 0x40000; 5 %,
+-- no cooldown (was 15 %, melee only, 3 s). The free Death Coil is a triggered
+-- cast and triggered casts do not proc (AttributesMask 0), so it never
+-- triggers itself.
 DELETE FROM `spell_proc` WHERE `SpellId` = 900304;
 INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFamilyMask0`, `SpellFamilyMask1`, `SpellFamilyMask2`, `ProcFlags`, `SpellTypeMask`, `SpellPhaseMask`, `HitMask`, `AttributesMask`, `DisableEffectsMask`, `ProcsPerMinute`, `Chance`, `Cooldown`, `Charges`) VALUES
-(900304, 0, 0, 0, 0, 0, 0x14, 1, 2, 0, 0, 0, 0, 15, 3000, 0);
+(900304, 0, 0, 0, 0, 0, 0x50014, 1, 2, 0, 0, 0, 0, 5, 0, 0);
 
 -- DK Unholy: DoT->AoE proc 900366 (DONE_PERIODIC=0x40000)
 DELETE FROM `spell_proc` WHERE `SpellId` = 900366;
@@ -11,7 +16,7 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 -- DK: spell_dbc 900300-900367
 DELETE FROM `spell_dbc` WHERE `ID` IN (900300, 900301, 900302, 900303, 900304, 900305, 900333, 900366, 900367);
 INSERT INTO `spell_dbc` (`ID`, `Attributes`, `AttributesEx`, `AttributesEx2`, `AttributesEx3`, `CastingTimeIndex`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectDieSides_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectRadiusIndex_1`, `EffectAura_1`, `EffectMiscValue_1`, `EffectTriggerSpell_1`, `EffectSpellClassMaskA_1`, `EffectSpellClassMaskB_1`, `SpellClassSet`, `SpellIconID`, `SchoolMask`, `CumulativeAura`, `Name_Lang_enUS`, `Name_Lang_Mask`) VALUES
-(900300, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 15, 3735, 0, 0, 'DKB: 3 Rune Weapons', 0x003F3F),
+(900300, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 15, 3735, 0, 0, 'DKB: 2 Rune Weapons', 0x003F3F),
 (900301, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 0, 1, 0, 4, 0, 0, 0, 0, 15, 3735, 0, 0, 'DKB: Double Cast', 0x003F3F),
 (900302, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 50, 1, 0, 108, 0, 0, 0x1000000, 0, 15, 3547, 0, 0, 'DKB: HS +50%', 0x003F3F),
 (900303, 0x10000040, 0, 0, 0x10000000, 1, 21, 1, -1, 6, 0, 9, 1, 0, 107, 17, 0, 0x1000000, 0, 15, 3547, 0, 0, 'DKB: HS +9 Targets', 0x003F3F),
