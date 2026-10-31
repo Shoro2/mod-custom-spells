@@ -26,8 +26,10 @@ not start with NUL (offset 0 must read as "").
 
     python tools/client_spell_sync.py            --check (default): report, write nothing
     python tools/client_spell_sync.py --write    back up each carrier, write in place, re-read
-    python tools/client_spell_sync.py --lua      picker labels in lua/CustomSpells_Server.lua
-                                                 := the manifest names
+    python tools/client_spell_sync.py --lua      picker labels and the SPELL_BADGES block in
+                                                 lua/CustomSpells_Server.lua := the manifest (names,
+                                                 badges); needs neither the DB nor the DBC files
+                                                 (tools/check_badges.py checks the badges)
 
 Then build the client patch: scripts\\30_build_hot_dbc_patch.py, then --deploy
 with the client closed (share-public forgotten-land MIG entry for the host).
@@ -78,10 +80,16 @@ def ddl_columns():
     return [c for c, _t in cols], {i for i, (_c, t) in enumerate(cols) if t == "float"}
 
 
-COLS, FLOAT_COLS = ddl_columns()
-CI = {c: i for i, c in enumerate(COLS)}
-STRING_COLS = {i for i, c in enumerate(COLS) if "_Lang_" in c}           # offsets AND masks
-TEXT_COLS = [i for i, c in enumerate(COLS) if "_Lang_" in c and not c.endswith("_Mask")]
+COLS, FLOAT_COLS, CI, STRING_COLS, TEXT_COLS = [], set(), {}, set(), []
+
+
+def init_columns():
+    """Read the spell_dbc DDL (the DBC modes only; --lua works in a checkout without the core tree)."""
+    global COLS, FLOAT_COLS, CI, STRING_COLS, TEXT_COLS
+    COLS, FLOAT_COLS = ddl_columns()
+    CI = {c: i for i, c in enumerate(COLS)}
+    STRING_COLS = {i for i, c in enumerate(COLS) if "_Lang_" in c}       # offsets AND masks
+    TEXT_COLS = [i for i, c in enumerate(COLS) if "_Lang_" in c and not c.endswith("_Mask")]
 
 
 def load_auras():
@@ -315,6 +323,28 @@ def write_carrier(carrier, before, after, tag):
     return bak
 
 
+BADGE_BEGIN = "-- BEGIN GENERATED SPELL_BADGES"
+BADGE_END = "-- END GENERATED SPELL_BADGES"
+
+
+def lua_string(text):
+    return '"%s"' % text.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def badge_block(manifest):
+    """The SPELL_BADGES table, in manifest order. Every entry needs a badge (tools/check_badges.py)."""
+    lines = [BADGE_BEGIN + " (tools/client_spell_sync.py --lua; edit data/spellbook_enUS.json, not this block)",
+             "local SPELL_BADGES = {"]
+    for sid, e in manifest.items():
+        badge = e.get("badge")
+        if not isinstance(badge, str) or not badge or not badge.isascii():
+            raise SystemExit("manifest: %d (%s) has no usable badge" % (sid, e["name"]))
+        lines.append("\t[%d] = %s, -- %s" % (sid, lua_string(badge), e["name"]))
+    lines.append("}")
+    lines.append(BADGE_END)
+    return "\n".join(lines) + "\n"
+
+
 def update_lua(manifest):
     text = open(PICKER_LUA, encoding="utf-8").read()
     changed = 0
@@ -334,16 +364,24 @@ def update_lua(manifest):
     if listed != set(manifest):
         raise SystemExit("picker list and manifest differ: %s / %s"
                          % (sorted(listed - set(manifest)), sorted(set(manifest) - listed)))
+
+    block = badge_block(manifest)
+    span = re.search(re.escape(BADGE_BEGIN) + r".*?" + re.escape(BADGE_END) + r"\n", new, re.S)
+    if not span:
+        raise SystemExit("%s: no '%s' ... '%s' markers for the badge block" % (PICKER_LUA, BADGE_BEGIN, BADGE_END))
+    badges_changed = new[span.start():span.end()] != block
+    new = new[:span.start()] + block + new[span.end():]
     if new != text:
         with open(PICKER_LUA, "w", encoding="utf-8", newline="\n") as f:
             f.write(new)
-    print("picker labels: %d changed" % changed)
+    print("picker labels: %d changed; badges: %d entries, block %s"
+          % (changed, len(manifest), "rewritten" if badges_changed else "unchanged"))
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--write", action="store_true", help="back up and write the carriers in place")
-    ap.add_argument("--lua", action="store_true", help="only rewrite the picker labels")
+    ap.add_argument("--lua", action="store_true", help="only rewrite the picker labels and the SPELL_BADGES block")
     ap.add_argument("--carrier", action="append", metavar="LABEL=PATH",
                     help="a carrier instead of the default pair (repeatable)")
     ap.add_argument("--server-tsv", help="server rows from a saved mysql -N --raw dump")
@@ -354,6 +392,7 @@ def main():
     if args.lua:
         update_lua(manifest)
         return 0
+    init_columns()
     carriers = CARRIERS
     if args.carrier:
         carriers = [tuple(c.split("=", 1)) for c in args.carrier]

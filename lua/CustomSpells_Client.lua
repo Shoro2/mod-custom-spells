@@ -5,6 +5,8 @@
 -- by spec; each row is a checkbox that learns/forgets the spell
 -- (validated server-side). Open with /spells or /cs. A GM also
 -- gets "Learn all Talents" for the Forgotten Talents tree.
+-- Every row shows the spell's icon with its badge (FLSpellBadge,
+-- CustomSpells_Badge_Client.lua; absent -> the icon alone).
 -- =============================================================
 
 local AIO = AIO or require("AIO")
@@ -24,8 +26,11 @@ end
 -- Main frame
 -- ============================================================
 
-local ROW_HEIGHT = 22
+local ROW_HEIGHT = 30
 local ROW_HIT_WIDTH = 296
+local ICON_SIZE = 26
+local LABEL_WIDTH = 238
+local UNKNOWN_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 local HEADER_HEIGHT = 24
 -- Bottom edge of the list, above the Learn All / Forget All row. The GM
 -- row lifts it by GM_ROW_HEIGHT while that row is shown.
@@ -91,8 +96,14 @@ local function GetRow(index)
 		row:SetSize(24, 24)
 		-- Include the label in the existing checkbox's click and hover area.
 		row:SetHitRectInsets(0, 24 - ROW_HIT_WIDTH, 0, 0)
+		-- the spell's own icon (the client's Spell.dbc record), badge on top
+		row.icon = row:CreateTexture(nil, "ARTWORK")
+		row.icon:SetSize(ICON_SIZE, ICON_SIZE)
+		row.icon:SetPoint("LEFT", row, "RIGHT", 2, 0)
 		row.label = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-		row.label:SetPoint("LEFT", row, "RIGHT", 4, 0)
+		row.label:SetPoint("LEFT", row.icon, "RIGHT", 6, 0)
+		row.label:SetWidth(LABEL_WIDTH)
+		row.label:SetJustifyH("LEFT")
 		row:SetScript("OnClick", function(self)
 			-- Server decides the real state; the reply repaints the list
 			AIO.Handle("CustomSpells", "Toggle", self.spellId)
@@ -114,6 +125,17 @@ local function GetRow(index)
 	row:Show()
 	row.label:Show()
 	return row
+end
+
+-- Badge of every shown row; also runs when a new badge table arrives
+local badgeListenerSet = false
+local function ApplyBadges()
+	if not FLSpellBadge then return end
+	for _, row in pairs(rowPool) do
+		if row:IsShown() and row.spellId then
+			FLSpellBadge.Set(row, row.spellId, row.icon)
+		end
+	end
 end
 
 local function Repaint(rows)
@@ -145,11 +167,19 @@ local function Repaint(rows)
 		local row = GetRow(rowIndex)
 		row.spellId = entry.id
 		row:ClearAllPoints()
-		row:SetPoint("TOPLEFT", 10, -y)
+		row:SetPoint("TOPLEFT", 10, -y - (ROW_HEIGHT - 24) / 2)
 		row:SetChecked(entry.learned == 1)
+		local _, _, texture = GetSpellInfo(entry.id)
+		row.icon:SetTexture(texture or UNKNOWN_ICON)
 		row.label:SetText(entry.name)
 		y = y + ROW_HEIGHT
 	end
+
+	if FLSpellBadge and not badgeListenerSet then
+		badgeListenerSet = true
+		FLSpellBadge.OnChange(ApplyBadges)
+	end
+	ApplyBadges()
 
 	content:SetHeight(y + 10)
 end
